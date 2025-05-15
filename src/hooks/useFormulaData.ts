@@ -128,22 +128,18 @@ export const useFormulaWeights = (sport: Sport) => {
     queryKey: ['formula-weights', sport],
     queryFn: async () => {
       try {
-        // Use a type assertion to avoid the TypeScript error
-        // since formula_weights isn't in the generated types yet
-        const result = await supabase
-          .from('formula_weights')
-          .select('*')
-          .eq('sport', sport)
-          .order('last_updated', { ascending: false })
-          .limit(1);
-          
-        const { data, error } = result;
-          
-        if (error || !data || data.length === 0) {
+        // Use a raw query via rpc to avoid TypeScript errors
+        // This is because formula_weights isn't in the generated types yet
+        const { data, error } = await supabase.rpc('get_latest_formula_weights', {
+          p_sport: sport
+        });
+        
+        if (error || !data) {
+          console.warn(`No stored weights found for ${sport}, using defaults`);
           return null;
         }
         
-        return data[0];
+        return data;
       } catch (err) {
         console.error('Exception fetching formula weights:', err);
         return null;
