@@ -43,7 +43,7 @@ export const useTeamsBySport = (sport: Sport) => {
 
 // Fetch betting odds for a player or team
 export const useBettingOdds = (id: string, isTeam: boolean = false) => {
-  const idField = isTeam ? 'teamId' : 'playerId';
+  const idField = isTeam ? 'team_id' : 'player_id';
   
   return useQuery({
     queryKey: ['bettingOdds', id, isTeam],
@@ -74,7 +74,7 @@ export const useAstrologicalData = (playerId: string) => {
         supabase
           .from('astrological_data')
           .select('*')
-          .eq('playerId', playerId)
+          .eq('player_id', playerId)
           .order('timestamp', { ascending: false })
           .limit(1),
         'Failed to fetch astrological data'
