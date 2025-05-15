@@ -128,12 +128,16 @@ export const useFormulaWeights = (sport: Sport) => {
     queryKey: ['formula-weights', sport],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        // Use a type assertion to avoid the TypeScript error
+        // since formula_weights isn't in the generated types yet
+        const result = await supabase
           .from('formula_weights')
           .select('*')
           .eq('sport', sport)
           .order('last_updated', { ascending: false })
           .limit(1);
+          
+        const { data, error } = result;
           
         if (error || !data || data.length === 0) {
           return null;
