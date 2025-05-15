@@ -2,7 +2,6 @@
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sport } from '@/types';
-import { Basketball, Football, BoxingGlove, Baseball, Soccer } from 'lucide-react';
 
 interface SportsTabsProps {
   activeSport: Sport;
@@ -76,7 +75,50 @@ const SportsTabs: React.FC<SportsTabsProps> = ({
   );
 };
 
-// Lucide icons that we need
+// Custom SVG icons for sports
+const Basketball = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="M4.93 4.93c4.03 4.03 10.18 10.18 14.14 14.14" />
+    <path d="M19.07 4.93C15.04 8.96 8.89 15.1 4.93 19.07" />
+    <path d="M2 12h20" />
+    <path d="M12 2v20" />
+  </svg>
+);
+
+const Football = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <ellipse cx="12" cy="12" rx="10" ry="7" />
+    <path d="M2 12h20" />
+    <path d="M12 5v14" />
+    <path d="M6 8l12 8" />
+    <path d="M18 8 6 16" />
+  </svg>
+);
+
+// Reuse the existing BoxingGlove SVG component
 const BoxingGlove = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -95,6 +137,7 @@ const BoxingGlove = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+// Reuse the existing Baseball SVG component
 const Baseball = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -111,6 +154,26 @@ const Baseball = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M5.5 2.5c1.5 1 3 1.5 3 8.5 0 7-3 9-3 9" />
     <path d="M12 21c.5 0 4.5-1.5 4.5-7.5S12 5.5 9 3" />
     <path d="M18.5 2.5c1 .5 3 1 3 9s-2 9.5-3 10" />
+  </svg>
+);
+
+const Soccer = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a27.26 27.26 0 0 0 3 13.91A27.26 27.26 0 0 0 12 22" />
+    <path d="M12 22a27.26 27.26 0 0 1-3-13.91A27.26 27.26 0 0 1 12 2" />
+    <path d="M2 12h20" />
   </svg>
 );
 
