@@ -1,1 +1,13 @@
+
 project_id = "awoxkynorbspcrrggbca"
+
+[api]
+enabled = true
+
+[db]
+enabled = true
+
+[functions]
+enabled = true
+[functions.update-ephemeris]
+verify_jwt = false

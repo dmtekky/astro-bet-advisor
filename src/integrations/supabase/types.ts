@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      astrological_calculations: {
+        Row: {
+          calculation_data: Json
+          created_at: string
+          date: string
+          id: string
+          player_id: string
+          score: number
+        }
+        Insert: {
+          calculation_data: Json
+          created_at?: string
+          date: string
+          id?: string
+          player_id: string
+          score: number
+        }
+        Update: {
+          calculation_data?: Json
+          created_at?: string
+          date?: string
+          id?: string
+          player_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "astrological_calculations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       astrological_data: {
         Row: {
           created_at: string
@@ -138,6 +173,54 @@ export type Database = {
           source?: string
           sport?: string
           success?: boolean
+        }
+        Relationships: []
+      }
+      ephemeris: {
+        Row: {
+          aspects: Json
+          created_at: string
+          date: string
+          id: string
+          jupiter_sign: string
+          mars_sign: string
+          mercury_retrograde: boolean
+          mercury_sign: string
+          moon_phase: number
+          moon_sign: string
+          saturn_sign: string
+          sun_sign: string
+          venus_sign: string
+        }
+        Insert: {
+          aspects: Json
+          created_at?: string
+          date: string
+          id?: string
+          jupiter_sign: string
+          mars_sign: string
+          mercury_retrograde: boolean
+          mercury_sign: string
+          moon_phase: number
+          moon_sign: string
+          saturn_sign: string
+          sun_sign: string
+          venus_sign: string
+        }
+        Update: {
+          aspects?: Json
+          created_at?: string
+          date?: string
+          id?: string
+          jupiter_sign?: string
+          mars_sign?: string
+          mercury_retrograde?: boolean
+          mercury_sign?: string
+          moon_phase?: number
+          moon_sign?: string
+          saturn_sign?: string
+          sun_sign?: string
+          venus_sign?: string
         }
         Relationships: []
       }
