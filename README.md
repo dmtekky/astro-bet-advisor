@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
 
-## Project info
+# Sports Betting Assistant App
 
-**URL**: https://lovable.dev/projects/bc31109f-86db-4da3-bf90-4e00e131fcc1
+A web-based tool that helps users make informed sports betting decisions by analyzing odds data and astrological factors.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Dashboard with tabs for different sports (NBA, MLB, NFL, Boxing)
+- Player and team cards displaying betting odds
+- Astrological insights for players
+- Data caching in Supabase for optimal performance
 
-**Use Lovable**
+## Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bc31109f-86db-4da3-bf90-4e00e131fcc1) and start prompting.
+- **Frontend**: React, Vite, TypeScript, Tailwind CSS, shadcn/ui
+- **Data Management**: Tanstack React Query, Supabase
+- **APIs**: The Odds API, Sports Game Odds API, Swiss Ephemeris
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v16+)
+- npm or yarn
+- A Supabase account
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Setup
 
-Follow these steps:
-
+1. Clone the repository:
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone <repository-url>
+cd sports-betting-assistant
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```sh
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Connect to Supabase:
+   - Create a Supabase project at https://supabase.com/
+   - Update `src/lib/supabase.ts` with your Supabase credentials
+   - Set up the required database tables (see Database Setup below)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Start the development server:
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Open your browser at http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Database Setup
 
-**Use GitHub Codespaces**
+Create the following tables in your Supabase project:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. **Players**:
+   - id (uuid, primary key)
+   - name (text)
+   - team (text)
+   - position (text)
+   - birthDate (date)
+   - image (text, URL)
+   - sport (text)
 
-## What technologies are used for this project?
+2. **Teams**:
+   - id (uuid, primary key)
+   - name (text)
+   - abbreviation (text)
+   - logo (text, URL)
+   - sport (text)
 
-This project is built with:
+3. **BettingOdds**:
+   - id (uuid, primary key)
+   - playerId (uuid, foreign key)
+   - teamId (uuid, foreign key)
+   - odds (numeric)
+   - type (text)
+   - bookmaker (text)
+   - timestamp (timestamptz)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+4. **AstrologicalData**:
+   - id (uuid, primary key)
+   - playerId (uuid, foreign key)
+   - favorability (integer)
+   - influences (text[])
+   - details (text)
+   - timestamp (timestamptz)
 
-## How can I deploy this project?
+## API Integration
 
-Simply open [Lovable](https://lovable.dev/projects/bc31109f-86db-4da3-bf90-4e00e131fcc1) and click on Share -> Publish.
+1. **The Odds API**: Used for retrieving betting odds from various bookmakers
+2. **Sports Game Odds API**: Alternative source for betting odds
+3. **Swiss Ephemeris**: Used for astrological calculations
 
-## Can I connect a custom domain to my Lovable project?
+## License
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License - see the LICENSE file for details.

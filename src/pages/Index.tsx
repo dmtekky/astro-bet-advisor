@@ -1,13 +1,35 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import SportsTabs from '@/components/dashboard/SportsTabs';
+import BettingGrid from '@/components/dashboard/BettingGrid';
+import { Sport } from '@/types';
 
 const Index = () => {
+  const [activeSport, setActiveSport] = useState<Sport>('nba');
+  
+  const handleSportChange = (sport: Sport) => {
+    setActiveSport(sport);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Sports Betting Assistant</h1>
+          <p className="text-muted-foreground mt-2">
+            Make informed betting decisions with odds and astrological insights
+          </p>
+        </div>
+        
+        <SportsTabs 
+          activeSport={activeSport} 
+          onSportChange={handleSportChange}
+        >
+          <BettingGrid sport={activeSport} />
+        </SportsTabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
