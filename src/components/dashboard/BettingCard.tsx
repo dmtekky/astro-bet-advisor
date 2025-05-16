@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -88,7 +88,17 @@ const BettingCard: React.FC<BettingCardProps> = ({ type, data, odds, astrologyDa
       )}>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg font-semibold truncate">
-            {name}
+            {type === 'team' ? (
+              <Link 
+                to={`/team/${data.id}`}
+                className="hover:underline hover:text-primary transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {name}
+              </Link>
+            ) : (
+              name
+            )}
           </CardTitle>
           <Badge variant="outline" className={cn(
             `border-sports-${sport} text-sports-${sport}`,
