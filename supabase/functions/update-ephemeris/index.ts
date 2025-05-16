@@ -3,28 +3,34 @@
 // This function serves as an API endpoint to trigger ephemeris calculation
 // It can be called manually or scheduled to run daily
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.33.2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.33.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+};
 
-serve(async (req) => {
+// Supabase edge function entry point
+export default async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return new Response("ok", { headers: corsHeaders });
   }
   
   try {
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || ""
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    // Get environment variables from Supabase
+    const supabaseUrl = req.headers.get("x-supabase-url") || "";
+    const supabaseKey = req.headers.get("x-supabase-key") || "";
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase credentials");
+    }
+    
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Get request data
-    const { date } = await req.json()
+    const { date }: { date?: string } = await req.json();
     const targetDate = date || new Date().toISOString().split('T')[0]
     
     console.log(`Processing ephemeris data for date: ${targetDate}`)
@@ -85,10 +91,9 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
-      }
-    )
+      });
   }
-})
+}
 
 // Generate mock ephemeris data for demonstration
 // In a real implementation, this would use an astronomy library
