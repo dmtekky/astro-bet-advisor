@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -33,20 +33,38 @@ interface Game {
   oas?: number;
 }
 
+// Map URL sport params to API sport keys
+const SPORT_MAPPING: Record<string, string> = {
+  nba: 'basketball_nba',
+  mlb: 'baseball_mlb',
+  nfl: 'americanfootball_nfl',
+  boxing: 'boxing',
+  soccer: 'soccer',
+  ncaa: 'college_football',
+};
+
 const EnhancedDashboard = () => {
+  const [searchParams] = useSearchParams();
   const [sport, setSport] = useState('basketball_nba');
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Sync URL parameter with component state
+  useEffect(() => {
+    const urlSport = searchParams.get('sport') || 'nba';
+    const apiSport = SPORT_MAPPING[urlSport] || 'basketball_nba';
+    setSport(apiSport);
+  }, [searchParams]);
+
   const sports = [
     { value: 'basketball_nba', label: 'NBA' },
     { value: 'baseball_mlb', label: 'MLB' },
     { value: 'americanfootball_nfl', label: 'NFL' },
     { value: 'boxing', label: 'Boxing' },
-    { value: 'soccer', label: 'Soccer (Coming Soon)', disabled: true },
-    { value: 'college_football', label: 'NCAA Football (Coming Soon)', disabled: true },
+    { value: 'soccer', label: 'Soccer', disabled: true },
+    { value: 'college_football', label: 'NCAA Football', disabled: true },
   ];
 
   useEffect(() => {

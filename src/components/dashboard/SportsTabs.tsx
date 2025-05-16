@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sport } from '@/types';
 
@@ -9,11 +9,28 @@ interface SportsTabsProps {
   children: React.ReactNode;
 }
 
+const sports: { id: Sport; name: string; comingSoon?: boolean }[] = [
+  { id: 'nba', name: 'NBA' },
+  { id: 'mlb', name: 'MLB' },
+  { id: 'nfl', name: 'NFL' },
+  { id: 'boxing', name: 'Boxing' },
+  { id: 'soccer', name: 'Soccer', comingSoon: true },
+  { id: 'ncaa', name: 'NCAA FB', comingSoon: true },
+];
+
 const SportsTabs: React.FC<SportsTabsProps> = ({ 
   activeSport, 
   onSportChange,
   children 
 }) => {
+  const navigate = useNavigate();
+
+  const handleSportChange = (sport: Sport) => {
+    onSportChange(sport);
+    // Update URL without page reload
+    navigate(`/dashboard?sport=${sport}`, { replace: true });
+  };
+
   // Map sports to their respective icons
   const SportIcon = ({ sport }: { sport: Sport }) => {
     switch (sport) {
@@ -34,19 +51,10 @@ const SportsTabs: React.FC<SportsTabsProps> = ({
     }
   };
 
-  const sports: { id: Sport; name: string; comingSoon?: boolean }[] = [
-    { id: 'nba', name: 'NBA' },
-    { id: 'mlb', name: 'MLB' },
-    { id: 'nfl', name: 'NFL' },
-    { id: 'boxing', name: 'Boxing' },
-    { id: 'soccer', name: 'Soccer', comingSoon: true },
-    { id: 'ncaa', name: 'NCAA FB', comingSoon: true },
-  ];
-
   return (
     <Tabs 
-      defaultValue={activeSport} 
-      onValueChange={(value) => onSportChange(value as Sport)}
+      value={activeSport} 
+      onValueChange={(value) => handleSportChange(value as Sport)}
       className="w-full"
     >
       <TabsList className="w-full max-w-3xl mx-auto grid grid-cols-3 md:grid-cols-6 mb-8">

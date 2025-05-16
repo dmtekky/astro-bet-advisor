@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import SportsTabs from '@/components/dashboard/SportsTabs';
 import BettingGrid from '@/components/dashboard/BettingGrid';
@@ -8,13 +9,24 @@ import { useFormulaWeights } from '@/hooks/useFormulaData';
 import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSport, setActiveSport] = useState<Sport>('nba');
+  
+  // Sync URL with active sport
+  useEffect(() => {
+    const sportParam = searchParams.get('sport') as Sport | null;
+    if (sportParam) {
+      setActiveSport(sportParam);
+    }
+  }, [searchParams]);
   
   // Get formula weights for the active sport
   const { data: formulaWeights, isLoading: isLoadingWeights } = useFormulaWeights(activeSport);
   
   const handleSportChange = (sport: Sport) => {
     setActiveSport(sport);
+    // Update URL without page reload
+    setSearchParams({ sport });
     
     // Notify user when weights are missing
     if (sport === 'soccer' || sport === 'ncaa') {
