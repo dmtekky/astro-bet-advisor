@@ -384,84 +384,9 @@ export const calculatePAF = async (entityId, isTeam = false, sportType = 'nba') 
     // Calculate adjustment factor - larger corrections for confident assessments
     const maxAdjustment = 0.25; // Max 25% adjustment
     const adjustmentFactor = 1.0 - ((avgError / 100) * (confidence / 100) * maxAdjustment);
-    
-    return {
-      adjustmentFactor: Math.max(0.75, Math.min(1.25, adjustmentFactor)),
-      confidence: Math.round(confidence),
-      mse: Math.round(mse * 100) / 100,
-      sampleSize: historicalData.length,
-      details: `Based on ${historicalData.length} historical predictions with MSE: ${Math.round(mse * 100) / 100}`
-    };
-  } catch (err) {
-    console.error("Error calculating PAF:", err);
-    return {
-      adjustmentFactor: 1.0,
-      confidence: 0,
-      mse: null,
-      sampleSize: 0,
-      details: "Error retrieving historical data"
-    };
-  }
-};
 
 /**
- * Calculate Odds Adjustment Score (OAS)
- * 
- * @param {Number} baseScore - Base astrological score (TAS)
- * @param {Number} adjustmentFactor - Performance adjustment factor
- * @param {Object} currentOdds - Current betting odds
- * @return {Object} Adjusted odds recommendation and detailed breakdown
- */
-export const calculateOAS = (baseScore, adjustmentFactor = 1.0, currentOdds = null) => {
-  // Apply adjustment factor to base score
-  const adjustedScore = baseScore * adjustmentFactor;
-  
-  // Calculate deviation from neutral (50)
-  const deviation = adjustedScore - 50;
-  
-  // Scale deviation to odds impact (-20% to +20% max odds adjustment)
-  const oddsImpact = (deviation / 50) * 0.2;
-  
-  // Calculate money line equivalent if provided with current odds
-  let recommendedMoneyLine = null;
-  let oddsShift = "neutral";
-  
-  if (currentOdds && currentOdds.moneyLine) {
-    const currentML = currentOdds.moneyLine;
-    const currentImpliedProb = moneyLineToImpliedProbability(currentML);
-    
-    // Adjust implied probability by oddsImpact
-    const adjustedImpliedProb = Math.min(0.95, Math.max(0.05, currentImpliedProb * (1 + oddsImpact)));
-    
-    // Convert back to money line
-    recommendedMoneyLine = impliedProbabilityToMoneyLine(adjustedImpliedProb);
-    
-    // Determine shift direction
-    if (recommendedMoneyLine < currentML) {
-      oddsShift = "favorable";
-    } else if (recommendedMoneyLine > currentML) {
-      oddsShift = "unfavorable";
-    }
-  }
-  
-  // Calculate a betting recommendation score (0-100)
-  // Higher = stronger bet recommendation
-  const recommendationStrength = Math.round(Math.min(100, Math.max(0, 50 + (deviation * 1.5))));
-  
-  return {
-    bettingRecommendation: recommendationStrength,
-    recommendationCategory: getBettingCategory(recommendationStrength),
-    adjustedScore: Math.round(adjustedScore),
-    oddsImpact: (oddsImpact * 100).toFixed(1) + "%",
-    oddsShift: oddsShift,
-    recommendedMoneyLine: recommendedMoneyLine,
-    details: `${adjustmentFactor < 1 ? "Reduced" : "Increased"} base score by factor of ${adjustmentFactor.toFixed(2)}`
-  };
-};
-
-/**
- * Update astrological weight factors based on prediction accuracy
- * 
+ * Update astrological weights based on historical performance
  * @param {String} sport - Sport type (e.g., 'nba', 'nfl')
  * @param {Object} customConfig - Optional configuration parameters
  * @return {Promise<Object>} Updated weights and statistics
@@ -1110,15 +1035,67 @@ export const initializeModule = async () => {
 initializeModule();
 
 // Make all functions available
-export default {
+// Export all functions
+export {
   calculateAIS,
   calculateKPW,
   calculateTAS,
   calculatePAF,
-  calculateOAS,
   updateAstrologicalWeights,
   loadLatestWeights,
   runTeamAnalysis,
+  calculateElementalCompatibility,
+  calculatePlanetSignInfluence,
+  getAspectScore,
+  moneyLineToImpliedProbability,
+  impliedProbabilityToMoneyLine,
+  getBettingCategory,
   runSamplePlayerCalculation,
-  runSampleTeamCalculation
+  runSampleTeamCalculation,
+  calculateOAS
+};
+
+/**
+ * Calculate Odds Adjustment Score (OAS)
+ * 
+ * @param {Object} game - Game object with odds data
+ * @param {Array} players - Array of player objects
+ * @param {Object} astroData - Astrological data for the day
+ * @param {Object} playerProps - Player performance statistics
+ * @return {Number} OAS score (-100 to +100)
+ */
+export const calculateOAS = (game, players, astroData, playerProps) => {
+  // Calculate AIS for key players
+  const keyPlayers = players.filter(p => p.is_key_player);
+  const playerAIS = keyPlayers.map(player => calculateAIS(player, astroData));
+  
+  // Calculate KPW for each player
+  const playerKPW = playerAIS.map((ais, index) => calculateKPW(ais.score, playerProps?.[keyPlayers[index].id]?.win_shares));
+  
+  // Calculate TAS for both teams
+  const homeTeamPlayers = players.filter(p => p.team === game.home_team);
+  const awayTeamPlayers = players.filter(p => p.team === game.away_team);
+  
+  const homeTAS = calculateTAS(homeTeamPlayers.map(p => ({
+    ...p,
+    ais: calculateAIS(p, astroData).score,
+    kpw: calculateKPW(calculateAIS(p, astroData).score, playerProps?.[p.id]?.win_shares)
+  })));
+  
+  const awayTAS = calculateTAS(awayTeamPlayers.map(p => ({
+    ...p,
+    ais: calculateAIS(p, astroData).score,
+    kpw: calculateKPW(calculateAIS(p, astroData).score, playerProps?.[p.id]?.win_shares)
+  })));
+  
+  // Calculate PAF for both teams
+  const homePAF = calculatePAF(game.home_team, true, game.sport);
+  const awayPAF = calculatePAF(game.away_team, true, game.sport);
+  
+  // Calculate final OAS score
+  const homeOAS = (homeTAS.score * homePAF.adjustment) - (awayTAS.score * awayPAF.adjustment);
+  const awayOAS = (awayTAS.score * awayPAF.adjustment) - (homeTAS.score * homePAF.adjustment);
+  
+  // Return the difference as the final OAS score
+  return homeOAS - awayOAS;
 };

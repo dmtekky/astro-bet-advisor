@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 // Initialize the Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const supabaseUrl = Deno.env.get('VITE_SUPABASE_URL') ?? '';
+const supabaseAnonKey = Deno.env.get('VITE_SUPABASE_KEY') ?? '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Handle CORS preflight requests
