@@ -37,6 +37,70 @@ interface PlayerWithStats extends Omit<Player, 'sport' | 'position'> {
   };
 }
 
+import { Tooltip } from 'react-tooltip';
+import { calculateAstrologicalInfluence } from '@/lib/astroCalc';
+import CelestialMap from '@/components/CelestialMap';
+
+// Convert astrological influence data to UI format
+function formatAstroInfluences(influences: any) {
+  const impacts = [];
+  
+  // Add zodiac sign influence
+  if (influences.zodiacSign) {
+    impacts.push({
+      name: `Sun in ${influences.zodiacSign}`,
+      impact: Math.round((influences.aspects?.sunMoon || 0.5) * 20) - 10, // Convert 0-1 to -10 to 10
+      description: `Sun sign influence on performance`
+    });
+  }
+
+  // Add moon phase influence
+  if (influences.moonPhase !== undefined) {
+    const moonImpact = Math.round((influences.moonPhase - 0.5) * 20); // Convert 0-1 to -10 to 10
+    impacts.push({
+      name: 'Moon Phase',
+      impact: moonImpact,
+      description: `Current lunar phase influence (${(influences.moonPhase * 100).toFixed(0)}% full)`
+    });
+  }
+
+  // Add Mercury retrograde if applicable
+  if (influences.mercuryRetrograde) {
+    impacts.push({
+      name: 'Mercury Retrograde',
+      impact: -5, // Fixed negative impact
+      description: 'Mercury is retrograde, may affect communication and coordination'
+    });
+  }
+
+  // Add aspects
+  if (influences.aspects) {
+    Object.entries(influences.aspects).forEach(([aspect, value]) => {
+      if (typeof value === 'number') {
+        const aspectImpact = Math.round((value - 0.5) * 10); // Convert 0-1 to -5 to 5
+        if (Math.abs(aspectImpact) > 1) { // Only include significant aspects
+          impacts.push({
+            name: aspect.split(/(?=[A-Z])/).join(' '),
+            impact: aspectImpact,
+            description: `Aspect influence on performance`
+          });
+        }
+      }
+    });
+  }
+
+  return impacts;
+}
+
+function getTopImpact(impacts: any[]) {
+  if (!impacts.length) return { name: 'No Data', impact: 0, description: 'No astrological data available' };
+  return impacts.reduce((max, curr) => (Math.abs(curr.impact) > Math.abs(max.impact) ? curr : max), impacts[0]);
+}
+
+function getSortedImpacts(impacts: any[]) {
+  return [...impacts].sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
+}
+
 const PlayerPage: React.FC = () => {
   const { playerId, teamId } = useParams<{ playerId: string; teamId: string }>();
   const navigate = useNavigate();
@@ -47,6 +111,35 @@ const PlayerPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [team, setTeam] = useState<{ id: string; name: string } | null>(null);
   const [stats, setStats] = useState<Record<string, string | number> | null>(null);
+
+  // Astrological insights
+  const [astrologicalData, setAstrologicalData] = useState<any>(null);
+  const [loadingAstro, setLoadingAstro] = useState(true);
+  const [astroError, setAstroError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!player) return;
+
+    const fetchAstroData = async () => {
+      try {
+        setLoadingAstro(true);
+        const result = await calculateAstrologicalInfluence(player);
+        setAstrologicalData(result);
+      } catch (err) {
+        console.error('Error calculating astrological data:', err);
+        setAstroError('Failed to load astrological data');
+      } finally {
+        setLoadingAstro(false);
+      }
+    };
+
+    fetchAstroData();
+  }, [player]);
+
+  // Format the astrological data for display
+  const astroImpacts = astrologicalData ? formatAstroInfluences(astrologicalData.influences) : [];
+  const topImpact = getTopImpact(astroImpacts);
+  const sortedImpacts = getSortedImpacts(astroImpacts);
 
   useEffect(() => {
     async function fetchData() {
@@ -149,13 +242,36 @@ const PlayerPage: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4">
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500 mb-4"></div>
-          <p>Loading player data...</p>
+          <Skeleton className="h-12 w-1/3 mb-4" />
+          <Skeleton className="h-8 w-1/2 mb-2" />
+          <Skeleton className="h-8 w-1/2 mb-2" />
         </div>
       </div>
     );
   }
-  
+
+  // --- Simplified Astrological Insight at the Top ---
+  const insightSection = loadingAstro ? (
+    <div className="bg-gradient-to-r from-indigo-900 to-black text-white p-4 rounded-lg mb-6 flex items-center gap-2">
+      <Skeleton className="h-6 w-48" />
+    </div>
+  ) : astroError ? (
+    <div className="bg-red-900/50 text-white p-4 rounded-lg mb-6">
+      {astroError}
+    </div>
+  ) : (
+    <div className="bg-gradient-to-r from-indigo-900 to-black text-white p-4 rounded-lg mb-6 flex items-center gap-2">
+      <span 
+        className="font-semibold text-lg" 
+        data-tooltip-id="top-impact-tip" 
+        data-tooltip-content={topImpact.description}
+      >
+        {topImpact.name}: {topImpact.impact > 0 ? "+" : ""}{topImpact.impact}%
+      </span>
+      <Tooltip id="top-impact-tip" />
+    </div>
+  );
+
   if (!player) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4">
@@ -175,6 +291,8 @@ const PlayerPage: React.FC = () => {
   
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
+      {insightSection}
+      
       <Button 
         variant="ghost" 
         onClick={() => navigate(`/team/${teamId}`)}
@@ -378,6 +496,53 @@ const PlayerPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Detailed Astrological Insights */}
+      <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mb-8">
+        <h3 className="font-medium mb-2">Detailed Astrological Insights</h3>
+        {loadingAstro ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+            ))}
+          </div>
+        ) : astroError ? (
+          <div className="text-red-400">{astroError}</div>
+        ) : (
+          <>
+            <div className="space-y-2 mb-6">
+              {sortedImpacts.length > 0 ? (
+                sortedImpacts.map((impact) => (
+                  <div key={impact.name} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">{impact.name}</span>
+                    <Badge 
+                      variant="outline" 
+                      className={`${impact.impact > 0 ? 'border-green-800 text-green-400' : 'border-red-800 text-red-400'}`}
+                    >
+                      {impact.impact > 0 ? "+" : ""}{impact.impact}%
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-400 text-sm">No astrological data available</div>
+              )}
+            </div>
+            
+            <div className="mt-8">
+              <h3 className="text-lg font-medium mb-4">Current Celestial Map</h3>
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <CelestialMap className="h-[400px]" />
+              </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Interactive map showing current planetary positions and their astrological influences
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

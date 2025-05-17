@@ -92,7 +92,7 @@ function calculateAspectsImpact(aspects: AstroData['aspects']): number {
   return Math.round(impact);
 }
 
-function calculatePlanetarySignsImpact(astroData: AstroData): number {
+export function calculatePlanetarySignsImpact(astroData: AstroData): number {
   let impact = 0;
 
   // Moon in water signs (Cancer, Scorpio, Pisces) is strong
