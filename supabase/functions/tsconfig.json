@@ -14,8 +14,12 @@
     "lib": ["ESNext", "DOM"],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["@supabase/supabase-js"]
+    "types": ["@supabase/supabase-js"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../../src/*"]
+    }
   },
-  "include": ["*.ts", "*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

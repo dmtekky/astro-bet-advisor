@@ -10,7 +10,7 @@ import CosmicHeadlines from './CosmicHeadlines';
 import { supabase } from '../lib/supabase';
 import { fetchOdds } from '../lib/oddsApi';
 import { fetchPlayerProps } from '../lib/sportsGameOdds';
-import { calculateOAS } from '../lib/formula';
+import { calculateOAS } from '../lib/formula.tsx';
 
 function GamesSection() {
   const [sport, setSport] = useState('NBA');
