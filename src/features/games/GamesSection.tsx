@@ -10,7 +10,7 @@ import CosmicHeadlines from './CosmicHeadlines';
 import { supabase } from '../lib/supabase';
 import { fetchOdds } from '../lib/oddsApi';
 import { fetchPlayerProps } from '../lib/sportsGameOdds';
-import { calculateOAS } from '../lib/formula.tsx';
+import { calculateAIS } from '../lib/formula';
 
 function GamesSection() {
   const [sport, setSport] = useState('NBA');
@@ -57,7 +57,7 @@ function GamesSection() {
         // Calculate OAS for each game
         const gamesWithOAS = oddsData.map(game => ({
           ...game,
-          oas: calculateOAS(game, playersData || [], astro, playerProps)
+          oas: calculateAIS(game, playersData || [], astro, playerProps)
         }));
 
         setGames(gamesWithOAS);
