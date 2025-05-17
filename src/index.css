@@ -3,6 +3,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Slick Carousel Styles */
+.slick-slide {
+  padding: 0 10px;
+}
+
+.slick-list {
+  margin: 0 -10px;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  color: #f59e0b !important;
+}
+
+.slick-dots li button:before {
+  color: #f59e0b !important;
+  opacity: 0.5;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #f59e0b !important;
+  opacity: 1;
+}
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased;

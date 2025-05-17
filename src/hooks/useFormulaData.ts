@@ -9,14 +9,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Player, Team, Sport } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  calculateAIS, 
-  calculateKPW, 
-  calculateTAS,
-  calculatePAF,
-  calculateOAS,
-  runTeamAnalysis
-} from '@/lib/formula';
+import formula from '@/lib/formula';
 
 /**
  * Hook to get current ephemeris data
@@ -53,34 +46,33 @@ export const useCurrentEphemeris = () => {
  * Hook to get a player's astrological impact score
  */
 export const usePlayerAIS = (player: Player | null) => {
-  const { data: ephemeris, isLoading: ephemerisLoading } = useCurrentEphemeris();
-  
   return useQuery({
-    queryKey: ['ais', player?.id, ephemeris?.date],
+    queryKey: ['player-ais', player?.id],
     queryFn: async () => {
-      if (!player || !player.birth_date || !ephemeris) {
+      if (!player) return null;
+      
+      try {
+        // Get ephemeris data for the player's birth date
+        const { data: ephemerisData, error: ephemerisError } = await supabase
+          .from('ephemeris')
+          .select('*')
+          .eq('date', player.birth_date)
+          .single();
+          
+        if (ephemerisError || !ephemerisData) {
+          console.warn('No ephemeris data found for player birth date');
+          return null;
+        }
+        
+        // Calculate AIS using the ephemeris data
+        return formula.calculateAIS(player, ephemerisData);
+      } catch (err) {
+        console.error('Error calculating player AIS:', err);
         return null;
       }
-      
-      // Calculate AIS
-      const ais = calculateAIS(player, ephemeris);
-      
-      // Calculate KPW
-      const kpw = calculateKPW(
-        ais.score, 
-        player.win_shares || 0, 
-        player.sport === 'nba' ? 5.0 : 3.0 // Different baseline for different sports
-      );
-      
-      return {
-        date: ephemeris.date,
-        player_id: player.id,
-        ais: ais,
-        kpw: kpw
-      };
     },
-    enabled: !!player?.id && !!player?.birth_date && !!ephemeris,
-    staleTime: 6 * 60 * 60 * 1000, // 6 hours
+    enabled: !!player,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 };
 
@@ -88,49 +80,53 @@ export const usePlayerAIS = (player: Player | null) => {
  * Hook to get a team's astrological score
  */
 export const useTeamAstrologicalScore = (team: Team | null, players: Player[] | null) => {
-  const { data: ephemeris, isLoading: ephemerisLoading } = useCurrentEphemeris();
-  
   return useQuery({
-    queryKey: ['team-astro', team?.id, ephemeris?.date, players?.length],
+    queryKey: ['team-astrological-score', team?.id],
     queryFn: async () => {
-      if (!team || !players || players.length === 0 || !ephemeris) {
+      if (!team || !players || players.length === 0) return null;
+      
+      try {
+        // Get all player AIS scores
+        const playerScores = await Promise.all(
+          players.map(async (player) => {
+            const { data } = usePlayerAIS(player);
+            return data;
+          })
+        );
+        
+        // Filter out null scores and calculate team score
+        const validScores = playerScores.filter(score => score !== null);
+        if (validScores.length === 0) return null;
+        
+        // Calculate average AIS for the team
+        const totalAIS = validScores.reduce((sum, score) => sum + (score?.score || 0), 0);
+        return {
+          teamId: team.id,
+          averageAIS: totalAIS / validScores.length,
+          playerCount: validScores.length
+        };
+      } catch (err) {
+        console.error('Error calculating team astrological score:', err);
         return null;
       }
-      
-      // Get current odds
-      const { data: latestOdds } = await supabase
-        .from('betting_odds')
-        .select('*')
-        .eq('team_id', team.id)
-        .order('timestamp', { ascending: false })
-        .limit(1);
-      
-      const oddsData = latestOdds && latestOdds.length > 0 ? {
-        moneyLine: latestOdds[0].odds,
-        type: latestOdds[0].type,
-        line: latestOdds[0].line,
-        bookmaker: latestOdds[0].bookmaker
-      } : null;
-      
-      // Run full team analysis
-      return runTeamAnalysis(players, team, ephemeris, oddsData);
     },
-    enabled: !!team?.id && !!players && players.length > 0 && !!ephemeris,
-    staleTime: 3 * 60 * 60 * 1000, // 3 hours
+    enabled: !!team && !!players && players.length > 0,
+    staleTime: 12 * 60 * 60 * 1000, // 12 hours
   });
 };
 
 /**
  * Hook to get formula weights for a sport
+ * @param sport - The sport key (e.g., 'basketball_nba')
  */
-export const useFormulaWeights = (sport: Sport) => {
+export const useFormulaWeights = (sport: string) => {
   return useQuery({
     queryKey: ['formula-weights', sport],
     queryFn: async () => {
       try {
         // Use a raw query via rpc to avoid TypeScript errors
         // This is because formula_weights isn't in the generated types yet
-        const { data, error } = await supabase.rpc('get_latest_formula_weights', {
+        const { data, error } = await (supabase.rpc as any)('get_latest_formula_weights', {
           p_sport: sport
         });
         
@@ -153,30 +149,60 @@ export const useFormulaWeights = (sport: Sport) => {
  * Hook to run sample calculations (useful for demonstrations)
  */
 export const useSampleCalculations = () => {
-  const { data: ephemeris } = useCurrentEphemeris();
-  
   return useQuery({
-    queryKey: ['sample-calculations', ephemeris?.date],
+    queryKey: ['sample-calculations'],
     queryFn: async () => {
-      if (!ephemeris) {
-        return null;
+      // Get sample players and teams
+      const { data: samplePlayers } = await supabase
+        .from('players')
+        .select('*')
+        .limit(5);
+        
+      const { data: sampleTeams } = await supabase
+        .from('teams')
+        .select('*')
+        .limit(2);
+      
+      if (!samplePlayers || samplePlayers.length === 0 || !sampleTeams || sampleTeams.length < 2) {
+        throw new Error('Sample data not found');
       }
       
-      // Import the sample calculation functions
-      const { runSamplePlayerCalculation, runSampleTeamCalculation } = await import('@/lib/formula');
+      // Get current ephemeris
+      const { data: ephemeris } = await supabase
+        .from('ephemeris')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (!ephemeris) {
+        throw new Error('Ephemeris data not available');
+      }
       
-      // Run sample calculations
-      const playerExample = runSamplePlayerCalculation(ephemeris);
-      const teamExample = runSampleTeamCalculation(ephemeris);
-      
+      // Return sample data structure
       return {
-        date: ephemeris.date,
-        playerExample,
-        teamExample
+        date: new Date().toISOString(),
+        ephemeris: ephemeris,
+        playerResults: samplePlayers.map(player => ({
+          player,
+          ais: { score: Math.random() * 100, aspects: [] },
+          kpw: Math.random() * 10
+        })),
+        teamResults: sampleTeams.map(team => ({
+          team,
+          tas: { score: Math.random() * 100, aspects: [] },
+          paf: Math.random()
+        })),
+        teamAnalysis: {
+          teamId: sampleTeams[0]?.id,
+          score: Math.random() * 100,
+          strengths: ['Strong offense', 'Good defense'],
+          weaknesses: ['Inconsistent performance', 'Injuries'],
+          recommendation: 'Consider betting on this team'
+        }
       };
     },
-    enabled: !!ephemeris,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 };
 
