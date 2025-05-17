@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import SportsTabs from '@/components/dashboard/SportsTabs';
-import BettingGrid from '@/components/dashboard/BettingGrid';
+import SportsTabs from '@/features/dashboard/SportsTabs';
+import BettingGrid from '@/features/dashboard/BettingGrid';
 import { Sport } from '@/types';
 import { useFormulaWeights } from '@/hooks/useFormulaData';
 import { toast } from '@/components/ui/use-toast';

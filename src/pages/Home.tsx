@@ -12,7 +12,7 @@ const LEAGUES = [
 
 import AstroSummaryBanner from '@/components/AstroSummaryBanner';
 import AstroStatus from '@/components/AstroStatus';
-import NextEventCount from '@/components/NextEventCount';
+import NextEventCount from '@/features/games/NextEventCount';
 
 export default function Home() {
   return (
