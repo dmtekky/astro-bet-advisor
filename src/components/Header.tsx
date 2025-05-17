@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLeaguesOpen, setIsLeaguesOpen] = useState(false);
   const location = useLocation();
+  
+  // Keep leagues menu open if we're on a league page
+  useEffect(() => {
+    setIsLeaguesOpen(location.pathname.startsWith('/league/'));
+  }, [location]);
 
   const leagues = [
     { id: 'nba', name: 'NBA', icon: '🏀' },
@@ -52,18 +58,24 @@ const Header: React.FC = () => {
             {/* Leagues Dropdown */}
             <div className="relative group">
               <button
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                   location.pathname.startsWith('/league/')
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => setIsLeaguesOpen(!isLeaguesOpen)}
+                aria-expanded={isLeaguesOpen}
+                aria-haspopup="true"
               >
                 Leagues
-                <span className="ml-1">▼</span>
+                <span className={`ml-1 transition-transform ${isLeaguesOpen ? 'transform rotate-180' : ''}`}>▼</span>
               </button>
               
-              <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+              <div 
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 ${
+                  isLeaguesOpen ? 'block' : 'hidden group-hover:block'
+                } z-50`}
+              >
                 <div className="py-1">
                   {leagues.map((league) => (
                     <Link
@@ -72,9 +84,17 @@ const Header: React.FC = () => {
                       className={`block px-4 py-2 text-sm ${
                         league.comingSoon 
                           ? 'text-gray-500 cursor-not-allowed' 
-                          : 'text-gray-300 hover:bg-gray-700'
+                          : location.pathname === `/league/${league.id}`
+                            ? 'bg-gray-700 text-white'
+                            : 'text-gray-300 hover:bg-gray-700'
                       }`}
-                      onClick={(e) => league.comingSoon && e.preventDefault()}
+                      onClick={(e) => {
+                        if (league.comingSoon) {
+                          e.preventDefault();
+                        } else {
+                          setIsLeaguesOpen(true);
+                        }
+                      }}
                     >
                       <span className="mr-2">{league.icon}</span>
                       {league.name}

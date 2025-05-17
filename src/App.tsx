@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
+import PlayerPage from "./pages/PlayerPage";
 import LeaguePage from "./pages/LeaguePage";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
@@ -19,6 +20,7 @@ function App() {
           <Route path="/league/:leagueId" element={<LeaguePage />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/team/:teamId" element={<TeamPage />} />
+<Route path="/team/:teamId/player/:playerId" element={<PlayerPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

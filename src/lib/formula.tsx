@@ -13,17 +13,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { getZodiacSign, getMoonPhaseInfo } from '@/lib/astroCalc';
 import { format } from 'date-fns';
 
-// Type definitions
-interface Player {
-  id: string;
-  birth_date: string;
-  name: string;
-  team_id: string;
-  position?: string;
+// Import types from the main types file
+import type { Player as BasePlayer } from '@/types';
+
+// Extend the base Player type with any additional fields needed for calculations
+export interface Player extends Omit<BasePlayer, 'position' | 'sport'> {
+  position?: string | string[];
+  sport: string;
+  birthDate?: string; // Alias for birth_date
+  birth_date?: string;
   win_shares?: number;
+  stats?: Record<string, any>;
+  height?: string;
+  weight?: string;
+  number?: number;
 }
 
-interface Ephemeris {
+export interface Ephemeris {
+  id?: string;
   date: string;
   moon_phase: number;
   moon_sign: string;
@@ -32,11 +39,16 @@ interface Ephemeris {
   venus_sign: string;
   mars_sign: string;
   jupiter_sign: string;
-  sun_sign: string;
   saturn_sign: string;
+  sun_sign: string;
   sun_mars_aspect: number;
   sun_saturn_aspect: number;
   sun_jupiter_aspect: number;
+  created_at?: string;
+  updated_at?: string;
+  aspects?: any;
+  metadata?: Record<string, any>;
+  timestamp?: string; // ISO timestamp of when the ephemeris data was generated
 }
 
 interface AISResult {
@@ -66,6 +78,7 @@ interface AISResult {
     sun_jupiter_aspect: number;
   };
   error?: string; // Added error property to the interface
+  timestamp?: string; // ISO timestamp of when the calculation was performed
 }
 
 interface TeamData {
@@ -252,22 +265,65 @@ export const loadLatestWeights = async (): Promise<AstrologicalWeights> => {
  */
 export async function calculateAIS(
   player: Player,
-  ephemeris: Ephemeris,
+  ephemeris: Partial<Ephemeris>,
   weights: AstrologicalWeights = { ...currentAstrologicalWeights }
 ): Promise<AISResult> {
   try {
-    // Calculate individual factor scores
+    // Validate required ephemeris data
+    if (!ephemeris || typeof ephemeris !== 'object') {
+      throw new Error('Invalid or missing ephemeris data');
+    }
+
+    // Get position as string (use first position if array)
+    const position = Array.isArray(player.position) 
+      ? player.position[0] || '' 
+      : player.position || '';
+    
+    // Get birth date (support both birth_date and birthDate for backward compatibility)
+    const birthDate = player.birth_date || player.birthDate;
+    
+    // Calculate individual factor scores with fallbacks for missing data
     const factors = {
-      moon_phase: calculateMoonPhaseScore(ephemeris.moon_phase, player.position || ''),
-      moon_sign: calculateSignCompatibility(ephemeris.moon_sign, player.birth_date || ''),
-      mercury_sign: calculateMercuryInfluence(ephemeris.mercury_sign, player.position || ''),
-      venus_sign: calculateVenusInfluence(ephemeris.venus_sign, player.position || ''),
-      mars_sign: calculateMarsInfluence(ephemeris.mars_sign, player.position || ''),
-      jupiter_sign: calculateJupiterInfluence(ephemeris.jupiter_sign, player.position || ''),
-      mercury_retrograde: ephemeris.mercury_retrograde ? 0.8 : 1.0,
-      sun_mars_aspect: ephemeris.sun_mars_aspect,
-      sun_saturn_aspect: ephemeris.sun_saturn_aspect,
-      sun_jupiter_aspect: ephemeris.sun_jupiter_aspect
+      moon_phase: ephemeris.moon_phase !== undefined 
+        ? calculateMoonPhaseScore(ephemeris.moon_phase, position) 
+        : 0.5,
+      
+      moon_sign: calculateSignCompatibility(
+        birthDate, 
+        ephemeris.moon_sign || ''
+      ),
+      
+      mercury_sign: ephemeris.mercury_sign !== undefined
+        ? calculateMercuryInfluence(ephemeris.mercury_sign, position)
+        : 0.5,
+        
+      venus_sign: ephemeris.venus_sign !== undefined
+        ? calculateVenusInfluence(ephemeris.venus_sign, position)
+        : 0.5,
+        
+      mars_sign: ephemeris.mars_sign !== undefined
+        ? calculateMarsInfluence(ephemeris.mars_sign, position)
+        : 0.5,
+        
+      jupiter_sign: ephemeris.jupiter_sign !== undefined
+        ? calculateJupiterInfluence(ephemeris.jupiter_sign, position)
+        : 0.5,
+        
+      mercury_retrograde: ephemeris.mercury_retrograde !== undefined
+        ? (ephemeris.mercury_retrograde ? 0.8 : 1.0)
+        : 1.0,
+        
+      sun_mars_aspect: ephemeris.sun_mars_aspect !== undefined 
+        ? ephemeris.sun_mars_aspect 
+        : 0.5,
+        
+      sun_saturn_aspect: ephemeris.sun_saturn_aspect !== undefined 
+        ? ephemeris.sun_saturn_aspect 
+        : 0.5,
+        
+      sun_jupiter_aspect: ephemeris.sun_jupiter_aspect !== undefined 
+        ? ephemeris.sun_jupiter_aspect 
+        : 0.5
     };
 
     // Calculate weighted scores
@@ -285,43 +341,60 @@ export async function calculateAIS(
     };
 
     // Calculate final score (weighted average)
-    const score = Object.values(weightedScores).reduce((sum, val) => sum + val, 0) / 
-                  Object.values(weights).reduce((sum, val) => sum + val, 0);
+    const totalWeight = Object.values(weights).reduce((sum, val) => sum + val, 0);
+    const score = totalWeight > 0 
+      ? Object.values(weightedScores).reduce((sum, val) => sum + val, 0) / totalWeight
+      : 0.5; // Default neutral score if no weights
 
     return {
-      score: Math.min(Math.max(0, score), 1), // Ensure score is between 0 and 1
+      score: Math.min(Math.max(0, score), 1), // Clamp score between 0 and 1
       factors,
-      weightedScores
+      weightedScores,
+      timestamp: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Error calculating AIS:', error);
+    console.error('Error calculating AIS:', error, { 
+      player: { 
+        id: player?.id, 
+        name: player?.name,
+        position: player?.position,
+        birthDate: player?.birth_date || player?.birthDate
+      },
+      ephemeris: {
+        date: ephemeris?.date,
+        moon_phase: ephemeris?.moon_phase,
+        moon_sign: ephemeris?.moon_sign
+      }
+    });
+    
     return {
       score: 0.5, // Default neutral score on error
       factors: {
-        moon_phase: 0,
-        moon_sign: 0,
-        mercury_sign: 0,
-        venus_sign: 0,
-        mars_sign: 0,
-        jupiter_sign: 0,
-        mercury_retrograde: 0,
-        sun_mars_aspect: 0,
-        sun_saturn_aspect: 0,
-        sun_jupiter_aspect: 0
+        moon_phase: 0.5,
+        moon_sign: 0.5,
+        mercury_sign: 0.5,
+        venus_sign: 0.5,
+        mars_sign: 0.5,
+        jupiter_sign: 0.5,
+        mercury_retrograde: 1.0,
+        sun_mars_aspect: 0.5,
+        sun_saturn_aspect: 0.5,
+        sun_jupiter_aspect: 0.5
       },
       weightedScores: {
-        moon_phase: 0,
-        moon_sign: 0,
-        mercury_sign: 0,
-        venus_sign: 0,
-        mars_sign: 0,
-        jupiter_sign: 0,
-        mercury_retrograde: 0,
-        sun_mars_aspect: 0,
-        sun_saturn_aspect: 0,
-        sun_jupiter_aspect: 0
+        moon_phase: 0.5 * weights.moon_phase,
+        moon_sign: 0.5 * weights.moon_sign,
+        mercury_sign: 0.5 * weights.mercury_sign,
+        venus_sign: 0.5 * weights.venus_sign,
+        mars_sign: 0.5 * weights.mars_sign,
+        jupiter_sign: 0.5 * weights.jupiter_sign,
+        mercury_retrograde: 1.0 * weights.mercury_retrograde,
+        sun_mars_aspect: 0.5 * weights.sun_mars_aspect,
+        sun_saturn_aspect: 0.5 * weights.sun_saturn_aspect,
+        sun_jupiter_aspect: 0.5 * weights.sun_jupiter_aspect
       },
-      error: error instanceof Error ? error.message : 'Unknown error in calculateAIS'
+      error: error instanceof Error ? error.message : 'Unknown error in calculateAIS',
+      timestamp: new Date().toISOString()
     };
   }
 };
@@ -334,15 +407,37 @@ function calculateMoonPhaseScore(phase: number, position: string): number {
 }
 
 // Helper function to calculate sign compatibility
-function calculateSignCompatibility(birthDate: string, currentSign: string): number {
+function calculateSignCompatibility(birthDate: string | undefined, currentSign: string): number {
+  // Return neutral score if no birth date is provided
+  if (!birthDate) {
+    console.debug('No birth date provided for sign compatibility check');
+    return 0.5;
+  }
+
   try {
-    // Parse the birth date and determine the birth sign
+    // Parse the birth date
     const birthDateObj = new Date(birthDate);
-    const birthMonth = birthDateObj.getMonth() + 1;
+    
+    // Validate the date
+    if (isNaN(birthDateObj.getTime())) {
+      console.warn('Invalid birth date format:', birthDate);
+      return 0.5;
+    }
+    
+    // Check if the date is in the future (invalid)
+    const now = new Date();
+    if (birthDateObj > now) {
+      console.warn('Future birth date provided:', birthDate);
+      return 0.5;
+    }
+    
+    // Extract month and day
+    const birthMonth = birthDateObj.getMonth() + 1; // getMonth() is 0-indexed
     const birthDay = birthDateObj.getDate();
     
-    // Simple zodiac sign calculation (simplified)
-    let birthSign = '';
+    // Determine the zodiac sign based on birth date
+    let birthSign: string;
+    
     if ((birthMonth === 3 && birthDay >= 21) || (birthMonth === 4 && birthDay <= 19)) birthSign = 'Aries';
     else if ((birthMonth === 4 && birthDay >= 20) || (birthMonth === 5 && birthDay <= 20)) birthSign = 'Taurus';
     else if ((birthMonth === 5 && birthDay >= 21) || (birthMonth === 6 && birthDay <= 20)) birthSign = 'Gemini';
@@ -356,11 +451,18 @@ function calculateSignCompatibility(birthDate: string, currentSign: string): num
     else if ((birthMonth === 1 && birthDay >= 20) || (birthMonth === 2 && birthDay <= 18)) birthSign = 'Aquarius';
     else birthSign = 'Pisces';
     
-    // Use the calculateElementalCompatibility function to get a score
-    return calculateElementalCompatibility(birthSign, currentSign) / 16; // Normalize to 0-1 range
+    // If no current sign is provided, use the birth sign compatibility with the moon
+    if (!currentSign) {
+      console.debug('No current sign provided, using Moon for compatibility');
+      return calculateElementalCompatibility(birthSign, 'Moon');
+    }
+    
+    // Calculate compatibility between birth sign and current sign
+    return calculateElementalCompatibility(birthSign, currentSign);
+    
   } catch (error) {
-    console.error('Error calculating sign compatibility:', error);
-    return 0.5; // Default neutral score on error
+    console.error('Error calculating sign compatibility:', error, { birthDate, currentSign });
+    return 0.5; // Return neutral score on error
   }
 }
 
@@ -618,9 +720,8 @@ export type FormulaTypes = {
 };
 
 // Export individual types for backward compatibility
+// Explicitly export all types
 export type { 
-  Player, 
-  Ephemeris, 
   AISResult, 
   TeamData, 
   BettingOdds, 
@@ -628,3 +729,5 @@ export type {
   WeightStats, 
   WeightsData 
 };
+
+// Player and Ephemeris are now exported as interfaces above
