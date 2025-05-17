@@ -28,6 +28,7 @@ const LeaguePage: React.FC = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
   const [astrologyData, setAstrologyData] = useState<string>('');
+  const [astroOutlook, setAstroOutlook] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   const LEAGUE_NAMES: Record<string, string> = {
@@ -50,6 +51,20 @@ const LeaguePage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Fetch latest astrological data for outlook
+      try {
+        const { fetchLatestAstrologicalData } = await import('@/lib/supabase');
+        const astro = await fetchLatestAstrologicalData();
+        if (astro) {
+          // Simple outlook logic (customize as needed)
+          let outlook = '';
+          if (astro.moon_sign) outlook += `Moon in ${astro.moon_sign}. `;
+          if (astro.mercury_retrograde) outlook += 'Mercury is retrograde. '; 
+          if (astro.sun_mars_transit) outlook += `Sun-Mars Transit: ${astro.sun_mars_transit}. `;
+          setAstroOutlook(outlook.trim());
+        }
+      } catch (e) { setAstroOutlook(''); }
+    
       try {
         setLoading(true);
         
@@ -137,11 +152,14 @@ const LeaguePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-4 md:p-8">
-      {/* League Header */}
-      <div className="max-w-7xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          {LEAGUE_ICONS[leagueId || '']} {LEAGUE_NAMES[leagueId || '']} Dashboard
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8">
+          {LEAGUE_ICONS[leagueId as keyof typeof LEAGUE_ICONS] || ''} {LEAGUE_NAMES[leagueId as keyof typeof LEAGUE_NAMES] || leagueId}
         </h1>
+        <div className="mb-6 p-4 bg-indigo-950 bg-opacity-70 rounded-xl border border-indigo-800">
+          <h2 className="text-2xl font-bold mb-2">League Astrological Outlook</h2>
+          <div className="text-lg text-indigo-200">{astroOutlook || 'Loading astrological outlook...'}</div>
+        </div>
         <p className="text-lg md:text-xl text-gray-300">Astrological insights and betting analysis</p>
       </div>
 

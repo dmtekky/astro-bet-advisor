@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import AstroTeamSection from './_AstroTeamSection';
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -9,9 +10,7 @@ export default function TeamPage() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Team: {teamId}</h1>
         <div className="bg-gray-800 bg-opacity-50 p-6 rounded-xl border border-gray-700">
-          <p className="text-lg text-gray-300">
-            Team details and statistics will be displayed here.
-          </p>
+          <AstroTeamSection teamId={teamId} />
         </div>
       </div>
     </div>

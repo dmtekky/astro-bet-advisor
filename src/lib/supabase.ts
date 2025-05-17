@@ -36,3 +36,36 @@ export const fetchFromSupabase = async <T>(
 };
 
 export { supabase };
+
+// Astrological data interface
+export interface AstrologicalData {
+  id: number;
+  date: string;
+  moon_phase: string;
+  moon_sign: string;
+  mercury_sign: string;
+  venus_sign: string;
+  mars_sign: string;
+  jupiter_sign: string;
+  mercury_retrograde: boolean;
+  sun_mars_transit: string;
+  sun_saturn_transit: string;
+  sun_jupiter_transit: string;
+  next_event_time: string;
+}
+
+// Fetch latest astrological data
+export async function fetchLatestAstrologicalData(): Promise<AstrologicalData | null> {
+  const { data, error } = await supabase
+    .from('astrological_data')
+    .select('*')
+    .order('date', { ascending: false })
+    .limit(1)
+    .single();
+  if (error) {
+    console.error('Error fetching astrological data:', error);
+    return null;
+  }
+  return data as AstrologicalData;
+}
+
