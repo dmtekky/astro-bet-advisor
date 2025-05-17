@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { fetchOdds } from '@/lib/oddsApi';
 import Slider from 'react-slick';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -134,13 +136,18 @@ const LeaguePage: React.FC = () => {
     const today = new Date();
     const daysLeft = Math.ceil((launchDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
+    const sortedTeams = [...teams].sort((a, b) => (b.win_pct || 0) - (a.win_pct || 0));
+
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-8 text-center">
-        <div className="max-w-4xl mx-auto mt-20 p-8 bg-gray-800 rounded-xl shadow-2xl">
-          <h1 className="text-4xl font-bold mb-6">
-            {LEAGUE_ICONS[leagueId || '']} {LEAGUE_NAMES[leagueId || '']} Coming Soon!
-          </h1>
-          <p className="text-xl mb-8">We're working hard to bring you {LEAGUE_NAMES[leagueId || '']} insights.</p>
+      <div className="min-h-screen bg-gray-50 pt-20 pb-16">
+        <div className="container mx-auto px-4">
+          {/* League Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2">
+              {LEAGUE_ICONS[leagueId] || '🏆'} {LEAGUE_NAMES[leagueId] || 'League'}
+            </h1>
+            <p className="text-gray-600">Astrological insights for {LEAGUE_NAMES[leagueId] || 'this league'}</p>
+          </div>
           <div className="text-5xl font-bold text-yellow-400 mb-8">
             {daysLeft} Days Until Launch
           </div>
@@ -151,80 +158,159 @@ const LeaguePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">
-          {LEAGUE_ICONS[leagueId as keyof typeof LEAGUE_ICONS] || ''} {LEAGUE_NAMES[leagueId as keyof typeof LEAGUE_NAMES] || leagueId}
-        </h1>
-        <div className="mb-6 p-4 bg-indigo-950 bg-opacity-70 rounded-xl border border-indigo-800">
-          <h2 className="text-2xl font-bold mb-2">League Astrological Outlook</h2>
-          <div className="text-lg text-indigo-200">{astroOutlook || 'Loading astrological outlook...'}</div>
+    <div className="min-h-screen bg-gray-50 pt-20 pb-16">
+      <div className="container mx-auto px-4">
+        {/* League Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2">
+            {LEAGUE_ICONS[leagueId] || '🏆'} {LEAGUE_NAMES[leagueId] || 'League'}
+          </h1>
+          <p className="text-gray-600">Astrological insights for {LEAGUE_NAMES[leagueId] || 'this league'}</p>
         </div>
-        <p className="text-lg md:text-xl text-gray-300">Astrological insights and betting analysis</p>
-      </div>
 
-      {/* Astrological Outlook */}
-      <section className="max-w-7xl mx-auto mb-12 p-6 bg-gray-800 bg-opacity-50 rounded-xl backdrop-blur-sm border border-gray-700">
-        <h2 className="text-2xl font-bold mb-4 text-yellow-400">✨ League Astrological Outlook</h2>
-        <p className="text-lg">{astrologyData || 'Loading astrological data...'}</p>
-      </section>
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Standings */}
-        <div className="lg:col-span-1 bg-gray-800 bg-opacity-50 p-6 rounded-xl border border-gray-700">
-          <h2 className="text-2xl font-bold mb-6 text-center">🏆 Standings</h2>
-          <div className="space-y-4">
-            {teams.map((team, index) => (
-              <div key={team.id} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <span className="font-bold w-6 text-center">{index + 1}</span>
-                  <span>{team.name}</span>
+        {/* Games Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Upcoming Games</h2>
+          {loading ? (
+            <div>Loading games...</div>
+          ) : upcomingGames.length > 0 ? (
+            <Slider
+              dots={true}
+              infinite={true}
+              speed={500}
+              slidesToShow={Math.min(upcomingGames.length, 3)}
+              slidesToScroll={1}
+              responsive={[
+                {
+                  breakpoint: 1024,
+                  settings: {
+                    slidesToShow: 2,
+                    slidesToScroll: 1,
+                  },
+                },
+                {
+                  breakpoint: 640,
+                  settings: {
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                  },
+                },
+              ]}
+              className="mb-8"
+            >
+              {upcomingGames.map((game) => (
+                <div key={game.id} className="px-2">
+                  <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                    <div className="text-center mb-2">
+                      <div className="text-sm text-gray-500">
+                        {new Date(game.commence_time).toLocaleDateString()}
+                      </div>
+                      <div className="text-lg font-semibold">
+                        {game.home_team} vs {game.away_team}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="text-sm">
+                        <div className="font-medium">Astro Score:</div>
+                        <div className="text-2xl font-bold text-yellow-500">
+                          {game.oas ? game.oas.toFixed(1) : 'N/A'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">Odds:</div>
+                        <div className="text-lg font-bold">
+                          {game.odds ? `+${game.odds}` : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      to={`/event/${game.id}`}
+                      className="mt-4 block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+                    >
+                      View Details
+                    </Link>
+                  </div>
                 </div>
-                <span className="font-mono">{(team.win_pct * 100).toFixed(1)}%</span>
+              ))}
+            </Slider>
+          ) : (
+            <div className="text-center py-8 bg-white rounded-lg shadow">
+              <p className="text-gray-500">No upcoming games scheduled</p>
+            </div>
+          )}
+        </div>
+
+        {/* Astrology Insights */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Astrological Outlook</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            {loading ? (
+              <div>Loading astrological data...</div>
+            ) : astroOutlook ? (
+              <div>
+                <p className="mb-4">{astroOutlook}</p>
+                <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+                  <p className="text-yellow-700">
+                    <span className="font-semibold">Astro Tip:</span> {astrologyData}
+                  </p>
+                </div>
               </div>
-            ))}
+            ) : (
+              <p className="text-gray-500">No astrological data available</p>
+            )}
           </div>
         </div>
 
-        {/* Upcoming Games Carousel */}
-        <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold mb-6">📅 Upcoming Games</h2>
-          <Slider {...carouselSettings} className="rounded-xl overflow-hidden">
-            {upcomingGames.map((game) => (
-              <div key={game.id} className="p-4">
-                <div className="bg-gray-800 bg-opacity-70 p-6 rounded-xl border border-gray-700">
-                  <div className="text-center mb-4">
-                    <div className="text-sm text-gray-400">
-                      {new Date(game.commence_time).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 items-center text-center">
-                    <div className="text-lg font-semibold">{game.away_team}</div>
-                    <div className="text-4xl py-4">vs</div>
-                    <div className="text-lg font-semibold">{game.home_team}</div>
-                  </div>
-                  
-                  <div className="mt-6 grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400">Odds</div>
-                      <div className="text-xl font-bold">{game.odds ? `${game.odds > 0 ? '+' : ''}${game.odds}` : 'N/A'}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400">OAS</div>
-                      <div className="text-xl font-bold">{game.oas ? game.oas.toFixed(1) : 'N/A'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Slider>
+        {/* Teams Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">Teams in {LEAGUE_NAMES[leagueId] || 'League'}</h2>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : teams.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {teams.map((team) => (
+                <Link 
+                  key={team.id} 
+                  to={`/team/${team.id}`}
+                  className="block hover:opacity-90 transition-opacity"
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-semibold">
+                        {team.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Record:</span>
+                        <span className="font-medium">{team.wins || 0}-{team.losses || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600 mt-1">
+                        <span>Win %:</span>
+                        <span className="font-medium">
+                          {team.win_pct ? (team.win_pct * 100).toFixed(1) + '%' : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">View Team</span>
+                          <span className="text-blue-600">→</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-white rounded-lg shadow">
+              <p className="text-gray-500">No teams found in this league</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
