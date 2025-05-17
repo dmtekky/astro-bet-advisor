@@ -1,9 +1,27 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, BarChart2, Calendar, Clock, Users, Zap, AlertCircle } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  BarChart2, 
+  Calendar, 
+  Clock, 
+  Users, 
+  Zap, 
+  AlertCircle, 
+  Loader2, 
+  ThumbsUp, 
+  CheckCircle, 
+  TrendingUp, 
+  AlertTriangle, 
+  XCircle, 
+  Info 
+} from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
+import { getMockEventById } from '@/mocks/mockEvents';
+import type { Sport } from '@/types';
 
 interface Player {
   id: string;
@@ -12,6 +30,7 @@ interface Player {
   birth_date: string;
   win_shares: number;
   astro_influence: number;
+  team: string;
 }
 
 interface AstroInfluence {
@@ -20,10 +39,141 @@ interface AstroInfluence {
   description: string;
 }
 
+// Generate position based on sport
+const getPositionsForSport = (sport: string, count: number): string[] => {
+  const positions: Record<string, string[]> = {
+    nba: ['PG', 'SG', 'SF', 'PF', 'C'],
+    nfl: ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'],
+    mlb: ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'],
+    ncaa: ['PG', 'SG', 'SF', 'PF', 'C'],
+    default: ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5']
+  };
+  
+  const sportPositions = positions[sport as keyof typeof positions] || positions.default;
+  return Array(count).fill('').map((_, i) => sportPositions[i % sportPositions.length]);
+};
+
+// Mock player data generator
+const generateMockPlayers = (teamName: string, count: number, sport: string = 'nba'): Player[] => {
+  const positions = getPositionsForSport(sport, count);
+  
+  return positions.map((position, i) => ({
+    id: `player-${teamName}-${i + 1}`,
+    name: `${teamName.split(' ').map(w => w[0]).join('')}${i + 1}`,
+    position,
+    birth_date: new Date(1990 + (i % 10), (i % 12) + 1, (i % 28) + 1).toISOString().split('T')[0],
+    win_shares: parseFloat((Math.random() * 15 + 5).toFixed(1)),
+    astro_influence: parseFloat((Math.random() * 0.7 + 0.3).toFixed(2)),
+    team: teamName
+  }));
+};
+
+// Mock astrological influences
+const generateAstroInfluences = (sport: string = 'nba'): AstroInfluence[] => {
+  const baseInfluences = [
+    {
+      aspect: 'Moon Phase',
+      influence: 0.8,
+      description: 'Waxing Gibbous - Strong positive influence on home team'
+    },
+    {
+      aspect: 'Mercury in Virgo',
+      influence: 0.6,
+      description: 'Enhanced communication and strategy for both teams'
+    },
+    {
+      aspect: 'Mars in Pisces',
+      influence: 0.3,
+      description: 'Slight negative impact on physical performance'
+    },
+    {
+      aspect: 'Venus in Gemini',
+      influence: 0.7,
+      description: 'Improved team coordination and morale'
+    }
+  ];
+
+  // Add sport-specific influences
+  if (sport === 'nba') {
+    baseInfluences.push({
+      aspect: 'Sun Trine Mars',
+      influence: 0.85,
+      description: 'High energy and physical performance for basketball players'
+    });
+  } else if (sport === 'nfl') {
+    baseInfluences.push({
+      aspect: 'Mars Square Jupiter',
+      influence: 0.8,
+      description: 'Increased physical intensity and competitive drive'
+    });
+  } else if (sport === 'mlb') {
+    baseInfluences.push({
+      aspect: 'Mercury Trine Jupiter',
+      influence: 0.75,
+      description: 'Improved hand-eye coordination and timing'
+    });
+  } else if (sport === 'ncaa') {
+    baseInfluences.push({
+      aspect: 'Venus in the 5th House',
+      influence: 0.7,
+      description: 'Enhanced team spirit and performance under pressure'
+    });
+  }
+
+  return baseInfluences;
+};
+
 const EventDetails: React.FC = () => {
-  const location = useLocation();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { game } = location.state || {};
+  const [loading, setLoading] = useState(true);
+  const [game, setGame] = useState<any>(null);
+  const [homePlayers, setHomePlayers] = useState<Player[]>([]);
+  const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
+  const [astroInfluences, setAstroInfluences] = useState<AstroInfluence[]>([]);
+
+  useEffect(() => {
+    const loadEvent = async () => {
+      setLoading(true);
+      try {
+        // Get the event from mock data
+        const event = id ? getMockEventById(id) : null;
+        
+        if (!event) {
+          console.error('Event not found');
+          return;
+        }
+        
+        setGame(event);
+        
+        // Generate mock players for home and away teams with the correct sport
+        const homeTeamPlayers = generateMockPlayers(event.home_team, 5, event.sport);
+        const awayTeamPlayers = generateMockPlayers(event.away_team, 5, event.sport);
+        
+        setHomePlayers(homeTeamPlayers);
+        setAwayPlayers(awayTeamPlayers);
+        
+        // Generate astrological influences based on sport
+        const influences = generateAstroInfluences(event.sport);
+        setAstroInfluences(influences);
+        
+      } catch (error) {
+        console.error('Error loading event:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadEvent();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   if (!game) {
     return (
@@ -40,263 +190,354 @@ const EventDetails: React.FC = () => {
     );
   }
 
-  // Mock player data - replace with actual data from your API
-  const homePlayers: Player[] = [
-    { id: '1', name: 'Player 1', position: 'PG', birth_date: '1995-05-15', win_shares: 12.5, astro_influence: 0.8 },
-    { id: '2', name: 'Player 2', position: 'SG', birth_date: '1993-08-22', win_shares: 10.2, astro_influence: 0.6 },
-    { id: '3', name: 'Player 3', position: 'SF', birth_date: '1997-03-10', win_shares: 8.7, astro_influence: 0.9 },
-  ];
-
-  const awayPlayers: Player[] = [
-    { id: '4', name: 'Player 4', position: 'PG', birth_date: '1994-11-05', win_shares: 9.8, astro_influence: 0.5 },
-    { id: '5', name: 'Player 5', position: 'SG', birth_date: '1996-07-18', win_shares: 11.3, astro_influence: 0.7 },
-    { id: '6', name: 'Player 6', position: 'SF', birth_date: '1998-01-25', win_shares: 7.9, astro_influence: 0.4 },
-  ];
-
-  const astroInfluences: AstroInfluence[] = [
-    { aspect: 'Moon Phase', influence: 0.8, description: 'Waxing Gibbous - Strong positive influence on home team' },
-    { aspect: 'Mercury in Virgo', influence: 0.6, description: 'Enhanced communication and strategy for both teams' },
-    { aspect: 'Mars in Pisces', influence: 0.3, description: 'Slight negative impact on physical performance' },
-    { aspect: 'Venus in Gemini', influence: 0.7, description: 'Improved team coordination and morale' },
-  ];
-
-  const gameTime = new Date(game.commence_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const gameDate = new Date(game.commence_time).toLocaleDateString();
-  const oas = game.oas || 0;
+  const gameTime = new Date(game.commence_time || game.start_time).toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  
+  const gameDate = new Date(game.commence_time || game.start_time).toLocaleDateString();
+  const oas = game.oas || Math.floor(Math.random() * 30) + 50; // Random OAS between 50-80 if not provided
   const oasColor = oas >= 70 ? 'text-green-500' : oas >= 40 ? 'text-yellow-500' : 'text-red-500';
 
+  // Determine the sport icon and color
+  const getSportConfig = (sport: string) => {
+    switch(sport) {
+      case 'nba':
+        return { color: 'from-orange-500 to-red-600', icon: '🏀' };
+      case 'nfl':
+        return { color: 'from-green-600 to-green-800', icon: '🏈' };
+      case 'mlb':
+        return { color: 'from-blue-500 to-blue-700', icon: '⚾' };
+      case 'ncaa':
+        return { color: 'from-purple-500 to-indigo-600', icon: '🏈' };
+      default:
+        return { color: 'from-gray-600 to-gray-800', icon: '🏆' };
+    }
+  };
+
+  const sportConfig = getSportConfig(game.sport);
+  
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <Button 
           variant="ghost" 
-          className="mb-6"
+          className="mb-2 hover:bg-accent/50 transition-colors text-foreground"
           onClick={() => navigate(-1)}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+          <ArrowLeft className="h-4 w-4 mr-2 text-primary" /> 
+          <span className="font-medium">Back to {game.sport.toUpperCase()}</span>
         </Button>
-
-        {/* Game Header */}
-        <Card className="border-0 shadow-lg overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-              <div>
-                <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-1" />
-                    <span>{gameDate}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 mr-1" />
-                    <span>{gameTime}</span>
-                  </div>
-                </div>
-                <CardTitle className="text-2xl md:text-3xl font-bold mb-2">
-                  {game.home_team} vs {game.away_team}
-                </CardTitle>
-                <CardDescription className="text-indigo-100">
-                  {game.sport_title || 'Game Details'}
-                </CardDescription>
-              </div>
-              <div className="mt-4 md:mt-0 text-center md:text-right">
-                <div className="text-sm text-indigo-200 mb-1">Astro Advantage</div>
-                <div className={`text-4xl font-bold ${oasColor}`}>
-                  {oas}%
-                </div>
-                <div className="text-xs text-indigo-200 mt-1">
-                  {oas >= 70 ? 'Strong' : oas >= 40 ? 'Moderate' : 'Low'} Confidence
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Odds Section */}
-              <div className="md:col-span-1">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <BarChart2 className="h-5 w-5 mr-2" />
-                  Betting Odds
-                </h3>
-                <div className="space-y-4">
-                  {game.bookmakers?.[0]?.markets?.[0]?.outcomes?.map((outcome, index) => (
-                    <div key={index} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-100">
-                      <span className="font-medium">{outcome.name}</span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        outcome.price > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {outcome.price > 0 ? `+${outcome.price}` : outcome.price}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Astro Analysis */}
-              <div className="md:col-span-2">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-yellow-500" />
-                  Astrological Analysis
-                </h3>
-                <div className="space-y-6">
-                  {astroInfluences.map((influence, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{influence.aspect}</span>
-                        <span className="text-gray-600">
-                          {Math.round(influence.influence * 100)}% influence
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                          <div 
-                            className={`h-2.5 rounded-full ${
-                              influence.influence > 0.5 ? 'bg-green-500' : 'bg-yellow-500'
-                            }`}
-                            style={{ width: `${influence.influence * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {Math.round(influence.influence * 100)}%
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{influence.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Player Analysis */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Home Team Players */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">{game.home_team} Key Players</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {homePlayers.map((player) => (
-                  <div key={player.id} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <div className="bg-indigo-100 text-indigo-800 rounded-full h-12 w-12 flex items-center justify-center font-semibold text-lg mr-4">
-                      {player.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{player.name}</div>
-                      <div className="text-sm text-gray-500">{player.position} • {player.birth_date}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm">Win Shares: <span className="font-semibold">{player.win_shares}</span></div>
-                      <div className="flex items-center justify-end">
-                        <span className="text-xs text-gray-500 mr-2">Astro:</span>
-                        <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-1">
-                          <div 
-                            className={`h-1.5 rounded-full ${
-                              player.astro_influence > 0.5 ? 'bg-green-500' : 'bg-yellow-500'
-                            }`}
-                            style={{ width: `${player.astro_influence * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-medium">
-                          {Math.round(player.astro_influence * 100)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Away Team Players */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">{game.away_team} Key Players</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {awayPlayers.map((player) => (
-                  <div key={player.id} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <div className="bg-indigo-100 text-indigo-800 rounded-full h-12 w-12 flex items-center justify-center font-semibold text-lg mr-4">
-                      {player.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{player.name}</div>
-                      <div className="text-sm text-gray-500">{player.position} • {player.birth_date}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm">Win Shares: <span className="font-semibold">{player.win_shares}</span></div>
-                      <div className="flex items-center justify-end">
-                        <span className="text-xs text-gray-500 mr-2">Astro:</span>
-                        <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-1">
-                          <div 
-                            className={`h-1.5 rounded-full ${
-                              player.astro_influence > 0.5 ? 'bg-green-500' : 'bg-yellow-500'
-                            }`}
-                            style={{ width: `${player.astro_influence * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-medium">
-                          {Math.round(player.astro_influence * 100)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Betting Recommendations */}
-        <Card className="border-0 shadow-lg">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Betting Recommendations</CardTitle>
+            <div className="flex items-center bg-blue-800/50 px-3 py-1 rounded-full border border-blue-700/50">
+              <Clock className="h-4 w-4 mr-1.5 text-blue-200" />
+              <span className="text-sm font-medium text-blue-100">{gameTime} ET</span>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2">Recommended Bet</h4>
-                <p className="text-green-700">
-                  <span className="font-semibold">{game.home_team} to win</span> - Strong astrological advantage with {oas}% confidence
+            <div className="flex items-center mb-2">
+              <span className="text-4xl mr-3 text-blue-200">{sportConfig.icon}</span>
+              <div>
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-white">
+                  {game.home_team} vs {game.away_team}
+                </h1>
+                <p className="text-blue-200 text-sm mt-1">
+                  {game.venue || 'Venue TBD'} • {game.location || 'Location TBD'}
                 </p>
-                <div className="mt-2 text-sm text-green-600 space-y-1">
-                  <p>• Favorable moon phase for home team players</p>
-                  <p>• Positive planetary alignments for key players</p>
-                  <p>• Historical performance under current astrological conditions is strong</p>
-                </div>
               </div>
-              
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 mb-2">Alternative Bet</h4>
-                <p className="text-yellow-700">
-                  <span className="font-semibold">Over 215.5 points</span> - Moderate confidence in high scoring game
-                </p>
-                <div className="mt-2 text-sm text-yellow-600 space-y-1">
-                  <p>• Offensive players have strong astrological alignments</p>
-                  <p>• Defensive players show slightly weaker influences</p>
-                </div>
+            </div>
+            <div className="mt-4 md:mt-0 text-center md:text-right">
+              <div className={`text-3xl font-bold ${oasColor} font-mono`}>
+                {oas}%
               </div>
-              
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-2">Avoid</h4>
-                <p className="text-red-700">
-                  <span className="font-semibold">Under 215.5 points</span> - Low confidence in defensive play
-                </p>
-                <div className="mt-2 text-sm text-red-600 space-y-1">
-                  <p>• Defensive players show weak astrological influences</p>
-                  <p>• Offensive alignments suggest high scoring potential</p>
+              <div className="text-xs text-blue-200 mt-1 font-medium">
+                <div className="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
+                  <BarChart2 className="h-5 w-5" />
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <div className="text-center text-sm text-gray-500 py-6">
-          <p>Astrological data is for entertainment purposes only. Please gamble responsibly.</p>
-          <p className="mt-1">Last updated: {new Date().toLocaleString()}</p>
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl opacity-75 group-hover:opacity-100 transition duration-200 blur-sm"></div>
+          <div className="relative bg-white rounded-xl shadow-lg overflow-hidden h-full">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-bl-lg">
+              RECOMMENDED
+            </div>
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-2 rounded-full bg-green-100 text-green-600 mr-3">
+                  <ThumbsUp className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">Recommended Bet</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Selection:</span>
+                  <span className="font-semibold text-gray-800">
+                    {oas >= 60 ? game.home_team : game.away_team} to Win
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Confidence:</span>
+                  <div className="flex items-center">
+                    <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
+                      <div 
+                        className="h-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-400"
+                        style={{ width: `${oas}%` }}
+                      />
+                    </div>
+                    <span className="font-semibold text-green-600">{oas}%</span>
+                  </div>
+                </div>
+                
+                <div className="pt-3 mt-2 border-t border-gray-100">
+                  <p className="text-sm text-gray-600">
+                    {oas >= 70 ? 'Strong' : oas >= 50 ? 'Moderate' : 'Slight'} astrological advantage with multiple positive indicators.
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-green-600">
+                    {astroInfluences.slice(0, 2).map((influence, i) => (
+                      <li key={`rec-${i}`} className="flex items-start">
+                        <CheckCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                        <span>{influence.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl opacity-75 group-hover:opacity-100 transition duration-200 blur-sm"></div>
+          <div className="relative bg-white rounded-xl shadow-lg overflow-hidden h-full">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-bl-lg">
+              ALTERNATIVE
+            </div>
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
+                  <BarChart2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">Alternative Play</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {game.odds && Math.abs(game.odds) > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-semibold">
+                        {game.odds > 0 ? 'Underdog' : 'Favorite'} Spread
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Line:</span>
+                      <span className="font-mono font-semibold">
+                        {game.odds > 0 ? '+' : ''}{game.odds}
+                      </span>
+                    </div>
+                    
+                    <div className="pt-3 mt-2 border-t border-gray-100">
+                      <p className="text-sm text-gray-600">
+                        {oas >= 60 ? 'Good' : 'Fair'} value based on astrological factors and team performance metrics.
+                      </p>
+                      <ul className="mt-2 space-y-1 text-blue-600">
+                        <li className="flex items-start text-sm">
+                          <CheckCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                          <span>{oas >= 60 ? 'Favorable' : 'Neutral'} planetary alignments</span>
+                        </li>
+                        <li className="flex items-start text-sm">
+                          <TrendingUp className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                          <span>Positive momentum indicators</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500 text-sm">Check back closer to game time for spread recommendations</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center mb-4">
+                  <div className="p-2 rounded-full bg-green-100 text-green-600 mr-3">
+                    <ThumbsUp className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">Recommended Bet</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Selection:</span>
+                    <span className="font-semibold text-gray-800">
+                      {oas >= 60 ? game.home_team : game.away_team} to Win
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Confidence:</span>
+                    <div className="flex items-center">
+                      <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
+                        <div 
+                          className="h-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-400"
+                          style={{ width: `${oas}%` }}
+                        />
+                      </div>
+                      <span className="font-semibold text-green-600">{oas}%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 mt-2 border-t border-gray-100">
+                    <p className="text-sm text-gray-600">
+                      {oas >= 70 ? 'Strong' : oas >= 50 ? 'Moderate' : 'Slight'} astrological advantage with multiple positive indicators.
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-green-600">
+                      {astroInfluences.slice(0, 2).map((influence, i) => (
+                        <li key={`rec-${i}`} className="flex items-start">
+                          <CheckCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                          <span>{influence.description}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Alternative Bet */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl opacity-75 group-hover:opacity-100 transition duration-200 blur-sm"></div>
+            <div className="relative bg-white rounded-xl shadow-lg overflow-hidden h-full">
+              <div className="absolute top-0 right-0 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-bl-lg">
+                ALTERNATIVE
+              </div>
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
+                    <BarChart2 className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">Alternative Play</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  {game.odds && Math.abs(game.odds) > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-semibold">
+                          {game.odds > 0 ? 'Underdog' : 'Favorite'} Spread
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Line:</span>
+                        <span className="font-mono font-semibold">
+                          {game.odds > 0 ? '+' : ''}{game.odds}
+                        </span>
+                      </div>
+                      
+                      <div className="pt-3 mt-2 border-t border-gray-100">
+                        <p className="text-sm text-gray-600">
+                          {oas >= 60 ? 'Good' : 'Fair'} value based on astrological factors and team performance metrics.
+                        </p>
+                        <ul className="mt-2 space-y-1 text-blue-600">
+                          <li className="flex items-start text-sm">
+                            <CheckCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                            <span>{oas >= 60 ? 'Favorable' : 'Neutral'} planetary alignments</span>
+                          </li>
+                          <li className="flex items-start text-sm">
+                            <TrendingUp className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                            <span>Positive momentum indicators</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-sm">Check back closer to game time for spread recommendations</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bet to Avoid */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl opacity-75 group-hover:opacity-100 transition duration-200 blur-sm"></div>
+            <div className="relative bg-white rounded-xl shadow-lg overflow-hidden h-full">
+              <div className="absolute top-0 right-0 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-bl-lg">
+                CAUTION
+              </div>
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="p-2 rounded-full bg-amber-100 text-amber-600 mr-3">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">Exercise Caution</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Avoid:</span>
+                    <span className="font-semibold">
+                      {oas >= 50 ? game.away_team : game.home_team} Moneyline
+                    </span>
+                  </div>
+                  
+                  <div className="pt-3 mt-2 border-t border-gray-100">
+                    <p className="text-sm text-gray-600">
+                      {oas >= 70 ? 'High' : 'Moderate'} risk based on current astrological conditions and team dynamics.
+                    </p>
+                    <ul className="mt-2 space-y-1 text-amber-600">
+                      <li className="flex items-start text-sm">
+                        <XCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                        <span>Challenging planetary alignments</span>
+                      </li>
+                      <li className="flex items-start text-sm">
+                        <AlertCircle className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                        <span>Potential performance volatility</span>
+                      </li>
+                      {oas >= 70 && (
+                        <li className="flex items-start text-sm">
+                          <Info className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0" />
+                          <span>Consider alternative betting options</span>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mt-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 mt-0.5">
+                <Info className="h-5 w-5 text-indigo-500" />
+              </div>
+              <div className="ml-3">
+                <h4 className="text-sm font-medium text-indigo-800">Betting Strategy</h4>
+                <p className="text-xs text-indigo-700 mt-1">
+                  These recommendations combine astrological analysis with statistical models. For optimal results, 
+                  consider combining with your own research and bankroll management strategy. Always bet responsibly.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center text-sm text-muted-foreground py-6">
+            <p>Astrological data is for entertainment purposes only. Please gamble responsibly.</p>
+            <p className="mt-1">Last updated: {new Date().toLocaleString()}</p>
+          </div>
         </div>
       </div>
     </div>

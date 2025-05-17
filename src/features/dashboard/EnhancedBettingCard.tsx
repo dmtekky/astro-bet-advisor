@@ -227,14 +227,18 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     .sort((a, b) => (b.win_shares || 0) - (a.win_shares || 0));
   
   return (
-    <Card className={cn(
-      "overflow-hidden transition-all hover:shadow-md", 
-      `border-sports-${team.sport} border-opacity-5 hover:border-opacity-50`
-    )}>
-      <CardHeader className={cn(
-        "pb-2 relative",
-        `bg-sports-${team.sport} bg-opacity-5`
-      )}>
+    <Card 
+      className={cn(
+        "overflow-hidden transition-all hover:shadow-md",
+        `border-sports-${team.sport} border-opacity-5 hover:border-opacity-50`
+      )}
+    >
+      <CardHeader 
+        className={cn(
+          "pb-2 relative",
+          `bg-sports-${team.sport} bg-opacity-5`
+        )}
+      >
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg font-semibold truncate">
             {team.name}
@@ -359,39 +363,29 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   );
 };
 
-const BettingCardSkeleton = () => (
-  <Card>
-    <CardHeader className="pb-2">
-      <div className="flex justify-between items-start">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-5 w-12" />
-      </div>
-      <Skeleton className="h-4 w-1/2 mt-1" />
-    </CardHeader>
-    
-    <CardContent className="pt-4">
-      <div className="flex justify-between">
-        <div className="flex gap-3 items-center">
-          <Skeleton className="w-16 h-16 rounded-full" />
-          <div>
-            <Skeleton className="h-3 w-16 mb-1" />
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-3 w-3 rounded-full" />
-              ))}
-            </div>
+export const BettingCardSkeleton = () => {
+  return (
+    <Card className="w-full bg-gray-900/50 border-gray-800 overflow-hidden">
+      <div className="relative
+        before:absolute before:inset-0 before:-translate-x-full
+        before:bg-gradient-to-r before:from-transparent before:via-gray-700/30 before:to-transparent
+        before:animate-[shimmer_2s_infinite] before:z-10">
+        <CardHeader>
+          <Skeleton className="h-5 w-3/4 bg-gray-800/50" />
+          <Skeleton className="h-4 w-1/2 mt-2 bg-gray-800/50" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full bg-gray-800/50" />
+            <Skeleton className="h-4 w-5/6 bg-gray-800/50" />
+            <Skeleton className="h-4 w-4/6 bg-gray-800/50" />
           </div>
-        </div>
-        <div className="text-right">
-          <Skeleton className="h-4 w-16 mb-1" />
-          <Skeleton className="h-6 w-20 mb-1" />
-          <Skeleton className="h-3 w-12" />
-        </div>
+        </CardContent>
+        <CardFooter className="flex justify-between gap-2">
+          <Skeleton className="h-10 w-24 bg-gray-800/50" />
+          <Skeleton className="h-10 w-24 bg-gray-800/50" />
+        </CardFooter>
       </div>
-    </CardContent>
-    
-    <CardFooter className="py-2 px-4">
-      <Skeleton className="h-3 w-full" />
-    </CardFooter>
-  </Card>
-);
+    </Card>
+  );
+};
