@@ -10,6 +10,10 @@ const LEAGUES = [
   { id: 'ncaa', name: 'NCAA Football', icon: '🏈', bg: 'bg-indigo-600', description: 'Coming soon - College football with cosmic wisdom', comingSoon: true },
 ];
 
+import AstroSummaryBanner from '@/components/AstroSummaryBanner';
+import AstroStatus from '@/components/AstroStatus';
+import NextEventCount from '@/components/NextEventCount';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
