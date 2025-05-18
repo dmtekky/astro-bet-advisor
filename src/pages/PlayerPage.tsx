@@ -39,7 +39,6 @@ interface PlayerWithStats extends Omit<Player, 'sport' | 'position'> {
 
 import { Tooltip } from 'react-tooltip';
 import { calculateAstrologicalInfluence } from '@/lib/astroCalc';
-import CelestialMap from '@/components/CelestialMap';
 
 // Convert astrological influence data to UI format
 function formatAstroInfluences(influences: any) {
@@ -532,15 +531,7 @@ const PlayerPage: React.FC = () => {
               )}
             </div>
             
-            <div className="mt-8">
-              <h3 className="text-lg font-medium mb-4">Current Celestial Map</h3>
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <CelestialMap className="h-[400px]" />
-              </div>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Interactive map showing current planetary positions and their astrological influences
-              </p>
-            </div>
+
           </>
         )}
       </div>

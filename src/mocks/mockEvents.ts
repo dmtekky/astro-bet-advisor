@@ -18,16 +18,36 @@ const getRandomDate = (daysFromNow: number) => {
   return date.toISOString();
 };
 
-// Helper function to generate random odds
-const getRandomOdds = () => {
-  const isPositive = Math.random() > 0.5;
-  const value = Math.floor(Math.random() * 200) + 100;
+// Deterministic random number generator based on a seed
+const seededRandom = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Simple pseudo-random number generator
+  const random = () => {
+    const x = Math.sin(hash++) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  return random;
+};
+
+// Helper function to generate consistent odds based on game ID
+const getRandomOdds = (gameId: string) => {
+  const random = seededRandom(gameId);
+  const isPositive = random() > 0.5;
+  const value = Math.floor(random() * 200) + 100;
   return isPositive ? value : -value;
 };
 
-// Helper function to generate random OAS (Overall Astrological Score)
-const getRandomOAS = () => {
-  return Math.floor(Math.random() * 30) + 50; // Between 50-80
+// Helper function to generate consistent OAS based on game ID
+const getRandomOAS = (gameId: string) => {
+  const random = seededRandom(gameId + '-oas'); // Different seed for OAS
+  return Math.floor(random() * 30) + 50; // Between 50-80
 };
 
 // NBA Teams
@@ -95,8 +115,9 @@ const generateMockGames = (leagueId: Sport, count: number): MockGame[] => {
       return Array.from({ length: Math.min(count, 4) }, (_, i) => {
         const boxer1 = boxers[i % boxers.length];
         const boxer2 = boxers[(i + 2) % boxers.length];
+        const gameId = `box-${i + 1}`;
         return {
-          id: `box-${i + 1}`,
+          id: gameId,
           sport: 'boxing' as const,
           home_team_id: `boxer-${i * 2 + 1}`,
           away_team_id: `boxer-${i * 2 + 2}`,
@@ -105,8 +126,8 @@ const generateMockGames = (leagueId: Sport, count: number): MockGame[] => {
           home_team: boxer1.name,
           away_team: boxer2.name,
           commence_time: getRandomDate(i + 1),
-          odds: getRandomOdds(),
-          oas: getRandomOAS(),
+          odds: getRandomOdds(gameId),
+          oas: getRandomOAS(gameId),
           weight_class: boxer1.weight
         } as MockGame;
       });
@@ -115,19 +136,22 @@ const generateMockGames = (leagueId: Sport, count: number): MockGame[] => {
   }
 
   // For team sports
-  return Array.from({ length: Math.min(count, teams.length / 2) }, (_, i) => ({
-    id: `${leagueId}-${i + 1}`,
-    sport: leagueId,
-    home_team_id: `${leagueId}-team-${i * 2 + 1}`,
-    away_team_id: `${leagueId}-team-${i * 2 + 2}`,
-    start_time: getRandomDate(i + 1),
-    status: 'scheduled',
-    home_team: teams[i * 2],
-    away_team: teams[i * 2 + 1],
-    commence_time: getRandomDate(i + 1),
-    odds: getRandomOdds(),
-    oas: getRandomOAS()
-  } as MockGame));
+  return Array.from({ length: Math.min(count, teams.length / 2) }, (_, i) => {
+    const gameId = `${leagueId}-${i + 1}`;
+    return {
+      id: gameId,
+      sport: leagueId,
+      home_team_id: `${leagueId}-team-${i * 2 + 1}`,
+      away_team_id: `${leagueId}-team-${i * 2 + 2}`,
+      start_time: getRandomDate(i + 1),
+      status: 'scheduled',
+      home_team: teams[i * 2],
+      away_team: teams[i * 2 + 1],
+      commence_time: getRandomDate(i + 1),
+      odds: getRandomOdds(gameId),
+      oas: getRandomOAS(gameId)
+    } as MockGame;
+  });
 };
 
 // Generate mock events for all leagues
