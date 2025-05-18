@@ -1,19 +1,110 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 
-// Simple planet data with positions and glyphs
+// Planet data with positions, glyphs, and orbital properties
 const PLANETS = [
-  { name: 'Sun', glyph: '☉', color: '#FDB813', size: 24 },
-  { name: 'Moon', glyph: '☽', color: '#E8E8E8', size: 20 },
-  { name: 'Mercury', glyph: '☿', color: '#A0A0A0', size: 16 },
-  { name: 'Venus', glyph: '♀', color: '#E6C229', size: 18 },
-  { name: 'Mars', glyph: '♂', color: '#C1440E', size: 18 },
-  { name: 'Jupiter', glyph: '♃', color: '#C88B3A', size: 22 },
-  { name: 'Saturn', glyph: '♄', color: '#E4D191', size: 20 },
-  { name: 'Uranus', glyph: '♅', color: '#D1E7E7', size: 16 },
-  { name: 'Neptune', glyph: '♆', color: '#5B5DDF', size: 16 },
-  { name: 'Pluto', glyph: '♇', color: '#BDAE7F', size: 14 },
+  { 
+    name: 'Sun', 
+    glyph: '☉', 
+    color: '#FDB813', 
+    size: 32,
+    orbitRadius: 0 
+  },
+  { 
+    name: 'Mercury', 
+    glyph: '☿', 
+    color: '#A0A0A0', 
+    size: 14,
+    orbitRadius: 100,
+    speed: 0.24
+  },
+  { 
+    name: 'Venus', 
+    glyph: '♀', 
+    color: '#E6C229', 
+    size: 18,
+    orbitRadius: 150,
+    speed: 0.16
+  },
+  { 
+    name: 'Earth', 
+    glyph: '🌍', 
+    color: '#1E90FF', 
+    size: 20,
+    orbitRadius: 200,
+    speed: 0.1
+  },
+  { 
+    name: 'Mars', 
+    glyph: '♂', 
+    color: '#C1440E', 
+    size: 16,
+    orbitRadius: 260,
+    speed: 0.08
+  },
+  { 
+    name: 'Jupiter', 
+    glyph: '♃', 
+    color: '#C88B3A', 
+    size: 28,
+    orbitRadius: 340,
+    speed: 0.04
+  },
+  { 
+    name: 'Saturn', 
+    glyph: '♄', 
+    color: '#E4D191', 
+    size: 26,
+    orbitRadius: 420,
+    speed: 0.02,
+    hasRings: true
+  },
+  { 
+    name: 'Uranus', 
+    glyph: '♅', 
+    color: '#D1E7E7', 
+    size: 22,
+    orbitRadius: 500,
+    speed: 0.01
+  },
+  { 
+    name: 'Neptune', 
+    glyph: '♆', 
+    color: '#5B5DDF', 
+    size: 22,
+    orbitRadius: 580,
+    speed: 0.006
+  },
+  { 
+    name: 'Pluto', 
+    glyph: '♇', 
+    color: '#BDAE7F', 
+    size: 12,
+    orbitRadius: 640,
+    speed: 0.003
+  }
 ];
+
+// Calculate 3D position with 35 degree perspective
+const calculate3DPosition = (x: number, y: number, z: number) => {
+  const angle = 35 * (Math.PI / 180);
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  
+  // Apply rotation around X axis
+  const y2 = y * cos - z * sin;
+  const z2 = y * sin + z * cos;
+  
+  // Simple perspective projection
+  const distance = 1000;
+  const factor = distance / (distance + z2);
+  
+  return {
+    x: x * factor,
+    y: y2 * factor,
+    scale: factor
+  };
+};
 
 // Zodiac signs with their symbols and dates
 const ZODIAC = [
@@ -21,27 +112,45 @@ const ZODIAC = [
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
-// Simple calculation for planet positions (simplified for demo)
+// Calculate planet positions with 3D perspective
 const calculatePlanetPositions = () => {
   const now = new Date();
   const time = now.getTime();
   
-  // Simple animation based on current time
-  const baseAngle = (time * 0.0001) % (Math.PI * 2);
+  // Base angle for animation
+  const baseAngle = (time * 0.00005) % (Math.PI * 2);
   
-  return PLANETS.map((planet, i) => {
-    // Each planet has its own orbit and speed
-    const orbitRadius = 100 + (i * 15);
-    const speed = 1 / (i + 1);
-    const angle = (baseAngle * speed) % (Math.PI * 2);
+  return PLANETS.map((planet) => {
+    if (planet.orbitRadius === 0) {
+      // Sun stays in the center
+      return {
+        ...planet,
+        x: 0,
+        y: 0,
+        z: 0,
+        scale: 1,
+        angle: 0,
+        retrograde: false
+      };
+    }
+    
+    // Calculate orbital position
+    const angle = (baseAngle * (planet.speed || 1)) % (Math.PI * 2);
+    const x = Math.cos(angle) * planet.orbitRadius;
+    const y = Math.sin(angle) * (planet.orbitRadius * 0.6); // Slight elliptical orbit
+    const z = Math.sin(angle * 0.5) * (planet.orbitRadius * 0.3); // Depth variation
+    
+    // Apply 3D perspective
+    const pos = calculate3DPosition(x, y, z);
     
     return {
       ...planet,
-      x: Math.cos(angle) * orbitRadius,
-      y: Math.sin(angle) * (orbitRadius * 0.6), // Flatten the ellipse
+      x: pos.x,
+      y: pos.y,
+      z: z,
+      scale: pos.scale,
       angle: angle * (180 / Math.PI),
-      sign: ZODIAC[Math.floor(angle / (Math.PI / 6)) % 12],
-      retrograde: i > 2 && Math.random() > 0.9 // Random retrograde for demo
+      retrograde: Math.random() > 0.98 // 2% chance of retrograde
     };
   });
 };
@@ -99,73 +208,172 @@ const CelestialMap: React.FC<{ className?: string }> = ({ className = '' }) => {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Draw zodiac ring
-    const ringRadius = Math.min(width, height) * 0.45;
-    ctx.strokeStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    // Draw starfield background
+    if (theme === 'dark') {
+      ctx.fillStyle = '#0A0E17';
+      ctx.fillRect(0, 0, width, height);
+      
+      // Draw stars
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      for (let i = 0; i < 200; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = Math.random() * 1.5;
+        ctx.fillRect(x, y, size, size);
+      }
+    } else {
+      // Light theme background
+      const gradient = ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, Math.max(width, height) / 1.5
+      );
+      gradient.addColorStop(0, '#F0F4F8');
+      gradient.addColorStop(1, '#D6E4F0');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    }
+    
+    // Draw grid lines for perspective
+    ctx.strokeStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
     ctx.lineWidth = 1;
+    
+    // Horizontal line
     ctx.beginPath();
-    ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(width, centerY);
     ctx.stroke();
     
-    // Draw zodiac signs
-    const signRadius = ringRadius + 15;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = 'bold 12px Arial';
-    ctx.fillStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+    // Vertical line
+    ctx.beginPath();
+    ctx.moveTo(centerX, 0);
+    ctx.lineTo(centerX, height);
+    ctx.stroke();
     
-    ZODIAC.forEach((sign, i) => {
-      const angle = (i * Math.PI * 2) / 12 - Math.PI/2;
-      const x = centerX + Math.cos(angle) * signRadius;
-      const y = centerY + Math.sin(angle) * signRadius;
-      ctx.fillText(sign[0], x, y);
-    });
+    // Sort planets by z-index for proper depth rendering
+    const sortedPlanets = [...planets].sort((a, b) => (a.z || 0) - (b.z || 0));
     
-    // Draw orbits and planets
-    planets.forEach((planet) => {
-      const x = centerX + planet.x;
-      const y = centerY + planet.y;
+    // Draw orbits and planets with 3D perspective
+    sortedPlanets.forEach((planet) => {
+      const x = centerX + (planet.x || 0);
+      const y = centerY + (planet.y || 0);
+      const scale = planet.scale || 1;
+      const size = planet.size * scale;
+      const isHovered = hoveredPlanet === planet.name;
       
-      // Draw orbit
-      ctx.beginPath();
-      ctx.strokeStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-      ctx.ellipse(centerX, centerY, Math.abs(planet.x) + 10, Math.abs(planet.y * 1.6) + 10, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      // Skip rendering if off-screen
+      if (x < -100 || x > width + 100 || y < -100 || y > height + 100) {
+        return;
+      }
+      
+      // Draw orbit path (only for planets with orbits)
+      if (planet.orbitRadius > 0) {
+        ctx.beginPath();
+        const orbitGradient = ctx.createRadialGradient(
+          centerX, centerY, planet.orbitRadius * 0.8,
+          centerX, centerY, planet.orbitRadius * 1.2
+        );
+        orbitGradient.addColorStop(0, `${planet.color}10`);
+        orbitGradient.addColorStop(1, 'transparent');
+        
+        ctx.strokeStyle = orbitGradient;
+        ctx.lineWidth = 1.5;
+        
+        // Draw elliptical orbit with perspective
+        const steps = 100;
+        for (let i = 0; i <= steps; i++) {
+          const angle = (i / steps) * Math.PI * 2;
+          const orbitX = Math.cos(angle) * planet.orbitRadius;
+          const orbitY = Math.sin(angle) * (planet.orbitRadius * 0.6);
+          const orbitZ = Math.sin(angle * 0.5) * (planet.orbitRadius * 0.3);
+          
+          const orbitPos = calculate3DPosition(orbitX, orbitY, orbitZ);
+          const projX = centerX + orbitPos.x;
+          const projY = centerY + orbitPos.y;
+          
+          if (i === 0) {
+            ctx.moveTo(projX, projY);
+          } else {
+            ctx.lineTo(projX, projY);
+          }
+        }
+        ctx.stroke();
+      }
+      
+      // Draw planet glow on hover
+      if (isHovered) {
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+        gradient.addColorStop(0, `${planet.color}80`);
+        gradient.addColorStop(1, `${planet.color}00`);
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
       
       // Draw planet
-      const isHovered = hoveredPlanet === planet.name;
-      const size = isHovered ? planet.size * 1.5 : planet.size;
-      
       ctx.font = `bold ${size}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // Add glow effect on hover
-      if (isHovered) {
-        ctx.shadowColor = planet.color;
-        ctx.shadowBlur = 15;
-      }
-      
-      // Retrograde indicator (R)
-      if (planet.retrograde) {
-        ctx.fillStyle = '#ff6b6b';
-        ctx.font = 'bold 10px Arial';
-        ctx.fillText('R', x + 15, y - 15);
-      }
+      // Add subtle shadow for depth
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetY = 2;
       
       // Planet symbol
       ctx.fillStyle = planet.color;
       ctx.fillText(planet.glyph, x, y);
       
       // Reset shadow
-      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+      
+      // Retrograde indicator (R)
+      if (planet.retrograde) {
+        ctx.fillStyle = '#ff6b6b';
+        ctx.font = `bold ${Math.max(10, size * 0.5)}px Arial`;
+        ctx.fillText('R', x + size * 0.7, y - size * 0.7);
+      }
       
       // Planet name on hover
       if (isHovered) {
-        ctx.fillStyle = theme === 'dark' ? '#fff' : '#000';
+        // Draw connecting line to label
+        ctx.strokeStyle = `${planet.color}80`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, y - size * 0.7);
+        ctx.lineTo(x, y - size * 1.5);
+        ctx.stroke();
+        
+        // Draw label background
+        const text = planet.name;
         ctx.font = 'bold 12px Arial';
-        ctx.fillText(planet.name, x, y - 25);
-        ctx.fillText(planet.sign, x, y + 25);
+        const textWidth = ctx.measureText(text).width;
+        const padding = 8;
+        const rectX = x - textWidth / 2 - padding;
+        const rectY = y - size * 1.5 - 20;
+        const rectWidth = textWidth + padding * 2;
+        const rectHeight = 20;
+        
+        // Rounded rectangle background
+        const radius = 4;
+        ctx.fillStyle = theme === 'dark' ? 'rgba(20, 25, 40, 0.9)' : 'rgba(240, 245, 250, 0.9)';
+        ctx.beginPath();
+        ctx.moveTo(rectX + radius, rectY);
+        ctx.lineTo(rectX + rectWidth - radius, rectY);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radius);
+        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radius);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radius, rectY + rectHeight);
+        ctx.lineTo(rectX + radius, rectY + rectHeight);
+        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
+        ctx.lineTo(rectX, rectY + radius);
+        ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Draw text
+        ctx.fillStyle = theme === 'dark' ? '#FFFFFF' : '#1A202C';
+        ctx.fillText(text, x, rectY + 14);
       }
     });
   }, [planets, hoveredPlanet, dimensions, theme]);
@@ -199,7 +407,8 @@ const CelestialMap: React.FC<{ className?: string }> = ({ className = '' }) => {
       </div>
       
       <div className="mt-4 text-center text-sm text-gray-500">
-        <p>Hover over planets for details • Current time: {new Date().toLocaleTimeString()}</p>
+        <p>Hover over planets for details • Tilted 35° for better perspective</p>
+        <p className="text-xs opacity-70 mt-1">Current time: {new Date().toLocaleTimeString()}</p>
       </div>
     </div>
   );

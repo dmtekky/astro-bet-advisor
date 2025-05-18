@@ -1,21 +1,31 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import { Search, CalendarDays } from 'lucide-react';
+import { useSearch } from '@/context/SearchContext';
 import SportNavigation from '@/components/navigation/SportNavigation';
+import { Link } from 'react-router-dom';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { toast } = useToast();
+  const { searchQuery, setSearchQuery, handleSearch } = useSearch();
   
-  const handleConnectSupabase = () => {
-    toast({
-      title: "Supabase Connection Required",
-      description: "Please connect Supabase using the Lovable integration to unlock all features.",
-      variant: "default",
-    });
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      handleSearch(searchQuery);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
   };
 
   return (
@@ -26,24 +36,49 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center p-4">
             <div className="flex items-center gap-2">
               <svg 
-                viewBox="0 0 24 24" 
-                className="w-8 h-8 text-primary" 
-                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-6 h-6 text-primary"
               >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-7.5l4-4 1.41 1.41L11.83 14 10 12.17z" />
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              <h1 className="text-xl font-bold">BettingAssist</h1>
+              <h1 className="text-xl font-bold">Astro Plays</h1>
             </div>
             
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="secondary" 
-                onClick={handleConnectSupabase}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Connect Supabase
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search players, teams, and more..."
+                  value={searchQuery}
+                  onChange={handleInputChange}
+                  className="pl-9 h-9 min-w-[200px] md:min-w-[300px] pr-9"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <Button type="submit" size="sm" className="mr-2">
+                Search
               </Button>
-            </div>
+              <Link to="/upcoming-games">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  View All Games
+                </Button>
+              </Link>
+            </form>
           </div>
           
           {/* Sports Navigation */}

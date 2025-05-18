@@ -22,6 +22,7 @@ const Footer: React.FC = () => {
   const footerLinks = [
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
+    { to: '/upcoming-games', label: 'Games' },
     { to: '/privacy', label: 'Privacy Policy' },
     { to: '/terms', label: 'Terms of Service' },
   ];

@@ -23,6 +23,7 @@ const Header: React.FC = () => {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/upcoming-games', label: 'Games' },
   ];
 
   return (

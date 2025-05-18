@@ -196,7 +196,8 @@ const EventDetails: React.FC = () => {
   });
   
   const gameDate = new Date(game.commence_time || game.start_time).toLocaleDateString();
-  const oas = game.oas || Math.floor(Math.random() * 30) + 50; // Random OAS between 50-80 if not provided
+  // Ensure oas is a valid number, default to 60 if not provided (shouldn't happen with our mock data)
+  const oas = typeof game.oas === 'number' ? game.oas : 60;
   const oasColor = oas >= 70 ? 'text-green-500' : oas >= 40 ? 'text-yellow-500' : 'text-red-500';
 
   // Determine the sport icon and color

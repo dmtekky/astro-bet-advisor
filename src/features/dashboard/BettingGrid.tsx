@@ -1,19 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Player, Team, Sport } from '@/types';
 import { PlayerCard, TeamCard } from './EnhancedBettingCard';
 import { usePlayersBySport, useTeamsBySport, useBettingOdds, useAstrologicalData } from '@/hooks/useSportsData';
 import { Search } from 'lucide-react';
+import { useSearch } from '@/context/SearchContext';
 
 interface BettingGridProps {
   sport: Sport;
 }
 
 const BettingGrid: React.FC<BettingGridProps> = ({ sport }) => {
-  const [activeTab, setActiveTab] = useState<'players' | 'teams'>('players');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = React.useState<'players' | 'teams'>('players');
   
   // Fetch players data
   const {
@@ -29,21 +28,51 @@ const BettingGrid: React.FC<BettingGridProps> = ({ sport }) => {
     error: teamsError
   } = useTeamsBySport(sport);
   
-  // Filter data based on search query
-  const filteredPlayers = players.filter(player => 
-    player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (player.team && player.team.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-  
-  const filteredTeams = teams.filter(team => 
-    team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    team.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Get search query from context
+  const { searchQuery } = useSearch();
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState(searchQuery);
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+  // Debounce search query to avoid too many re-renders
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
+  // Memoize filtered players and teams to prevent unnecessary re-renders
+  const filteredPlayers = React.useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return players;
+    const query = debouncedSearchQuery.toLowerCase().trim();
+    
+    try {
+      return players.filter(player => 
+        player.name.toLowerCase().includes(query) ||
+        (player.team && player.team.toLowerCase().includes(query))
+      );
+    } catch (error) {
+      console.error('Error filtering players:', error);
+      return players;
+    }
+  }, [players, debouncedSearchQuery]);
+  
+  const filteredTeams = React.useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return teams;
+    const query = debouncedSearchQuery.toLowerCase().trim();
+    
+    try {
+      return teams.filter(team => 
+        team.name.toLowerCase().includes(query) ||
+        (team.abbreviation && team.abbreviation.toLowerCase().includes(query))
+      );
+    } catch (error) {
+      console.error('Error filtering teams:', error);
+      return teams;
+    }
+  }, [teams, debouncedSearchQuery]);
 
   // Render placeholder for empty state
   const renderEmptyState = (type: 'players' | 'teams', isError: boolean = false) => (
@@ -80,16 +109,6 @@ const BettingGrid: React.FC<BettingGridProps> = ({ sport }) => {
             <TabsTrigger value="teams">Teams</TabsTrigger>
           </TabsList>
         </Tabs>
-        
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="pl-9"
-          />
-        </div>
       </div>
       
       <TabsContent value="players" className="m-0 animate-fade-in">
