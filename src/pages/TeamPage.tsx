@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AstroTeamSection from './_AstroTeamSection';
 import TeamRoster from '@/components/TeamRoster';
-import { Player } from '@/lib/formula';
+import { PlayerStats, TeamStats, calculatePlayerImpact } from '@/lib/astroFormula';
 
 interface TeamInfo {
   id: string;
@@ -19,7 +19,8 @@ interface TeamInfo {
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const [team, setTeam] = useState<TeamInfo | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PlayerStats[]>([]);
+  const [playerImpacts, setPlayerImpacts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [recentGames, setRecentGames] = useState<any[]>([]);
 
@@ -46,12 +47,19 @@ export default function TeamPage() {
         setTeam(mockTeam);
         
         // Mock players data
-        const mockPlayers: Player[] = Array(5).fill(0).map((_, i) => ({
+        const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
+        const mockPlayers: PlayerStats[] = Array(5).fill(0).map((_, i) => ({
           id: `player-${i}`,
           name: `Player ${i + 1}`,
-          position: ['PG', 'SG', 'SF', 'PF', 'C'][i],
           birth_date: `199${i}-0${i+1}-${10+i}`,
-          team_id: teamId || ''
+          sport: 'basketball',
+          win_shares: 2 + i,
+          stats: {
+            points: 10 + i * 2,
+            assists: 3 + i,
+            rebounds: 5 + i
+          },
+          position: positions[i]
         }));
         
         setPlayers(mockPlayers);
@@ -71,6 +79,45 @@ export default function TeamPage() {
     
     fetchTeamData();
   }, [teamId]);
+
+  // Calculate team stats
+  useEffect(() => {
+    if (players.length === 0) return;
+    // Aggregate stats (mocked for now)
+    const teamStats: TeamStats = {
+      totalPoints: players.reduce((sum, p) => sum + (p.stats?.points || 0), 0),
+      totalAssists: players.reduce((sum, p) => sum + (p.stats?.assists || 0), 0),
+      totalRebounds: players.reduce((sum, p) => sum + (p.stats?.rebounds || 0), 0),
+      totalWinShares: players.reduce((sum, p) => sum + (p.win_shares || 0), 0),
+      playerCount: players.length,
+    };
+    // Mock astro data (replace with real hook/fetch in prod)
+    const astroData = {
+      moon_phase: 0.5,
+      moon_sign: 'Aries',
+      sun_sign: 'Aries',
+      mercury_sign: 'Aries',
+      venus_sign: 'Aries',
+      mars_sign: 'Aries',
+      jupiter_sign: 'Aries',
+      saturn_sign: 'Aries',
+      mercury_retrograde: false,
+      aspects: {
+        sun_mars: null,
+        sun_saturn: null,
+        sun_jupiter: null
+      }
+    };
+    const today = new Date();
+    // Calculate impact for each player
+    Promise.all(
+      [players].map(players => calculatePlayerImpact(players, astroData))
+    ).then(scores => {
+      const impacts: Record<string, number> = {};
+      players.forEach((player, idx) => { impacts[player.id] = scores[idx]; });
+      setPlayerImpacts(impacts);
+    });
+  }, [players, teamId]);
 
   if (loading) {
     return (
@@ -170,7 +217,7 @@ export default function TeamPage() {
 
         {/* Team Roster */}
         <div className="bg-gray-800 bg-opacity-50 p-6 rounded-xl border border-gray-700">
-          <TeamRoster players={players} teamId={teamId || ''} />
+           <TeamRoster players={players} teamId={teamId || ''} playerImpacts={playerImpacts} />
         </div>
       </div>
     </div>
