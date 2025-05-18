@@ -1,14 +1,29 @@
 import { supabase } from '@/lib/supabase';
 
-
-interface PlayerStats {
+export interface PlayerStats {
+  id: string;
   name: string;
   birth_date: string;
   sport: string;
   win_shares: number;
+  stats?: {
+    points?: number;
+    assists?: number;
+    rebounds?: number;
+  };
+  position?: string;
 }
 
-interface AstroData {
+
+export interface TeamStats {
+  totalPoints: number;
+  totalAssists: number;
+  totalRebounds: number;
+  totalWinShares: number;
+  playerCount: number;
+}
+
+export interface AstroData {
   moon_phase: number;
   moon_sign: string;
   sun_sign: string;
@@ -47,10 +62,10 @@ export async function calculateAstrologicalImpact(
     baseScore += astroData.mercury_retrograde ? -50 : 0;
 
     // Calculate player impact based on win shares
-    const playerImpact = await calculatePlayerImpact(players, astroData);
+    // (Legacy - now handled in new function)
 
     // Combine all factors
-    const totalScore = baseScore + playerImpact;
+    const totalScore = baseScore;
 
     // Normalize to 0-100 range
     const normalizedScore = Math.max(0, Math.min(100, totalScore));
@@ -62,6 +77,11 @@ export async function calculateAstrologicalImpact(
   }
 }
 
+/**
+ * Calculate the impact of the moon phase
+ * @param moonPhase Moon phase (0-1)
+ * @returns Impact score (0-100)
+ */
 function calculateMoonPhaseImpact(moonPhase: number): number {
   // Moon phase is 0-1 (0=new moon, 0.5=full moon)
   // New moon and full moon are most impactful
@@ -113,7 +133,7 @@ export function calculatePlanetarySignsImpact(astroData: AstroData): number {
   return Math.round(impact);
 }
 
-async function calculatePlayerImpact(
+export async function calculatePlayerImpact(
   players: PlayerStats[],
   astroData: AstroData
 ): Promise<number> {

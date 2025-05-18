@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getZodiacSign, getZodiacIcon } from '@/lib/astroCalc';
 import { calculateAstrologicalImpact } from '@/lib/astroFormula';
+import { getLunarNodeForecast } from '@/lib/astronomy';
+
+interface CelestialEvent {
+  name: string;
+  description: string;
+  intensity: 'low' | 'medium' | 'high';
+  date?: string;
+}
 
 interface AstroData {
   moon: {
@@ -34,12 +42,17 @@ interface AstroData {
   lunarNodes: {
     northNode: string;
     southNode: string;
+    nextTransitDate: string | null;
+    nextTransitType: 'north' | 'south' | null;
+    nextTransitSign: string | null;
+    upcomingTransits?: Array<{
+      date: string;
+      type: 'north' | 'south';
+      sign: string;
+    }>;
   };
-  celestialEvents: Array<{
-    name: string;
-    description: string;
-    intensity: 'low' | 'medium' | 'high';
-  }>;
+  celestialEvents: CelestialEvent[];
+  next_event: CelestialEvent | null;
 }
 
 export function useAstroData() {
@@ -55,10 +68,13 @@ export function useAstroData() {
         
         // In a real app, you'd fetch this from your backend or calculate it
         // This is a simplified version with mock data
+        const lunarNodeForecast = getLunarNodeForecast(2);
+        const nextCelestialEvent = getUpcomingCelestialEvents(now)[0];
+        
         const data: AstroData = {
           moon: {
             phase: calculateMoonPhase(now),
-            sign: getZodiacSign(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)), // Mock: moon changes sign ~2.5 days
+            sign: getZodiacSign(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)),
             icon: getZodiacIcon(getZodiacSign(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)))
           },
           sun: {
@@ -67,7 +83,7 @@ export function useAstroData() {
           },
           mercury: {
             retrograde: isMercuryRetrograde(now),
-            sign: getZodiacSign(new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000)) // Mock: changes sign ~monthly
+            sign: getZodiacSign(new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000))
           },
           aspects: {
             sunMars: Math.random() > 0.5 ? 'trine' : 'square',
@@ -77,10 +93,21 @@ export function useAstroData() {
           elements: calculateElementalBalance(now),
           currentHour: getCurrentPlanetaryHour(now),
           lunarNodes: {
-            northNode: 'Aries',
-            southNode: 'Libra'
+            ...lunarNodeForecast.current,
+            nextTransitDate: lunarNodeForecast.current.nextTransitDate?.toISOString() || null,
+            upcomingTransits: lunarNodeForecast.upcomingTransits.map(t => ({
+              date: t.date.toISOString(),
+              type: t.type,
+              sign: t.sign
+            }))
           },
-          celestialEvents: getUpcomingCelestialEvents(now)
+          celestialEvents: getUpcomingCelestialEvents(now),
+          next_event: nextCelestialEvent ? {
+            name: nextCelestialEvent.name,
+            date: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            intensity: nextCelestialEvent.intensity,
+            description: nextCelestialEvent.description
+          } : null
         };
 
         setAstroData(data);

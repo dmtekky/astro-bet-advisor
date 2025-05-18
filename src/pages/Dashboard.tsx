@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip } from 'react-tooltip';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { GameCard } from '@/features/dashboard/GameCard';
 import { useAstroData } from '@/hooks/useAstroData';
@@ -7,404 +9,515 @@ import { useCurrentEphemeris } from '@/hooks/useFormulaData';
 import { calculateAstrologicalImpact } from '@/lib/astroFormula';
 import type { GameData } from '../types/game';
 
+// Default values moved to the top to avoid usage before declaration
+const defaultAspects = {
+  sunMars: null,
+  sunJupiter: null,
+  sunSaturn: null,
+  moonVenus: null,
+  mercuryMars: null,
+  venusMars: null
+} as const;
+
+const defaultElements = {
+  fire: 0,
+  earth: 0,
+  air: 0,
+  water: 0
+};
+
+const defaultEvent = {
+  name: 'No upcoming events',
+  date: new Date().toISOString(),
+  intensity: 'low' as const,
+  description: 'No major celestial events in the near future.'
+};
+
+const defaultSigns = {
+  moon: 'Aries',
+  sun: 'Aries',
+  mercury: 'Taurus',
+  venus: 'Gemini',
+  mars: 'Cancer',
+  jupiter: 'Leo',
+  saturn: 'Virgo',
+  uranus: 'Libra',
+  neptune: 'Scorpio',
+  pluto: 'Sagittarius'
+};
+
+// Sample games data with all required GameData properties
+const SAMPLE_GAMES: GameData[] = [
+  {
+    id: '1',
+    homeTeam: 'Team A',
+    awayTeam: 'Team B',
+    startTime: new Date().toISOString(),
+    homeOdds: 1.8,
+    awayOdds: 2.1,
+    spread: 1.5,
+    total: 2.5,
+    homeRecord: '5-2-3',
+    awayRecord: '3-4-3',
+    homeScore: 0,
+    awayScore: 0,
+    status: 'scheduled',
+    period: 1,
+    league: 'Premier League',
+    // Remove players as it's not part of GameData type
+  }
+];
+
 // Type definitions for astrological data
-type AspectKey = 'sunMars' | 'sunJupiter' | 'sunSaturn' | 'moonVenus' | 'mercuryMars' | 'venusMars';
-type ElementKey = 'fire' | 'earth' | 'air' | 'water';
+type AspectKey = keyof typeof defaultAspects;
+type ElementKey = keyof typeof defaultElements;
 
 type AspectRecord = Record<AspectKey, string | null>;
 type ElementRecord = Record<ElementKey, number>;
 
 interface CelestialEvent {
   name: string;
-  date: string;
+  date?: string;  // Make date optional
   intensity: 'low' | 'medium' | 'high';
   description: string;
+  // Add other possible properties that might be used
+  startTime?: string;
+  endTime?: string;
+  type?: string;
+  icon?: string;
 }
 
-// Type for data coming from the hook (all fields optional)
-type AstroDataFromHook = Partial<{
-  moon_phase: string;
-  moon_sign: string;
-  mercury_retrograde: boolean;
-  mercury_sign: string;
-  aspects: Partial<AspectRecord>;
-  planetary_hour: string;
-  elements: Partial<ElementRecord>;
-  north_node: string;
-  south_node: string;
-  next_event: Partial<CelestialEvent>;
-  sun_sign: string;
-  sun_icon: string;
-}>;
-
-// Extended AstroData interface with all required properties
-interface AstroData {
-  // Core astro data
-  moon_phase: string;
-  moon_sign: string;
-  mercury_retrograde: boolean;
-  mercury_sign: string;
-  venus_sign: string;
-  mars_sign: string;
-  jupiter_sign: string;
-  saturn_sign: string;
-  uranus_sign: string;
-  neptune_sign: string;
-  pluto_sign: string;
-  
-  // Aspects and elements
-  aspects: AspectRecord;
-  elements: ElementRecord;
-  
-  // Nodes and events
-  north_node: string;
-  south_node: string;
-  next_event: CelestialEvent;
-  
-  // Sun and planetary data
-  sun_sign: string;
-  sun_icon: string;
-  planetary_hour: string;
-  
-  // Aliases for backward compatibility
-  moonPhase: string;
-  moonSign: string;
-  mercuryRetrograde: boolean;
-  mercurySign: string;
-  venusSign: string;
-  marsSign: string;
-  jupiterSign: string;
-  saturnSign: string;
-  uranusSign: string;
-  neptuneSign: string;
-  plutoSign: string;
-  planetaryHour: string;
-  northNode: string;
-  southNode: string;
-  nextEvent: CelestialEvent;
-  sunSign: string;
-  sunIcon: string;
-  
-  // Additional properties that might be used
-  [key: string]: any;
+// Type for the component's local state
+interface DashboardState {
+  loading: boolean;
+  error: Error | null;
+  astroData: AstroData | null;
+  games: GameData[];
+  lunarNodeData: {
+    northNode: string;
+    southNode: string;
+    nextTransitDate: string | null;
+    nextTransitType: 'north' | 'south' | null;
+    nextTransitSign: string | null;
+    upcomingTransits: Array<{ date: string; type: 'north' | 'south'; sign: string }>;
+  };
 }
 
-// Sample games data
-const SAMPLE_GAMES: GameData[] = [
-  {
-    id: '1',
-    league: 'NBA',
-    homeTeam: 'Lakers',
-    awayTeam: 'Warriors',
-    startTime: new Date(Date.now() + 3600000).toISOString(),
-    homeOdds: -110,
-    awayOdds: -110,
-    spread: 1.5,
-    total: 225.5,
-    homeRecord: '25-15',
-    awayRecord: '28-12',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'scheduled',
-    period: 0,
-  },
-  {
-    id: '2',
-    league: 'NBA',
-    homeTeam: 'Celtics',
-    awayTeam: 'Bucks',
-    startTime: new Date(Date.now() + 7200000).toISOString(),
-    homeOdds: 120,
-    awayOdds: -140,
-    spread: -2.5,
-    total: 218.5,
-    homeRecord: '30-10',
-    awayRecord: '28-12',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'scheduled',
-    period: 0,
-  },
-  {
-    id: '3',
-    league: 'NBA',
-    homeTeam: 'Suns',
-    awayTeam: 'Nuggets',
-    startTime: new Date(Date.now() + 10800000).toISOString(),
-    homeOdds: -150,
-    awayOdds: 130,
-    spread: -3.5,
-    total: 230.5,
-    homeRecord: '26-14',
-    awayRecord: '27-13',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'scheduled',
-    period: 0,
-  },
-];
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip } from 'react-tooltip';
+// AstroData interface matching the hook's return type
+// Base type for astro data with all possible properties
+type BaseAstroData = {
+  moon: {
+    phase: string | number;
+    sign: string;
+    icon: string;
+  };
+  sun: {
+    sign: string;
+    icon: string;
+  };
+  mercury: {
+    retrograde: boolean;
+    sign: string;
+  };
+  aspects: {
+    sunMars: string | null;
+    sunJupiter: string | null;
+    sunSaturn: string | null;
+    moonVenus?: string | null;
+    mercuryMars?: string | null;
+    venusMars?: string | null;
+  };
+  elements: {
+    fire: number;
+    earth: number;
+    air: number;
+    water: number;
+  };
+  currentHour?: {
+    ruler: string;
+    influence: string;
+  };
+  lunarNodes: {
+    northNode: string;
+    southNode: string;
+    nextTransitDate: string | null;
+    nextTransitType: 'north' | 'south' | null;
+    nextTransitSign: string | null;
+    upcomingTransits?: Array<{
+      date: string;
+      type: 'north' | 'south';
+      sign: string;
+    }>;
+  };
+  celestialEvents?: CelestialEvent[];
+  next_event?: CelestialEvent | null;
+  moon_phase?: string | number;
+  moon_sign?: string;
+  mercury_retrograde?: boolean;
+  mercury_sign?: string;
+  venus_sign?: string;
+  mars_sign?: string;
+  jupiter_sign?: string;
+  saturn_sign?: string;
+  uranus_sign?: string;
+  neptune_sign?: string;
+  pluto_sign?: string;
+  planetary_hour?: string;
+  north_node?: string;
+  south_node?: string;
+  sun_sign?: string;
+  sun_icon?: string;
+  moonPhase?: string | number;
+  moonSign?: string;
+  mercuryRetrograde?: boolean;
+  mercurySign?: string;
+  venusSign?: string;
+  marsSign?: string;
+  jupiterSign?: string;
+  saturnSign?: string;
+  uranusSign?: string;
+  neptuneSign?: string;
+  plutoSign?: string;
+  planetaryHour?: string;
+  nextEvent?: CelestialEvent;
+  [key: string]: any; // Allow additional properties
+};
+
+// Intersection type to ensure required properties are present
+type AstroData = BaseAstroData & {
+  moon: {
+    phase: string | number;
+    sign: string;
+    icon: string;
+  };
+  sun: {
+    sign: string;
+    icon: string;
+  };
+  mercury: {
+    retrograde: boolean;
+    sign: string;
+  };
+  elements: {
+    fire: number;
+    earth: number;
+    air: number;
+    water: number;
+  };
+  lunarNodes: {
+    northNode: string;
+    southNode: string;
+    nextTransitDate: string | null;
+    nextTransitType: 'north' | 'south' | null;
+    nextTransitSign: string | null;
+  };
+};
 
 const Dashboard = () => {
   const { data: ephemerisData } = useCurrentEphemeris();
-  const { astroData: astroDataFromHook, loading, error } = useAstroData();
+  const { astroData, loading, error } = useAstroData();
 
-  // Default values for astro data
-  const defaultAspects: AspectRecord = {
-    sunMars: null,
-    sunJupiter: null,
-    sunSaturn: null,
-    moonVenus: null,
-    mercuryMars: null,
-    venusMars: null,
-  };
-  
-  const defaultElements: ElementRecord = { 
-    fire: 0, 
-    earth: 0, 
-    air: 0, 
-    water: 0 
-  };
-  
-  const defaultEvent: CelestialEvent = {
-    name: 'No upcoming events',
-    date: new Date().toISOString(),
-    intensity: 'low',
-    description: 'No major celestial events in the near future.'
-  };
-  
-  // Safely merge astro data with defaults
-  const safeAstroData: AstroData = (() => {
-    // Default values for all required properties
-    const defaultSigns = {
-      venus_sign: 'Taurus',
-      mars_sign: 'Aries',
-      jupiter_sign: 'Sagittarius',
-      saturn_sign: 'Capricorn',
-      uranus_sign: 'Taurus',
-      neptune_sign: 'Pisces',
-      pluto_sign: 'Capricorn'
-    };
-
-    // Base data with all required fields
-    const baseData = {
-      // Core astro data
-      moon_phase: 'New Moon',
-      moon_sign: 'Aries',
-      mercury_retrograde: false,
-      mercury_sign: 'Gemini',
-      ...defaultSigns,
-      
-      // Aspects and elements
-      aspects: { ...defaultAspects },
-      elements: { ...defaultElements },
-      
-      // Nodes and events
-      north_node: 'Aries',
-      south_node: 'Libra',
-      next_event: { ...defaultEvent },
-      
-      // Sun and planetary data
-      sun_sign: 'Gemini',
-      sun_icon: '♊️',
-      planetary_hour: 'Sun',
-      
-      // Aliases for backward compatibility
-      moonPhase: 'New Moon',
-      moonSign: 'Aries',
-      mercuryRetrograde: false,
-      mercurySign: 'Gemini',
-      venusSign: 'Taurus',
-      marsSign: 'Aries',
-      jupiterSign: 'Sagittarius',
-      saturnSign: 'Capricorn',
-      uranusSign: 'Taurus',
-      neptuneSign: 'Pisces',
-      plutoSign: 'Capricorn',
-      planetaryHour: 'Sun',
+  // Initialize state
+  const [state, setState] = useState<DashboardState>({
+    loading: true,
+    error: null,
+    astroData: null,
+    games: SAMPLE_GAMES,
+    lunarNodeData: {
       northNode: 'Aries',
       southNode: 'Libra',
-      nextEvent: { ...defaultEvent },
-      sunSign: 'Gemini',
-      sunIcon: '♊️'
-    };
-
-    // If no data from hook, return defaults
-    if (loading || error || !astroDataFromHook) {
-      return { ...baseData };
+      nextTransitDate: null,
+      nextTransitType: null,
+      nextTransitSign: null,
+      upcomingTransits: []
     }
+  });
 
-    // Merge hook data with defaults
-    const mergedData: Partial<AstroData> = {
-      ...baseData,
-      ...astroDataFromHook,
-      aspects: { ...defaultAspects, ...(astroDataFromHook.aspects || {}) },
-      elements: { ...defaultElements, ...(astroDataFromHook.elements || {}) },
-      next_event: { ...defaultEvent, ...(astroDataFromHook.next_event || {}) },
-      nextEvent: { ...defaultEvent, ...(astroDataFromHook.next_event || {}) }
-    };
+  // Update state when astroData changes
+  useEffect(() => {
+    if (astroData) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        astroData,
+        lunarNodeData: {
+          northNode: astroData.lunarNodes?.northNode || 'Aries',
+          southNode: astroData.lunarNodes?.southNode || 'Libra',
+          nextTransitDate: astroData.lunarNodes?.nextTransitDate || null,
+          nextTransitType: astroData.lunarNodes?.nextTransitType || null,
+          nextTransitSign: astroData.lunarNodes?.nextTransitSign || null,
+          upcomingTransits: astroData.lunarNodes?.upcomingTransits || []
+        }
+      }));
+    }
+  }, [astroData]);
 
-    // Ensure all required fields are set
-    const result: AstroData = {
-      ...mergedData,
-      // Core astro data
-      moon_phase: mergedData.moon_phase || baseData.moon_phase,
-      moon_sign: mergedData.moon_sign || baseData.moon_sign,
-      mercury_retrograde: mergedData.mercury_retrograde ?? baseData.mercury_retrograde,
-      mercury_sign: mergedData.mercury_sign || baseData.mercury_sign,
-      venus_sign: mergedData.venus_sign || baseData.venus_sign,
-      mars_sign: mergedData.mars_sign || baseData.mars_sign,
-      jupiter_sign: mergedData.jupiter_sign || baseData.jupiter_sign,
-      saturn_sign: mergedData.saturn_sign || baseData.saturn_sign,
-      uranus_sign: mergedData.uranus_sign || baseData.uranus_sign,
-      neptune_sign: mergedData.neptune_sign || baseData.neptune_sign,
-      pluto_sign: mergedData.pluto_sign || baseData.pluto_sign,
-      
-      // Aliases
-      moonPhase: mergedData.moon_phase || baseData.moon_phase,
-      moonSign: mergedData.moon_sign || baseData.moon_sign,
-      mercuryRetrograde: mergedData.mercury_retrograde ?? baseData.mercury_retrograde,
-      mercurySign: mergedData.mercury_sign || baseData.mercury_sign,
-      venusSign: mergedData.venus_sign || baseData.venus_sign,
-      marsSign: mergedData.mars_sign || baseData.mars_sign,
-      jupiterSign: mergedData.jupiter_sign || baseData.jupiter_sign,
-      saturnSign: mergedData.saturn_sign || baseData.saturn_sign,
-      uranusSign: mergedData.uranus_sign || baseData.uranus_sign,
-      neptuneSign: mergedData.neptune_sign || baseData.neptune_sign,
-      plutoSign: mergedData.pluto_sign || baseData.pluto_sign,
-      planetaryHour: mergedData.planetary_hour || baseData.planetary_hour,
-      northNode: mergedData.north_node || baseData.north_node,
-      southNode: mergedData.south_node || baseData.south_node,
-      nextEvent: { ...defaultEvent, ...(mergedData.next_event || {}) },
-      sunSign: mergedData.sun_sign || baseData.sun_sign,
-      sunIcon: mergedData.sun_icon || baseData.sun_icon,
-      
-      // Other required fields
-      aspects: { ...defaultAspects, ...(mergedData.aspects || {}) },
-      elements: { ...defaultElements, ...(mergedData.elements || {}) },
-      next_event: { ...defaultEvent, ...(mergedData.next_event || {}) }
-    };
+  // Update state when there's an error
+  useEffect(() => {
+    if (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error
+      }));
+    }
+  }, [error]);
 
-    return result;
-  })();
-  
-  // Safe accessor for astro data with fallbacks
-  const getAstroData = <K extends keyof AstroData>(
-    key: K,
-    fallback: AstroData[K]
-  ): AstroData[K] => {
-    if (loading || error) return fallback;
-    const value = safeAstroData[key];
-    return value !== undefined ? value : fallback;
+  // Handle loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="p-4 text-red-600 bg-red-100 rounded-lg">
+          Error loading astrological data: {error.message}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Destructure state for easier access
+  const { astroData: safeAstroData, games, lunarNodeData } = state;
+
+  // Initialize base data with defaults
+  const baseData: AstroData = {
+    moon: safeAstroData?.moon || { phase: '', sign: '', icon: '' },
+    sun: safeAstroData?.sun || { sign: '', icon: '' },
+    mercury: safeAstroData?.mercury || { retrograde: false, sign: '' },
+    aspects: {
+      ...defaultAspects,
+      ...(safeAstroData?.aspects || {})
+    } as AspectRecord,
+    elements: {
+      ...defaultElements,
+      ...(safeAstroData?.elements || {})
+    },
+    currentHour: safeAstroData?.currentHour || { ruler: '', influence: '' },
+    lunarNodes: {
+      ...safeAstroData?.lunarNodes || {
+        northNode: '',
+        southNode: '',
+        nextTransitDate: null,
+        nextTransitType: null,
+        nextTransitSign: null,
+        upcomingTransits: []
+      }
+    },
+    celestialEvents: safeAstroData?.celestialEvents || [],
+    next_event: safeAstroData?.next_event || defaultEvent
+  };
+
+  // Default signs if not provided
+  // Default signs if not provided
+  const defaultSigns = {
+    moon: 'Aries',
+    sun: 'Aries',
+    mercury: 'Taurus',
+    venus: 'Gemini',
+    mars: 'Cancer',
+    jupiter: 'Leo',
+    saturn: 'Virgo',
+    uranus: 'Libra',
+    neptune: 'Scorpio',
+    pluto: 'Sagittarius'
+  } as const;
+
+  // Helper function to get specific astro data with defaults
+  const getAstroData = (key: string, defaultValue: any) => {
+    const astroData = state.astroData;
+    if (!astroData) return defaultValue;
+    
+    // Handle nested properties using dot notation
+    if (key.includes('.')) {
+      const parts = key.split('.');
+      let value: any = astroData;
+      for (const part of parts) {
+        value = value?.[part];
+        if (value === undefined) return defaultValue;
+      }
+      return value;
+    }
+    
+    // Handle specific keys
+    switch(key) {
+      case 'elements':
+        return astroData.elements || defaultValue;
+      case 'moonPhase':
+        return astroData.moon?.phase || defaultValue;
+      case 'moonSign':
+        return astroData.moon?.sign || defaultValue;
+      case 'sunSign':
+        return astroData.sun?.sign || defaultValue;
+      case 'sunIcon':
+        return astroData.sun?.icon || defaultValue;
+      case 'mercuryRetrograde':
+        return astroData.mercury?.retrograde || defaultValue;
+      case 'mercurySign':
+        return astroData.mercury?.sign || defaultValue;
+      case 'northNode':
+        return astroData.lunarNodes?.northNode || defaultValue;
+      case 'southNode':
+        return astroData.lunarNodes?.southNode || defaultValue;
+      case 'planetaryHour':
+        return astroData.currentHour?.ruler || defaultValue;
+      case 'aspects':
+        return astroData.aspects || defaultValue;
+      default:
+        return defaultValue;
+    }
   };
 
   // Calculate astro edge for a game
-  const calculateAstroEdge = (game: any): number => {
-    if (!game?.players?.length) return 0;
+  const calculateAstroEdge = (game: GameData): number => {
+    // Use default astro data
+    const astroData = {
+      moon_phase: typeof state.astroData?.moon?.phase === 'number' ? state.astroData.moon.phase : 0.5,
+      moon_sign: state.astroData?.moon?.sign || 'Aries',
+      sun_sign: state.astroData?.sun?.sign || 'Aries',
+      mercury_sign: state.astroData?.mercury?.sign || 'Aries',
+      venus_sign: state.astroData?.venusSign || 'Aries',
+      mars_sign: state.astroData?.marsSign || 'Aries',
+      jupiter_sign: state.astroData?.jupiterSign || 'Aries',
+      saturn_sign: state.astroData?.saturnSign || 'Aries',
+      mercury_retrograde: state.astroData?.mercury?.retrograde || false,
+      aspects: {
+        sun_mars: state.astroData?.aspects?.sunMars || null,
+        sun_saturn: state.astroData?.aspects?.sunSaturn || null,
+        sun_jupiter: state.astroData?.aspects?.sunJupiter || null
+      }
+    };
     
-    // Ensure we have valid astro data
-    if (!safeAstroData) return 0;
-    
-    // Default aspects if not provided
-    const defaultAspects: AspectRecord = {
-      sunMars: null,
-      sunJupiter: null,
-      sunSaturn: null,
-      moonVenus: null,
-      mercuryMars: null,
-      venusMars: null
-    };
-
-    // Default elements if not provided
-    const defaultElements: ElementRecord = {
-      fire: 0,
-      earth: 0,
-      air: 0,
-      water: 0
-    };
-
-    // Default event if not provided
-    const defaultEvent: CelestialEvent = {
-      name: 'New Moon',
-      date: new Date().toISOString(),
-      intensity: 'medium',
-      description: 'A new lunar cycle begins'
-    };
-
     try {
-      // Prepare astro data with all required properties
-      const astroDataForCalculation: AstroData = {
-        ...safeAstroData,
-        // Ensure all required properties are present
-        moon_phase: safeAstroData.moon_phase || 'New Moon',
-        moon_sign: safeAstroData.moon_sign || 'Aries',
-        mercury_retrograde: safeAstroData.mercury_retrograde || false,
-        mercury_sign: safeAstroData.mercury_sign || 'Gemini',
-        venus_sign: safeAstroData.venus_sign || 'Taurus',
-        mars_sign: safeAstroData.mars_sign || 'Aries',
-        jupiter_sign: safeAstroData.jupiter_sign || 'Sagittarius',
-        saturn_sign: safeAstroData.saturn_sign || 'Capricorn',
-        uranus_sign: safeAstroData.uranus_sign || 'Taurus',
-        neptune_sign: safeAstroData.neptune_sign || 'Pisces',
-        pluto_sign: safeAstroData.pluto_sign || 'Capricorn',
-        aspects: { ...defaultAspects, ...(safeAstroData.aspects || {}) },
-        elements: { ...defaultElements, ...(safeAstroData.elements || {}) },
-        north_node: safeAstroData.north_node || 'Aries',
-        south_node: safeAstroData.south_node || 'Libra',
-        next_event: { ...defaultEvent, ...(safeAstroData.next_event || {}) },
-        sun_sign: safeAstroData.sun_sign || 'Gemini',
-        sun_icon: safeAstroData.sun_icon || '♊️',
-        planetary_hour: safeAstroData.planetary_hour || 'Sun',
-        // Aliases
-        moonPhase: safeAstroData.moon_phase || 'New Moon',
-        moonSign: safeAstroData.moon_sign || 'Aries',
-        mercuryRetrograde: safeAstroData.mercury_retrograde || false,
-        mercurySign: safeAstroData.mercury_sign || 'Gemini',
-        venusSign: safeAstroData.venus_sign || 'Taurus',
-        marsSign: safeAstroData.mars_sign || 'Aries',
-        jupiterSign: safeAstroData.jupiter_sign || 'Sagittarius',
-        saturnSign: safeAstroData.saturn_sign || 'Capricorn',
-        uranusSign: safeAstroData.uranus_sign || 'Taurus',
-        neptuneSign: safeAstroData.neptune_sign || 'Pisces',
-        plutoSign: safeAstroData.pluto_sign || 'Capricorn',
-        planetaryHour: safeAstroData.planetary_hour || 'Sun',
-        northNode: safeAstroData.north_node || 'Aries',
-        southNode: safeAstroData.south_node || 'Libra',
-        nextEvent: { ...defaultEvent, ...(safeAstroData.next_event || {}) },
-        sunSign: safeAstroData.sun_sign || 'Gemini',
-        sunIcon: safeAstroData.sun_icon || '♊️'
-      };
+      // Simple implementation - can be enhanced with actual calculations
+      let score = 50; // Start with neutral score
+      
+      // Example: Adjust score based on moon phase
+      if (astroData.moon_phase > 0.7 || astroData.moon_phase < 0.3) {
+        score += 10; // Favor new and full moons
+      }
+      
+      // Example: Favor certain signs
+      const favoredSigns = ['Aries', 'Leo', 'Sagittarius'];
+      if (favoredSigns.includes(astroData.sun_sign)) {
+        score += 5;
+      }
+      
+      // Ensure score is within 0-100 range
+      return Math.max(0, Math.min(100, score));
+    } catch (error) {
+      console.error('Error calculating astro edge:', error);
+      return 50; // Return neutral score on error
+    }
+  };
 
-      // Calculate average astro impact for all players
-      const totalImpact = game.players.reduce((sum: number, player: any) => {
-        // Skip players without birth data
-        if (!player.birthDate) return sum;
-        
-        try {
-          // Calculate player's astro impact
-          const playerImpact = calculateAstrologicalImpact(
-            [player],
-            astroDataForCalculation,
-            game.date || new Date().toISOString()
-          );
-          
-          // Ensure we have a valid number
-          const impactValue = Number(playerImpact) || 0;
-          return sum + impactValue;
-        } catch (error) {
-          console.error('Error calculating player astro impact:', error);
-          return sum;
+  // Process games with astrological data
+  const processGamesWithAstro = (games: GameData[]) => {
+    if (!games || !Array.isArray(games)) return [];
+    
+    return games.map(game => ({
+      ...game,
+      astroEdge: calculateAstroEdge(game),
+      astroInfluence: 'Neutral astrological influence'
+    }));
+  };
+  
+  // Initialize games with astro data
+  const gamesWithAstro = processGamesWithAstro(state.games);
+  
+  // Destructure lunar node data
+  const { northNode, southNode, upcomingTransits } = state.astroData?.lunarNodes || {
+    northNode: 'Gemini',
+    southNode: 'Sagittarius',
+    upcomingTransits: []
+  };
+  
+  // Calculate astrological impact for each game
+  const calculateGameImpact = (game: GameData): number => {
+    try {
+      // Simple implementation - can be enhanced with actual calculations
+      let score = 50; // Start with neutral score
+      
+      // Example: Adjust score based on team names (simple hash)
+      const homeTeamHash = game.homeTeam.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const awayTeamHash = game.awayTeam.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      
+      // Add some randomness based on team names
+      score += (homeTeamHash - awayTeamHash) % 10;
+      
+      // Ensure score is within 0-100 range
+      return Math.max(0, Math.min(100, score));
+    } catch (error) {
+      console.error('Error calculating game impact:', error);
+      return 50; // Return neutral score on error
+    }
+  };
+  
+  // Helper function to convert Dashboard AstroData to astroFormula AstroData format
+  const convertAstroDataFormat = (dashboardAstroData: any): any => {
+    // Ensure moon_phase is always a number
+    let moonPhase = 0.5; // Default value
+    if (dashboardAstroData.moon?.phase !== undefined) {
+      if (typeof dashboardAstroData.moon.phase === 'number') {
+        moonPhase = dashboardAstroData.moon.phase;
+      } else if (typeof dashboardAstroData.moon.phase === 'string') {
+        // Try to parse string to number if possible
+        const parsed = parseFloat(dashboardAstroData.moon.phase);
+        if (!isNaN(parsed)) {
+          moonPhase = parsed;
         }
-      }, 0);
+      }
+    }
+    
+    return {
+      moon_phase: moonPhase,
+      moon_sign: dashboardAstroData.moon?.sign || 'Aries',
+      sun_sign: dashboardAstroData.sun?.sign || 'Aries',
+      mercury_sign: dashboardAstroData.mercury?.sign || 'Aries',
+      venus_sign: dashboardAstroData.venusSign || 'Aries',
+      mars_sign: dashboardAstroData.marsSign || 'Aries',
+      jupiter_sign: dashboardAstroData.jupiterSign || 'Aries',
+      saturn_sign: dashboardAstroData.saturnSign || 'Aries',
+      mercury_retrograde: dashboardAstroData.mercury?.retrograde || false,
+      aspects: {
+        sun_mars: dashboardAstroData.aspects?.sunMars || null,
+        sun_saturn: dashboardAstroData.aspects?.sunSaturn || null,
+        sun_jupiter: dashboardAstroData.aspects?.sunJupiter || null
+      }
+    };
+  };
+
+  // Calculate astrological impact for players
+  const calculatePlayerImpact = async (players: any[], astroData: any, gameDate: Date) => {
+    try {
+      // Convert players to the expected format for astro formula
+      const formattedPlayers = players.map(player => ({
+        id: player.id || '',
+        name: player.name || 'Unknown',
+        birth_date: player.birthDate || new Date().toISOString().split('T')[0],
+        sport: player.sport || 'basketball',
+        win_shares: player.winShares || 0
+      }));
+
+      // Convert astroData to the format expected by calculateAstrologicalImpact
+      const formulaAstroData = convertAstroDataFormat(astroData);
       
-      // Calculate average and ensure it's within 0-100 range
-      const averageImpact = game.players.length > 0 
-        ? totalImpact / game.players.length 
-        : 0;
-      
-      // Return the impact as a percentage (0-100)
-      return Math.min(100, Math.max(0, averageImpact));
+      const impact = await calculateAstrologicalImpact(
+        formattedPlayers,
+        formulaAstroData as any,
+        gameDate.toISOString()
+      );
+
+      // Ensure the impact is within 0-100 range
+      return Math.max(0, Math.min(100, Number(impact) || 0));
     } catch (error) {
       console.error('Error in calculateAstroEdge:', error);
       return 0;
@@ -487,7 +600,7 @@ const Dashboard = () => {
                         {element.charAt(0).toUpperCase() + element.slice(1)}
                       </span>
                       <span className="text-white/60 ml-auto">
-                        {value}%
+                        {String(value)}%
                       </span>
                     </div>
                   ))}
@@ -519,7 +632,7 @@ const Dashboard = () => {
                   {String(getMoonInfluence(
                     getAstroData('moonPhase', '') as string, 
                     getAstroData('moonSign', '') as string
-                  ))}
+                  ) || '')}
                 </div>
               </CardContent>
             </Card>
@@ -571,7 +684,7 @@ const Dashboard = () => {
                           ? 'text-red-400' 
                           : 'text-green-400'
                       }>
-                        {value}
+                        {String(value || '')}
                       </span>
                     </div>
                   )
@@ -600,7 +713,7 @@ const Dashboard = () => {
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {getPlanetaryHourInfluence(getAstroData('planetaryHour', ''))}
+                  {String(getPlanetaryHourInfluence(getAstroData('planetaryHour', '')) || '')}
                 </div>
               </CardContent>
             </Card>
@@ -630,21 +743,61 @@ const Dashboard = () => {
             <Card className="bg-gray-900/50 border-gray-800">
               <CardHeader className="pb-2 flex flex-row items-center gap-2">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-pink-900/80">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 2v20M2 12h20" strokeWidth="2" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M12 2v20M2 12h20" strokeWidth="2" />
+                  </svg>
                 </span>
                 <CardTitle className="text-lg">Lunar Nodes</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {safeAstroData.nextEvent?.name || 'No upcoming events'}
-                  </span>
-                  <span className="text-xs px-2 py-1 rounded bg-pink-800/40 text-pink-200">
-                    {safeAstroData.nextEvent?.intensity === 'high' ? 'Major Event' : 'Event'}
-                  </span>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  {/* Current Nodes */}
+                  <div className="p-2 rounded-lg bg-pink-900/30 border border-pink-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+                        <span className="text-sm font-medium text-white">
+                          North Node in {getAstroData('northNode', 'Aries')}
+                        </span>
+                      </div>
+                      <span className="text-xs text-pink-200">
+                        Current
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Upcoming Transits */}
+                  {getAstroData('lunarNodes.upcomingTransits', []).map((transit, index) => {
+                    const transitDate = new Date(transit.date);
+                    const isCurrent = new Date() <= transitDate && new Date() >= new Date(transitDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`p-2 rounded-lg ${isCurrent ? 'bg-pink-900/30 border border-pink-800' : 'bg-gray-800/50'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-pink-400' : 'bg-pink-400/50'}`}></div>
+                            <span className={`text-sm font-medium ${isCurrent ? 'text-white' : 'text-gray-300'}`}>
+                              {transit.type === 'north' ? 'North' : 'South'} Node enters {transit.sign}
+                            </span>
+                          </div>
+                          <span className={`text-xs ${isCurrent ? 'text-pink-200' : 'text-gray-400'}`}>
+                            {transitDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                        {isCurrent && (
+                          <div className="mt-1 text-xs text-pink-200">
+                            Currently in transition
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {safeAstroData.nextEvent?.description || 'No major celestial events in the near future.'}
+                <div className="text-xs text-muted-foreground pt-1">
+                  {getLunarNodeInfluence(northNode, southNode)}
                 </div>
               </CardContent>
             </Card>

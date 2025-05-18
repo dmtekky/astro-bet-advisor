@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Player } from '@/lib/formula';
+import { PlayerStats } from '@/lib/astroFormula';
 
 interface TeamRosterProps {
-  players: Player[];
+  players: PlayerStats[];
   teamId: string;
+  playerImpacts?: Record<string, number>;
 }
 
-export default function TeamRoster({ players, teamId }: TeamRosterProps) {
+export default function TeamRoster({ players, teamId, playerImpacts }: TeamRosterProps) {
   if (!players.length) {
     return <div className="text-gray-400">No players found for this team.</div>;
   }
@@ -30,6 +31,9 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Status
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                Impact
               </th>
             </tr>
           </thead>
@@ -54,6 +58,9 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                     Active
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  {playerImpacts && playerImpacts[player.id] !== undefined ? playerImpacts[player.id] : '...'}
                 </td>
               </tr>
             ))}
