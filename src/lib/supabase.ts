@@ -37,6 +37,38 @@ export const fetchFromSupabase = async <T>(
 
 export { supabase };
 
+// Interface for a scheduled game
+export interface ScheduledGame {
+  id: number;
+  sport: string;
+  league: string;
+  home_team: string;
+  away_team: string;
+  start_time: string;
+  venue?: string;
+  [key: string]: any;
+}
+
+/**
+ * Fetch upcoming games from the schedules table, filtered by sport and start_time in the future
+ * @param sport - the sport to filter by (e.g., 'mlb', 'nba')
+ * @returns array of ScheduledGame
+ */
+export async function fetchUpcomingGamesBySport(sport: string): Promise<ScheduledGame[]> {
+  const now = new Date().toISOString();
+  return fetchFromSupabase<ScheduledGame>(
+    'schedules',
+    supabase
+      .from('schedules')
+      .select('*')
+      .eq('sport', sport)
+      .gte('start_time', now)
+      .order('start_time', { ascending: true }),
+    'Failed to fetch upcoming games'
+  );
+}
+
+
 // Astrological data interface
 export interface AstrologicalData {
   id: number;

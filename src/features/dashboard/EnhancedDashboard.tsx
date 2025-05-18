@@ -10,6 +10,7 @@ import { fetchGames } from '@/lib/games';
 import { supabase } from '@/lib/supabase';
 import type { Sport } from '@/types/sports';
 import { SPORTS } from '@/types/sports';
+import { GameCard } from './GameCard';
 
 interface Team {
   id: string;
@@ -230,46 +231,19 @@ const EnhancedDashboard: React.FC = () => {
                   <p className="text-center text-gray-500">No upcoming games found</p>
                 ) : (
                   games.map((game) => (
-                    <Card key={game.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-2">
-                            <img 
-                              src={getTeamLogo(game.home_team_id)} 
-                              alt={getTeamName(game.home_team_id)}
-                              className="w-8 h-8 rounded-full"
-                            />
-                            <span>{getTeamName(game.home_team_id)}</span>
-                          </div>
-                          <span className="mx-2">vs</span>
-                          <div className="flex items-center space-x-2">
-                            <span>{getTeamName(game.away_team_id)}</span>
-                            <img 
-                              src={getTeamLogo(game.away_team_id)} 
-                              alt={getTeamName(game.away_team_id)}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex justify-between text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {format(new Date(game.start_time), 'MMM d, yyyy')}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock3 className="w-4 h-4 mr-1" />
-                            {format(new Date(game.start_time), 'h:mm a')}
-                          </div>
-                          {game.odds && (
-                            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                              Odds: {game.odds}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <GameCard
+                      key={game.id}
+                      game={{
+                        id: game.id,
+                        sport: game.sport || sport,
+                        home_team: game.home_team_id,
+                        away_team: game.away_team_id,
+                        game_time: game.start_time,
+                        status: game.status,
+                        homeOdds: typeof game.odds === 'number' ? game.odds : undefined,
+                        awayOdds: typeof game.odds === 'number' ? game.odds : undefined
+                      }}
+                    />
                   ))
                 )}
               </div>
