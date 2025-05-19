@@ -57,8 +57,10 @@ SPORTS = [
     {'key': 'nba', 'sport': 'basketball', 'league': 'nba', 'stat_table': 'basketball_stats'},
     {'key': 'mlb', 'sport': 'baseball',   'league': 'mlb', 'stat_table': 'baseball_stats'},
     {'key': 'nfl', 'sport': 'football',   'league': 'nfl', 'stat_table': 'football_stats'},
-    {'key': 'soccer', 'sport': 'soccer',  'league': 'eng.1', 'stat_table': 'soccer_stats'},  # Premier League as example
-    {'key': 'boxing', 'sport': 'boxing',  'league': 'boxing', 'stat_table': 'boxing_stats'},
+    {'key': 'nhl', 'sport': 'hockey',     'league': 'nhl', 'stat_table': 'hockey_stats'},
+    {'key': 'wnba', 'sport': 'basketball', 'league': 'wnba', 'stat_table': 'basketball_stats'},
+    {'key': 'mls', 'sport': 'soccer',     'league': 'usa.1', 'stat_table': 'soccer_stats'},  # MLS
+    {'key': 'epl', 'sport': 'soccer',     'league': 'eng.1', 'stat_table': 'soccer_stats'},  # Premier League
 ]
 
 RATE_LIMIT_SEC = 1
@@ -79,6 +81,7 @@ def download_image(url: str, save_path: Path) -> Optional[str]:
 # --- Scraper Logic ---
 def scrape_and_update():
     logger.info('Starting ESPN data scrape...')
+    player_count = 0  # TEMPORARY: Count total players processed
     for sport in SPORTS:
         logger.info(f"Processing {sport['key'].upper()}...")
         teams_url = f"{ESPN_BASE_URL}/{sport['sport']}/{sport['league']}/teams"
@@ -93,20 +96,47 @@ def scrape_and_update():
         for team_obj in teams:
             team = team_obj.get('team', {})
             team_id = team.get('id')
-            team_logo_url = team.get('logos', [{}])[0].get('href', '')
-            team_logo_path = download_image(team_logo_url, TEAM_IMAGE_DIR / f"{team_id}.png") if team_logo_url else None
-            # Upsert team
+            team_logos = team.get('logos', [])
+            team_logo_url = team_logos[0].get('href') if team_logos and isinstance(team_logos, list) and len(team_logos) > 0 else ''
+            team_logo_path = None
+            if team_logo_url:
+                try:
+                    team_logo_path = download_image(team_logo_url, TEAM_IMAGE_DIR / f"{sport['key']}_{team_id}.png")
+                except Exception as e:
+                    logger.warning(f"Failed to download team logo for {team.get('name', '')}: {e}")
+                    team_logo_path = None
+            # Create prefixed team ID
+            prefixed_team_id = f"{sport['key']}_{team_id}"
+            
+            # Get league display name
+            league_name = sport['league'].upper()
+            if sport['key'] == 'mls':
+                league_name = 'MLS'
+            elif sport['key'] == 'epl':
+                league_name = 'Premier League'
+            elif sport['key'] == 'wnba':
+                league_name = 'WNBA'
+                
+            # Get team location from display name if not available
+            location = team.get('location', '')
+            if not location and 'displayName' in team:
+                location = team['displayName'].split(' ')[0]
+                
+            # Prepare team record with new ID format
             team_record = {
-                'espn_id': team_id,
-                'name': team.get('name', ''),
-                'display_name': team.get('displayName', ''),
-                'abbreviation': team.get('abbreviation', ''),
-                'sport': sport['key'],
-                'league': sport['league'],
+                'espn_id': prefixed_team_id,
+                'name': team.get('displayName', team.get('name', '')),
+                'abbreviation': team.get('abbreviation', '').upper(),
+                'sport': 'BASKETBALL' if sport['key'] in ['nba', 'wnba'] else sport['key'].upper(),
+                'league': league_name,
                 'logo_url': team_logo_url,
                 'logo_path': team_logo_path,
                 'primary_color': team.get('color', ''),
-                'secondary_color': team.get('alternateColor', '')
+                'secondary_color': team.get('alternateColor', ''),
+                'location': location,
+                'external_id': f"espn_{sport['key']}_{team_id}",
+                'created_at': datetime.utcnow().isoformat(),
+                'updated_at': datetime.utcnow().isoformat()
             }
             try:
                 supabase.table('teams').upsert(team_record, on_conflict='espn_id').execute()
@@ -141,6 +171,8 @@ def scrape_and_update():
                 continue
                 
             for athlete in athletes:
+
+                player_count += 1
                 # Handle different athlete data structures
                 if isinstance(athlete, dict) and 'athlete' in athlete:
                     player = athlete.get('athlete', {})
@@ -187,18 +219,39 @@ def scrape_and_update():
                     if isinstance(position, dict):
                         position = position.get('abbreviation', '')
                         
+                    # Extract stats from possible keys
+                    stats = {}
+                    # ESPN often uses 'stats', 'statistics', or a nested list of stats objects
+                    if 'stats' in player and isinstance(player['stats'], list):
+                        # If stats is a list of dicts, merge them
+                        for stat_obj in player['stats']:
+                            if isinstance(stat_obj, dict):
+                                stats.update(stat_obj)
+                    elif 'statistics' in player and isinstance(player['statistics'], dict):
+                        stats = player['statistics']
+                    elif 'statistics' in player and isinstance(player['statistics'], list):
+                        # Sometimes it's a list of dicts
+                        for stat_obj in player['statistics']:
+                            if isinstance(stat_obj, dict):
+                                stats.update(stat_obj)
+                    # Fallback: look for known stat fields for common sports
+                    if not stats:
+                        for key in ['points', 'rebounds', 'assists', 'goals', 'saves', 'appearances', 'minutes', 'touchdowns', 'homeRuns', 'battingAverage']:
+                            if key in player:
+                                stats[key] = player[key]
                     player_record = {
-                        'espn_id': str(player_id).strip(),
+                        'espn_id': f"{sport['key']}_{player_id}",
                         'name': player_name,
                         'birth_date': player.get('dateOfBirth') or player.get('birthDate'),
-                        'sport': sport['key'],
-                        'team_id': str(team_id).strip() if team_id else None,
+                        'sport': 'BASKETBALL' if sport['key'] in ['nba', 'wnba'] else sport['key'].upper(),
+                        'team_id': prefixed_team_id,
                         'position': position,
                         'jersey_number': int(athlete.get('jersey') or player.get('jersey') or 0) if str(athlete.get('jersey') or player.get('jersey') or '').isdigit() else None,
                         'height': player.get('displayHeight') or player.get('height') or '',
                         'weight': int(player.get('weight', 0)) if str(player.get('weight', '')).isdigit() else None,
                         'image_url': player_img_url or None,
-                        'image_path': str(player_img_path) if player_img_path else None
+                        'image_path': str(player_img_path) if player_img_path else None,
+                        'stats': stats if stats else None
                     }
                     
                     # Only include fields that have values

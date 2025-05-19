@@ -1,21 +1,31 @@
+export interface Team {
+  id: string;
+  name: string;
+  abbreviation: string;
+  wins: number;
+  losses: number;
+  logo?: string;
+}
+
 export interface GameData {
   id: string;
   league: string;
-  homeTeam: string;
-  awayTeam: string;
-  startTime: string;
-  homeOdds: number;
-  awayOdds: number;
-  spread: number;
-  total: number;
-  homeRecord: string;
-  awayRecord: string;
-  homeScore: number;
-  awayScore: number;
+  homeTeam: string | Team;
+  awayTeam: string | Team;
+  start_time?: string;
+  startTime?: string;
+  homeOdds?: number;
+  awayOdds?: number;
+  spread?: number;
+  total?: number;
+  homeRecord?: string;
+  awayRecord?: string;
+  homeScore?: number;
+  awayScore?: number;
   status: 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'suspended' | 'canceled';
-  period: number;
-  astroEdge?: number;
-  astroInfluence?: string;
+  period?: number;
+  astroEdge: number;
+  astroInfluence: string;
   homeAstroScore?: number;
   awayAstroScore?: number;
   homeTrend?: 'up' | 'down' | 'neutral';

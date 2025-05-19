@@ -12,6 +12,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import TeamMatchingService from '../services/teamMatching.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { access, constants } from 'fs/promises';
@@ -77,6 +78,10 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 });
 
+// Initialize team matching service
+const teamMatching = new TeamMatchingService(supabase);
+await teamMatching.initialize();
+
 // Sports to sync
 const SPORTS = ['basketball_nba', 'baseball_mlb'];
 
@@ -86,6 +91,7 @@ const SPORTS = ['basketball_nba', 'baseball_mlb'];
  * @returns {Promise<{success: boolean, gameCount?: number, error?: string}>}
  */
 async function syncGameSchedules(sport) {
+  const { sport: sportType, league } = getSportAndLeague(sport);
   try {
     console.log(`Syncing ${sport} games...`);
     
@@ -106,115 +112,125 @@ async function syncGameSchedules(sport) {
     }
 
     // Store raw response in cached_odds
-    const { error: cacheError } = await supabase
-      .from('cached_odds')
-      .upsert({
-        sport,
-        data: games,
-        last_update: new Date().toISOString()
-      }, {
-        onConflict: 'sport'
-      });
+    try {
+      const { error: cacheError } = await supabase
+        .from('cached_odds')
+        .upsert({
+          sport,
+          data: games,
+          last_update: new Date().toISOString()
+        }, {
+          onConflict: 'sport'
+        });
 
-    if (cacheError) {
-      console.error('Error caching odds:', cacheError);
+      if (cacheError) {
+        console.error('Error caching odds:', cacheError);
+      }
+    } catch (cacheError) {
+      console.error('Error in cache operation:', cacheError);
     }
 
-    // Match teams with existing teams in the database
-    // Process each game to include team IDs
-    const processedGames = [];
-    
+    const { sport: sportType, league } = getSportAndLeague(sport);
+    const gameRecords = [];
     for (const game of games) {
-      // Find home team in teams table
-      const { data: homeTeam } = await supabase
-        .from('teams')
-        .select('id, name')
-        .or(`name.eq.${game.home_team},name.ilike.${game.home_team}`)
-        .eq('sport', sport.includes('basketball') ? 'nba' : 'mlb')
-        .limit(1)
-        .single();
-
-      // Find away team in teams table
-      const { data: awayTeam } = await supabase
-        .from('teams')
-        .select('id, name')
-        .or(`name.eq.${game.away_team},name.ilike.${game.away_team}`)
-        .eq('sport', sport.includes('basketball') ? 'nba' : 'mlb')
-        .limit(1)
-        .single();
-
-      // Determine sport type based on the sport key
-      const sportType = sport.includes('basketball') ? 'basketball' : 
-                      sport.includes('baseball') ? 'baseball' : 'other';
-      
-      // Prepare game record matching the existing schedules table structure
-      const gameRecord = {
-        home_team: game.home_team,
-        away_team: game.away_team,
-        game_time: game.commence_time,
-        status: 'scheduled',
-        last_updated: new Date().toISOString(),
-        odds: game.bookmakers?.[0]?.markets?.[0]?.outcomes || [],
-        sport_type: sportType
-      };
-      
-      // Set the ID based on home_team, away_team, and game_time
-      const gameId = `${sportType}_${game.home_team.replace(/\s+/g, '_')}_${game.away_team.replace(/\s+/g, '_')}_${new Date(game.commence_time).getTime()}`;
-      gameRecord.id = gameId;
-
-      processedGames.push(gameRecord);
+      try {
+        console.log(`\nProcessing game: ${game.home_team} vs ${game.away_team}`);
+        
+        // Find or create home team
+        const homeTeam = await teamMatching.findOrCreateTeam(
+          game.home_team,
+          sportType,
+          league
+        );
+        
+        if (!homeTeam || !homeTeam.id) {
+          console.error(`Failed to process home team: ${game.home_team}`);
+          continue;
+        }
+        
+        // Find or create away team
+        const awayTeam = await teamMatching.findOrCreateTeam(
+          game.away_team,
+          sportType,
+          league
+        );
+        
+        if (!awayTeam || !awayTeam.id) {
+          console.error(`Failed to process away team: ${game.away_team}`);
+          continue;
+        }
+        
+        // Create game record
+        const gameRecord = {
+          home_team: homeTeam.name,
+          away_team: awayTeam.name,
+          home_team_id: homeTeam.id,
+          away_team_id: awayTeam.id,
+          game_time: game.commence_time,
+          status: 'scheduled',
+          last_updated: new Date().toISOString(),
+          odds: game.bookmakers?.[0]?.markets?.[0]?.outcomes || [],
+          sport_type: sportType,
+          metadata: {
+            original_home_team: game.home_team,
+            original_away_team: game.away_team,
+            home_team_confidence: homeTeam.confidence || 0,
+            away_team_confidence: awayTeam.confidence || 0,
+            home_team_is_new: homeTeam.isNew || false,
+            away_team_is_new: awayTeam.isNew || false
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        // Generate a unique game ID
+        const gameId = `${sportType}_${game.home_team.replace(/\s+/g, '_')}_${game.away_team.replace(/\s+/g, '_')}_${new Date(game.commence_time).getTime()}`;
+        gameRecord.id = gameId;
+        
+        console.log(`Adding game record: ${gameId}`);
+        gameRecords.push(gameRecord);
+        
+      } catch (error) {
+        console.error(`Error processing game ${game.home_team} vs ${game.away_team} [${sportType}]:`, error);
+      }
     }
-
-    // Upsert processed games to schedules table
-    const { error: upsertError } = await supabase
-      .from('schedules')
-      .upsert(processedGames, { onConflict: 'id' });
-
-    if (upsertError) {
-      throw new Error(`Error upserting games: ${upsertError.message}`);
+    if (gameRecords.length > 0) {
+      const { error } = await supabase
+        .from('schedules')
+        .upsert(gameRecords, { onConflict: 'id' });
+      if (error) throw error;
+      console.log(`✅ Successfully synced ${gameRecords.length} ${sportType} games`);
     }
-
-    console.log(`✅ Successfully synced ${processedGames.length} ${sport} games`);
-    return { success: true, gameCount: processedGames.length };
-
+    return gameRecords;
   } catch (error) {
-    console.error(`❌ Sync failed for ${sport}:`, error);
-    return { success: false, error: error.message };
+    console.error(`❌ Sync failed for ${sportType}:`, error);
+    throw error;
   }
 }
 
-/**
- * Main function to sync all sports
- */
+function getSportAndLeague(sportType) {
+  if (sportType.includes('basketball')) {
+    return { sport: 'basketball', league: 'NBA' };
+  } else if (sportType.includes('baseball')) {
+    return { sport: 'baseball', league: 'MLB' };
+  }
+  return { sport: 'other', league: 'OTHER' };
+}
+
 async function syncAllSports() {
   try {
-    console.log('Starting sync for all sports...');
-    console.log(`Supabase URL: ${supabaseUrl.substring(0, 30)}...`);
+    const sports = ['basketball_nba', 'baseball_mlb'];
     
-    // Test Supabase connection
-    const { data: testData, error: testError } = await supabase
-      .from('schedules')
-      .select('*')
-      .limit(1);
-      
-    if (testError) {
-      throw new Error(`Supabase connection failed: ${testError.message}`);
-    }
-    
-    console.log('Successfully connected to Supabase');
-    
-    // Sync each sport
-    for (const sport of SPORTS) {
+    for (const sport of sports) {
       console.log(`\nSyncing ${sport}...`);
       await syncGameSchedules(sport);
-      console.log(`Completed sync for ${sport}`);
     }
     
-    console.log('\nSync completed successfully');
-    return { success: true, message: 'Sync completed successfully' };
+    console.log('\n✅ Sync completed successfully');
+    process.exit(0);
   } catch (error) {
-    console.error('Error during sync:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Sync failed:', error);
+    process.exit(1);
   }
 }
 

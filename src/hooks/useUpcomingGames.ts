@@ -1,12 +1,38 @@
 import { useState, useEffect } from 'react';
-import { Sport } from '@/types';
-import { GameData } from '@/types/game';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+
+// Define interfaces to match GameCard
+interface Team {
+  id: string;
+  name: string;
+  wins: number;
+  losses: number;
+  logo?: string;
+  abbreviation?: string;
+}
+
+interface Game {
+  id: string;
+  home_team_id: string;
+  away_team_id: string;
+  home_team: Team | string;
+  away_team: Team | string;
+  start_time: string;
+  odds?: string | number | null;
+  oas?: string | number | null;
+  status?: string;
+  league?: string;
+  sport?: string;
+  astroEdge?: number;
+  astroInfluence?: string;
+  home_score?: number;
+  away_score?: number;
+}
+
+type Sport = 'basketball_nba' | 'baseball_mlb' | 'football_nfl' | 'hockey_nhl' | 'all';
 
 // Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
 
 // Define the API response type
 interface OddsResponse {
@@ -63,8 +89,8 @@ const getLeagueName = (sportKey: string): string => {
  * @param limit Maximum number of games to return
  * @returns Object containing games, loading state, and error
  */
-export function useUpcomingGames(sport: Sport | 'all' = 'all', limit = 10) {
-  const [games, setGames] = useState<GameData[]>([]);
+export function useUpcomingGames(sport: Sport = 'all', limit = 10) {
+  const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -74,102 +100,69 @@ export function useUpcomingGames(sport: Sport | 'all' = 'all', limit = 10) {
       setError(null);
 
       try {
-        // Use the provided sport key directly
-        const sportKey = sport;
-        
-        // Fetch games from Supabase schedules table
-        const now = new Date();
-        const future = new Date();
-        future.setDate(future.getDate() + 7); // Look 7 days ahead
-        
-        // Use the sport key directly since it's already in the correct format
-        const sportValue = sportKey;
-        
-        // First, build the base query
-        let query = supabase
+        // Fetch first 10 rows from schedules table, no filters
+        console.log('Fetching schedules from Supabase...');
+        const { data: scheduledGames, error: scheduleError } = await supabase
           .from('schedules')
-          .select(`
-            id,
-            home_team,
-            away_team,
-            game_time,
-            status,
-            odds,
-            last_updated,
-            created_at,
-            sport_type
-          `)
-          .gte('game_time', now.toISOString())
-          .lte('game_time', future.toISOString())
-          .order('game_time', { ascending: true });
-          
-        // Add sport filter if not 'all'
-        if (sport !== 'all') {
-          const sportType = sport === 'basketball_nba' ? 'basketball' : 
-                          sport === 'baseball_mlb' ? 'baseball' : null;
-          
-          if (sportType) {
-            query = query.eq('sport_type', sportType);
-          }
+          .select('*')  // Select all columns
+          .limit(limit);
+
+        if (scheduleError) {
+          console.error('Supabase query error:', scheduleError);
+          throw scheduleError;
         }
+
+        console.log('Fetched scheduledGames:', scheduledGames);
+
+        console.log('Raw scheduledGames data:', JSON.stringify(scheduledGames, null, 2));
         
-        // Execute the query
-        const { data: scheduledGames, error: scheduleError } = await query.limit(limit);
-
-        if (scheduleError) throw scheduleError;
-
-        // Check if we need to sync games (if none found)
         if (!scheduledGames || scheduledGames.length === 0) {
-          console.log('No games found in the database');
           setGames([]);
-          setError(new Error('No upcoming games found. Please run the sync script.'));
+          setError(new Error('No games found in the schedules table.'));
           setLoading(false);
           return;
         }
 
-        // Transform data to app format
-        const games: GameData[] = scheduledGames.map((game: any) => {
-          // Determine the league from sport_type
-          const league = game.sport_type === 'basketball' ? 'NBA' : 
-                        game.sport_type === 'baseball' ? 'MLB' : 'UNKNOWN';
+        // Map the database fields to match the GameCard component's expected structure
+        const mappedGames = scheduledGames.map((game: any) => {
+          const homeTeamName = game.home_team || 'Home Team';
+          const awayTeamName = game.away_team || 'Away Team';
           
           return {
-            id: game.id.toString(),
-            league,
-            homeTeam: game.home_team,
-            awayTeam: game.away_team,
-            startTime: game.game_time,
-            homeOdds: 0,
-            awayOdds: 0,
-            spread: 0,
-            total: 0,
-            homeRecord: '',
-            awayRecord: '',
-            homeScore: game.score_home || 0,
-            awayScore: game.score_away || 0,
+            id: game.id?.toString() || `game-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            home_team_id: game.home_team_id?.toString() || `home-${Date.now()}`,
+            away_team_id: game.away_team_id?.toString() || `away-${Date.now()}`,
+            home_team: {
+              id: game.home_team_id?.toString() || `home-${Date.now()}`,
+              name: homeTeamName,
+              abbreviation: homeTeamName.split(' ').map((word: string) => word[0]).join('').toUpperCase().substring(0, 3),
+              wins: typeof game.home_wins === 'number' ? game.home_wins : 0,
+              losses: typeof game.home_losses === 'number' ? game.home_losses : 0,
+              logo: game.home_logo || ''
+            },
+            away_team: {
+              id: game.away_team_id?.toString() || `away-${Date.now()}`,
+              name: awayTeamName,
+              abbreviation: awayTeamName.split(' ').map((word: string) => word[0]).join('').toUpperCase().substring(0, 3),
+              wins: typeof game.away_wins === 'number' ? game.away_wins : 0,
+              losses: typeof game.away_losses === 'number' ? game.away_losses : 0,
+              logo: game.away_logo || ''
+            },
+            start_time: game.commence_time || new Date().toISOString(),
+            odds: game.odds || null,
+            oas: game.oas || null,
             status: game.status || 'scheduled',
-            period: 1,
-            home_team_id: game.home_team_id,
-            away_team_id: game.away_team_id,
-            odds: game.odds || {},
-            last_updated: game.last_updated,
-            created_at: game.created_at
+            league: getLeagueName(game.sport_key) || 'NBA',
+            sport: game.sport_key || 'basketball_nba'
           };
         });
-        
-        // Filter by sport if not 'all'
-        const filteredGames = sport === 'all' 
-          ? games 
-          : sport === 'basketball_nba' 
-            ? games.filter(game => game.league === 'NBA')
-            : sport === 'baseball_mlb'
-              ? games.filter(game => game.league === 'MLB')
-              : games;
-        
-        setGames(filteredGames.slice(0, limit));
-      } catch (err) {
-        console.error('Error fetching upcoming games:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch games'));
+
+        console.log('Mapped games:', mappedGames);
+        setGames(mappedGames);
+        setError(null);
+      } catch (err: any) {
+        setError(err);
+        setGames([]);
       } finally {
         setLoading(false);
       }

@@ -29,18 +29,23 @@ interface Game {
   id: string;
   home_team_id: string;
   away_team_id: string;
+  home_team: Team;
+  away_team: Team;
   start_time: string;
   odds?: string | number;
   oas?: string | number;
-  home_team?: Team;
-  away_team?: Team;
+  status?: string;
+  league?: string;
+  sport?: string;
   created_at?: string;
   external_id?: string;
   score_away?: number;
   score_home?: number;
-  sport?: string;
-  status?: string;
   updated_at?: string;
+  home_team_abbreviation?: string;
+  away_team_abbreviation?: string;
+  sport_key?: string;
+  commencing_at?: string;
 }
 
 
@@ -77,60 +82,81 @@ const EnhancedDashboard: React.FC = () => {
   const loadGames = async (sportKey: string) => {
     try {
       setLoading(true);
+      console.log(`Loading games for sport: ${sportKey}`);
       
-      if (!sportKey) return;
-      
-      // First, load teams if not already loaded
-      if (teams.length === 0) {
-        const { data: teamsData, error: teamsError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('sport', sportKey.split('_')[0]);
-          
-        if (teamsError) throw teamsError;
-        if (teamsData) {
-          const typedTeams: Team[] = teamsData.map(team => ({
-            ...team,
-            // Ensure required fields have default values
-            wins: (team as any).wins || 0,
-            losses: (team as any).losses || 0,
-            // Ensure optional fields are properly typed
-            abbreviation: (team as any).abbreviation || '',
-            created_at: (team as any).created_at,
-            external_id: (team as any).external_id || '',
-            sport: (team as any).sport || sportKey.split('_')[0],
-            updated_at: (team as any).updated_at,
-            logo: (team as any).logo
-          }));
-          setTeams(typedTeams);
-        }
+      if (!sportKey) {
+        console.error('No sport key provided');
+        return;
       }
       
-      // Then load games
-      const gamesData = await fetchGames(sportKey as Sport['key']);
+      // Skip loading teams for now since we'll use the team names directly from the game
+      // This simplifies the data flow since we don't have team IDs in the schedules table
       
-      // Transform games with team data
-      const transformedGames: Game[] = gamesData.map((game: any) => ({
-        ...game,
-        home_team: teams.find(t => t.id === game.home_team_id) || { 
-          id: game.home_team_id, 
-          name: 'Unknown Team',
-          wins: 0,
-          losses: 0
-        },
-        away_team: teams.find(t => t.id === game.away_team_id) || { 
-          id: game.away_team_id,
-          name: 'Unknown Team',
-          wins: 0,
-          losses: 0
-        },
-        odds: game.odds || 'N/A',
-        oas: game.oas || 0,
-        start_time: game.commencing_at || game.start_time
-      }));
-      
-      setGames(transformedGames);
-      setError(null);
+      try {
+        // Load games
+        const gamesData = await fetchGames(sportKey as Sport['key']);
+        console.log(`Fetched ${gamesData.length} games`);
+        
+        if (!gamesData || gamesData.length === 0) {
+          console.warn('No games found for sport:', sportKey);
+          setGames([]);
+          setError('No games found for the selected sport.');
+          return;
+        }
+        
+        // Transform games with team data
+        const transformedGames: Game[] = gamesData.map((game: any) => {
+          // Create team objects directly from game data
+          const homeTeam: Team = {
+            id: game.home_team_id || `home_${game.id}`,
+            name: game.home_team || 'Home Team',
+            wins: 0,
+            losses: 0,
+            abbreviation: game.home_team_abbreviation || 
+                        (typeof game.home_team === 'string' ? game.home_team.substring(0, 3).toUpperCase() : 'HT'),
+            logo: game.home_team_logo
+          };
+          
+          const awayTeam: Team = {
+            id: game.away_team_id || `away_${game.id}`,
+            name: game.away_team || 'Away Team',
+            wins: 0,
+            losses: 0,
+            abbreviation: game.away_team_abbreviation || 
+                        (typeof game.away_team === 'string' ? game.away_team.substring(0, 3).toUpperCase() : 'AT'),
+            logo: game.away_team_logo
+          };
+          
+          // Format the game data
+          return {
+            ...game,
+            id: game.id,
+            home_team: homeTeam,
+            away_team: awayTeam,
+            home_team_id: homeTeam.id,
+            away_team_id: awayTeam.id,
+            odds: game.odds || 'N/A',
+            oas: game.oas || 0,
+            start_time: game.commence_time || game.start_time,
+            league: game.league || 
+                  (game.sport_key ? game.sport_key.toUpperCase() : 
+                  (sportKey.includes('_') ? sportKey.split('_')[1].toUpperCase() : sportKey.toUpperCase())),
+            sport: game.sport_key || sportKey,
+            status: game.status || 'scheduled',
+            // Ensure we have all required fields
+            home_team_abbreviation: homeTeam.abbreviation,
+            away_team_abbreviation: awayTeam.abbreviation
+          };
+        });
+        
+        console.log('Transformed games:', transformedGames);
+        setGames(transformedGames);
+        setError(null);
+      } catch (fetchError) {
+        console.error('Error in fetchGames:', fetchError);
+        setError('Failed to load game data. Please try again later.');
+        setGames([]);
+      }
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try again later.');
@@ -230,21 +256,54 @@ const EnhancedDashboard: React.FC = () => {
                 {games.length === 0 ? (
                   <p className="text-center text-gray-500">No upcoming games found</p>
                 ) : (
-                  games.map((game) => (
-                    <GameCard
-                      key={game.id}
-                      game={{
-                        id: game.id,
-                        sport: game.sport || sport,
-                        home_team: game.home_team_id,
-                        away_team: game.away_team_id,
-                        game_time: game.start_time,
-                        status: game.status,
-                        homeOdds: typeof game.odds === 'number' ? game.odds : undefined,
-                        awayOdds: typeof game.odds === 'number' ? game.odds : undefined
-                      }}
-                    />
-                  ))
+                  games.filter(game => !!game.id).map((game) => {
+                    // Create a properly formatted game object that matches the Game interface
+                    const formattedGame: Game = {
+                      id: game.id,
+                      home_team_id: game.home_team_id,
+                      away_team_id: game.away_team_id,
+                      start_time: game.start_time || game.commencing_at || new Date().toISOString(),
+                      odds: game.odds || 'N/A',
+                      oas: game.oas || 0,
+                      status: game.status || 'scheduled',
+                      league: game.league || game.sport?.toUpperCase(),
+                      sport: game.sport,
+                      home_team: (game.home_team && typeof game.home_team === 'object') ? {
+                        id: game.home_team.id || game.home_team_id,
+                        name: game.home_team.name || 'Home Team',
+                        wins: typeof game.home_team.wins === 'number' ? game.home_team.wins : 0,
+                        losses: typeof game.home_team.losses === 'number' ? game.home_team.losses : 0,
+                        abbreviation: game.home_team.abbreviation || game.home_team_abbreviation || 'HOM'
+                      } : {
+                        id: game.home_team_id,
+                        name: 'Home Team',
+                        wins: 0,
+                        losses: 0,
+                        abbreviation: game.home_team_abbreviation || 'HOM'
+                      },
+                      away_team: (game.away_team && typeof game.away_team === 'object') ? {
+                        id: game.away_team.id || game.away_team_id,
+                        name: game.away_team.name || 'Away Team',
+                        wins: typeof game.away_team.wins === 'number' ? game.away_team.wins : 0,
+                        losses: typeof game.away_team.losses === 'number' ? game.away_team.losses : 0,
+                        abbreviation: game.away_team.abbreviation || game.away_team_abbreviation || 'AWY'
+                      } : {
+                        id: game.away_team_id,
+                        name: 'Away Team',
+                        wins: 0,
+                        losses: 0,
+                        abbreviation: game.away_team_abbreviation || 'AWY'
+                      }
+                    };
+                    
+                    return (
+                      <GameCard
+                        key={game.id}
+                        game={formattedGame}
+                        className="w-full"
+                      />
+                    );
+                  })
                 )}
               </div>
               <ScrollBar orientation="vertical" />

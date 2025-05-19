@@ -73,13 +73,13 @@ def download_image(url: str, save_path: Path) -> Optional[str]:
         logger.debug(f"Failed to download image {url}: {e}")
         return None
 
-def process_team(team: dict, sport: dict) -> None:
+def process_team(team: dict, sport: dict) -> int:
     """Process a single team's data."""
     try:
         team_id = team.get('id')
         if not team_id:
             logger.warning("Skipping team with no ID")
-            return
+            return 0
             
         # Use the team dict directly (already flattened by extract_teams_from_response)
         team_logo_url = (team.get('logos') or [{}])[0].get('href', '')
@@ -105,11 +105,27 @@ def process_team(team: dict, sport: dict) -> None:
         supabase.table('teams').upsert(team_record, on_conflict='espn_id').execute()
         logger.debug(f"Processed team: {team_record.get('name')} (ID: {team_id})")
         
-        # Process team roster
-        process_team_roster(team_id, sport)
+        # Process team roster and count players
+        players_added = 0
+        try:
+            roster_url = f"{ESPN_BASE_URL}/{sport['sport']}/{sport['league']}/teams/{team_id}/roster"
+            response = requests.get(roster_url, headers=HEADERS, timeout=15)
+            response.raise_for_status()
+            roster_data = response.json()
+            
+            # Count athletes in the roster
+            if 'athletes' in roster_data and roster_data['athletes']:
+                players_added = len(roster_data['athletes'])
+                logger.debug(f"Found {players_added} players in roster for team {team_id}")
+                
+        except Exception as e:
+            logger.warning(f"Error fetching roster for team {team_id}: {e}")
+        
+        return players_added
         
     except Exception as e:
         logger.error(f"Error processing team {team_id}: {e}", exc_info=True)
+        return 0
 
 def process_team_roster(team_id: str, sport: dict) -> None:
     """Process the roster for a single team."""
@@ -317,7 +333,7 @@ def extract_teams_from_response(response_data: dict) -> list:
     
     return teams
 
-def scrape_teams_and_players():
+def scrape_teams_and_players(limit_players=None):
     """Main function to scrape teams and players for all sports."""
     logger.info("Starting team and player scrape...")
     
@@ -352,7 +368,11 @@ def scrape_teams_and_players():
             logger.info(f"Found {len(teams)} teams for {sport['key']}")
             
             # Process each team
+            player_count = 0
             for team in teams:
+                if limit_players is not None and player_count >= limit_players:
+                    logger.info(f"Reached player limit of {limit_players}. Stopping...")
+                    return
                 if not isinstance(team, dict):
                     logger.warning(f"Skipping invalid team data: {team}")
                     continue
@@ -364,7 +384,13 @@ def scrape_teams_and_players():
                     
                 try:
                     logger.debug(f"Processing team: {team.get('name')} (ID: {team_id})")
-                    process_team(team, sport)
+                    # Process team and get number of players added
+                    players_added = process_team(team, sport)
+                    if players_added:
+                        player_count += players_added
+                        if limit_players is not None and player_count >= limit_players:
+                            logger.info(f"Reached player limit of {limit_players}. Stopping...")
+                            return
                     time.sleep(0.5)  # Be nice to the API
                 except Exception as e:
                     logger.error(f"Error processing team {team_id}: {e}", exc_info=True)
@@ -382,12 +408,13 @@ def main():
     
     parser = argparse.ArgumentParser(description='ESPN Data Scraper')
     parser.add_argument('--once', action='store_true', help='Run the scraper once and exit')
+    parser.add_argument('--limit', type=int, help='Limit the number of players to fetch')
     args = parser.parse_args()
     
     try:
-        if args.once:
-            logger.info("Running scraper once...")
-            scrape_teams_and_players()
+        if args.once or args.limit is not None:
+            logger.info(f"Running scraper once with player limit: {args.limit if args.limit else 'unlimited'}")
+            scrape_teams_and_players(limit_players=args.limit)
         else:
             logger.info("Starting scraper in scheduled mode...")
             # Schedule to run daily at 3 AM
