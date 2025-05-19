@@ -1,6 +1,7 @@
 -- Create schedules table
 CREATE TABLE IF NOT EXISTS schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    external_id TEXT,
     sport TEXT NOT NULL,
     game_date DATE NOT NULL,
     home_team TEXT NOT NULL,
@@ -13,6 +14,9 @@ CREATE TABLE IF NOT EXISTS schedules (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add index for external_id for fast lookups
+CREATE INDEX IF NOT EXISTS idx_schedules_external_id ON schedules(external_id);
 
 -- Create indexes for schedules
 CREATE INDEX IF NOT EXISTS idx_schedules_sport ON schedules(sport);

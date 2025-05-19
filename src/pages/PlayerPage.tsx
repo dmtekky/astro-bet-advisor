@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Info, BarChart2, Activity, Star, Clock, Award } from 'lucide-react';
 import { getZodiacSign, getZodiacIcon } from '@/lib/astroCalc';
 import { calculateAIS } from '@/lib/formula';
-import { supabase } from '@/lib/supabase';
 
 // Types
 import type { Player, Sport } from '@/types';
@@ -144,39 +144,52 @@ const PlayerPage: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        // Fetch player data
-        const mockPlayer: PlayerWithStats = {
-          id: playerId || '',
-          name: 'Player ' + (playerId || '').slice(0, 5),
-          sport: 'nba',
-          height: '6\'7"',
-          weight: '220 lbs',
-          position: ['PG', 'SG', 'SF', 'PF', 'C'][Math.floor(Math.random() * 5)],
-          number: Math.floor(Math.random() * 99) + 1,
-          birth_date: new Date(1990 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)).toISOString().split('T')[0],
-          team_id: teamId || 'LAL',
-          stats: {
-            points: Math.floor(Math.random() * 30) + 10,
-            rebounds: (Math.random() * 12).toFixed(1),
-            assists: (Math.random() * 10).toFixed(1),
-            steals: (Math.random() * 3).toFixed(1),
-            blocks: (Math.random() * 2.5).toFixed(1),
-            fgPercentage: (Math.random() * 30 + 40).toFixed(1) + '%',
-            threePointPercentage: (Math.random() * 20 + 30).toFixed(1) + '%',
-            ftPercentage: (Math.random() * 20 + 70).toFixed(1) + '%',
-          }
-        };
+        // Fetch player data from Supabase
+        const { data: player, error: playerError } = await supabase
+          .from('players')
+          .select('*')
+          .eq('id', playerId)
+          .single();
+        if (playerError) throw playerError;
         
-        setPlayer(mockPlayer);
+        // Transform player data to match expected format
+        const formattedPlayer = {
+          ...player,
+          sport: player.sport as Sport, // Type assertion for Sport enum
+          stats: player.stats && typeof player.stats === 'object' 
+            ? {
+                points: (player.stats as any).points || 0,
+                rebounds: (player.stats as any).rebounds || '0',
+                assists: (player.stats as any).assists || '0',
+                steals: (player.stats as any).steals || '0',
+                blocks: (player.stats as any).blocks || '0',
+                fgPercentage: (player.stats as any).fgPercentage || '0%',
+                threePointPercentage: (player.stats as any).threePointPercentage || '0%',
+                ftPercentage: (player.stats as any).ftPercentage || '0%'
+              }
+            : {
+                points: 0,
+                rebounds: '0',
+                assists: '0',
+                steals: '0',
+                blocks: '0',
+                fgPercentage: '0%',
+                threePointPercentage: '0%',
+                ftPercentage: '0%'
+              }
+        } as PlayerWithStats;
         
-        // Fetch team data if teamId is available
-        if (teamId) {
-          const { data: teamData } = await supabase
+        setPlayer(formattedPlayer);
+
+        // Fetch team data for this player
+        if (player && player.team_id) {
+          const { data: team, error: teamError } = await supabase
             .from('teams')
             .select('*')
-            .eq('id', teamId)
+            .eq('id', player.team_id)
             .single();
-          setTeam(teamData || { id: teamId, name: teamId.toUpperCase() });
+          if (teamError) throw teamError;
+          setTeam(team);
         }
         
         // Fetch player stats (mock data for now)
@@ -212,15 +225,15 @@ const PlayerPage: React.FC = () => {
         setEphemeris(mockEphemeris);
         
         // Calculate AIS using the formula
-        if (mockPlayer) {
-          const aisResult = await calculateAIS(mockPlayer, mockEphemeris);
+        if (formattedPlayer) {
+          const aisResult = await calculateAIS(formattedPlayer, mockEphemeris);
           
           // Enhance the AIS result with additional UI-specific data
           const enhancedAIS: PlayerAIS = {
             ...aisResult,
             dominant_house: ['first', 'second', 'fifth', 'tenth'][Math.floor(Math.random() * 4)],
             key_attributes: ['creativity', 'energy', 'focus', 'luck'].slice(0, Math.floor(Math.random() * 3) + 1),
-            forecast: generateAstroForecast(aisResult, mockPlayer.name)
+            forecast: generateAstroForecast(aisResult, formattedPlayer.name)
           };
           
           setAIS(enhancedAIS);

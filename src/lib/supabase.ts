@@ -1,6 +1,22 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/database.types';
 import { toast } from '@/components/ui/use-toast';
+
+// Import environment variables with Vite's import.meta.env
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase environment variables. Please check your .env file.');
+  console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? 'exists' : 'missing');
+  console.log('VITE_SUPABASE_KEY:', import.meta.env.VITE_SUPABASE_KEY ? 'exists' : 'missing');
+  throw new Error('Missing required Supabase environment variables');
+}
+
+// Create a single supabase client for interacting with your database
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+console.debug('Supabase initialized with URL:', supabaseUrl);
 
 /**
  * Helper function to fetch data from Supabase with better error handling
@@ -35,7 +51,8 @@ export const fetchFromSupabase = async <T>(
   }
 };
 
-export { supabase };
+// Export types for use in other files
+export type { Database };
 
 // Interface for a scheduled game
 export interface ScheduledGame {

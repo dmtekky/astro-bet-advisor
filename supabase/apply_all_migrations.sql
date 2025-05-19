@@ -64,6 +64,64 @@ CREATE TABLE public.teams (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add your migration SQL statements below this line
+
+-- Drop existing schedules table if it exists
+DROP TABLE IF EXISTS public.schedules;
+
+-- Create new schedules table with all required columns
+CREATE TABLE public.schedules (
+    id TEXT PRIMARY KEY,
+    home_team TEXT NOT NULL,
+    away_team TEXT NOT NULL,
+    home_team_id UUID NOT NULL,
+    away_team_id UUID NOT NULL,
+    game_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    status TEXT NOT NULL,
+    last_updated TIMESTAMP WITH TIME ZONE NOT NULL,
+    odds JSONB,
+    sport_type TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create trigger to update updated_at column
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_schedules_updated_at
+    BEFORE UPDATE ON public.schedules
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger to update updated_at column
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_schedules_updated_at
+    BEFORE UPDATE ON public.schedules
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create function to refresh schema cache
+CREATE OR REPLACE FUNCTION refresh_schema_cache()
+RETURNS void
+LANGUAGE sql
+AS $$
+SELECT pg_catalog.pg_reload_conf();
+$$;
+
 -- Drop stats tables if they exist
 DROP TABLE IF EXISTS public.basketball_stats CASCADE;
 DROP TABLE IF EXISTS public.baseball_stats CASCADE;

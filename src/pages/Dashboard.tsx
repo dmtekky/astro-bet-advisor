@@ -6,8 +6,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { GameCard } from '@/features/dashboard/GameCard';
 import { useAstroData } from '@/hooks/useAstroData';
 import { useCurrentEphemeris } from '@/hooks/useFormulaData';
+import { useUpcomingGames } from '@/hooks/useUpcomingGames';
 import { calculateAstrologicalImpact } from '@/lib/astroFormula';
-import type { GameData } from '../types/game';
+import type { Game } from '@/features/dashboard/GameCard'; // Update import to use Game interface
 
 // Default values moved to the top to avoid usage before declaration
 const defaultAspects = {
@@ -46,27 +47,7 @@ const defaultSigns = {
   pluto: 'Sagittarius'
 };
 
-// Sample games data with all required GameData properties
-const SAMPLE_GAMES: GameData[] = [
-  {
-    id: '1',
-    homeTeam: 'Team A',
-    awayTeam: 'Team B',
-    startTime: new Date().toISOString(),
-    homeOdds: 1.8,
-    awayOdds: 2.1,
-    spread: 1.5,
-    total: 2.5,
-    homeRecord: '5-2-3',
-    awayRecord: '3-4-3',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'scheduled',
-    period: 1,
-    league: 'Premier League',
-    // Remove players as it's not part of GameData type
-  }
-];
+// No sample games - we'll use real data from Supabase via the hooks
 
 // Type definitions for astrological data
 type AspectKey = keyof typeof defaultAspects;
@@ -87,12 +68,20 @@ interface CelestialEvent {
   icon?: string;
 }
 
+// Extend the Game interface to include required properties
+interface DashboardGame extends Game {
+  astroEdge: number;
+  astroInfluence: string;
+}
+
 // Type for the component's local state
 interface DashboardState {
   loading: boolean;
   error: Error | null;
   astroData: AstroData | null;
-  games: GameData[];
+  games: DashboardGame[];
+  nbaGames: DashboardGame[];
+  mlbGames: DashboardGame[];
   lunarNodeData: {
     northNode: string;
     southNode: string;
@@ -215,17 +204,23 @@ type AstroData = BaseAstroData & {
 
 const Dashboard = () => {
   const { data: ephemerisData } = useCurrentEphemeris();
-  const { astroData, loading, error } = useAstroData();
+  const { astroData, loading: astroLoading, error: astroError } = useAstroData();
+  
+  // Fetch games for each sport
+  const { games: nbaGames = [], loading: nbaLoading, error: nbaError } = useUpcomingGames('basketball_nba');
+  const { games: mlbGames = [], loading: mlbLoading, error: mlbError } = useUpcomingGames('baseball_mlb');
 
   // Initialize state
   const [state, setState] = useState<DashboardState>({
     loading: true,
     error: null,
     astroData: null,
-    games: SAMPLE_GAMES,
+    games: [],
+    nbaGames: [],
+    mlbGames: [],
     lunarNodeData: {
-      northNode: 'Aries',
-      southNode: 'Libra',
+      northNode: '',
+      southNode: '',
       nextTransitDate: null,
       nextTransitType: null,
       nextTransitSign: null,
@@ -252,34 +247,95 @@ const Dashboard = () => {
     }
   }, [astroData]);
 
-  // Update state when there's an error
+  // Update state when games change
   useEffect(() => {
-    if (error) {
+    // Only update if we have games or both loading processes are complete
+    if ((nbaGames.length > 0 || mlbGames.length > 0) || (!nbaLoading && !mlbLoading)) {
+      // Ensure all games have the required astroEdge and astroInfluence properties
+      const processedNbaGames = (nbaGames || []).map(game => {
+        // Ensure home_team and away_team are properly typed
+        const homeTeam = typeof game.home_team === 'string' ? 
+          { id: '', name: game.home_team, wins: 0, losses: 0 } : 
+          game.home_team;
+        
+        const awayTeam = typeof game.away_team === 'string' ?
+          { id: '', name: game.away_team, wins: 0, losses: 0 } :
+          game.away_team;
+
+        return {
+          ...game,
+          home_team: homeTeam,
+          away_team: awayTeam,
+          astroEdge: game.astroEdge ?? 0,
+          astroInfluence: game.astroInfluence ?? 'Neutral',
+        };
+      });
+      
+      const processedMlbGames = (mlbGames || []).map(game => {
+        // Ensure home_team and away_team are properly typed
+        const homeTeam = typeof game.home_team === 'string' ? 
+          { id: '', name: game.home_team, wins: 0, losses: 0 } : 
+          game.home_team;
+        
+        const awayTeam = typeof game.away_team === 'string' ?
+          { id: '', name: game.away_team, wins: 0, losses: 0 } :
+          game.away_team;
+
+        return {
+          ...game,
+          home_team: homeTeam,
+          away_team: awayTeam,
+          astroEdge: game.astroEdge ?? 0,
+          astroInfluence: game.astroInfluence ?? 'Neutral',
+        };
+      });
+
       setState(prev => ({
         ...prev,
-        loading: false,
-        error
+        nbaGames: processedNbaGames,
+        mlbGames: processedMlbGames,
+        games: [...processedNbaGames, ...processedMlbGames],
+        loading: nbaLoading || mlbLoading,
+        error: nbaError || mlbError || prev.error,
       }));
     }
-  }, [error]);
+  }, [nbaGames, mlbGames, nbaLoading, mlbLoading, nbaError, mlbError]);
+
+  // Handle error state
+  useEffect(() => {
+    if (astroError || nbaError || mlbError) {
+      setState(prev => ({
+        ...prev,
+        error: astroError || nbaError || mlbError,
+        loading: false,
+      }));
+    }
+  }, [astroError, nbaError, mlbError]);
 
   // Handle loading state
-  if (loading) {
+  if (state.loading || astroLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
   }
 
   // Handle error state
-  if (error) {
+  if (state.error) {
     return (
       <DashboardLayout>
-        <div className="p-4 text-red-600 bg-red-100 rounded-lg">
-          Error loading astrological data: {error.message}
+        <div className="container mx-auto p-4">
+          <div className="text-red-500 text-xl mb-4">Error loading data</div>
+          <p className="text-muted-foreground">{state.error.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </DashboardLayout>
     );
@@ -377,32 +433,52 @@ const Dashboard = () => {
   };
 
   // Calculate astro edge for a game
-  const calculateAstroEdge = (game: GameData): number => {
-    // Use default astro data
-    const astroData = {
-      moon_phase: typeof state.astroData?.moon?.phase === 'number' ? state.astroData.moon.phase : 0.5,
-      moon_sign: state.astroData?.moon?.sign || 'Aries',
-      sun_sign: state.astroData?.sun?.sign || 'Aries',
-      mercury_sign: state.astroData?.mercury?.sign || 'Aries',
-      venus_sign: state.astroData?.venusSign || 'Aries',
-      mars_sign: state.astroData?.marsSign || 'Aries',
-      jupiter_sign: state.astroData?.jupiterSign || 'Aries',
-      saturn_sign: state.astroData?.saturnSign || 'Aries',
-      mercury_retrograde: state.astroData?.mercury?.retrograde || false,
-      aspects: {
-        sun_mars: state.astroData?.aspects?.sunMars || null,
-        sun_saturn: state.astroData?.aspects?.sunSaturn || null,
-        sun_jupiter: state.astroData?.aspects?.sunJupiter || null
-      }
-    };
-    
+  const calculateAstroEdge = (game: any): number => {
     try {
+      // Use default astro data with safe access
+      const astroData = {
+        moon_phase: typeof state.astroData?.moon?.phase === 'number' ? state.astroData.moon.phase : 0.5,
+        moon_sign: state.astroData?.moon?.sign || 'Aries',
+        sun_sign: state.astroData?.sun?.sign || 'Aries',
+        mercury_sign: state.astroData?.mercury?.sign || 'Aries',
+        venus_sign: state.astroData?.venusSign || 'Aries',
+        mars_sign: state.astroData?.marsSign || 'Aries',
+        jupiter_sign: state.astroData?.jupiterSign || 'Aries',
+        saturn_sign: state.astroData?.saturnSign || 'Aries',
+        mercury_retrograde: state.astroData?.mercury?.retrograde || false,
+        aspects: {
+          sun_mars: state.astroData?.aspects?.sunMars || null,
+          sun_saturn: state.astroData?.aspects?.sunSaturn || null,
+          sun_jupiter: state.astroData?.aspects?.sunJupiter || null
+        }
+      };
+      
       // Simple implementation - can be enhanced with actual calculations
       let score = 50; // Start with neutral score
       
       // Example: Adjust score based on moon phase
       if (astroData.moon_phase > 0.7 || astroData.moon_phase < 0.3) {
         score += 10; // Favor new and full moons
+      }
+      
+      // Add some variation based on team names
+      try {
+        const getTeamName = (team: any): string => {
+          if (!team) return '';
+          if (typeof team === 'string') return team;
+          return team.name || '';
+        };
+        
+        const homeTeamName = getTeamName(game.home_team);
+        const awayTeamName = getTeamName(game.away_team);
+        
+        if (homeTeamName && awayTeamName) {
+          const homeTeamHash = homeTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const awayTeamHash = awayTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          score += (homeTeamHash - awayTeamHash) % 10; // Smaller impact on astro edge
+        }
+      } catch (e) {
+        console.warn('Error processing team names for astro edge:', e);
       }
       
       // Example: Favor certain signs
@@ -419,40 +495,39 @@ const Dashboard = () => {
     }
   };
 
-  // Process games with astrological data
-  const processGamesWithAstro = (games: GameData[]) => {
-    if (!games || !Array.isArray(games)) return [];
-    
-    return games.map(game => ({
-      ...game,
-      astroEdge: calculateAstroEdge(game),
-      astroInfluence: 'Neutral astrological influence'
-    }));
-  };
-  
-  // Initialize games with astro data
-  const gamesWithAstro = processGamesWithAstro(state.games);
-  
-  // Destructure lunar node data
-  const { northNode, southNode, upcomingTransits } = state.astroData?.lunarNodes || {
-    northNode: 'Gemini',
-    southNode: 'Sagittarius',
-    upcomingTransits: []
-  };
-  
   // Calculate astrological impact for each game
-  const calculateGameImpact = (game: GameData): number => {
+  const calculateGameImpact = (game: any): number => {
     try {
-      // Simple implementation - can be enhanced with actual calculations
-      let score = 50; // Start with neutral score
-      
-      // Example: Adjust score based on team names (simple hash)
-      const homeTeamHash = game.homeTeam.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const awayTeamHash = game.awayTeam.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      
-      // Add some randomness based on team names
-      score += (homeTeamHash - awayTeamHash) % 10;
-      
+      // Start with a base score of 50 (neutral)
+      let score = 50;
+      // Get team names, handling both string and Team object cases
+      const getTeamName = (team: any): string => {
+        if (!team) return 'Team';
+        if (typeof team === 'string') return team;
+        return team.name || 'Team';
+      };
+      const homeTeamName = getTeamName(game.home_team);
+      const awayTeamName = getTeamName(game.away_team);
+      // Simple hash of team names for consistent but pseudo-random scoring
+      const homeTeamHash = homeTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const awayTeamHash = awayTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      // Add some variation based on team names (0-20 points)
+      score += (homeTeamHash - awayTeamHash) % 21;
+      // Consider game time if available
+      if (game.start_time) {
+        try {
+          const gameTime = new Date(game.start_time);
+          if (!isNaN(gameTime.getTime())) { // Check if date is valid
+            const hour = gameTime.getHours();
+            // Slight preference for evening games (6 PM - 11 PM)
+            if (hour >= 18 && hour < 23) {
+              score += 5;
+            }
+          }
+        } catch (e) {
+          console.warn('Invalid date format for game time:', game.start_time);
+        }
+      }
       // Ensure score is within 0-100 range
       return Math.max(0, Math.min(100, score));
     } catch (error) {
@@ -460,7 +535,53 @@ const Dashboard = () => {
       return 50; // Return neutral score on error
     }
   };
+
+  // Process games with astrological data
+  const processGamesWithAstro = (games: any[]) => {
+    if (!games || !Array.isArray(games)) return [];
+    
+    return games.map(game => {
+      try {
+        const astroEdge = calculateAstroEdge(game);
+        const impact = calculateGameImpact(game);
+        
+        return {
+          ...game,
+          astroEdge,
+          astroInfluence: getAstroInfluence(astroEdge, impact)
+        };
+      } catch (error) {
+        console.error('Error processing game:', game, error);
+        return {
+          ...game,
+          astroEdge: 50, // Neutral score on error
+          astroInfluence: 'Neutral astrological influence'
+        };
+      }
+    });
+  };
   
+  // Initialize games with astro data
+  const gamesWithAstro = processGamesWithAstro(state.games);
+  
+  // Get astrological influence description based on score and impact
+  const getAstroInfluence = (astroEdge: number, impact: number): string => {
+    if (astroEdge >= 70 && impact >= 70) return 'Strong positive astrological influence';
+    if (astroEdge >= 70 && impact <= 30) return 'Strong but conflicting astrological signals';
+    if (astroEdge <= 30 && impact <= 30) return 'Strong negative astrological influence';
+    if (astroEdge <= 30 && impact >= 70) return 'Challenging but potentially rewarding';
+    if (astroEdge >= 60) return 'Favorable astrological conditions';
+    if (astroEdge <= 40) return 'Challenging astrological conditions';
+    return 'Neutral astrological influence';
+  };
+  
+  // Destructure lunar node data
+  const { northNode, southNode, upcomingTransits } = state.astroData?.lunarNodes || {
+    northNode: 'Gemini',
+    southNode: 'Sagittarius',
+    upcomingTransits: []
+  };
+
   // Helper function to convert Dashboard AstroData to astroFormula AstroData format
   const convertAstroDataFormat = (dashboardAstroData: any): any => {
     // Ensure moon_phase is always a number
@@ -527,25 +648,94 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Upcoming Games Section */}
+        {/* NBA Games Section */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight">Upcoming Games</h2>
+          <h2 className="text-2xl font-bold tracking-tight">NBA Games</h2>
           <p className="text-muted-foreground">
-            Today's top matchups with astrological insights
+            Upcoming NBA matchups with astrological insights
           </p>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {SAMPLE_GAMES.slice(0, 3).map((game) => {
-              const astroEdge = calculateAstroEdge(game);
-              return <GameCard key={game.id} game={game} astroEdge={astroEdge} />;
-            })}
-          </div>
+          {state.nbaGames.length > 0 ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {state.nbaGames.slice(0, 3).map((game) => {
+                  // Ensure game has all required properties
+                  const gameWithAstro = {
+                    ...game,
+                    // Ensure required properties exist
+                    id: game.id || `nba-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    home_team_id: game.home_team_id || '',
+                    away_team_id: game.away_team_id || '',
+                    home_team: game.home_team || 'Home Team',
+                    away_team: game.away_team || 'Away Team',
+                    start_time: game.start_time || new Date().toISOString(),
+                    // Calculate astro data if not present
+                    astroEdge: game.astroEdge || calculateAstroEdge(game),
+                    astroInfluence: game.astroInfluence || 'Neutral astrological influence',
+                    // Add default values for optional properties
+                    status: game.status || 'scheduled',
+                    league: game.league || 'NBA',
+                    sport: game.sport || 'basketball_nba'
+                  };
+                  return <GameCard key={gameWithAstro.id} game={gameWithAstro} astroEdge={gameWithAstro.astroEdge} />;
+                })}
+              </div>
+              <div className="flex justify-center mt-4">
+                <Link to="/upcoming-games/nba" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                  View All NBA Games →
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4 bg-gray-900/50 rounded-lg border border-gray-800">
+              <p className="text-muted-foreground">No upcoming NBA games found.</p>
+            </div>
+          )}
+        </div>
 
-          <div className="flex justify-center mt-4">
-            <Link to="/upcoming-games" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-              View All Upcoming Games →
-            </Link>
-          </div>
+        {/* MLB Games Section */}
+        <div className="space-y-4 mt-8">
+          <h2 className="text-2xl font-bold tracking-tight">MLB Games</h2>
+          <p className="text-muted-foreground">
+            Upcoming MLB matchups with astrological insights
+          </p>
+
+          {state.mlbGames.length > 0 ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {state.mlbGames.slice(0, 3).map((game) => {
+                  // Ensure game has all required properties
+                  const gameWithAstro = {
+                    ...game,
+                    // Ensure required properties exist
+                    id: game.id || `mlb-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    home_team_id: game.home_team_id || '',
+                    away_team_id: game.away_team_id || '',
+                    home_team: game.home_team || 'Home Team',
+                    away_team: game.away_team || 'Away Team',
+                    start_time: game.start_time || new Date().toISOString(),
+                    // Calculate astro data if not present
+                    astroEdge: game.astroEdge || calculateAstroEdge(game),
+                    astroInfluence: game.astroInfluence || 'Neutral astrological influence',
+                    // Add default values for optional properties
+                    status: game.status || 'scheduled',
+                    league: game.league || 'MLB',
+                    sport: game.sport || 'baseball_mlb'
+                  };
+                  return <GameCard key={gameWithAstro.id} game={gameWithAstro} astroEdge={gameWithAstro.astroEdge} />;
+                })}
+              </div>
+              <div className="flex justify-center mt-4">
+                <Link to="/upcoming-games/mlb" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                  View All MLB Games →
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4 bg-gray-900/50 rounded-lg border border-gray-800">
+              <p className="text-muted-foreground">No upcoming MLB games found.</p>
+            </div>
+          )}
         </div>
 
         {/* Celestial Insights Section */}

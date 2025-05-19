@@ -1,19 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { fetchPlayersByTeam } from '@/services/playerService';
 import AstroTeamSection from './_AstroTeamSection';
 import TeamRoster from '@/components/TeamRoster';
 import { PlayerStats, TeamStats, calculatePlayerImpact } from '@/lib/astroFormula';
 
+interface Player {
+  id: string;
+  name: string;
+  position: string;
+  stats: {
+    points: number;
+    assists: number;
+    rebounds: number;
+  };
+  image_url?: string;
+}
+
 interface TeamInfo {
   id: string;
   name: string;
-  city: string;
+  abbreviation?: string;
   logo: string;
-  league: string;
-  founded: number;
-  venue: string;
-  coach: string;
+  city?: string;
+  league?: string;
+  founded?: number;
+  wins?: number;
+  losses?: number;
+  win_pct?: number;
+}
+
+interface TeamInfo {
+  id: string;
+  name: string;
+  abbreviation?: string;
+  logo: string;
+  sport: string;
+  external_id?: string;
+  created_at: string;
+  updated_at: string;
+  // Optional fields that might be in the database
+  city?: string;
+  league?: string;
+  founded?: number;
+  venue?: string;
+  coach?: string;
   record?: string;
+  // New fields for stats
+  wins?: number;
+  losses?: number;
+  win_pct?: number;
 }
 
 export default function TeamPage() {
@@ -28,43 +65,33 @@ export default function TeamPage() {
     async function fetchTeamData() {
       setLoading(true);
       try {
-        // In a real app, you would fetch this from your API
-        // const teamData = await fetch(`/api/teams/${teamId}`).then(res => res.json());
+        // Fetch team info from Supabase
+        const { data: team, error: teamError } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('id', teamId)
+          .single();
+        if (teamError) throw teamError;
+        setTeam(team);
+
+        // Fetch players for the team using playerService
+        const players = await fetchPlayersByTeam(teamId);
+        // Transform players data to match the PlayerStats type
+        const formattedPlayers = players.map(player => ({
+          ...player,
+          position: player.position || 'N/A',
+          // Ensure stats has the required shape with default values
+          stats: player.stats && typeof player.stats === 'object' 
+            ? {
+                points: (player.stats as any).points || 0,
+                assists: (player.stats as any).assists || 0,
+                rebounds: (player.stats as any).rebounds || 0,
+              }
+            : { points: 0, assists: 0, rebounds: 0 }
+        })) as unknown as PlayerStats[]; // Type assertion to handle the transformation
+        setPlayers(formattedPlayers);
         
-        // Mock data for demonstration
-        const mockTeam: TeamInfo = {
-          id: teamId || '',
-          name: teamId ? teamId.toUpperCase() : 'Team',
-          city: teamId === 'lakers' ? 'Los Angeles' : teamId === 'celtics' ? 'Boston' : 'City',
-          logo: `/${teamId}-logo.png`,
-          league: 'NBA',
-          founded: 1947,
-          venue: teamId === 'lakers' ? 'Crypto.com Arena' : 'Arena',
-          coach: 'Head Coach',
-          record: '42-30'
-        };
-        
-        setTeam(mockTeam);
-        
-        // Mock players data
-        const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
-        const mockPlayers: PlayerStats[] = Array(5).fill(0).map((_, i) => ({
-          id: `player-${i}`,
-          name: `Player ${i + 1}`,
-          birth_date: `199${i}-0${i+1}-${10+i}`,
-          sport: 'basketball',
-          win_shares: 2 + i,
-          stats: {
-            points: 10 + i * 2,
-            assists: 3 + i,
-            rebounds: 5 + i
-          },
-          position: positions[i]
-        }));
-        
-        setPlayers(mockPlayers);
-        
-        // Mock recent games
+        // Set recent games (you might want to fetch this from your database later)
         setRecentGames([
           { id: '1', date: '2023-05-10', vs: 'Warriors', result: 'W 112-108' },
           { id: '2', date: '2023-05-08', vs: 'Suns', result: 'L 98-105' },
@@ -153,33 +180,39 @@ export default function TeamPage() {
         {/* Team Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center mb-8 bg-gray-800 p-6 rounded-xl">
           <div className="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center mb-4 md:mb-0 md:mr-8">
-            {team.logo ? (
+            {team?.logo ? (
               <img src={team.logo} alt={`${team.name} logo`} className="w-24 h-24 object-contain" />
             ) : (
-              <span className="text-4xl">🏀</span>
+              <span className="text-4xl font-bold text-gray-400">?</span>
             )}
           </div>
           <div>
-            <h1 className="text-4xl font-bold">{team.city} {team.name}</h1>
-            <div className="flex flex-wrap gap-4 mt-2 text-gray-300">
-              <div>
-                <span className="font-semibold">League:</span> {team.league}
-              </div>
-              <div>
-                <span className="font-semibold">Founded:</span> {team.founded}
-              </div>
-              <div>
-                <span className="font-semibold">Arena:</span> {team.venue}
-              </div>
-              <div>
-                <span className="font-semibold">Coach:</span> {team.coach}
-              </div>
-              {team.record && (
-                <div>
-                  <span className="font-semibold">Record:</span> {team.record}
+            <h1 className="text-3xl font-bold mb-2">{team?.name}</h1>
+            <div className="text-lg text-gray-400 mb-1">{team?.abbreviation}</div>
+            <div className="text-md text-gray-400">{team?.city}</div>
+          </div>
+        </div>
+
+        {/* Player Roster Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Team Roster</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {players.length === 0 ? (
+              <div className="text-center text-gray-400">No players found for this team.</div>
+            ) : (
+              players.map((player) => (
+                <div key={player.id} className="bg-gray-800 p-4 rounded-lg">
+                  {player.image_url && (
+                    <img src={player.image_url} alt={player.name} className="w-16 h-16 rounded-full mb-2" />
+                  )}
+                  <div className="font-semibold">{player.name}</div>
+                  <div className="text-sm text-gray-400">{player.position}</div>
+                  <div className="text-sm text-gray-400">Points: {player.stats?.points || 0}</div>
+                  <div className="text-sm text-gray-400">Assists: {player.stats?.assists || 0}</div>
+                  <div className="text-sm text-gray-400">Rebounds: {player.stats?.rebounds || 0}</div>
                 </div>
-              )}
-            </div>
+              ))
+            )}
           </div>
         </div>
 

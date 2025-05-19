@@ -11,18 +11,19 @@ type Team = {
   logo?: string;
 };
 
-// Mock team data - replace with actual data from your API
-const MOCK_TEAMS: Record<string, Team> = {
-  lal: { id: 'lal', name: 'Los Angeles Lakers', logo: 'https://cdn.nba.com/logos/nba/1610612747/primary/L/logo.svg' },
-  gsw: { id: 'gsw', name: 'Golden State Warriors', logo: 'https://cdn.nba.com/logos/nba/1610612744/primary/G/logo.svg' },
-  bos: { id: 'bos', name: 'Boston Celtics', logo: 'https://cdn.nba.com/logos/nba/1610612738/primary/B/logo.svg' },
-  mia: { id: 'mia', name: 'Miami Heat', logo: 'https://cdn.nba.com/logos/nba/1610612748/primary/HEI/logo.svg' },
-  bkn: { id: 'bkn', name: 'Brooklyn Nets', logo: 'https://cdn.nba.com/logos/nba/1610612751/primary/BKN/logo.svg' },
+// Default logos for different sports
+const DEFAULT_LOGOS: Record<string, string> = {
+  soccer: 'https://cdn-icons-png.flaticon.com/512/33/33736.png',
+  basketball: 'https://cdn-icons-png.flaticon.com/512/33/33682.png',
+  football: 'https://cdn-icons-png.flaticon.com/512/1/1322.png',
+  baseball: 'https://cdn-icons-png.flaticon.com/512/33/33736.png',
+  hockey: 'https://cdn-icons-png.flaticon.com/512/33/33618.png',
 };
 
 const UpcomingGames: React.FC = () => {
-  const { sport = 'basketball' } = useParams<{ sport?: string }>();
-  const { games, loading, error } = useUpcomingGames(sport);
+  const { sport = 'soccer' } = useParams<{ sport?: string }>();
+  // Fetch more games (up to 30) for the upcoming games page
+  const { games, loading, error } = useUpcomingGames(sport, 30);
   const groupedGames = groupGamesByDate(games);
 
   if (error) {
@@ -71,50 +72,68 @@ const UpcomingGames: React.FC = () => {
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {dateGames.map((game) => {
-                const homeTeam = MOCK_TEAMS[game.home_team_id];
-                const awayTeam = MOCK_TEAMS[game.away_team_id];
+                // Use the actual team names from the game data
+                const sportType = sport.includes('soccer') ? 'soccer' : 
+                                 sport.includes('basketball') ? 'basketball' : 
+                                 sport.includes('football') ? 'football' : 
+                                 sport.includes('baseball') ? 'baseball' : 
+                                 sport.includes('hockey') ? 'hockey' : 'soccer';
+                
+                const defaultLogo = DEFAULT_LOGOS[sportType] || DEFAULT_LOGOS.soccer;
                 
                 return (
                   <Card key={game.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base font-medium text-muted-foreground">
-                        {formatGameTime(game.start_time)}
+                        {formatGameTime(game.startTime)}
                       </CardTitle>
+                      <div className="text-xs text-muted-foreground">{game.league}</div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            {homeTeam?.logo && (
-                              <img 
-                                src={homeTeam.logo} 
-                                alt={`${homeTeam.name} logo`} 
-                                className="w-8 h-8 object-contain"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                            )}
-                            <span>{homeTeam?.name || `Team ${game.home_team_id}`}</span>
+                            <img 
+                              src={defaultLogo} 
+                              alt={`${game.homeTeam} logo`} 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div>
+                              <span className="font-medium">{game.homeTeam}</span>
+                              {game.homeRecord && (
+                                <div className="text-xs text-muted-foreground">{game.homeRecord}</div>
+                              )}
+                            </div>
                           </div>
-                          <span className="font-medium">vs</span>
+                          <div className="font-medium text-sm bg-muted px-2 py-1 rounded">
+                            {game.homeOdds.toFixed(2)}
+                          </div>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            {awayTeam?.logo && (
-                              <img 
-                                src={awayTeam.logo} 
-                                alt={`${awayTeam.name} logo`} 
-                                className="w-8 h-8 object-contain"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                            )}
-                            <span>{awayTeam?.name || `Team ${game.away_team_id}`}</span>
+                            <img 
+                              src={defaultLogo} 
+                              alt={`${game.awayTeam} logo`} 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div>
+                              <span className="font-medium">{game.awayTeam}</span>
+                              {game.awayRecord && (
+                                <div className="text-xs text-muted-foreground">{game.awayRecord}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="font-medium text-sm bg-muted px-2 py-1 rounded">
+                            {game.awayOdds.toFixed(2)}
                           </div>
                           <span className="text-sm text-muted-foreground">
                             {game.venue}

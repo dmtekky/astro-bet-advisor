@@ -1,147 +1,243 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Sport } from '@/types';
-import Slider from 'react-slick';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { TrendingUp, Info, ArrowRight } from 'lucide-react';
-import { getMockEvents } from '@/mocks/mockEvents';
+import { ArrowRight } from 'lucide-react';
+import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import { fetchGamesFromOddsAPI, fetchStandings } from '@/services/sportsDataService';
+import { getTeamLogo } from '@/utils/teamUtils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { GamesSectionSkeleton } from '@/components/ui/skeletons/GameCardSkeleton';
+import { TeamsSectionSkeleton } from '@/components/ui/skeletons/TeamCardSkeleton';
+import type { Team } from '@/types/supabase';
 
-interface Team {
+interface UIGame {
   id: string;
-  name: string;
-  wins: number;
-  losses: number;
-  win_pct: number;
-}
-
-interface Game {
-  id: string;
-  home_team: string;
-  away_team: string;
-  commence_time: string;
-  odds?: number;
-  oas?: number;
+  homeTeam: string;
+  awayTeam: string;
+  gameTime: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore?: number;
+  awayScore?: number;
+  status: string;
+  odds?: {
+    home: number;
+    away: number;
+    draw?: number;
+  };
 }
 
 const LeaguePage: React.FC = () => {
   const { leagueId: leagueIdParam } = useParams<{ leagueId: string }>();
-  // Ensure leagueId is a valid Sport type or default to 'nba'
-  const leagueId = (['nba', 'mlb', 'nfl', 'boxing', 'soccer', 'ncaa'].includes(leagueIdParam || '') 
-    ? leagueIdParam 
-    : 'nba') as Sport;
-    
-  const [teams, setTeams] = useState<Team[]>([]);
-  // Define a custom game type for the UI
-  interface UIGame {
-    id: string;
-    sport: Sport;
-    home_team: string;
-    away_team: string;
-    commence_time: string;
-    oas?: number;
-    odds?: number;
-    home_team_id: string;
-    away_team_id: string;
-    start_time: string;
-    status: string;
-  }
-
-  const [upcomingGames, setUpcomingGames] = useState<UIGame[]>([]);
-  const [astrologyData] = useState<string>('Astrological conditions are favorable for high-scoring games today with strong offensive performances likely.');
-  const [astroOutlook] = useState<string>('The Moon in Aries brings high energy and competitive spirit. Mars trine Jupiter enhances physical performance and endurance.');
-  const [loading, setLoading] = useState(false);
-
-  const LEAGUE_NAMES: Record<string, string> = {
-    nba: 'NBA',
-    mlb: 'MLB',
-    nfl: 'NFL',
-    boxing: 'Boxing',
-    soccer: 'Soccer',
-    ncaa: 'NCAA Football'
-  };
-
-  const LEAGUE_ICONS: Record<string, string> = {
-    nba: '🏀',
-    mlb: '⚾',
-    nfl: '🏈',
-    boxing: '🥊',
-    soccer: '⚽',
-    ncaa: '🏈'
-  };
-
-  useEffect(() => {
-    const loadData = () => {
-      setLoading(true);
-      
-      try {
-        // Generate mock teams based on the league
-        const mockTeams = Array.from({ length: 8 }, (_, i) => ({
-          id: `${leagueId}-team-${i + 1}`,
-          name: `${leagueId.toUpperCase()} Team ${String.fromCharCode(65 + i)}`,
-          abbreviation: `${leagueId.toUpperCase().slice(0, 3)}${i + 1}`,
-          sport: leagueId,
-          wins: Math.floor(Math.random() * 30) + 10,
-          losses: Math.floor(Math.random() * 20) + 5,
-          win_pct: parseFloat((Math.random() * 0.5 + 0.3).toFixed(3)), // Between 0.3 and 0.8
-        }));
-        
-        // Get mock games for the current league
-        const mockGames = getMockEvents(leagueId);
-        
-        // Map mock games to our UI game type
-        const formattedGames: UIGame[] = mockGames.map(game => ({
-          id: game.id,
-          sport: game.sport,
-          home_team_id: game.home_team_id,
-          away_team_id: game.away_team_id,
-          start_time: game.start_time,
-          status: 'scheduled',
-          home_team: game.home_team,
-          away_team: game.away_team,
-          commence_time: game.commence_time || game.start_time,
-          oas: game.oas,
-          odds: game.odds
-        }));
-        
-        setTeams(mockTeams);
-        setUpcomingGames(formattedGames);
-      } catch (error) {
-        console.error('Error loading mock data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [leagueId]);
-
+  const navigate = useNavigate();
+  
+  // Carousel settings for the games slider
   const carouselSettings = {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
+    slidesToShow: 3,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 5000
+    autoplaySpeed: 5000,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        }
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1
+        }
+      }
+    ]
+  };
+  
+  // Define valid league IDs
+  const validLeagueIds: Sport[] = ['nba', 'mlb', 'nfl', 'nhl', 'soccer', 'tennis', 'mma', 'ncaa', 'ncaab', 'ncaaf', 'golf', 'esports', 'cfl', 'boxing'];
+  
+  // Ensure leagueId is a valid Sport type or default to 'nba'
+  const leagueId: Sport = validLeagueIds.includes(leagueIdParam as Sport) 
+    ? (leagueIdParam as Sport) 
+    : 'nba';
+    
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [games, setGames] = useState<UIGame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [astrologyData] = useState<string>('Loading astrological data...');
+  const [astroOutlook] = useState<string>('Loading astrological outlook...');
+  const [retryCount, setRetryCount] = useState(0);
+
+  const loadData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!leagueId) {
+        setError('Invalid league ID');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch teams and games in parallel
+      const [teamsData, gamesData] = await Promise.all([
+        fetchStandings(leagueId as Sport),
+        fetchGamesFromOddsAPI(leagueId as Sport)
+      ]);
+      
+      setTeams(teamsData);
+      
+      // Map games to UI format
+      const formattedGames: UIGame[] = gamesData.map((game: any) => {
+        // Find the best odds from all bookmakers
+        const bestOdds = game.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'h2h')?.outcomes || [];
+        
+        return {
+          id: game.id,
+          homeTeam: game.home_team,
+          awayTeam: game.away_team,
+          homeTeamId: game.home_team_id || '',
+          awayTeamId: game.away_team_id || '',
+          gameTime: new Date(game.commence_time).toLocaleString(),
+          status: 'scheduled',
+          odds: {
+            home: bestOdds.find((o: any) => o.name === game.home_team)?.price,
+            away: bestOdds.find((o: any) => o.name === game.away_team)?.price,
+            draw: bestOdds.find((o: any) => o.name === 'Draw')?.price
+          }
+        };
+      });
+      
+      setGames(formattedGames);
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError('Failed to load league data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [leagueId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData, retryCount]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
   };
 
-  if (loading) {
-    return <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-8">
-      <div className="animate-pulse">Loading {LEAGUE_NAMES[leagueId || 'nba']} data...</div>
-    </div>;
+  // Handlers for navigation
+  const handleTeamClick = React.useCallback((teamId: string) => {
+    navigate(`/team/${teamId}`);
+  }, [navigate]);
+
+  const handleGameClick = React.useCallback((gameId: string) => {
+    navigate(`/game/${gameId}`);
+  }, [navigate]);
+
+  const LEAGUE_NAMES: Record<Sport, string> = {
+    nba: 'NBA',
+    mlb: 'MLB',
+    nfl: 'NFL',
+    nhl: 'NHL',
+    soccer: 'Soccer',
+    tennis: 'Tennis',
+    mma: 'MMA',
+    ncaa: 'NCAA',
+    ncaab: 'NCAA Basketball',
+    ncaaf: 'NCAA Football',
+    golf: 'Golf',
+    esports: 'eSports',
+    cfl: 'CFL',
+    boxing: 'Boxing'
+  } as const;
+
+  const LEAGUE_EMOJIS: Record<Sport, string> = {
+    nba: '🏀',
+    mlb: '⚾',
+    nfl: '🏈',
+    nhl: '🏒',
+    soccer: '⚽',
+    tennis: '🎾',
+    mma: '🥋',
+    ncaa: '🏈',
+    ncaab: '🏀',
+    ncaaf: '🏈',
+    golf: '⛳',
+    esports: '🎮',
+    cfl: '🏈',
+    boxing: '🥊'
+  } as const;
+
+  // Show full page skeleton only on initial load
+  if (loading && (!teams.length || !games.length)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-8">
+        <div className="container mx-auto">
+          <div className="flex items-center mb-8">
+            <Skeleton className="h-12 w-12 rounded-full mr-4" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          
+          <div className="mb-12">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <GamesSectionSkeleton />
+          </div>
+          
+          <div>
+            <Skeleton className="h-8 w-48 mb-6" />
+            <TeamsSectionSkeleton />
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (['soccer', 'ncaa'].includes(leagueId || '')) {
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="max-w-2xl mx-auto">
+          <Alert variant="destructive">
+            <div className="flex flex-col space-y-4">
+              <AlertDescription>{error}</AlertDescription>
+              <Button 
+                onClick={handleRetry}
+                variant="outline"
+                className="w-fit"
+              >
+                Retry
+              </Button>
+            </div>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  if (leagueId && ['soccer', 'ncaa'].includes(leagueId)) {
     const launchDate = new Date('2025-06-01');
     const today = new Date();
     const daysLeft = Math.ceil((launchDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
-    const sortedTeams = [...teams].sort((a, b) => (b.win_pct || 0) - (a.win_pct || 0));
+    const sortedTeams = [...teams].sort((a, b) => {
+      const aWinPct = a.win_percentage ?? 0;
+      const bWinPct = b.win_percentage ?? 0;
+      return bWinPct - aWinPct;
+    });
 
     return (
       <div className="min-h-screen bg-gray-50 pt-20 pb-16">
@@ -149,9 +245,9 @@ const LeaguePage: React.FC = () => {
           {/* League Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-2">
-              {LEAGUE_ICONS[leagueId] || '🏆'} {LEAGUE_NAMES[leagueId] || 'League'}
+              {LEAGUE_EMOJIS[leagueId as Sport] || '🏆'} {LEAGUE_NAMES[leagueId as Sport] || 'League'}
             </h1>
-            <p className="text-gray-600">Astrological insights for {LEAGUE_NAMES[leagueId] || 'this league'}</p>
+            <p className="text-gray-600">Astrological insights for {LEAGUE_NAMES[leagueId as Sport] || 'this league'}</p>
           </div>
           <div className="text-5xl font-bold text-yellow-400 mb-8">
             {daysLeft} Days Until Launch
@@ -167,13 +263,13 @@ const LeaguePage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* League Header */}
         <div className="flex items-center mb-8">
-          <span className="text-4xl mr-4">{LEAGUE_ICONS[leagueId] || '🏆'}</span>
+          <span className="text-4xl mr-4">{LEAGUE_EMOJIS[leagueId as Sport] || '🏆'}</span>
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              {LEAGUE_NAMES[leagueId] || 'League'} Dashboard
+              {LEAGUE_NAMES[leagueId as Sport] || 'League'} Dashboard
             </h1>
             <p className="text-muted-foreground">
-              Latest odds and astrological insights for {LEAGUE_NAMES[leagueId] || 'the league'}
+              Latest odds and astrological insights for {LEAGUE_NAMES[leagueId as Sport] || 'the league'}
             </p>
           </div>
         </div>
@@ -187,46 +283,29 @@ const LeaguePage: React.FC = () => {
             </button>
           </div>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-48 w-full rounded-lg bg-gray-800/50" />
-              ))}
-            </div>
-          ) : upcomingGames.length > 0 ? (
+            <GamesSectionSkeleton />
+          ) : games.length > 0 ? (
             <Slider {...carouselSettings}>
-              {upcomingGames.map((game) => (
+              {games.map((game) => (
                 <div key={game.id} className="px-2">
                   <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800 hover:border-blue-500/30 transition-colors">
                     <div className="text-center mb-2">
                       <div className="text-sm text-muted-foreground">
-                        {game.commence_time ? (
-                          <>
-                            {new Date(game.commence_time).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                            {' at '}
-                            {new Date(game.commence_time).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </>
-                        ) : 'TBD'}
+                        {game.gameTime}
                       </div>
                       <div className="text-lg font-semibold text-foreground">
-                        {game.home_team} vs {game.away_team}
+                        {game.homeTeam} vs {game.awayTeam}
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <div className="text-sm">
                         <span className="text-muted-foreground">Astro Score:</span>{' '}
                         <span className="font-medium">
-                          {game.oas ? `${game.oas.toFixed(1)}/10` : 'N/A'}
+                          N/A
                         </span>
                       </div>
                       <Link 
-                        to={`/event/${game.id}`}
+                        to={`/game/${game.id}`}
                         className="text-sm text-blue-500 hover:underline flex items-center"
                       >
                         View Details <ArrowRight className="ml-1 h-3 w-3" />
@@ -236,20 +315,18 @@ const LeaguePage: React.FC = () => {
                       <div className="text-sm">
                         <div className="text-muted-foreground">Astro Score</div>
                         <div className="text-2xl font-bold text-yellow-400">
-                          {game.oas ? game.oas.toFixed(1) : 'N/A'}
+                          N/A
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-muted-foreground">Odds</div>
-                        <div className={`text-lg font-bold ${
-                          game.odds && game.odds > 0 ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                          {game.odds ? (game.odds > 0 ? `+${game.odds}` : game.odds) : 'N/A'}
+                        <div className={`text-lg font-bold text-red-500`}>
+                          N/A
                         </div>
                       </div>
                     </div>
                     <Link
-                      to={`/event/${game.id}`}
+                      to={`/game/${game.id}`}
                       className="mt-4 block w-full text-center bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 py-2 px-4 rounded-md transition-colors"
                     >
                       View Matchup Details
@@ -289,17 +366,15 @@ const LeaguePage: React.FC = () => {
         {/* Teams Section */}
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Teams in {LEAGUE_NAMES[leagueId] || 'League'}</h2>
+            <h2 className="text-2xl font-bold text-foreground">
+              Teams in {leagueId ? LEAGUE_NAMES[leagueId] : 'League'}
+            </h2>
             <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
               View All Teams →
             </button>
           </div>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-lg bg-gray-800/50" />
-              ))}
-            </div>
+            <TeamsSectionSkeleton />
           ) : teams.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {teams.map((team) => (
@@ -322,7 +397,10 @@ const LeaguePage: React.FC = () => {
                       <div className="flex justify-between text-sm text-muted-foreground mt-1">
                         <span>Win %:</span>
                         <span className="font-medium text-foreground">
-                          {team.win_pct ? (team.win_pct * 100).toFixed(1) + '%' : 'N/A'}
+                          {typeof team.win_percentage === 'number' 
+                            ? (team.win_percentage * 100).toFixed(1) + '%' 
+                            : 'N/A'
+                          }
                         </span>
                       </div>
                       <div className="mt-3 pt-3 border-t border-gray-800">
