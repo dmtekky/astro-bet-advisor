@@ -1,123 +1,84 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getMoonPhase, getPlanetPositions } from '@/lib/astroCalculations';
 
-// Helper function to handle CORS
-const allowCors = (fn: Function) => async (req: NextApiRequest, res: NextApiResponse) => {
-  // Get the origin from the request headers
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://fullmoonodds-*.vercel.app',
-    'https://fullmoonodds.vercel.app',
-    'https://fullmoonodds-git-*',
-  ];
-
-  const origin = req.headers.origin || '';
-  const isAllowedOrigin = allowedOrigins.some(allowedOrigin => 
-    allowedOrigin.includes('*') 
-      ? origin.startsWith(allowedOrigin.split('*')[0])
-      : origin === allowedOrigin
-  );
-
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', isAllowedOrigin ? origin : allowedOrigins[0]);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, DELETE');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-V, Authorization'
-  );
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  return await fn(req, res);
-};
-
-// Mock data for celestial events (replace with real data)
-const getCelestialEvents = (date: Date) => [
-  {
-    name: 'Full Moon',
-    description: 'Full Moon in Scorpio - A time for release and transformation.',
-    intensity: 'high' as const,
-    date: new Date(date.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    name: 'Mercury Square Mars',
-    description: 'Heightened communication and potential conflicts.',
-    intensity: 'medium' as const,
-    date: new Date(date.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { date } = req.query;
-  
+// Simple test endpoint with CORS support
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.log('Received request for date:', date);
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
-    // Parse the date from the URL parameter or use current date
-    const targetDate = date ? new Date(Array.isArray(date) ? date[0] : date) : new Date();
-    
-    if (isNaN(targetDate.getTime())) {
-      throw new Error('Invalid date format. Please use YYYY-MM-DD');
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
     }
 
-    console.log('Calculating moon phase...');
-    // Get moon phase (0-1)
-    const moonPhase = getMoonPhase(targetDate);
+    // Get the date from the URL or use current date
+    const { date } = req.query;
+    const targetDate = date || new Date().toISOString().split('T')[0];
     
-    console.log('Getting planet positions...');
-    // Get planet positions
-    const positions = getPlanetPositions(targetDate);
-    
-    console.log('Getting celestial events...');
-    // Get celestial events
-    const celestialEvents = getCelestialEvents(targetDate);
+    console.log(`[${new Date().toISOString()}] Request for date:`, targetDate);
 
-    console.log('Sending response...');
-    // Return the data in the expected format
-    res.status(200).json({
-      moon_phase: moonPhase,
+    // Return test data in the expected format
+    const response = {
+      success: true,
+      moon_phase: 0.75, // 0 = new moon, 1 = full moon
       positions: {
-        moon: {
-          longitude: positions.moon.longitude,
-          speed: positions.moon.speed
+        moon: { 
+          longitude: 90, 
+          speed: 12.2 
         },
-        sun: {
-          longitude: positions.sun.longitude
+        sun: { 
+          longitude: 45 
         },
-        mercury: {
-          longitude: positions.mercury.longitude,
-          speed: positions.mercury.speed
+        mercury: { 
+          longitude: 30, 
+          speed: 1.2 
         },
-        venus: {
-          longitude: positions.venus.longitude
+        venus: { 
+          longitude: 120 
         },
-        mars: {
-          longitude: positions.mars.longitude
+        mars: { 
+          longitude: 200,
+          speed: 0.5
         },
-        jupiter: {
-          longitude: positions.jupiter.longitude
+        jupiter: { 
+          longitude: 150 
         },
-        saturn: {
-          longitude: positions.saturn.longitude
+        saturn: { 
+          longitude: 300 
         }
       },
-      celestial_events: celestialEvents
+      celestial_events: [
+        {
+          name: 'Full Moon',
+          description: 'Full Moon in Scorpio - A time for release and transformation.',
+          intensity: 'high',
+          date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          name: 'Mercury Square Mars',
+          description: 'Heightened communication and potential conflicts.',
+          intensity: 'medium',
+          date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]
+    };
+
+    // Add next_event (first upcoming event or null)
+    const nextEvent = response.celestial_events[0] || null;
+    
+    return res.status(200).json({
+      ...response,
+      next_event: nextEvent
     });
+    
   } catch (error) {
-    console.error('Error in API handler:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch astrological data',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+    console.error('API Error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 }
-
-export default allowCors(handler);
