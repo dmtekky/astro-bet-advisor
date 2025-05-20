@@ -11,6 +11,9 @@
       "use": "@vercel/static-build"
     }
   ],
+  "rewrites": [
+    { "source": "/api/astro/:date", "destination": "/api/astro/[date].ts" }
+  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*\\.(js|css|png|jpg|jpeg|svg|ico|json|txt|woff2|woff|ttf|map))", "dest": "/$1" },
