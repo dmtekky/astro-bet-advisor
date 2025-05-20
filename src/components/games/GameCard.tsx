@@ -1,11 +1,15 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Clock, Zap } from 'lucide-react';
+import { Clock, Zap, Star } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Team, Game } from "@/types/dashboard";
 
 interface GameCardProps {
-  game: Game;
+  game: Game & {
+    astroEdge?: number;
+    astroInfluence?: string;
+  };
   homeTeam: Team;
   awayTeam: Team;
   defaultLogo: string;
@@ -87,6 +91,17 @@ export const GameCard: React.FC<GameCardProps> = ({
                 <div className="flex items-center">
                   <Zap className="w-3 h-3 text-yellow-500 mr-1" />
                   <span>Odds: {game.odds[0]?.market || 'N/A'}</span>
+                </div>
+              </div>
+            )}
+            
+            {game.astroInfluence && (
+              <div className="mt-2 text-xs">
+                <div className="flex items-center">
+                  <Star className="w-3 h-3 text-purple-500 mr-1" />
+                  <Badge variant="outline" className="text-xs bg-purple-500/10 hover:bg-purple-500/20">
+                    {game.astroInfluence}
+                  </Badge>
                 </div>
               </div>
             )}
