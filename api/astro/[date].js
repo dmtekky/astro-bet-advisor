@@ -1,7 +1,12 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getMoonPhase, getPlanetPositions } from '../../src/lib/astroCalculations';
+// @ts-check
+const { VercelRequest, VercelResponse } = require('@vercel/node');
+const { getMoonPhase, getPlanetPositions } = require('../../src/lib/astroCalculations');
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+/**
+ * @param {import('@vercel/node').VercelRequest} req
+ * @param {import('@vercel/node').VercelResponse} res
+ */
+function handler(req, res) {
   const { date } = req.query;
   
   // Set CORS headers
@@ -84,3 +89,5 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
+
+module.exports = handler;
