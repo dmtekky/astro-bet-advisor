@@ -6,7 +6,8 @@
   ],
   "routes": [
     { "src": "/api/astro/([^/]+)", "dest": "/api/astro/date.ts?date=$1" },
-    { "src": "/(.*)", "dest": "/" }
+    { "src": "^/(.*)", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist"
