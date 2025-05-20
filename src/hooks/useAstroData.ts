@@ -186,11 +186,10 @@ interface AstroData {
 }
 
 // Base URL for API requests - using environment variable with fallback
-// In production, this will be handled by Vercel's rewrites
-// In development, it points to localhost:3001
+// In production, this will use the Vercel URL, in development it uses localhost
 const API_BASE_URL = import.meta.env.PROD
-  ? '/api/astro'  // Production: Vercel will handle the routing
-  : 'http://localhost:3001/api/astro';  // Development: Direct to local backend
+  ? `${window.location.origin}/api/astro`  // Production: Use current origin
+  : 'http://localhost:3001/api/astro';    // Development: Local backend
 
 export function useAstroData(dateParam: Date | string = new Date()) {
   // Always produce a YYYY-MM-DD string
