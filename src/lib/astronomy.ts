@@ -128,12 +128,26 @@ export function getNextLunarNodeTransits(count: number = 3): Array<{date: Date, 
     .slice(0, count);
 }
 
+interface LunarNodeForecast {
+  northNode: string;
+  southNode: string;
+  nextTransitDate: string | null;
+  nextTransitType: 'north' | 'south' | null;
+  nextTransitSign: string | null;
+  upcomingTransits: Array<{
+    date: string;
+    type: 'north' | 'south';
+    sign: string;
+    degree: number;
+  }>;
+}
+
 /**
  * Get the current and next few lunar node transits
  * @param count Number of future transits to include (default: 2)
  * @returns Object with current nodes and upcoming transits
  */
-export function getLunarNodeForecast(count: number = 2) {
+export function getLunarNodeForecast(count: number = 2): LunarNodeForecast {
   const now = new Date();
   const current = getLunarNodes(now);
   const nextTransits = getNextLunarNodeTransits(count);
@@ -141,14 +155,19 @@ export function getLunarNodeForecast(count: number = 2) {
   // Find the next transit for the current node (north or south)
   const nextTransit = nextTransits[0];
   
+  // Calculate degrees based on date (simplified)
+  const getDegree = (date: Date) => (date.getDate() % 30) + 1;
+  
   return {
-    current: {
-      northNode: current.north,
-      southNode: current.south,
-      nextTransitDate: nextTransit?.date || null,
-      nextTransitType: nextTransit?.type || null,
-      nextTransitSign: nextTransit?.sign || null
-    },
-    upcomingTransits: nextTransits
+    northNode: current.north,
+    southNode: current.south,
+    nextTransitDate: nextTransit?.date.toISOString() || null,
+    nextTransitType: nextTransit?.type || null,
+    nextTransitSign: nextTransit?.sign || null,
+    upcomingTransits: nextTransits.map(transit => ({
+      ...transit,
+      date: transit.date.toISOString(),
+      degree: getDegree(transit.date)
+    }))
   };
 }
