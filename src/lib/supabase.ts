@@ -13,8 +13,22 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing required Supabase environment variables');
 }
 
-// Create a single supabase client for interacting with your database
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+// Singleton pattern: only one Supabase client in the browser
+let supabase: ReturnType<typeof createClient>;
+
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  if (!window.__supabase) {
+    // @ts-ignore
+    window.__supabase = createClient<Database>(supabaseUrl, supabaseKey);
+  }
+  // @ts-ignore
+  supabase = window.__supabase;
+} else {
+  supabase = createClient<Database>(supabaseUrl, supabaseKey);
+}
+
+export { supabase };
 
 console.debug('Supabase initialized with URL:', supabaseUrl);
 
