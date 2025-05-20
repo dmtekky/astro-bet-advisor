@@ -1,6 +1,8 @@
 // Simple mock implementation for astrological calculations
 // This provides mock data to unblock development
 
+// Use CommonJS exports for Vercel compatibility
+
 type Body = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
 
 interface PlanetPosition {
@@ -11,7 +13,7 @@ interface PlanetPosition {
 }
 
 // Get the current moon phase (0-1)
-export function getMoonPhase(date: Date): number {
+function getMoonPhase(date: Date): number {
   const cycleLength = 29.53; // days
   const knownNewMoon = new Date('2023-11-13T09:27:00Z').getTime();
   const phase = ((date.getTime() - knownNewMoon) / (1000 * 60 * 60 * 24)) % cycleLength / cycleLength;
@@ -19,7 +21,7 @@ export function getMoonPhase(date: Date): number {
 }
 
 // Get positions of all planets
-export function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
+function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
   // Generate consistent positions based on date
   const timeFactor = date.getTime() / (1000 * 60 * 60 * 24); // days since epoch
   
@@ -47,7 +49,7 @@ export function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
 }
 
 // Calculate aspects between planets
-export function calculateAspects(
+function calculateAspects(
   positions: Record<string, {longitude: number}>
 ): Record<string, string | null> {
   const aspects: Record<string, string | null> = {};
@@ -94,12 +96,20 @@ function getAspect(angle: number): string | null {
 }
 
 // Get the current zodiac sign from ecliptic longitude
-export function getZodiacSign(longitude: number): string {
+function getZodiacSign(longitude: number): string {
   const signs = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
     'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
   ];
   
-  const index = Math.floor(longitude / 30);
-  return signs[index % 12];
+  const signIndex = Math.floor((longitude / 30) % 12);
+  return signs[signIndex];
 }
+
+// Export all functions
+module.exports = {
+  getMoonPhase,
+  getPlanetPositions,
+  calculateAspects,
+  getZodiacSign
+};

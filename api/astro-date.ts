@@ -1,19 +1,25 @@
 // @ts-check
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getMoonPhase, getPlanetPositions, getZodiacSign } from '../src/lib/astroCalculations.js';
+const { VercelRequest, VercelResponse } = require('@vercel/node');
+const { getMoonPhase, getPlanetPositions, getZodiacSign } = require('../src/lib/astroCalculations');
 
-interface PlanetPosition {
-  longitude: number;
-  latitude: number;
-  distance: number;
-  speed: number;
-}
+/**
+ * @typedef {Object} PlanetPosition
+ * @property {number} longitude
+ * @property {number} latitude
+ * @property {number} distance
+ * @property {number} speed
+ */
 
-interface PlanetPositions {
-  [key: string]: PlanetPosition;
-}
+/** @type {Record<string, PlanetPosition>} */
+let PlanetPositions;
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+// Type definitions are now in JSDoc format above
+
+/**
+ * @param {import('@vercel/node').VercelRequest} req
+ * @param {import('@vercel/node').VercelResponse} res
+ */
+function handler(req, res) {
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -58,15 +64,17 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     const moonPhase = getMoonPhase(targetDate);
     
     console.log('Calculating planet positions...');
-    const positions = getPlanetPositions(targetDate) as PlanetPositions;
+    /** @type {Record<string, PlanetPosition>} */
+    const positions = getPlanetPositions(targetDate);
     
     // Get zodiac signs for each planet
-    const signs = Object.entries(positions).reduce<Record<string, string>>((acc, [planet, data]) => {
+    const signs = Object.entries(positions).reduce((acc, [planet, data]) => {
+      const planetData = /** @type {PlanetPosition} */ (data);
       return {
         ...acc,
-        [planet]: getZodiacSign(data.longitude)
+        [planet]: getZodiacSign(planetData.longitude)
       };
-    }, {});
+    }, /** @type {Record<string, string>} */({}));
     
     console.log('Zodiac signs calculated:', signs);
     
@@ -131,3 +139,5 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
+
+module.exports = handler;
