@@ -1,44 +1,8 @@
-import { 
-  AstroTime, 
-  Body, 
-  EquatorCoords, 
-  EclipticCoordinates,
-  Vector,
-  moonPhase,
-  moonPosition,
-  sunPosition,
-  planetPosition,
-  eclipticFromEquator,
-  eclipticFromHorizon,
-  eclipticToEquatorial,
-  horizon
-} from 'astronomy-engine';
+// Simple mock implementation for astrological calculations
+// This provides mock data to unblock development
 
-// Helper function to safely create AstroTime
-const createAstroTime = (date: Date): AstroTime => {
-  try {
-    return AstroTime.fromDate(date);
-  } catch (error) {
-    console.error('Error creating AstroTime:', error);
-    return new AstroTime(date.getTime() / 1000);
-  }
-};
+type Body = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
 
-// Get the current moon phase (0-1)
-export function getMoonPhase(date: Date): number {
-  try {
-    const time = createAstroTime(date);
-    const phase = moonPhase(time);
-    // Convert from degrees (0-360) to 0-1 range
-    return (phase % 360) / 360;
-  } catch (error) {
-    console.error('Error in getMoonPhase:', error);
-    // Return a default value if there's an error
-    return 0.5; // First quarter as fallback
-  }
-}
-
-// Interface for planet positions
 interface PlanetPosition {
   longitude: number;
   latitude: number;
@@ -46,92 +10,60 @@ interface PlanetPosition {
   speed: number;
 }
 
+// Get the current moon phase (0-1)
+export function getMoonPhase(date: Date): number {
+  const cycleLength = 29.53; // days
+  const knownNewMoon = new Date('2023-11-13T09:27:00Z').getTime();
+  const phase = ((date.getTime() - knownNewMoon) / (1000 * 60 * 60 * 24)) % cycleLength / cycleLength;
+  return phase >= 0 ? phase : 1 + phase; // Ensure positive value
+}
+
 // Get positions of all planets
 export function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
-  const time = createAstroTime(date);
+  // Generate consistent positions based on date
+  const timeFactor = date.getTime() / (1000 * 60 * 60 * 24); // days since epoch
   
-  // Get positions in ecliptic coordinates
-  const getEclipticPos = (body: Body): PlanetPosition => {
-    try {
-      let equ: Vector;
-      
-      switch (body) {
-        case Body.Sun:
-          equ = sunPosition(time);
-          break;
-        case Body.Moon:
-          equ = moonPosition(time);
-          break;
-        default:
-          equ = planetPosition(body, time);
-      }
-      
-      // Convert to ecliptic coordinates (longitude, latitude, distance)
-      const ecl = eclipticFromEquator(equ, time);
-      
-      return {
-        longitude: ecl.elon,  // Ecliptic longitude in degrees
-        latitude: ecl.elat,   // Ecliptic latitude in degrees
-        distance: ecl.dist,   // Distance in AU
-        speed: 0.9833         // Approximate speed (simplified)
-      };
-    } catch (error) {
-      console.error(`Error getting position for ${Body[body]}:`, error);
-      // Return default values if there's an error
-      return {
-        longitude: 0,
-        latitude: 0,
-        distance: 1,
-        speed: 0.9833
-      };
-    }
+  // Helper to generate position based on body and time factor
+  const getPosition = (body: Body, speed: number): PlanetPosition => {
+    const base = (body.charCodeAt(0) + body.length) * 100; // Unique base per planet
+    return {
+      longitude: (base + timeFactor * speed) % 360,
+      latitude: Math.sin(timeFactor * 0.1 + base) * 5, // -5 to 5 degrees
+      distance: 1 + Math.sin(timeFactor * 0.05 + base) * 0.5, // 0.5 to 1.5 AU
+      speed: speed
+    };
   };
 
-  try {
-    return {
-      moon: getEclipticPos(Body.Moon),
-      sun: getEclipticPos(Body.Sun),
-      mercury: getEclipticPos(Body.Mercury),
-      venus: getEclipticPos(Body.Venus),
-      mars: getEclipticPos(Body.Mars),
-      jupiter: getEclipticPos(Body.Jupiter),
-      saturn: getEclipticPos(Body.Saturn)
-    };
-  } catch (error) {
-    console.error('Error in getPlanetPositions:', error);
-    // Return default values if there's an error
-    return {
-      moon: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      sun: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      mercury: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      venus: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      mars: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      jupiter: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 },
-      saturn: { longitude: 0, latitude: 0, distance: 1, speed: 0.9833 }
-    };
-  }
+  // Return positions for all planets with different speeds
+  return {
+    sun: getPosition('sun', 0.9833),
+    moon: getPosition('moon', 13.176), // Faster orbit
+    mercury: getPosition('mercury', 1.3833),
+    venus: getPosition('venus', 1.1167),
+    mars: getPosition('mars', 0.5242),
+    jupiter: getPosition('jupiter', 0.0833),
+    saturn: getPosition('saturn', 0.0339)
+  };
 }
 
 // Calculate aspects between planets
-export function calculateAspects(positions: Record<string, {longitude: number}>): Record<string, string | null> {
+export function calculateAspects(
+  positions: Record<string, {longitude: number}>
+): Record<string, string | null> {
   const aspects: Record<string, string | null> = {};
-  const bodies = Object.keys(positions);
+  const planets = Object.keys(positions);
   
-  try {
-    for (let i = 0; i < bodies.length; i++) {
-      for (let j = i + 1; j < bodies.length; j++) {
-        const body1 = bodies[i];
-        const body2 = bodies[j];
-        const angle = Math.abs(positions[body1].longitude - positions[body2].longitude) % 360;
-        const aspect = getAspect(angle);
-        
-        if (aspect) {
-          aspects[`${body1}_${body2}`] = aspect;
-        }
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const planet1 = planets[i];
+      const planet2 = planets[j];
+      const angle = Math.abs(positions[planet1].longitude - positions[planet2].longitude) % 360;
+      const aspect = getAspect(angle);
+      
+      if (aspect) {
+        aspects[`${planet1}_${planet2}`] = aspect;
       }
     }
-  } catch (error) {
-    console.error('Error in calculateAspects:', error);
   }
   
   return aspects;
@@ -139,20 +71,23 @@ export function calculateAspects(positions: Record<string, {longitude: number}>)
 
 // Helper function to determine the aspect based on angle
 function getAspect(angle: number): string | null {
-  try {
-    const orb = 8; // Orb in degrees
-    
-    if (Math.abs(angle - 0) <= orb) return 'conjunction';
-    if (Math.abs(angle - 30) <= orb) return 'semi-sextile';
-    if (Math.abs(angle - 45) <= orb) return 'semi-square';
-    if (Math.abs(angle - 60) <= orb) return 'sextile';
-    if (Math.abs(angle - 90) <= orb) return 'square';
-    if (Math.abs(angle - 120) <= orb) return 'trine';
-    if (Math.abs(angle - 135) <= orb) return 'sesquiquadrate';
-    if (Math.abs(angle - 150) <= orb) return 'quincunx';
-    if (Math.abs(angle - 180) <= orb) return 'opposition';
-  } catch (error) {
-    console.error('Error in getAspect:', error);
+  const aspects = [
+    { degree: 0, name: 'conjunction', orb: 8 },
+    { degree: 30, name: 'semi-sextile', orb: 2 },
+    { degree: 60, name: 'sextile', orb: 4 },
+    { degree: 90, name: 'square', orb: 6 },
+    { degree: 120, name: 'trine', orb: 6 },
+    { degree: 150, name: 'quincunx', orb: 2 },
+    { degree: 180, name: 'opposition', orb: 8 }
+  ];
+  
+  for (const aspect of aspects) {
+    if (Math.abs(angle - aspect.degree) <= aspect.orb) {
+      return aspect.name;
+    }
+    if (Math.abs(360 - angle - aspect.degree) <= aspect.orb) {
+      return aspect.name;
+    }
   }
   
   return null;
@@ -160,16 +95,11 @@ function getAspect(angle: number): string | null {
 
 // Get the current zodiac sign from ecliptic longitude
 export function getZodiacSign(longitude: number): string {
-  try {
-    const signs = [
-      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-    ];
-    const normalizedLongitude = ((longitude % 360) + 360) % 360; // Ensure positive value
-    const index = Math.floor(normalizedLongitude / 30) % 12;
-    return signs[index] || 'Aries';
-  } catch (error) {
-    console.error('Error in getZodiacSign:', error);
-    return 'Aries'; // Default to Aries if there's an error
-  }
+  const signs = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+  
+  const index = Math.floor(longitude / 30);
+  return signs[index % 12];
 }
