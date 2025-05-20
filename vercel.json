@@ -6,7 +6,7 @@
   ],
   "routes": [
     { "src": "/api/astro/([^/]+)", "dest": "/api/astro/date.ts?date=$1" },
-    { "src": "^/(.*)", "dest": "/index.html" },
+    { "src": "/(.*\\.(js|css|png|jpg|jpeg|svg|ico|json|txt|woff2?|ttf|map))", "dest": "/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "buildCommand": "npm run build",
