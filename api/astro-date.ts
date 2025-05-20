@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getMoonPhase, getPlanetPositions } from '../../src/lib/astroCalculations';
+import { getMoonPhase, getPlanetPositions } from '../src/lib/astroCalculations';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
