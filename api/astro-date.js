@@ -1,24 +1,13 @@
 // @ts-check
 /**
  * @typedef {Object} PlanetPosition
- * @property {number} longitude
- * @property {number} latitude
- * @property {number} distance
- * @property {number} speed
+ * @property {number} longitude - Longitude in degrees
+ * @property {number} latitude - Latitude in degrees
+ * @property {number} distance - Distance in AU
+ * @property {number} speed - Speed in degrees per day
  */
 const { VercelRequest, VercelResponse } = require('@vercel/node');
 const { getMoonPhase, getPlanetPositions, getZodiacSign } = require('../src/lib/astroCalculations');
-
-/**
- * @typedef {Object} PlanetPosition
- * @property {number} longitude
- * @property {number} latitude
- * @property {number} distance
- * @property {number} speed
- */
-
-/** @type {Record<string, PlanetPosition>} */
-let PlanetPositions;
 
 // Type definitions are now in JSDoc format above
 
@@ -79,12 +68,16 @@ function handler(req, res) {
     const signs = Object.entries(positions).reduce(
       /**
        * @param {Record<string, string>} acc
-       * @param {[string, PlanetPosition]} entry
+       * @param {Array} entry - [planet, position] tuple
+       * @returns {Record<string, string>} Updated accumulator
        */
-      (acc, [planet, data]) => {
+      (acc, entry) => {
+        const planet = entry[0];
+        /** @type {PlanetPosition} */
+        const position = entry[1];
         return {
           ...acc,
-          [planet]: getZodiacSign(data.longitude)
+          [planet]: getZodiacSign(position.longitude)
         };
       }, {});
 

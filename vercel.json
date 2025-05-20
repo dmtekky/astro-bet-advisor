@@ -2,7 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/astro-date.ts",
+      "src": "api/astro-date.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/astro/[date].js",
       "use": "@vercel/node"
     },
     {

@@ -3,28 +3,42 @@
 
 // Use CommonJS exports for Vercel compatibility
 
-interface PlanetPosition {
-  longitude: number;
-  latitude: number;
-  distance: number;
-  speed: number;
-}
+/**
+ * @typedef {Object} PlanetPosition
+ * @property {number} longitude - Longitude in degrees
+ * @property {number} latitude - Latitude in degrees
+ * @property {number} distance - Distance in AU
+ * @property {number} speed - Speed in degrees per day
+ */
 
-// Get the current moon phase (0-1)
-function getMoonPhase(date: Date): number {
+/**
+ * Get the current moon phase (0-1)
+ * @param {Date} date - The date to calculate moon phase for
+ * @returns {number} Moon phase from 0-1
+ */
+function getMoonPhase(date) {
   const cycleLength = 29.53; // days
   const knownNewMoon = new Date('2023-11-13T09:27:00Z').getTime();
   const phase = ((date.getTime() - knownNewMoon) / (1000 * 60 * 60 * 24)) % cycleLength / cycleLength;
   return phase >= 0 ? phase : 1 + phase; // Ensure positive value
 }
 
-// Get positions of all planets
-function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
+/**
+ * Get positions of all planets
+ * @param {Date} date - The date to calculate positions for
+ * @returns {Object.<string, PlanetPosition>} Object with planet positions
+ */
+function getPlanetPositions(date) {
   // Generate consistent positions based on date
   const timeFactor = date.getTime() / (1000 * 60 * 60 * 24); // days since epoch
   
   // Helper to generate position based on body and time factor
-  const getPosition = (body: string, speed: number): PlanetPosition => {
+  /**
+   * @param {string} body - Planet name
+   * @param {number} speed - Speed in degrees per day
+   * @returns {PlanetPosition} Position object
+   */
+  const getPosition = (body, speed) => {
     const base = (body.charCodeAt(0) + body.length) * 100; // Unique base per planet
     return {
       longitude: (base + timeFactor * speed) % 360,
@@ -46,11 +60,14 @@ function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
   };
 }
 
-// Calculate aspects between planets
-function calculateAspects(
-  positions: Record<string, {longitude: number}>
-): Record<string, string | null> {
-  const aspects: Record<string, string | null> = {};
+/**
+ * Calculate aspects between planets
+ * @param {Object.<string, {longitude: number}>} positions - Planet positions
+ * @returns {Object.<string, string|null>} Aspects between planets
+ */
+function calculateAspects(positions) {
+  /** @type {Object.<string, string|null>} */
+  const aspects = {};
   const planets = Object.keys(positions);
   
   for (let i = 0; i < planets.length; i++) {
@@ -69,8 +86,12 @@ function calculateAspects(
   return aspects;
 }
 
-// Helper function to determine the aspect based on angle
-function getAspect(angle: number): string | null {
+/**
+ * Helper function to determine the aspect based on angle
+ * @param {number} angle - Angle between planets in degrees
+ * @returns {string|null} Aspect name or null if no aspect
+ */
+function getAspect(angle) {
   const aspects = [
     { degree: 0, name: 'conjunction', orb: 8 },
     { degree: 30, name: 'semi-sextile', orb: 2 },
@@ -93,8 +114,12 @@ function getAspect(angle: number): string | null {
   return null;
 }
 
-// Get the current zodiac sign from ecliptic longitude
-function getZodiacSign(longitude: number): string {
+/**
+ * Get the current zodiac sign from ecliptic longitude
+ * @param {number} longitude - Ecliptic longitude in degrees
+ * @returns {string} Zodiac sign name
+ */
+function getZodiacSign(longitude) {
   const signs = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
     'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
