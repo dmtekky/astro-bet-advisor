@@ -23,6 +23,13 @@ export interface Team {
   name: string;
   abbreviation: string;
   logo?: string;
+  logo_url?: string;
+  city?: string;
+  record?: string;
+  wins?: number;
+  losses?: number;
+  primary_color?: string;
+  secondary_color?: string;
   sport: Sport;
   external_id?: string;
 }
@@ -58,4 +65,8 @@ export interface Game {
   score_home?: number;
   score_away?: number;
   external_id?: string;
+  league?: string;
+  league_id?: string;
+  odds?: number | string | null;
+  oas?: number | string | null;
 }
