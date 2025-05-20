@@ -3,8 +3,6 @@
 
 // Use CommonJS exports for Vercel compatibility
 
-type Body = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
-
 interface PlanetPosition {
   longitude: number;
   latitude: number;
@@ -26,7 +24,7 @@ function getPlanetPositions(date: Date): Record<string, PlanetPosition> {
   const timeFactor = date.getTime() / (1000 * 60 * 60 * 24); // days since epoch
   
   // Helper to generate position based on body and time factor
-  const getPosition = (body: Body, speed: number): PlanetPosition => {
+  const getPosition = (body: string, speed: number): PlanetPosition => {
     const base = (body.charCodeAt(0) + body.length) * 100; // Unique base per planet
     return {
       longitude: (base + timeFactor * speed) % 360,
