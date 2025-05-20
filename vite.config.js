@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(({ command, mode }) => ({
   plugins: [
@@ -11,6 +12,26 @@ export default defineConfig(({ command, mode }) => ({
       },
     })
   ],
+  resolve: {
+    alias: [
+      {
+        find: '@',
+        replacement: path.resolve(__dirname, './src')
+      },
+      {
+        find: '@components',
+        replacement: path.resolve(__dirname, './src/components')
+      },
+      {
+        find: '@lib',
+        replacement: path.resolve(__dirname, './src/lib')
+      },
+      {
+        find: '@hooks',
+        replacement: path.resolve(__dirname, './src/hooks')
+      }
+    ],
+  },
   server: {
     proxy: {
       // Proxy API requests to our Express server in development
