@@ -111,8 +111,9 @@ const Dashboard: React.FC = () => {
 import { useAstroData } from '@/hooks/useAstroData';
 
 const AstroSummarySection: React.FC = () => {
-  const { astroData, loading, error } = useAstroData();
   const now = new Date();
+  const dateStr = now.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  const { astroData, loading, error } = useAstroData(dateStr);
 
   if (loading) return <div className="py-12 text-center text-indigo-700 animate-pulse">Loading today's cosmic forecast...</div>;
   if (error || !astroData) return <div className="text-red-600">Failed to load astrological data.</div>;
@@ -276,7 +277,8 @@ const AstroSportsSummary: React.FC<AstroSportsSummaryProps> = ({ astroData, date
   useEffect(() => {
     async function calc() {
       // For dashboard, just use empty player stats for a global outlook
-      const result = await calculateAstrologicalImpact([], astroData, date.toISOString());
+      const dateStr = date.toISOString().split('T')[0];
+      const result = await calculateAstrologicalImpact([], astroData, dateStr);
       setScore(result);
     }
     calc();

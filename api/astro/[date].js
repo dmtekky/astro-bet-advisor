@@ -12,13 +12,20 @@ import { getMoonPhase, getPlanetPositions } from '../../src/lib/astroCalculation
  * @param {import('@vercel/node').VercelResponse} res
  */
 function handler(req, res) {
-  const { date } = req.query;
+  // Try to get date from query or RESTful path
+  let dateParam = req.query.date;
+  if (!dateParam && req.url) {
+    const match = req.url.match(/\/api\/astro\/(\d{4}-\d{2}-\d{2})/);
+    if (match) dateParam = match[1];
+  }
   
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  // Set cache headers for scalability
+  res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -27,10 +34,24 @@ function handler(req, res) {
   }
   
   try {
-    const targetDate = date ? new Date(Array.isArray(date) ? date[0] : date) : new Date();
-    
-    if (isNaN(targetDate.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD' });
+    // Validate and clean date parameter
+    let targetDate;
+    if (dateParam) {
+      // Remove any time component and ensure YYYY-MM-DD format
+      const dateStr = dateParam.toString().split('T')[0];
+      targetDate = new Date(dateStr);
+      
+      if (isNaN(targetDate.getTime())) {
+        console.error('Invalid date received:', dateParam);
+        return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD' });
+      }
+      
+      // Use the cleaned date string for consistency
+      dateParam = dateStr;
+    } else {
+      // Use current date if no date parameter
+      targetDate = new Date();
+      dateParam = targetDate.toISOString().split('T')[0];
     }
 
     // Get moon phase (0-1)
@@ -87,12 +108,8 @@ function handler(req, res) {
       celestial_events: celestialEvents
     });
   } catch (error) {
-    console.error('Error in API handler:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch astrological data',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      ...(process.env.NODE_ENV === 'development' && error instanceof Error ? { stack: error.stack } : {})
-    });
+    console.error('Astro API error:', error && error.stack ? error.stack : error);
+    res.status(500).json({ error: 'Failed to fetch astrological data', details: error && error.message ? error.message : String(error) });
   }
 }
 

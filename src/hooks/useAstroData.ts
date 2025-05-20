@@ -186,9 +186,11 @@ interface AstroData {
 }
 
 // Base URL for API requests - using environment variable with fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL ? 
-  `${import.meta.env.VITE_API_URL}/astro-date` : 
-  '/api/astro-date';
+// In production, this will be handled by Vercel's rewrites
+// In development, it points to localhost:3001
+const API_BASE_URL = import.meta.env.PROD
+  ? '/api/astro'  // Production: Vercel will handle the routing
+  : 'http://localhost:3001/api/astro';  // Development: Direct to local backend
 
 export function useAstroData(dateParam: Date | string = new Date()) {
   // Always produce a YYYY-MM-DD string
@@ -202,8 +204,9 @@ export function useAstroData(dateParam: Date | string = new Date()) {
   } else {
     dateStr = new Date().toISOString().split('T')[0];
   }
+  // Use RESTful path param for API call
   const { data: apiData, error, isLoading } = useSWR(
-    `${API_BASE_URL}?date=${dateStr}`,
+    `${API_BASE_URL}/${dateStr}`,
     fetcher,
     {
       revalidateOnFocus: false,

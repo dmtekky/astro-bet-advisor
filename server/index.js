@@ -1,6 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const { getMoonPhase, getPlanetPositions } = require('../src/lib/astroCalculations');
+import express from 'express';
+import cors from 'cors';
+import { getMoonPhase, getPlanetPositions } from '../src/lib/astroCalculations.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = 3001;
@@ -9,9 +14,13 @@ const PORT = 3001;
 app.use(cors());
 
 // API endpoint
-app.get('/api/astro/:date?', (req, res) => {
+app.get('/api/astro/:date', (req, res) => {
   try {
-    const dateParam = req.params.date || new Date().toISOString().split('T')[0];
+    let dateParam = req.params.date;
+    // If date is missing or invalid, use today's date
+    if (!dateParam || typeof dateParam !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      dateParam = new Date().toISOString().split('T')[0];
+    }
     const targetDate = new Date(dateParam);
     
     if (isNaN(targetDate.getTime())) {

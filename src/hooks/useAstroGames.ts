@@ -43,8 +43,11 @@ export const useAstroGames = (sport: string) => {
   // Get game data from useGames hook
   const { games, gamesByDate, isLoading: isLoadingGames, error, refetch } = useGames(sport);
   
+  // Get current date for astrological data
+  const dateStr = new Date().toISOString().split('T')[0];
+  
   // Get astrological data
-  const { astroData, loading: isLoadingAstro } = useAstroData();
+  const { astroData, loading: isLoadingAstro } = useAstroData(dateStr);
   
   // Enhance games with astrological data
   const gamesWithAstro = useMemo(() => {
