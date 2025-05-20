@@ -1,4 +1,11 @@
 // @ts-check
+/**
+ * @typedef {Object} PlanetPosition
+ * @property {number} longitude
+ * @property {number} latitude
+ * @property {number} distance
+ * @property {number} speed
+ */
 const { VercelRequest, VercelResponse } = require('@vercel/node');
 const { getMoonPhase, getPlanetPositions, getZodiacSign } = require('../src/lib/astroCalculations');
 
@@ -68,13 +75,19 @@ function handler(req, res) {
     const positions = getPlanetPositions(targetDate);
     
     // Get zodiac signs for each planet
-    const signs = Object.entries(positions).reduce((acc, [planet, data]) => {
-      const planetData = /** @type {PlanetPosition} */ (data);
-      return {
-        ...acc,
-        [planet]: getZodiacSign(planetData.longitude)
-      };
-    }, /** @type {Record<string, string>} */({}));
+    /** @type {Record<string, string>} */
+    const signs = Object.entries(positions).reduce(
+      /**
+       * @param {Record<string, string>} acc
+       * @param {[string, PlanetPosition]} entry
+       */
+      (acc, [planet, data]) => {
+        return {
+          ...acc,
+          [planet]: getZodiacSign(data.longitude)
+        };
+      }, {});
+
     
     console.log('Zodiac signs calculated:', signs);
     
