@@ -185,8 +185,10 @@ interface AstroData {
   next_event: CelestialEvent | null;
 }
 
-// Base URL for API requests - using new Vercel function endpoint
-const API_BASE_URL = '/api/astro-date';
+// Base URL for API requests - using environment variable with fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL ? 
+  `${import.meta.env.VITE_API_URL}/astro-date` : 
+  '/api/astro-date';
 
 export function useAstroData(date: Date = new Date()) {
   const dateStr = date.toISOString().split('T')[0];
