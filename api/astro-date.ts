@@ -1,5 +1,6 @@
+// @ts-check
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getMoonPhase, getPlanetPositions, getZodiacSign } from '../src/lib/astroCalculations';
+import { getMoonPhase, getPlanetPositions, getZodiacSign } from '../src/lib/astroCalculations.js';
 
 interface PlanetPosition {
   longitude: number;
