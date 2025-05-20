@@ -1,158 +1,128 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { APIRoute } from 'astro';
+import { getMoonPhase, getPlanetPositions } from '../../../lib/astroCalculations.js';
 
-// Mock data for demonstration
-const mockAstroData = (date: string) => ({
-  moon: {
-    phase: 'Waxing Gibbous',
-    phaseValue: 0.75,
-    sign: 'Scorpio',
-    icon: '♏️'
-  },
-  sun: {
-    sign: 'Taurus',
-    icon: '♉️',
-    degree: 15
-  },
-  mercury: {
-    retrograde: false,
-    sign: 'Taurus',
-    degree: 10
-  },
-  venus: {
-    sign: 'Gemini',
-    degree: 20
-  },
-  mars: {
-    sign: 'Leo',
-    degree: 5
-  },
-  jupiter: {
-    sign: 'Pisces',
-    degree: 25
-  },
-  saturn: {
-    sign: 'Aquarius',
-    degree: 18
-  },
-  aspects: {
-    sunMars: 'trine',
-    sunJupiter: 'sextile',
-    sunSaturn: 'square',
-    moonVenus: 'conjunction',
-    marsJupiter: 'trine',
-    venusMars: 'sextile'
-  },
-  elements: {
-    fire: 30,
-    earth: 40,
-    air: 20,
-    water: 10
-  },
-  currentHour: {
-    ruler: 'Mars',
-    influence: 'Energy and action are favored',
-    sign: 'Aries'
-  },
-  lunarNodes: {
-    northNode: {
-      sign: 'Gemini',
-      degree: 12
-    },
-    southNode: {
-      sign: 'Sagittarius',
-      degree: 12
-    },
-    nextTransitDate: '2025-06-15',
-    nextTransitType: 'north',
-    nextTransitSign: 'Gemini',
-    upcomingTransits: [
-      {
-        date: '2025-06-15',
-        type: 'north',
-        sign: 'Gemini',
-        degree: 12
-      }
-    ]
-  },
-  fixedStars: [
-    {
-      name: 'Sirius',
-      magnitude: -1.46,
-      influence: 'Success and fame',
-      position: {
-        sign: 'Cancer',
-        degree: 14
-      }
-    }
-  ],
-  celestialEvents: [
+export const prerender = false; // Ensure this is serverless, not static
+
+export const GET: APIRoute = async ({ params, request }) => {
+  let { date } = params;
+  // Strictly extract only YYYY-MM-DD, ignore trailing chars (e.g., :1)
+  const match = typeof date === 'string' ? date.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})/) : null;
+  const dateStr = match ? match[1] : new Date().toISOString().split('T')[0];
+
+  const targetDate = new Date(dateStr);
+  if (isNaN(targetDate.getTime())) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid date format. Please use YYYY-MM-DD' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Example: get moon phase and planet positions
+  const moonPhase = getMoonPhase(targetDate);
+  const positions = getPlanetPositions(targetDate);
+
+  // Mock celestial events (replace with real logic as needed)
+  const celestialEvents = [
     {
       name: 'Full Moon',
-      description: 'Full Moon in Sagittarius',
+      description: 'Full Moon in Scorpio - A time for release and transformation.',
       intensity: 'high',
-      date: '2025-05-25'
+      date: new Date(targetDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
     }
-  ],
-  next_event: {
-    name: 'Mercury Retrograde',
-    description: 'Mercury goes retrograde in Gemini',
-    intensity: 'high',
-    date: '2025-06-10'
-  }
-});
+  ];
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
+  return new Response(
+    JSON.stringify({
+      moon_phase: moonPhase,
+      positions,
+      celestial_events: celestialEvents
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
+  );
+};
   try {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
     // Get the date from the URL or use current date
-    const dateParam = req.query.date;
-    let dateStr: string;
+    const { date } = req.query;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    console.log(`[${new Date().toISOString()}] Request for date:`, targetDate);
 
-    if (Array.isArray(dateParam)) {
-      // Handle array case (shouldn't happen with proper routing)
-      const match = dateParam[0]?.match(/^(\d{4}-\d{2}-\d{2})/);
-      dateStr = match ? match[1] : new Date().toISOString().split('T')[0];
-    } else if (typeof dateParam === 'string') {
-      const match = dateParam.match(/^(\d{4}-\d{2}-\d{2})/);
-      dateStr = match ? match[1] : new Date().toISOString().split('T')[0];
-    } else {
-      dateStr = new Date().toISOString().split('T')[0];
-    }
-
-    // Validate date format
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid date format. Please use YYYY-MM-DD'
-      });
-    }
-
-    // In a real app, you would fetch this data from your database or an external API
+    // Return test data in the expected format
     const response = {
       success: true,
-      date: dateStr,
-      ...mockAstroData(dateStr)
+      moon_phase: 0.75, // 0 = new moon, 1 = full moon
+      positions: {
+        moon: { 
+          longitude: 90, 
+          speed: 12.2 
+        },
+        sun: { 
+          longitude: 45 
+        },
+        mercury: { 
+          longitude: 30, 
+          speed: 1.2 
+        },
+        venus: { 
+          longitude: 120 
+        },
+        mars: { 
+          longitude: 200,
+          speed: 0.5
+        },
+        jupiter: { 
+          longitude: 150 
+        },
+        saturn: { 
+          longitude: 300 
+        }
+      },
+      celestial_events: [
+        {
+          name: 'Full Moon',
+          description: 'Full Moon in Scorpio - A time for release and transformation.',
+          intensity: 'high',
+          date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          name: 'Mercury Square Mars',
+          description: 'Heightened communication and potential conflicts.',
+          intensity: 'medium',
+          date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]
     };
 
-    // Cache for 1 hour
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
-    return res.status(200).json(response);
-
+    // Add next_event (first upcoming event or null)
+    const nextEvent = response.celestial_events[0] || null;
+    
+    return res.status(200).json({
+      ...response,
+      next_event: nextEvent
+    });
+    
   } catch (error) {
-    console.error('Error in API route:', error);
+    console.error('API Error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 }
