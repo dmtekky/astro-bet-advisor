@@ -1,6 +1,11 @@
 // @ts-check
-const { VercelRequest, VercelResponse } = require('@vercel/node');
-const { getMoonPhase, getPlanetPositions } = require('../../src/lib/astroCalculations');
+// Import runtime functionality
+import vercel from '@vercel/node';
+import { getMoonPhase, getPlanetPositions } from '../../src/lib/astroCalculations.js';
+
+// Use JSDoc for type imports
+/** @typedef {import('@vercel/node').VercelRequest} VercelRequest */
+/** @typedef {import('@vercel/node').VercelResponse} VercelResponse */
 
 /**
  * @param {import('@vercel/node').VercelRequest} req
@@ -35,17 +40,18 @@ function handler(req, res) {
     const positions = getPlanetPositions(targetDate);
     
     // Mock celestial events
+    /** @type {Array<{name: string, description: string, intensity: 'low'|'medium'|'high', date: string}>} */
     const celestialEvents = [
       {
         name: 'Full Moon',
         description: 'Full Moon in Scorpio - A time for release and transformation.',
-        intensity: 'high' as const,
+        intensity: 'high',
         date: new Date(targetDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         name: 'Mercury Square Mars',
         description: 'Heightened communication and potential conflicts.',
-        intensity: 'medium' as const,
+        intensity: 'medium',
         date: new Date(targetDate.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
@@ -90,4 +96,4 @@ function handler(req, res) {
   }
 }
 
-module.exports = handler;
+export default handler;
