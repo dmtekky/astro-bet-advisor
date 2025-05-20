@@ -187,7 +187,7 @@ interface AstroData {
 
 // Base URL for API requests
 const API_BASE_URL = import.meta.env.PROD 
-  ? '' // In production, use relative URLs (handled by Vercel rewrites)
+  ? 'https://fullmoonodds-zb2q89qit-ddberryjr-6892s-projects.vercel.app/api' // Full URL in production
   : '/api'; // In development, use the Vite proxy
 
 export function useAstroData(date: Date = new Date()) {
