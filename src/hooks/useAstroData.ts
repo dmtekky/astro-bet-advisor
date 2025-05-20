@@ -213,41 +213,75 @@ export function useAstroData(date: Date = new Date()) {
   const transformedData = useMemo<AstroData | null>(() => {
     if (!apiData) return null;
     
-    const { moon_phase, positions } = apiData;
-    
-    const lunarNodes = getLunarNodeForecast();
-    const celestialEvents = getUpcomingCelestialEvents();
+    try {
+      const { moon_phase, positions, celestial_events = [] } = apiData;
+      
+      // Safely get position or return default values
+      const getPosition = (planet: string) => {
+        const pos = positions?.[planet.toLowerCase()];
+        if (!pos) return { longitude: 0, speed: 0 };
+        return {
+          longitude: typeof pos.longitude === 'number' ? pos.longitude : 0,
+          speed: typeof pos.speed === 'number' ? pos.speed : 0
+        };
+      };
+      
+      const moonPos = getPosition('moon');
+      const sunPos = getPosition('sun');
+      const mercuryPos = getPosition('mercury');
+      const venusPos = getPosition('venus');
+      const marsPos = getPosition('mars');
+      const jupiterPos = getPosition('jupiter');
+      const saturnPos = getPosition('saturn');
+      
+      const lunarNodes = getLunarNodeForecast();
+      
+      // Map the API's celestial_events to the expected format
+      const celestialEvents: CelestialEvent[] = Array.isArray(celestial_events) 
+        ? celestial_events.map(event => ({
+            name: event.name || 'Unknown Event',
+            description: event.description || '',
+            intensity: (['low', 'medium', 'high'].includes(event.intensity?.toLowerCase()) 
+              ? event.intensity.toLowerCase() 
+              : 'medium') as 'low' | 'medium' | 'high',
+            date: event.date || new Date().toISOString()
+          }))
+        : [];
 
-    return {
-      moon: {
-        phase: getMoonPhaseName(moon_phase * 100),
-        phaseValue: moon_phase,
-        ...getSignInfo(positions.moon.longitude)
-      },
-      sun: getSignInfo(positions.sun.longitude),
-      mercury: {
-        retrograde: positions.mercury.speed < 0,
-        ...getSignInfo(positions.mercury.longitude)
-      },
-      venus: getSignInfo(positions.venus.longitude),
-      mars: getSignInfo(positions.mars.longitude),
-      jupiter: getSignInfo(positions.jupiter.longitude),
-      saturn: getSignInfo(positions.saturn.longitude),
-      aspects: {
-        sunMars: calculateAspect(positions.sun.longitude, positions.mars.longitude),
-        sunJupiter: calculateAspect(positions.sun.longitude, positions.jupiter.longitude),
-        sunSaturn: calculateAspect(positions.sun.longitude, positions.saturn.longitude),
-        moonVenus: calculateAspect(positions.moon.longitude, positions.venus.longitude),
-        marsJupiter: calculateAspect(positions.mars.longitude, positions.jupiter.longitude),
-        venusMars: calculateAspect(positions.venus.longitude, positions.mars.longitude)
-      },
-      elements: calculateElementalBalance(),
-      currentHour: getPlanetaryHour(),
-      lunarNodes,
-      fixedStars: [],
-      celestialEvents,
-      next_event: celestialEvents[0] || null
-    } as AstroData;
+      return {
+        moon: {
+          phase: getMoonPhaseName((moon_phase || 0) * 100),
+          phaseValue: moon_phase || 0,
+          ...getSignInfo(moonPos.longitude)
+        },
+        sun: getSignInfo(sunPos.longitude),
+        mercury: {
+          retrograde: (mercuryPos.speed || 0) < 0,
+          ...getSignInfo(mercuryPos.longitude)
+        },
+        venus: getSignInfo(venusPos.longitude),
+        mars: getSignInfo(marsPos.longitude),
+        jupiter: getSignInfo(jupiterPos.longitude),
+        saturn: getSignInfo(saturnPos.longitude),
+        aspects: {
+          sunMars: calculateAspect(sunPos.longitude, marsPos.longitude),
+          sunJupiter: calculateAspect(sunPos.longitude, jupiterPos.longitude),
+          sunSaturn: calculateAspect(sunPos.longitude, saturnPos.longitude),
+          moonVenus: calculateAspect(moonPos.longitude, venusPos.longitude),
+          marsJupiter: calculateAspect(marsPos.longitude, jupiterPos.longitude),
+          venusMars: calculateAspect(venusPos.longitude, marsPos.longitude)
+        },
+        elements: calculateElementalBalance(),
+        currentHour: getPlanetaryHour(),
+        lunarNodes,
+        fixedStars: [],
+        celestialEvents,
+        next_event: celestialEvents[0] || null
+      } as AstroData;
+    } catch (error) {
+      console.error('Error transforming astro data:', error);
+      return null;
+    }
   }, [apiData]);
 
   return {
