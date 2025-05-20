@@ -130,7 +130,7 @@ function getZodiacSign(longitude) {
 }
 
 // Export all functions
-module.exports = {
+export {
   getMoonPhase,
   getPlanetPositions,
   calculateAspects,

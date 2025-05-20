@@ -6,8 +6,13 @@
  * @property {number} distance - Distance in AU
  * @property {number} speed - Speed in degrees per day
  */
-const { VercelRequest, VercelResponse } = require('@vercel/node');
-const { getMoonPhase, getPlanetPositions, getZodiacSign } = require('../src/lib/astroCalculations');
+// Import runtime functionality
+import vercel from '@vercel/node';
+import { getMoonPhase, getPlanetPositions, getZodiacSign } from '../src/lib/astroCalculations.js';
+
+// Use JSDoc for type imports
+/** @typedef {import('@vercel/node').VercelRequest} VercelRequest */
+/** @typedef {import('@vercel/node').VercelResponse} VercelResponse */
 
 // Type definitions are now in JSDoc format above
 
@@ -146,4 +151,4 @@ function handler(req, res) {
   }
 }
 
-module.exports = handler;
+export default handler;
