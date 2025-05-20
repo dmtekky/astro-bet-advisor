@@ -190,8 +190,18 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ?
   `${import.meta.env.VITE_API_URL}/astro-date` : 
   '/api/astro-date';
 
-export function useAstroData(date: Date = new Date()) {
-  const dateStr = date.toISOString().split('T')[0];
+export function useAstroData(dateParam: Date | string = new Date()) {
+  // Always produce a YYYY-MM-DD string
+  let dateStr: string;
+  if (dateParam instanceof Date) {
+    dateStr = dateParam.toISOString().split('T')[0];
+  } else if (typeof dateParam === 'string') {
+    // Extract only the date part (YYYY-MM-DD)
+    const match = dateParam.match(/\d{4}-\d{2}-\d{2}/);
+    dateStr = match ? match[0] : new Date().toISOString().split('T')[0];
+  } else {
+    dateStr = new Date().toISOString().split('T')[0];
+  }
   const { data: apiData, error, isLoading } = useSWR(
     `${API_BASE_URL}?date=${dateStr}`,
     fetcher,
