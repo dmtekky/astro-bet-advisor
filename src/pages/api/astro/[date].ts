@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+// This file has been deprecated. See /api/astro-date.ts for the new implementation.
 
 // Simple test endpoint with CORS support
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

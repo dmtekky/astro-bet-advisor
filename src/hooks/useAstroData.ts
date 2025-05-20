@@ -185,13 +185,13 @@ interface AstroData {
   next_event: CelestialEvent | null;
 }
 
-// Base URL for API requests - using relative URL for Vercel
-const API_BASE_URL = '/api';
+// Base URL for API requests - using new Vercel function endpoint
+const API_BASE_URL = '/api/astro-date';
 
 export function useAstroData(date: Date = new Date()) {
   const dateStr = date.toISOString().split('T')[0];
   const { data: apiData, error, isLoading } = useSWR(
-    `${API_BASE_URL}/astro/${dateStr}`,
+    `${API_BASE_URL}?date=${dateStr}`,
     fetcher,
     {
       revalidateOnFocus: false,
