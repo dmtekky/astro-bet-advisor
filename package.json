@@ -2,7 +2,9 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
 
   "dependencies": {
     "@emotion/react": "^11.11.1",
