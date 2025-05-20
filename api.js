@@ -4,7 +4,8 @@ import { getMoonPhase, getPlanetPositions, getZodiacSign } from './src/lib/astro
 const app = express();
 const port = 3000;
 
-app.get('/astro-date', (req, res) => {
+// DEPRECATED: /astro-date endpoint removed. Use /api/astro/:date instead.
+// app.get('/astro-date', (req, res) => {
   try {
     const now = new Date();
     const positions = getPlanetPositions(now);
