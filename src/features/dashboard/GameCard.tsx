@@ -9,10 +9,13 @@ import { cn } from '@/lib/utils';
 interface Team {
   id: string;
   name: string;
-  wins: number;
-  losses: number;
-  logo?: string;
   abbreviation?: string;
+  logo_url?: string;
+  logo?: string; // For backward compatibility
+  wins?: number;
+  losses?: number;
+  primary_color?: string;
+  secondary_color?: string;
 }
 
 export interface Game {
@@ -52,39 +55,76 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
     return null; // Don't render the card if there's no ID
   }
 
-  // Helper to get team name
-  const getTeamName = (team: Team | string): string => {
+  // Helper to get team name with fallback
+  const getTeamName = (team: Team | string | null): string => {
+    if (!team) return 'TBD';
     if (typeof team === 'string') return team;
     return team.name || 'Unknown Team';
   };
 
-  // Helper to get team wins/losses
-  const getTeamRecord = (team: Team | string) => {
-    if (typeof team === 'string') return { wins: 0, losses: 0 };
+  // Helper to get team abbreviation with fallback
+  const getTeamAbbreviation = (team: Team | string | null): string => {
+    if (!team) return 'TBD';
+    if (typeof team === 'string') return team.substring(0, 3).toUpperCase();
+    return team.abbreviation || team.name?.substring(0, 3).toUpperCase() || 'TBD';
+  };
+
+  // Helper to get team wins/losses with null check
+  const getTeamRecord = (team: Team | string | null) => {
+    if (!team || typeof team === 'string') return { wins: 0, losses: 0 };
     return { wins: team.wins || 0, losses: team.losses || 0 };
   };
 
-  // Helper for team logo
-  const TeamLogo = ({ team, className = '' }: { team: Team | string; className?: string }) => {
+  // Helper for team logo with better logo handling
+  const TeamLogo = ({ team, className = '' }: { team: Team | string | null; className?: string }) => {
     const teamName = getTeamName(team);
+    const teamAbbr = getTeamAbbreviation(team);
+    
+    // Get logo URL with fallback
+    const getLogoUrl = () => {
+      if (!team) return null;
+      
+      // If team is a string (just the ID), we don't have logo info
+      if (typeof team === 'string') {
+        return `https://via.placeholder.com/40?text=${teamAbbr}`;
+      }
+      
+      // Try to get logo from logo_url first, then logo, then fallback to placeholder
+      return team.logo_url || team.logo || `https://via.placeholder.com/40?text=${teamAbbr}`;
+    };
+
+    const logoUrl = getLogoUrl();
+    const hasLogo = logoUrl && !logoUrl.includes('via.placeholder.com');
+
     return (
       <div className={`flex items-center ${className}`}>
-        {typeof team !== 'string' && team.logo ? (
-          <img 
-            src={team.logo} 
-            alt={teamName}
-            className="w-8 h-8 mr-2 rounded-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = `https://via.placeholder.com/40?text=${teamName.substring(0, 2).toUpperCase()}`;
-            }}
-          />
+        {hasLogo ? (
+          <div className="relative w-10 h-10 mr-2 flex-shrink-0">
+            <img 
+              src={logoUrl}
+              alt={`${teamName} logo`}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = `https://via.placeholder.com/40?text=${teamAbbr}`;
+                target.className = 'w-full h-full object-cover';
+              }}
+            />
+          </div>
         ) : (
-          <div className="w-8 h-8 mr-2 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-            {teamName.substring(0, 2).toUpperCase()}
+          <div className="w-10 h-10 mr-2 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-300 flex-shrink-0">
+            {teamAbbr}
           </div>
         )}
-        <span className="font-medium">{teamName}</span>
+        
+        <div className="min-w-0">
+          <div className="font-medium truncate">{teamName}</div>
+          {typeof team === 'object' && (team.wins !== undefined || team.losses !== undefined) && (
+            <div className="text-xs text-muted-foreground">
+              {team.wins || 0}-{team.losses || 0}
+            </div>
+          )}
+        </div>
       </div>
     );
   };

@@ -1,0 +1,298 @@
+import React, { useMemo } from 'react';
+import { Game, Team } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useAstroData } from '@/hooks/useAstroData';
+import { useUpcomingGames } from '@/hooks/useUpcomingGames';
+
+// Types
+type Aspect = {
+  planet1: string;
+  planet2: string;
+  aspect: string;
+  orb: number;
+};
+
+type Elements = {
+  fire: number;
+  earth: number;
+  air: number;
+  water: number;
+};
+
+interface MoonData {
+  phase: number;
+  sign: string;
+  icon: string;
+}
+
+interface AstroData {
+  moon: MoonData;
+  sun: {
+    sign: string;
+    element: string;
+  };
+  mercury: {
+    retrograde: boolean;
+    sign: string;
+  };
+  venus: {
+    sign: string;
+  };
+  mars: {
+    sign: string;
+  };
+  jupiter: {
+    sign: string;
+  };
+  saturn: {
+    sign: string;
+  };
+  uranus: {
+    sign: string;
+  };
+  neptune: {
+    sign: string;
+  };
+  pluto: {
+    sign: string;
+  };
+  northNode: {
+    sign: string;
+  };
+  southNode: {
+    sign: string;
+  };
+  aspects: Aspect[];
+  elements: Elements;
+  modalities: {
+    cardinal: number;
+    fixed: number;
+    mutable: number;
+  };
+}
+
+interface GameWithAstro extends Game {
+  astroEdge: number;
+  astroInfluence: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  defaultLogo: string;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
+  gameTime: string;
+  astroData?: AstroData;
+}
+
+// Utility functions
+const calculateAstroEdge = (game: Game, astroData: AstroData): number => {
+  if (!astroData) return 0;
+  
+  const homeTeamHash = (game.home_team_id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const awayTeamHash = (game.away_team_id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  let score = Math.abs(homeTeamHash - awayTeamHash) % 21;
+  
+  if (astroData.moon?.phase) {
+    if (astroData.moon.phase > 0.7 || astroData.moon.phase < 0.3) {
+      score += 10;
+    }
+  }
+  
+  if (astroData.elements) {
+    const elementalDiff = Math.abs(astroData.elements.fire - astroData.elements.water);
+    score += Math.min(20, elementalDiff * 10);
+  }
+  
+  return Math.max(0, Math.min(100, score));
+};
+
+const calculateGameImpact = (game: Game, astroData: AstroData): number => {
+  if (!astroData) return 0;
+  
+  const homeTeamHash = (game.home_team_id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const awayTeamHash = (game.away_team_id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  let score = Math.abs(homeTeamHash - awayTeamHash) % 21;
+  
+  if (astroData.aspects?.length > 0) {
+    const majorAspects = astroData.aspects.filter(a => 
+      ['conjunction', 'opposition', 'square'].includes(a.aspect.toLowerCase())
+    );
+    score += Math.min(30, majorAspects.length * 5);
+  }
+  
+  return Math.max(0, Math.min(100, score));
+};
+
+const getAstroInfluence = (edge: number, impact: number): string => {
+  const total = edge + impact;
+  if (total > 80) return 'Very High';
+  if (total > 60) return 'High';
+  if (total > 40) return 'Medium';
+  return 'Low';
+};
+
+const getElementalInfluence = (elements: Elements) => {
+  const maxElement = Object.entries(elements).reduce((max, [element, value]) => 
+    value > max.value ? { element, value } : max,
+    { element: '', value: 0 }
+  );
+  
+  return {
+    dominantElement: maxElement.element,
+    isBalanced: Object.values(elements).every(v => 
+      v >= maxElement.value * 0.7 && v <= maxElement.value * 1.3
+    )
+  };
+};
+
+const Dashboard: React.FC = () => {
+  const { data: games = [], isLoading, error } = useUpcomingGames({
+    sport: 'baseball_mlb',
+    limit: 5
+  });
+
+  const { data: astroData, isLoading: isLoadingAstro, error: astroError } = useAstroData();
+
+  const processedGames = useMemo(() => {
+    return games.map(game => {
+      const astroEdge = calculateAstroEdge(game, astroData);
+      const impact = calculateGameImpact(game, astroData);
+      const astroInfluence = getAstroInfluence(astroEdge, impact);
+      
+      return {
+        ...game,
+        astroEdge,
+        astroInfluence,
+        homeTeamName: game.home_team_id, // Replace with actual team name
+        awayTeamName: game.away_team_id, // Replace with actual team name
+        defaultLogo: '/team-logo-placeholder.png',
+        gameTime: format(new Date(game.commence_time), 'h:mm a')
+      };
+    });
+  }, [games, astroData]);
+
+  if (isLoading || isLoadingAstro) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || astroError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64 text-red-500">
+          <AlertCircle className="h-8 w-8 mr-2" />
+          <span>Error loading data. Please try again later.</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            View upcoming games and astrological insights
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {processedGames.map((game) => (
+            <Card key={game.id} className="bg-card">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">
+                      {game.homeTeamName} vs {game.awayTeamName}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {game.gameTime}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="ml-2">
+                    {game.astroInfluence}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Astro Edge</span>
+                    <span className="text-sm">{game.astroEdge}/100</span>
+                  </div>
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${game.astroEdge}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {astroData && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Celestial Insights</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Moon Phase</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-2xl">{astroData.moon.phase * 100}%</div>
+                    <div className="text-sm text-muted-foreground">
+                      {astroData.moon.sign}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Elemental Balance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(astroData.elements).map(([element, value]) => (
+                      <div key={element} className="flex items-center">
+                        <span className="w-24 text-sm font-medium capitalize">
+                          {element}
+                        </span>
+                        <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${value}%` }}
+                          />
+                        </div>
+                        <span className="w-8 text-right text-xs">
+                          {Math.round(value)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Dashboard;
