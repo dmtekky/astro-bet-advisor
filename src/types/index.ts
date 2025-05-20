@@ -1,5 +1,8 @@
-
-export type Sport = 'nba' | 'mlb' | 'nfl' | 'boxing' | 'soccer' | 'ncaa';
+export type Sport = 
+  // Frontend display names
+  'nba' | 'mlb' | 'nfl' | 'nhl' | 'soccer' | 'tennis' | 'mma' | 'ncaa' | 'ncaab' | 'ncaaf' | 'golf' | 'esports' | 'cfl' | 'boxing' |
+  // API sport keys
+  'basketball_nba' | 'baseball_mlb' | 'americanfootball_nfl' | 'icehockey_nhl' | 'soccer_epl' | 'soccer_fifa_world_cup';
 
 export interface Player {
   id: string;
@@ -20,6 +23,13 @@ export interface Team {
   name: string;
   abbreviation: string;
   logo?: string;
+  logo_url?: string;
+  city?: string;
+  record?: string;
+  wins?: number;
+  losses?: number;
+  primary_color?: string;
+  secondary_color?: string;
   sport: Sport;
   external_id?: string;
 }
@@ -55,4 +65,8 @@ export interface Game {
   score_home?: number;
   score_away?: number;
   external_id?: string;
+  league?: string;
+  league_id?: string;
+  odds?: number | string | null;
+  oas?: number | string | null;
 }
