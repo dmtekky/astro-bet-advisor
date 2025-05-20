@@ -3,13 +3,31 @@ import { getMoonPhase, getPlanetPositions } from '@/lib/astroCalculations';
 
 // Helper function to handle CORS
 const allowCors = (fn: Function) => async (req: NextApiRequest, res: NextApiResponse) => {
+  // Get the origin from the request headers
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://fullmoonodds-*.vercel.app',
+    'https://fullmoonodds.vercel.app',
+    'https://fullmoonodds-git-*',
+  ];
+
+  const origin = req.headers.origin || '';
+  const isAllowedOrigin = allowedOrigins.some(allowedOrigin => 
+    allowedOrigin.includes('*') 
+      ? origin.startsWith(allowedOrigin.split('*')[0])
+      : origin === allowedOrigin
+  );
+
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Origin', isAllowedOrigin ? origin : allowedOrigins[0]);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-V'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-V, Authorization'
   );
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {

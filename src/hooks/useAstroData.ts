@@ -185,10 +185,8 @@ interface AstroData {
   next_event: CelestialEvent | null;
 }
 
-// Base URL for API requests
-const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://fullmoonodds-zb2q89qit-ddberryjr-6892s-projects.vercel.app/api' // Full URL in production
-  : '/api'; // In development, use the Vite proxy
+// Base URL for API requests - using relative URL for Vercel
+const API_BASE_URL = '/api';
 
 export function useAstroData(date: Date = new Date()) {
   const dateStr = date.toISOString().split('T')[0];
