@@ -46,6 +46,22 @@ export function getZodiacIcon(sign: string): string {
 }
 
 /**
+ * Gets the name of the moon phase based on a percentage (0-100)
+ * @param percentage The moon phase percentage (0-100)
+ * @returns The name of the moon phase
+ */
+export function getMoonPhaseName(percentage: number): string {
+  if (percentage < 2 || percentage > 98) return 'New Moon';
+  if (percentage < 23) return 'Waxing Crescent';
+  if (percentage < 27) return 'First Quarter';
+  if (percentage < 48) return 'Waxing Gibbous';
+  if (percentage < 52) return 'Full Moon';
+  if (percentage < 73) return 'Waning Gibbous';
+  if (percentage < 77) return 'Last Quarter';
+  return 'Waning Crescent';
+}
+
+/**
  * Calculates astrological influence for a player on a given date
  * @param player The player object containing birth date and other details
  * @param date The date to calculate influence for

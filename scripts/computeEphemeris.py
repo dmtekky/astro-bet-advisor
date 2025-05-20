@@ -21,14 +21,17 @@ import os
 from supabase import create_client
 
 # Supabase configuration
-SUPABASE_URL = "https://awoxkynorbspcrrggbca.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3b3hreW5vcmJzcGNycmdnYmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjQzMzQsImV4cCI6MjA2Mjg0MDMzNH0.jiJnx4z9jMFQcBNg1pLtuQAgnKxykqyLWSwQ4KHbhE4"
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY')
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Please set SUPABASE_URL and SUPABASE_ANON_KEY environment variables")
 
 # Initialize Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Initialize Swiss Ephemeris
-swe.set_ephe_path('/usr/share/ephe')  # Path to ephemeris files, adjust as needed
+swe.set_ephe_path('./ephemeris')  # Path to ephemeris files, adjust as needed
 
 # Constants
 YEAR = 2025
@@ -56,12 +59,33 @@ SEXTILE_ORB = 6.0
 
 def get_julday(year, month, day):
     """Convert calendar date to Julian day."""
-    return swe.julday(year, month, day, 0.0)
+    return swe.utc_to_jd(year, month, day, 0, 0, 0, swe.GREG_CAL)[1]
 
 def get_moon_phase(jd):
     """Calculate moon phase (0-1) for given Julian day."""
-    sun_pos = swe.calc_ut(jd, SUN)[0]
-    moon_pos = swe.calc_ut(jd, MOON)[0]
+    # Get positions
+    sun_pos = swe.calc_ut(jd, SUN)
+    moon_pos = swe.calc_ut(jd, MOON)
+    
+    print(f"Raw positions: sun={sun_pos}, moon={moon_pos}")
+    
+    # Extract position (first element of the first tuple)
+    sun_pos = sun_pos[0][0]
+    moon_pos = moon_pos[0][0]
+    
+    print(f"Extracted positions: sun={sun_pos}, moon={moon_pos}")
+    
+    # Convert to degrees
+    sun_pos = math.degrees(sun_pos)
+    moon_pos = math.degrees(moon_pos)
+    
+    print(f"Degrees positions: sun={sun_pos}, moon={moon_pos}")
+    
+    # Normalize to 0-360 degrees
+    sun_pos = (sun_pos + 360) % 360
+    moon_pos = (moon_pos + 360) % 360
+    
+    print(f"Normalized positions: sun={sun_pos}, moon={moon_pos}")
     
     # Calculate phase angle
     phase_angle = (moon_pos - sun_pos) % 360
@@ -73,6 +97,16 @@ def get_moon_phase(jd):
 
 def get_zodiac_sign(longitude):
     """Convert ecliptic longitude to zodiac sign."""
+    # Convert to degrees if needed
+    if isinstance(longitude, tuple):
+        longitude = longitude[0]  # Get the first element of the tuple
+    if longitude < 180:
+        longitude = math.degrees(longitude)
+    
+    # Normalize to 0-360 degrees
+    longitude = (longitude + 360) % 360
+    
+    # Get zodiac sign
     sign_index = int(longitude / 30) % 12
     return ZODIAC_SIGNS[sign_index]
 
@@ -80,7 +114,9 @@ def is_retrograde(planet, jd):
     """Check if a planet is retrograde on given Julian day."""
     # Get planet's speed
     planet_info = swe.calc_ut(jd, planet)
-    speed = planet_info[3]  # Longitudinal speed
+    
+    # Get the speed from the correct position in the tuple
+    speed = planet_info[1][3]  # Speed is in the second element, 4th position
     
     # If speed is negative, the planet is retrograde
     return speed < 0
@@ -88,10 +124,36 @@ def is_retrograde(planet, jd):
 def calculate_aspects(jd):
     """Calculate major aspects between planets on given Julian day."""
     # Get positions
-    sun_pos = swe.calc_ut(jd, SUN)[0]
-    mars_pos = swe.calc_ut(jd, MARS)[0]
-    saturn_pos = swe.calc_ut(jd, SATURN)[0]
-    jupiter_pos = swe.calc_ut(jd, JUPITER)[0]
+    sun_pos = swe.calc_ut(jd, SUN)
+    mars_pos = swe.calc_ut(jd, MARS)
+    saturn_pos = swe.calc_ut(jd, SATURN)
+    jupiter_pos = swe.calc_ut(jd, JUPITER)
+    
+    print(f"Raw positions: sun={sun_pos}, mars={mars_pos}, saturn={saturn_pos}, jupiter={jupiter_pos}")
+    
+    # Extract position (first element of the first tuple)
+    sun_pos = sun_pos[0][0]
+    mars_pos = mars_pos[0][0]
+    saturn_pos = saturn_pos[0][0]
+    jupiter_pos = jupiter_pos[0][0]
+    
+    print(f"Extracted positions: sun={sun_pos}, mars={mars_pos}, saturn={saturn_pos}, jupiter={jupiter_pos}")
+    
+    # Convert to degrees if needed
+    sun_pos = math.degrees(sun_pos)
+    mars_pos = math.degrees(mars_pos)
+    saturn_pos = math.degrees(saturn_pos)
+    jupiter_pos = math.degrees(jupiter_pos)
+    
+    print(f"Degrees positions: sun={sun_pos}, mars={mars_pos}, saturn={saturn_pos}, jupiter={jupiter_pos}")
+    
+    # Normalize to 0-360 degrees
+    sun_pos = (sun_pos + 360) % 360
+    mars_pos = (mars_pos + 360) % 360
+    saturn_pos = (saturn_pos + 360) % 360
+    jupiter_pos = (jupiter_pos + 360) % 360
+    
+    print(f"Normalized positions: sun={sun_pos}, mars={mars_pos}, saturn={saturn_pos}, jupiter={jupiter_pos}")
     
     aspects = {
         "sun_mars": check_aspect(sun_pos, mars_pos),
@@ -103,6 +165,10 @@ def calculate_aspects(jd):
 
 def check_aspect(pos1, pos2):
     """Check for aspects between two celestial positions."""
+    # Convert to degrees if needed
+    pos1 = math.degrees(pos1) if pos1 < 180 else pos1
+    pos2 = math.degrees(pos2) if pos2 < 180 else pos2
+    
     # Calculate the angular difference
     diff = abs((pos1 - pos2 + 180) % 360 - 180)
     
@@ -136,13 +202,13 @@ def generate_ephemeris_for_year(year):
         jd = get_julday(current_date.year, current_date.month, current_date.day)
         
         # Get planetary positions
-        sun_pos = swe.calc_ut(jd, SUN)[0]
-        moon_pos = swe.calc_ut(jd, MOON)[0]
-        mercury_pos = swe.calc_ut(jd, MERCURY)[0]
-        venus_pos = swe.calc_ut(jd, VENUS)[0]
-        mars_pos = swe.calc_ut(jd, MARS)[0]
-        jupiter_pos = swe.calc_ut(jd, JUPITER)[0]
-        saturn_pos = swe.calc_ut(jd, SATURN)[0]
+        sun_pos = swe.calc_ut(jd, SUN)[0][0]
+        moon_pos = swe.calc_ut(jd, MOON)[0][0]
+        mercury_pos = swe.calc_ut(jd, MERCURY)[0][0]
+        venus_pos = swe.calc_ut(jd, VENUS)[0][0]
+        mars_pos = swe.calc_ut(jd, MARS)[0][0]
+        jupiter_pos = swe.calc_ut(jd, JUPITER)[0][0]
+        saturn_pos = swe.calc_ut(jd, SATURN)[0][0]
         
         # Calculate moon phase and aspects
         moon_phase = get_moon_phase(jd)

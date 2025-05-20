@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/astro/date.ts", "use": "@vercel/node" },
+    { "src": "package.json", "use": "@vercel/static-build" }
+  ],
+  "routes": [
+    { "src": "/api/astro/(?<date>[^/]+)", "dest": "/api/astro/date.ts?date=$date" },
+    { "src": "/(.*)", "dest": "/" }
+  ],
+  "rewrites": [
+    { "source": "/api/astro/(.*)", "destination": "/api/astro/date.ts" }
+  ]
+}

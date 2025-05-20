@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, isAfter, subHours } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -39,14 +40,12 @@ const fetchGames = async (sport: string): Promise<Game[]> => {
 
 export const useGames = (sport: string) => {
   // Fetch teams
-  const { data: teams = {}, isLoading: isLoadingTeams } = useQuery(
-    ['teams', sport],
-    () => fetchTeams(sport),
-    { 
-      staleTime: 1000 * 60 * 60, // 1 hour
-      enabled: !!sport,
-    }
-  );
+  const { data: teams = {}, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['teams', sport],
+    queryFn: () => fetchTeams(sport),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    enabled: !!sport,
+  });
   
   // Fetch games
   const { 
@@ -54,39 +53,37 @@ export const useGames = (sport: string) => {
     isLoading: isLoadingGames, 
     error, 
     refetch 
-  } = useQuery<Game[], Error>(
-    ['games', sport],
-    () => fetchGames(sport),
-    { 
-      enabled: !!sport && !isLoadingTeams,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      select: (games) => {
-        const now = subHours(new Date(), 4); // Show games from last 4 hours
-        
-        return games
-          .filter(game => {
-            try {
-              const gameTime = parseISO(game.commence_time || game.start_time || game.game_time);
-              return isAfter(gameTime, now);
-            } catch (e) {
-              console.warn('Invalid game time:', game);
-              return false;
-            }
-          })
-          .map(game => ({
-            ...game,
-            home_team_data: game.home_team_id ? teams[game.home_team_id] : {
-              id: game.home_team_id || '',
-              name: game.home_team,
-            },
-            away_team_data: game.away_team_id ? teams[game.away_team_id] : {
-              id: game.away_team_id || '',
-              name: game.away_team,
-            },
-          }));
-      }
+  } = useQuery<Game[], Error>({
+    queryKey: ['games', sport],
+    queryFn: () => fetchGames(sport),
+    enabled: !!sport && !isLoadingTeams,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    select: (games) => {
+      const now = subHours(new Date(), 4); // Show games from last 4 hours
+      
+      return games
+        .filter(game => {
+          try {
+            const gameTime = parseISO(game.commence_time || game.start_time || game.game_time);
+            return isAfter(gameTime, now);
+          } catch (e) {
+            console.warn('Invalid game time:', game);
+            return false;
+          }
+        })
+        .map(game => ({
+          ...game,
+          home_team_data: game.home_team_id ? teams[game.home_team_id] : {
+            id: game.home_team_id || '',
+            name: game.home_team,
+          },
+          away_team_data: game.away_team_id ? teams[game.away_team_id] : {
+            id: game.away_team_id || '',
+            name: game.away_team,
+          },
+        }));
     }
-  );
+  });
 
   // Group games by date
   const gamesByDate = React.useMemo(() => {
