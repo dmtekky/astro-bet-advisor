@@ -15,8 +15,10 @@ function handler(req, res) {
   // Try to get date from query or RESTful path
   let dateParam = req.query.date;
   if (!dateParam && req.url) {
-    const match = req.url.match(/\/api\/astro\/(\d{4}-\d{2}-\d{2})/);
+    // Extract YYYY-MM-DD format, ignoring any trailing characters
+    const match = req.url.match(/\/api\/astro\/(\d{4}-\d{2}-\d{2})[^\w\d-]*/);
     if (match) dateParam = match[1];
+    console.log('URL:', req.url, 'Extracted date:', dateParam);
   }
   
   // Set CORS headers
@@ -37,12 +39,15 @@ function handler(req, res) {
     // Validate and clean date parameter
     let targetDate;
     if (dateParam) {
-      // Remove any time component and ensure YYYY-MM-DD format
-      const dateStr = dateParam.toString().split('T')[0];
+      // Strictly extract only YYYY-MM-DD format, ignoring any trailing characters
+      const dateMatch = dateParam.toString().match(/^(\d{4}-\d{2}-\d{2})/);
+      const dateStr = dateMatch ? dateMatch[1] : dateParam.toString().split('T')[0];
+      
+      console.log('Original date param:', dateParam, 'Sanitized:', dateStr);
       targetDate = new Date(dateStr);
       
       if (isNaN(targetDate.getTime())) {
-        console.error('Invalid date received:', dateParam);
+        console.error('Invalid date received:', dateParam, 'Sanitized to:', dateStr);
         return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD' });
       }
       
