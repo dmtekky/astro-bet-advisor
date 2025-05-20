@@ -198,8 +198,8 @@ export function useAstroData(dateParam: Date | string = new Date()) {
   if (dateParam instanceof Date) {
     dateStr = dateParam.toISOString().split('T')[0];
   } else if (typeof dateParam === 'string') {
-    // Extract only the date part (YYYY-MM-DD)
-    const match = dateParam.match(/\d{4}-\d{2}-\d{2}/);
+    // Strictly extract only the YYYY-MM-DD part, ignore any trailing characters (e.g. :1)
+    const match = dateParam.match(/^\d{4}-\d{2}-\d{2}/);
     dateStr = match ? match[0] : new Date().toISOString().split('T')[0];
   } else {
     dateStr = new Date().toISOString().split('T')[0];
