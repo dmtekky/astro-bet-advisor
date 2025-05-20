@@ -74,62 +74,41 @@ def download_image(url: str, save_path: Path) -> Optional[str]:
         return None
 
 def process_team(team: dict, sport: dict) -> int:
-    """Process a single team's data."""
+    """Process a single team's data and its roster."""
     try:
         team_id = team.get('id')
         if not team_id:
             logger.warning("Skipping team with no ID")
             return 0
             
-        # Use the team dict directly (already flattened by extract_teams_from_response)
-        team_logo_url = (team.get('logos') or [{}])[0].get('href', '')
-        team_logo_path = download_image(team_logo_url, TEAM_IMAGE_DIR / f"{team_id}.png") if team_logo_url else None
+        # Map team data to match our schema
+        team_name = team.get('displayName') or team.get('name', '')
+        team_abbr = team.get('abbreviation', team_name[:3].upper())
 
         team_record = {
             'espn_id': team_id,
-            'name': team.get('name', ''),
-            'display_name': team.get('displayName', ''),
-            'abbreviation': team.get('abbreviation', ''),
+            'name': team_name,
+            'abbreviation': team_abbr,
             'sport': sport['key'],
-            'league': sport['league'],
-            'logo_url': team_logo_url or None,
-            'logo_path': team_logo_path,
-            'primary_color': team.get('color', ''),
-            'secondary_color': team.get('alternateColor', '')
+            'league': sport['league']
         }
         logger.info(f"Upserting team: {team_record['name']} (ID: {team_id})")
         
-        # Remove None values
-        team_record = {k: v for k, v in team_record.items() if v is not None}
-        
+        # Upsert team record
         supabase.table('teams').upsert(team_record, on_conflict='espn_id').execute()
-        logger.debug(f"Processed team: {team_record.get('name')} (ID: {team_id})")
         
-        # Process team roster and count players
-        players_added = 0
-        try:
-            roster_url = f"{ESPN_BASE_URL}/{sport['sport']}/{sport['league']}/teams/{team_id}/roster"
-            response = requests.get(roster_url, headers=HEADERS, timeout=15)
-            response.raise_for_status()
-            roster_data = response.json()
-            
-            # Count athletes in the roster
-            if 'athletes' in roster_data and roster_data['athletes']:
-                players_added = len(roster_data['athletes'])
-                logger.debug(f"Found {players_added} players in roster for team {team_id}")
-                
-        except Exception as e:
-            logger.warning(f"Error fetching roster for team {team_id}: {e}")
-        
-        return players_added
+        # Process team roster
+        logger.info(f"Processing roster for team: {team_name} (ID: {team_id})")
+        return process_team_roster(team_id, sport)
         
     except Exception as e:
         logger.error(f"Error processing team {team_id}: {e}", exc_info=True)
         return 0
 
-def process_team_roster(team_id: str, sport: dict) -> None:
-    """Process the roster for a single team."""
+def process_team_roster(team_id: str, sport: dict) -> int:
+    """Process the roster for a single team and return the number of players processed."""
     roster_url = f"{ESPN_BASE_URL}/{sport['sport']}/{sport['league']}/teams/{team_id}/roster"
+    players_processed = 0
     
     try:
         logger.debug(f"Fetching roster for team {team_id}")
@@ -139,7 +118,7 @@ def process_team_roster(team_id: str, sport: dict) -> None:
         
         # Find athletes data in the response
         athletes = []
-        if 'athletes' in roster_data:
+        if 'athletes' in roster_data and isinstance(roster_data['athletes'], list):
             athletes = roster_data['athletes']
         else:
             # Try common alternative locations for athlete data
@@ -151,22 +130,27 @@ def process_team_roster(team_id: str, sport: dict) -> None:
         
         if not isinstance(athletes, list):
             logger.warning(f"Could not find athletes list for team {team_id}")
-            return
+            return 0
             
         logger.info(f"Found {len(athletes)} athletes for team {team_id}")
         
         for athlete in athletes:
             try:
-                process_athlete(athlete, team_id, sport)
+                if process_athlete(athlete, team_id, sport):
+                    players_processed += 1
             except Exception as e:
                 logger.error(f"Error processing athlete: {e}", exc_info=True)
                 continue
                 
+        logger.info(f"Successfully processed {players_processed} players for team {team_id}")
+        return players_processed
+                
     except Exception as e:
         logger.error(f"Error fetching roster for team {team_id}: {e}")
+        return 0
 
-def process_athlete(athlete: dict, team_id: str, sport: dict) -> None:
-    """Process a single athlete's data."""
+def process_athlete(athlete: dict, team_id: str, sport: dict) -> bool:
+    """Process a single athlete's data and return True if successful, False otherwise."""
     try:
         # Handle different athlete data structures
         if isinstance(athlete, dict) and 'athlete' in athlete:
@@ -178,7 +162,7 @@ def process_athlete(athlete: dict, team_id: str, sport: dict) -> None:
         player_id = str(player.get('id', '')).strip()
         if not player_id or player_id.lower() in ('none', 'null', 'undefined'):
             logger.debug(f"Skipping player with invalid ID. Data: {json.dumps(athlete, default=str)[:200]}")
-            return
+            return False
         
         # Get player image URL
         player_img_url = (
@@ -271,20 +255,40 @@ def process_athlete(athlete: dict, team_id: str, sport: dict) -> None:
         # Validate required fields
         if not all(k in player_record for k in ['espn_id', 'name', 'sport']):
             logger.warning(f"Skipping player with missing required fields: {player_id}")
-            return
+            return False
         
-        # Insert/update player record
-        supabase.table('players').upsert(player_record, on_conflict='espn_id').execute()
-        logger.info(f"Upserted player: {player_name} (ID: {player_id})")
+        try:
+            # Insert/update player record
+            supabase.table('players').upsert(player_record, on_conflict='espn_id').execute()
+            logger.info(f"Upserted player: {player_name} (ID: {player_id})")
+            player_upserted = True
+        except Exception as e:
+            logger.error(f"Failed to upsert player {player_name} (ID: {player_id}): {e}")
+            return False
 
         # --- Fetch and upsert player statistics ---
         try:
             stat_table = sport.get('stat_table')
+            if not stat_table:
+                logger.debug(f"No stat table defined for sport {sport['key']}, skipping stats")
+                return player_upserted
+                
             stats_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport['sport']}/{sport['league']}/athletes/{player_id}/stats"
             stat_resp = requests.get(stats_url, headers=HEADERS, timeout=10)
             stat_resp.raise_for_status()
             stat_json = stat_resp.json()
-            # Attempt to extract stats from the first available set (season/career)
+            
+            # Save raw JSON stats to the stats column
+            try:
+                supabase.table('players') \
+                    .update({'stats': stat_json}) \
+                    .eq('espn_id', player_id) \
+                    .execute()
+                logger.info(f"Saved raw JSON stats for player: {player_name} (ID: {player_id})")
+            except Exception as json_err:
+                logger.warning(f"Failed to save raw JSON stats for player {player_id}: {json_err}")
+            
+            # Also store flattened stats in the stat table for easier querying
             stats = {}
             if 'stats' in stat_json and isinstance(stat_json['stats'], list) and stat_json['stats']:
                 # Grab the first stats dict that has 'stats' inside it
@@ -294,20 +298,41 @@ def process_athlete(athlete: dict, team_id: str, sport: dict) -> None:
                         break
             elif 'athlete' in stat_json and 'stats' in stat_json['athlete']:
                 stats = stat_json['athlete']['stats']
+                
             # Only upsert if we have stats and a stat table
             if stats and stat_table:
-                stats_record = {'player_id': player_id, 'espn_id': player_id}
-                # Flatten stats dict into the record
-                stats_record.update(stats)
-                supabase.table(stat_table).upsert(stats_record, on_conflict='player_id').execute()
-                logger.info(f"Upserted stats for player: {player_name} (ID: {player_id}) in table {stat_table}")
+                try:
+                    stats_record = {
+                        'player_id': player_id, 
+                        'espn_id': player_id,
+                        'last_updated': datetime.utcnow().isoformat()
+                    }
+                    # Flatten stats dict into the record
+                    stats_record.update(stats)
+                    
+                    # Add additional metadata
+                    if 'athlete' in stat_json and 'displayName' in stat_json['athlete']:
+                        stats_record['player_name'] = stat_json['athlete']['displayName']
+                        
+                    # Add team info if available
+                    if 'athlete' in stat_json and 'team' in stat_json['athlete'] and 'id' in stat_json['athlete']['team']:
+                        stats_record['team_id'] = stat_json['athlete']['team']['id']
+                        
+                    supabase.table(stat_table).upsert(stats_record, on_conflict='player_id').execute()
+                    logger.info(f"Upserted flattened stats for player: {player_name} (ID: {player_id}) in table {stat_table}")
+                except Exception as stats_err:
+                    logger.warning(f"Failed to upsert stats for player {player_id}: {stats_err}")
             else:
-                logger.info(f"No stats found for player: {player_name} (ID: {player_id})")
+                logger.info(f"No flattened stats found for player: {player_name} (ID: {player_id})")
+                
         except Exception as e:
             logger.warning(f"Failed to fetch/upsert stats for player {player_id}: {e}")
+            
+        return player_upserted
 
     except Exception as e:
         logger.error(f"Error processing athlete: {e}", exc_info=True)
+        return False
 
 def extract_teams_from_response(response_data: dict) -> list:
     """Extract teams from the ESPN API response."""
@@ -409,10 +434,22 @@ def main():
     parser = argparse.ArgumentParser(description='ESPN Data Scraper')
     parser.add_argument('--once', action='store_true', help='Run the scraper once and exit')
     parser.add_argument('--limit', type=int, help='Limit the number of players to fetch')
+    parser.add_argument('--sport', type=str, help='Filter by sport key (e.g., mlb, nba, nfl)', default=None)
     args = parser.parse_args()
     
+    # Filter sports if --sport is specified
+    global SPORTS
+    if args.sport:
+        filtered_sports = [s for s in SPORTS if s['key'] == args.sport]
+        if not filtered_sports:
+            logger.error(f"No sport found with key: {args.sport}")
+            logger.info(f"Available sports: {[s['key'] for s in SPORTS]}")
+            return
+        SPORTS = filtered_sports
+        logger.info(f"Filtering to sport: {args.sport}")
+    
     try:
-        if args.once or args.limit is not None:
+        if args.once or args.limit is not None or args.sport:
             logger.info(f"Running scraper once with player limit: {args.limit if args.limit else 'unlimited'}")
             scrape_teams_and_players(limit_players=args.limit)
         else:

@@ -23,90 +23,37 @@ export const fetchPlayersByTeam = async (team_id: string): Promise<Player[]> => 
   try {
     console.log(`[PLAYER FETCH] Fetching players for team ID: ${team_id}`);
     
-    // First try with team_id
-    let { data, error } = await supabase
-      .from('players')
-      .select('*')
-      .eq('team_id', team_id)  // Changed to use team_id column
-      .order('name');
-      
-    if (error) {
-      console.error('[PLAYER FETCH] Error fetching players by team_id:', error);
-      throw error;
-    }
-    
-    // If no players found, try alternative approaches
-    if (!data || data.length === 0) {
-      console.log(`[PLAYER FETCH] No players found for team_id ${team_id}, trying alternative methods...`);
-      
-      // Try to get team espn_id first
-      const { data: teamData, error: teamError } = await supabase
-        .from('teams')
-        .select('id, name, abbreviation, espn_id')
-        .eq('id', team_id)
-        .single();
-        
-      if (!teamError && teamData) {
-        console.log(`[PLAYER FETCH] Found team: ${teamData.name} (${teamData.abbreviation}), espn_id: ${teamData.espn_id}`);
-        
-        // Try with espn_id if available
-        if (teamData.espn_id) {
-          console.log(`[PLAYER FETCH] Trying to fetch players using espn_id: ${teamData.espn_id}`);
-          const { data: playersByEspnId, error: espnError } = await supabase
-            .from('players')
-            .select('*')
-            .eq('team_id', teamData.espn_id)  // Changed to use espn_id
-            .order('name');
-            
-          if (!espnError && playersByEspnId && playersByEspnId.length > 0) {
-            console.log(`[PLAYER FETCH] Found ${playersByEspnId.length} players using espn_id`);
-            return playersByEspnId;
-          }
-        }
-        
-        // Try with team name as fallback (in case team_id is actually the name)
-        console.log(`[PLAYER FETCH] Trying to fetch players using team name: ${teamData.name}`);
-        const { data: playersByName, error: nameError } = await supabase
-          .from('players')
-          .select('*')
-          .eq('team_id', teamData.name)  // Try matching team_id with team name
-          .order('name');
-          
-        if (!nameError && playersByName && playersByName.length > 0) {
-          console.log(`[PLAYER FETCH] Found ${playersByName.length} players by team name`);
-          return playersByName;
-        }
-      }
-      
-      // If still no players, try a more general search
-      console.log('[PLAYER FETCH] Trying general player search...');
-      const { data: allPlayers, error: allError } = await supabase
-        .from('players')
-        .select('*')
-        .limit(100);
-        
-      if (!allError && allPlayers) {
-        console.log(`[PLAYER FETCH] Fetched ${allPlayers.length} players for inspection`);
-        // Log sample of player data for debugging
-        if (allPlayers.length > 0) {
-          console.log('[PLAYER FETCH] Sample player data:', allPlayers.slice(0, 3).map(p => ({
-            id: p.id,
-            name: p.name,
-            team_id: p.team_id,
-            position: p.position
-          })));
-        }
-      }
-      
-      // Return empty array if no players found
+    // First try to get the team's espn_id
+    const { data: teamData, error: teamError } = await supabase
+      .from('teams')
+      .select('espn_id, name, abbreviation')
+      .eq('id', team_id)
+      .single();
+
+    if (teamError || !teamData) {
+      console.error('[PLAYER FETCH] Error fetching team:', teamError?.message || 'Team not found');
       return [];
     }
-    
-    console.log(`[PLAYER FETCH] Found ${data.length} players for team_id ${team_id}`);
-    return data || [];
+
+    const espnId = teamData.espn_id;
+    console.log(`[PLAYER FETCH] Found team: ${teamData.name} (${teamData.abbreviation}), espn_id: ${espnId}`);
+
+    // Fetch players where espn_id matches the team's espn_id
+    const { data: players, error: playersError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('espn_id', espnId);
+
+    if (playersError) {
+      console.error('[PLAYER FETCH] Error fetching players:', playersError.message);
+      return [];
+    }
+
+    console.log(`[PLAYER FETCH] Found ${players?.length || 0} players for team espn_id: ${espnId}`);
+    return players || [];
   } catch (error) {
     console.error('[PLAYER FETCH] Error in fetchPlayersByTeam:', error);
-    throw error;
+    return [];
   }
 };
 
