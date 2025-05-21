@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Info, BarChart2, Activity, Star, Clock, Award } from 'lucide-react';
 import { getZodiacSign, getZodiacIcon } from '@/lib/astroCalc';
 import { calculateAIS } from '@/lib/formula';
+import { useAstroData } from '@/hooks/useAstroData';
 
 // Types
 import type { Player, Sport } from '@/types';
@@ -112,31 +113,26 @@ const PlayerPage: React.FC = () => {
   const [stats, setStats] = useState<Record<string, string | number> | null>(null);
 
   // Astrological insights
-  const [astrologicalData, setAstrologicalData] = useState<any>(null);
-  const [loadingAstro, setLoadingAstro] = useState(true);
-  const [astroError, setAstroError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!player) return;
-
-    const fetchAstroData = async () => {
-      try {
-        setLoadingAstro(true);
-        const result = await calculateAstrologicalInfluence(player);
-        setAstrologicalData(result);
-      } catch (err) {
-        console.error('Error calculating astrological data:', err);
-        setAstroError('Failed to load astrological data');
-      } finally {
-        setLoadingAstro(false);
+  // Use the useAstroData hook to fetch astrological data
+  const { astroData, loading: loadingAstro, error: astroError } = useAstroData();
+  
+  // Format the astrological data for display
+  const astroImpacts = useMemo(() => {
+    if (!astroData) return [];
+    
+    const influences = {
+      zodiacSign: astroData.sun?.sign,
+      moonPhase: astroData.moon?.phaseValue,
+      mercuryRetrograde: astroData.mercury?.retrograde,
+      aspects: {
+        sunMoon: 0.5, // Default neutral aspect
+        // Add more aspects as needed from astroData
       }
     };
-
-    fetchAstroData();
-  }, [player]);
-
-  // Format the astrological data for display
-  const astroImpacts = astrologicalData ? formatAstroInfluences(astrologicalData.influences) : [];
+    
+    return formatAstroInfluences(influences);
+  }, [astroData]);
+  
   const topImpact = getTopImpact(astroImpacts);
   const sortedImpacts = getSortedImpacts(astroImpacts);
 
@@ -144,111 +140,117 @@ const PlayerPage: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        // Fetch player data from Supabase
+        // 1. First, fetch the player data
         const { data: player, error: playerError } = await supabase
           .from('players')
           .select('*')
           .eq('id', playerId)
           .single();
+          
         if (playerError) throw playerError;
+        if (!player) throw new Error('Player not found');
+
+        // 2. Determine the stats table based on the player's sport
+        const sport = player.sport?.toLowerCase();
+        let statsTable = 'player_stats'; // Default fallback
         
-        // Transform player data to match expected format
+        if (sport === 'basketball') statsTable = 'basketball_stats';
+        else if (sport === 'baseball') statsTable = 'baseball_stats';
+        else if (sport === 'football') statsTable = 'football_stats';
+        else if (sport === 'soccer') statsTable = 'soccer_stats';
+        else if (sport === 'boxing') statsTable = 'boxing_stats';
+
+        // 3. Fetch the player's stats
+        const { data: statsData, error: statsError } = await supabase
+          .from(statsTable)
+          .select('*')
+          .eq('player_id', playerId)
+          .order('season', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (statsError) console.error('Error fetching stats:', statsError);
+
+        // 4. Transform player data with stats
         const formattedPlayer = {
           ...player,
-          sport: player.sport as Sport, // Type assertion for Sport enum
-          stats: player.stats && typeof player.stats === 'object' 
-            ? {
-                points: (player.stats as any).points || 0,
-                rebounds: (player.stats as any).rebounds || '0',
-                assists: (player.stats as any).assists || '0',
-                steals: (player.stats as any).steals || '0',
-                blocks: (player.stats as any).blocks || '0',
-                fgPercentage: (player.stats as any).fgPercentage || '0%',
-                threePointPercentage: (player.stats as any).threePointPercentage || '0%',
-                ftPercentage: (player.stats as any).ftPercentage || '0%'
-              }
-            : {
-                points: 0,
-                rebounds: '0',
-                assists: '0',
-                steals: '0',
-                blocks: '0',
-                fgPercentage: '0%',
-                threePointPercentage: '0%',
-                ftPercentage: '0%'
-              }
+          sport: player.sport as Sport,
+          stats: statsData ? {
+            points: statsData.points_per_game || statsData.points || 0,
+            rebounds: statsData.rebounds_per_game?.toFixed(1) || statsData.rebounds?.toFixed(1) || '0.0',
+            assists: statsData.assists_per_game?.toFixed(1) || statsData.assists?.toFixed(1) || '0.0',
+            steals: statsData.steals_per_game?.toFixed(1) || statsData.steals?.toFixed(1) || '0.0',
+            blocks: statsData.blocks_per_game?.toFixed(1) || statsData.blocks?.toFixed(1) || '0.0',
+            fgPercentage: (statsData.field_goal_percentage * 100)?.toFixed(1) + '%' || '0.0%',
+            threePointPercentage: (statsData.three_point_percentage * 100)?.toFixed(1) + '%' || '0.0%',
+            ftPercentage: (statsData.free_throw_percentage * 100)?.toFixed(1) + '%' || '0.0%',
+            season: statsData?.season || '2023-24'
+          } : {
+            points: 0,
+            rebounds: '0.0',
+            assists: '0.0',
+            steals: '0.0',
+            blocks: '0.0',
+            fgPercentage: '0.0%',
+            threePointPercentage: '0.0%',
+            ftPercentage: '0.0%',
+            season: '2023-24'
+          }
         } as PlayerWithStats;
         
         setPlayer(formattedPlayer);
 
-        // Fetch team data for this player
-        if (player && player.team_id) {
+        // 5. Fetch team data if available
+        if (player.current_team_id) {
           const { data: team, error: teamError } = await supabase
             .from('teams')
             .select('*')
-            .eq('id', player.team_id)
+            .eq('id', player.current_team_id)
             .single();
-          if (teamError) throw teamError;
-          setTeam(team);
+            
+          if (!teamError) {
+            setTeam(team);
+          }
         }
         
-        // Fetch player stats (mock data for now)
-        setStats({
-          points: Math.floor(Math.random() * 30) + 10,
-          rebounds: (Math.random() * 12).toFixed(1),
-          assists: (Math.random() * 10).toFixed(1),
-          steals: (Math.random() * 3).toFixed(1),
-          blocks: (Math.random() * 2.5).toFixed(1),
-          fgPercentage: (Math.random() * 30 + 40).toFixed(1) + '%',
-          threePointPercentage: (Math.random() * 20 + 30).toFixed(1) + '%',
-          ftPercentage: (Math.random() * 20 + 70).toFixed(1) + '%',
-        });
-        
-        // Mock ephemeris data
-        const mockEphemeris: Ephemeris = {
-          id: 'mock-ephemeris',
-          date: new Date().toISOString().slice(0, 10),
-          moon_phase: Math.random(),
-          moon_sign: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][Math.floor(Math.random() * 12)],
-          sun_sign: 'Leo',
-          mercury_sign: 'Virgo',
-          venus_sign: 'Libra',
-          mars_sign: 'Scorpio',
-          jupiter_sign: 'Sagittarius',
-          saturn_sign: 'Capricorn',
-          mercury_retrograde: Math.random() > 0.8,
-          sun_mars_aspect: Math.random(),
-          sun_saturn_aspect: Math.random(),
-          sun_jupiter_aspect: Math.random(),
-        };
-        
-        setEphemeris(mockEphemeris);
-        
-        // Calculate AIS using the formula
-        if (formattedPlayer) {
-          const aisResult = await calculateAIS(formattedPlayer, mockEphemeris);
-          
-          // Enhance the AIS result with additional UI-specific data
-          const enhancedAIS: PlayerAIS = {
-            ...aisResult,
-            dominant_house: ['first', 'second', 'fifth', 'tenth'][Math.floor(Math.random() * 4)],
-            key_attributes: ['creativity', 'energy', 'focus', 'luck'].slice(0, Math.floor(Math.random() * 3) + 1),
-            forecast: generateAstroForecast(aisResult, formattedPlayer.name)
+        // 6. Calculate AIS using the astrological data
+        if (formattedPlayer && astroData) {
+          // Convert astroData to the format expected by calculateAIS
+          const ephemeris: Ephemeris = {
+            id: `player-${playerId}-${new Date().toISOString().split('T')[0]}`,
+            date: new Date().toISOString().split('T')[0],
+            moon_phase: astroData.moon?.phaseValue || 0.5,
+            moon_sign: astroData.moon?.sign || 'Aries',
+            mercury_sign: astroData.mercury?.sign || 'Aries',
+            mercury_retrograde: astroData.mercury?.retrograde || false,
+            venus_sign: astroData.venus?.sign || 'Aries',
+            mars_sign: astroData.mars?.sign || 'Aries',
+            jupiter_sign: astroData.jupiter?.sign || 'Aries',
+            saturn_sign: astroData.saturn?.sign || 'Aries',
+            sun_sign: astroData.sun?.sign || 'Aries',
+            sun_mars_aspect: 0, // Calculate or get from astroData if available
+            sun_saturn_aspect: 0, // Calculate or get from astroData if available
+            sun_jupiter_aspect: 0  // Calculate or get from astroData if available
           };
           
-          setAIS(enhancedAIS);
+          const aisResult = await calculateAIS(formattedPlayer, ephemeris);
+          setAIS({
+            ...aisResult,
+            dominant_house: 'first', // Default value since houses data is not available
+            key_attributes: ['energy', 'focus'], // Could be enhanced with actual astro data
+            forecast: generateAstroForecast(aisResult, formattedPlayer.full_name?.split(' ')[0] || 'This player')
+          });
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         console.error('Error fetching player data:', err);
-        setError(errorMessage);
+        setError(err instanceof Error ? err.message : 'Failed to load player data');
       } finally {
         setLoading(false);
       }
     }
     
     fetchData();
-  }, [playerId, teamId]);
+  }, [playerId]);
 
   if (loading) {
     return (
@@ -269,7 +271,7 @@ const PlayerPage: React.FC = () => {
     </div>
   ) : astroError ? (
     <div className="bg-red-900/50 text-white p-4 rounded-lg mb-6">
-      {astroError}
+      {astroError instanceof Error ? astroError.message : String(astroError)}
     </div>
   ) : (
     <div className="bg-gradient-to-r from-indigo-900 to-black text-white p-4 rounded-lg mb-6 flex items-center gap-2">
@@ -355,7 +357,15 @@ const PlayerPage: React.FC = () => {
                 <Calendar className="h-5 w-5 text-gray-400" />
                 <div>
                   <div className="text-sm text-gray-400">Birthday</div>
-                  <div>{player.birth_date || 'N/A'}</div>
+                  <div>
+                    {player.birth_date 
+                      ? new Date(player.birth_date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                      : 'N/A'}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -371,14 +381,18 @@ const PlayerPage: React.FC = () => {
                 <BarChart2 className="h-5 w-5 text-gray-400" />
                 <div>
                   <div className="text-sm text-gray-400">Height</div>
-                  <div>{player.height || '6\'7"'}</div>
+                  <div>
+                    {player.height 
+                      ? `${Math.floor(player.height / 12)}'${player.height % 12}"` 
+                      : 'N/A'}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-gray-400" />
                 <div>
                   <div className="text-sm text-gray-400">Weight</div>
-                  <div>{player.weight || '220 lbs'}</div>
+                  <div>{player.weight ? `${player.weight} lbs` : 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -431,38 +445,49 @@ const PlayerPage: React.FC = () => {
               {ais ? (
                 <div className="space-y-4">
                   <div className="bg-gray-900 p-4 rounded-lg border border-yellow-900/30">
-                    <div className="text-sm text-yellow-400 mb-2">Overall Impact</div>
-                    <div className="flex items-end gap-2">
-                      <div className="text-4xl font-bold">
-                        {(ais.score * 100).toFixed(0)}
-                      </div>
-                      <div className="text-gray-400 mb-1">/100</div>
+                    <div className="flex justify-between items-center">
                     </div>
-                    <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400"
                         style={{ width: `${ais.score * 100}%` }}
-                      ></div>
+                      />
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">
+                      {getPerformanceImpact(ais.score).description}
                     </div>
                   </div>
                   
-                  <div>
-                    <h4 className="font-medium mb-2">Key Influences</h4>
-                    <div className="space-y-2">
-                      {Object.entries(ais.factors).map(([factor, value]) => (
-                        <div key={factor} className="flex items-center justify-between">
-                          <span className="text-sm text-gray-400 capitalize">{factor.replace(/_/g, ' ')}</span>
-                          <Badge variant="outline" className="border-yellow-800 text-yellow-400">
-                            {String(value)}
-                          </Badge>
-                        </div>
-                      ))}
+                  <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
+                    <h4 className="font-medium mb-3 text-yellow-400">Key Performance Factors</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {getTopInfluences(ais.factors).map(([factor, value]) => {
+                        const impact = getFactorImpact(factor, value);
+                        return (
+                          <div key={factor} className="flex flex-col">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm text-gray-300 capitalize">
+                                {formatFactorName(factor)}
+                              </span>
+                              <Badge 
+                                variant={impact.positive ? 'default' : 'destructive'}
+                                className="text-xs h-5 px-2"
+                              >
+                                {impact.value}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {impact.description}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   
-                  <div className="pt-4 mt-4 border-t border-gray-800">
-                    <h4 className="font-medium mb-2">Today's Forecast</h4>
-                    <p className="text-sm text-gray-400">
+                  <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-800">
+                    <h4 className="font-medium mb-2 text-yellow-400">Performance Forecast</h4>
+                    <p className="text-sm text-gray-300">
                       {generateAstroForecast(ais, player.name?.split(' ')[0] || 'This player')}
                     </p>
                   </div>
@@ -523,7 +548,9 @@ const PlayerPage: React.FC = () => {
             ))}
           </div>
         ) : astroError ? (
-          <div className="text-red-400">{astroError}</div>
+          <div className="text-red-400">
+            {astroError instanceof Error ? astroError.message : String(astroError)}
+          </div>
         ) : (
           <>
             <div className="space-y-2 mb-6">
@@ -627,6 +654,77 @@ function generateAstroForecast(ais: AISResult, playerName: string): string {
   }
   
   return forecast.trim();
+}
+
+// Helper to format factor names for display
+function formatFactorName(factor: string): string {
+  return factor
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Helper to get performance impact level and description
+function getPerformanceImpact(score: number): { level: string; description: string } {
+  if (score >= 0.8) {
+    return { 
+      level: 'Elite Performance', 
+      description: 'Exceptional cosmic alignment for peak performance' 
+    };
+  } else if (score >= 0.6) {
+    return { 
+      level: 'Strong Impact', 
+      description: 'Favorable conditions for above-average performance' 
+    };
+  } else if (score >= 0.4) {
+    return { 
+      level: 'Moderate Impact', 
+      description: 'Average cosmic influence on performance' 
+    };
+  } else {
+    return { 
+      level: 'Below Average', 
+      description: 'Challenging cosmic conditions' 
+    };
+  }
+}
+
+// Helper to get top 4 influences
+function getTopInfluences(factors: Record<string, number>): [string, number][] {
+  return Object.entries(factors)
+    .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+    .slice(0, 4);
+}
+
+// Helper to get impact details for each factor
+function getFactorImpact(factor: string, value: number) {
+  const positive = value > 0;
+  const absValue = Math.abs(value);
+  let description = '';
+  
+  // Customize descriptions based on factor type
+  switch(factor) {
+    case 'moon_phase':
+      description = positive ? 'Ideal lunar phase for performance' : 'Challenging lunar conditions';
+      break;
+    case 'moon_sign':
+      description = positive ? 'Favorable moon sign alignment' : 'Moon sign may affect consistency';
+      break;
+    case 'mercury_retrograde':
+      description = positive ? 'Clear communication' : 'Potential for miscommunication';
+      break;
+    case 'sun_mars_aspect':
+      description = positive ? 'Enhanced energy and drive' : 'May need extra motivation';
+      break;
+    default:
+      description = positive ? 'Positive influence' : 'Challenging influence';
+  }
+  
+  return {
+    positive,
+    value: `${positive ? '+' : ''}${(value * 100).toFixed(0)}%`,
+    description
+  };
 }
 
 export default PlayerPage;

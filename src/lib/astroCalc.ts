@@ -64,7 +64,7 @@ export function getMoonPhaseName(percentage: number): string {
 /**
  * Calculates astrological influence for a player on a given date
  * @param player The player object containing birth date and other details
- * @param date The date to calculate influence for
+ * @param date The date to calculate influence for (defaults to current date)
  * @returns Object containing astrological influence data
  */
 export async function calculateAstrologicalInfluence(
@@ -76,55 +76,134 @@ export async function calculateAstrologicalInfluence(
   influences: Record<string, any>;
   score: number;
 }> {
+  // Create a consistent date (set to noon UTC to avoid timezone issues)
+  const dateOnly = new Date(Date.UTC(
+    date.getFullYear(), 
+    date.getMonth(), 
+    date.getDate(), 
+    12, 0, 0, 0
+  ));
+  
   // Default values if birth date is not available
   if (!player.birth_date) {
     return {
       playerId: player.id,
-      date: date.toISOString(),
-      influences: {
-        zodiacSign: 'Unknown',
-        moonPhase: 0.5,
-        mercuryRetrograde: false,
-        aspects: {}
-      },
-      score: 0.5
+      date: dateOnly.toISOString(),
+      influences: {},
+      score: 0.5, // Neutral score if no birth date
     };
   }
 
-  // Calculate basic astrological data
-  const birthDate = new Date(player.birth_date);
-  const zodiacSign = getZodiacSign(birthDate);
+  // Create a consistent date string (YYYY-MM-DD) for caching
+  const dateStr = dateOnly.toISOString().split('T')[0];
   
-  // Mock calculations for demonstration
-  // In a real app, you would use actual astrological calculations here
-  const moonPhase = Math.sin(date.getTime() * 0.0000001) * 0.5 + 0.5; // Random value between 0 and 1
-  const mercuryRetrograde = Math.random() > 0.8; // 20% chance of Mercury being retrograde
+  // Create a cache key based on player ID and date
+  const cacheKey = `ais_${player.id}_${dateStr}`;
   
-  // Calculate a score based on various factors
-  let score = 0.5; // Base score
-  
-  // Random factors to simulate astrological influences
-  score += (Math.sin(date.getTime() * 0.000001) + 1) * 0.25; // Time-based variation
-  score += (Math.sin(player.id.charCodeAt(0) * 100) + 1) * 0.25; // Player-specific variation
-  
-  // Cap the score between 0 and 1
-  score = Math.max(0, Math.min(1, score));
+  try {
+    // Try to get cached AIS data from localStorage
+    const cachedAIS = localStorage.getItem(cacheKey);
+    if (cachedAIS) {
+      return JSON.parse(cachedAIS);
+    }
+    
+    // If not in cache, calculate new AIS
+    const birthDate = new Date(player.birth_date);
+    // Use dateOnly for all calculations to ensure consistency
+    const age = (dateOnly.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    
+    // Get zodiac sign
+    const zodiacSign = getZodiacSign(birthDate);
+    
+    // Calculate moon phase (0-1)
+    const moonPhase = getMoonPhase(dateOnly);
+    
+    // Check if Mercury is in retrograde (simplified)
+    const mercuryRetrograde = isMercuryRetrograde(dateOnly);
+    
+    // Calculate base score based on consistent factors
+    let score = 0.5; // Base neutral score
+    
+    // Age factor (peaks around age 27-28 for most athletes)
+    const ageFactor = Math.sin((age - 27.5) * 0.2) * 0.1 + 0.5;
+    score = score * 0.8 + ageFactor * 0.2;
+    
+    // Moon phase influence (slight boost around full and new moons)
+    const moonInfluence = 0.5 + Math.sin(moonPhase * Math.PI * 2) * 0.2;
+    score = score * 0.8 + moonInfluence * 0.2;
+    
+    // Mercury retrograde impact (slight negative)
+    if (mercuryRetrograde) {
+      score *= 0.95; // 5% reduction during retrograde
+    }
+    
+    // Ensure score is between 0 and 1
+    score = Math.max(0, Math.min(1, score));
+    
+    // Prepare result
+    const result = {
+      playerId: player.id,
+      date: date.toISOString(),
+      influences: {
+        zodiacSign,
+        moonPhase,
+        mercuryRetrograde,
+        age,
+        calculatedAt: new Date().toISOString()
+      },
+      score
+    };
+    
+    // Cache the result for 24 hours
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(result));
+      // Set expiration
+      const expiration = new Date();
+      expiration.setDate(expiration.getDate() + 1);
+      localStorage.setItem(`${cacheKey}_expires`, expiration.toISOString());
+    } catch (e) {
+      console.warn('Could not cache AIS data:', e);
+    }
+    
+    return result;
+    
+  } catch (error) {
+    console.error('Error calculating astrological influence:', error);
+    return {
+      playerId: player.id,
+      date: date.toISOString(),
+      influences: { error: 'Calculation failed' },
+      score: 0.5 // Fallback neutral score
+    };
+  }
+}
 
-  return {
-    playerId: player.id,
-    date: date.toISOString(),
-    influences: {
-      zodiacSign,
-      moonPhase,
-      mercuryRetrograde,
-      aspects: {
-        sunMoon: Math.random(),
-        moonVenus: Math.random(),
-        marsJupiter: Math.random()
-      }
-    },
-    score
-  };
+// Helper function to get moon phase (0-1)
+function getMoonPhase(date: Date): number {
+  // Simplified moon phase calculation (returns 0-1 where 0/1 is new moon, 0.5 is full moon)
+  const lunarCycle = 29.53; // days in lunar cycle
+  const knownNewMoon = new Date('2023-01-21T20:53:00Z').getTime();
+  const daysSinceKnownNewMoon = (date.getTime() - knownNewMoon) / (1000 * 60 * 60 * 24);
+  return (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
+}
+
+// Helper function to check if Mercury is in retrograde (simplified)
+function isMercuryRetrograde(date: Date): boolean {
+  // This is a simplified check - in a real app, use an ephemeris
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  // Check if date falls within known retrograde periods (approximate)
+  const retrogradePeriods = [
+    { start: `${year}-01-14`, end: `${year}-02-03` },
+    { start: `${year}-05-10`, end: `${year}-06-02` },
+    { start: `${year}-09-09`, end: `${year}-10-02` },
+    { start: `${year}-12-29`, end: `${year+1}-01-18` },
+  ];
+  
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return retrogradePeriods.some(p => dateStr >= p.start && dateStr <= p.end);
 }
 
 /**
