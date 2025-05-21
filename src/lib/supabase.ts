@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database.types';
 import { toast } from '@/components/ui/use-toast';
 
@@ -13,8 +13,47 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing required Supabase environment variables');
 }
 
-// Create a single supabase client for interacting with your database
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+// Global variable to store the Supabase client instance
+let supabaseClient: SupabaseClient<Database> | null = null;
+
+/**
+ * Get or create a Supabase client instance
+ * Uses singleton pattern to ensure only one instance exists
+ */
+export function getSupabaseClient(): SupabaseClient<Database> {
+  // In the browser, we store the client in window.__supabase
+  if (typeof window !== 'undefined') {
+    // @ts-ignore - We're adding a property to window
+    if (!window.__supabase) {
+      // @ts-ignore
+      window.__supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+      console.debug('Created new Supabase client instance');
+    }
+    // @ts-ignore
+    return window.__supabase;
+  }
+
+  // On the server, we store the client in a module variable
+  if (!supabaseClient) {
+    supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+      },
+    });
+    console.debug('Created new server-side Supabase client instance');
+  }
+
+  return supabaseClient;
+}
+
+// Export the singleton instance
+export const supabase = getSupabaseClient();
 
 console.debug('Supabase initialized with URL:', supabaseUrl);
 

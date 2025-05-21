@@ -138,11 +138,18 @@ export async function getAstrologicalData(playerId: string): Promise<{
   timestamp: string;
 } | null> {
   try {
-    const response = await fetch(`/api/astrology/player/${playerId}`);
+    // Use RESTful endpoint with current date
+    const dateStr = new Date().toISOString().split('T')[0];
+    const response = await fetch(`/api/astro/${dateStr}`);
     if (!response.ok) {
       return null;
     }
-    return await response.json();
+    const data = await response.json();
+    return {
+      playerId,
+      data,
+      timestamp: new Date().toISOString()
+    };
   } catch (error) {
     console.error('Error fetching astrological data:', error);
     return null;
