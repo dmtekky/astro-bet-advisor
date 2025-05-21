@@ -10,6 +10,7 @@ import { Calendar, ChevronLeft, Info, Star, TrendingUp, Users } from 'lucide-rea
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { GameCard } from '@/components/games/GameCard';
+import { GameCarousel } from '@/components/games/GameCarousel';
 
 // Type definitions for the component
 interface Team {
@@ -33,22 +34,13 @@ interface Team {
 
 interface Player {
   id: string;
-  name: string;
-  headshot_url: string;
-  jersey_number: string;
-  position: string;
-  stats?: {
-    points_per_game?: number;
-    rebounds_per_game?: number;
-    assists_per_game?: number;
-    batting_average?: number;
-    home_runs?: number;
-    era?: number;
-    passing_yards?: number;
-    touchdowns?: number;
-    saves?: number;
-  };
-}
+  full_name: string;
+  headshot_url?: string;
+  primary_position?: string;
+  primary_number?: number;
+  current_team_id?: string;
+  birth_date?: string;
+} 
 
 interface Game {
   id: string;
@@ -56,7 +48,7 @@ interface Game {
   away_team_id: string;
   home_team?: Team;
   away_team?: Team;
-  commence_time: string;
+  game_time_utc: string;
   venue?: {
     name: string;
     city: string;
@@ -116,7 +108,9 @@ const TeamPage: React.FC = () => {
           .from('players')
           .select('*')
           .eq('current_team_id', teamId)
-          .order('jersey_number', { ascending: true });
+          .order('primary_number', { ascending: true });
+          
+        console.log('Players query results:', playersData);
 
         if (playersError) {
           console.error('Error fetching players:', playersError);
@@ -192,8 +186,8 @@ const TeamPage: React.FC = () => {
             away_team:away_team_id(*)
           `)
           .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
-          .gt('commence_time', new Date().toISOString())
-          .order('commence_time', { ascending: true })
+          .gt('game_time_utc', new Date().toISOString())
+          .order('game_time_utc', { ascending: true })
           .limit(6);
 
         if (gamesError) {
@@ -229,6 +223,26 @@ const TeamPage: React.FC = () => {
       borderColor: `${primaryColor}40`,
     };
   };
+
+  // Zodiac sign calculation utility
+  function getZodiacSign(dateString?: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getUTCDate();
+    const month = date.getUTCMonth() + 1;
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'Aquarius';
+    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return 'Pisces';
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'Aries';
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'Taurus';
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'Gemini';
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'Cancer';
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'Leo';
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'Virgo';
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'Libra';
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'Scorpio';
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'Sagittarius';
+    return 'Capricorn';
+  }
 
   // Loading state
   if (loading) {
@@ -371,28 +385,30 @@ const TeamPage: React.FC = () => {
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
             {topPlayers.length > 0 ? topPlayers.map(player => (
               <Link to={`/team/${teamId}/player/${player.id}`} key={player.id}>
-                <Card className="h-full bg-white hover:shadow-md transition-shadow overflow-hidden">
-                  <CardContent className="p-4 flex flex-col items-center">
-                    <div 
-                      className="w-full h-40 bg-slate-100 mb-4 rounded-md flex items-center justify-center overflow-hidden"
-                      style={{ borderTop: `3px solid ${teamColors.primary}` }}
-                    >
-                      <img 
-                        src={player.headshot_url || '/placeholder-player.png'} 
-                        alt={player.name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder-player.png';
-                        }}
-                      />
-                    </div>
-                    <p className="font-medium text-center truncate w-full">{player.name}</p>
-                    <div className="flex justify-between w-full mt-2 text-xs text-slate-500">
-                      <span>#{player.jersey_number || 'N/A'}</span>
-                      <span>{player.position || 'N/A'}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div
+                  className="w-full bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col items-center relative"
+                  style={{ borderTop: `4px solid ${teamColors.primary}` }}
+                >
+                  {/* Player Image */}
+                  <div className="w-full h-36 bg-slate-100 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={player.headshot_url || '/placeholder-player.png'}
+                      alt={player.full_name}
+                      className="h-full w-full object-cover"
+                      onError={e => {
+                        (e.target as HTMLImageElement).src = '/placeholder-player.png';
+                      }}
+                    />
+                  </div>
+                  {/* Player Name */}
+                  <p className="font-bold text-gray-900 text-center mb-1 mt-3 px-2 truncate w-full">{player.full_name}</p>
+                  {/* Zodiac Sign */}
+                  <span className="text-xs text-purple-600 mb-2 text-center">{getZodiacSign(player.birth_date)}</span>
+                  <div className="flex justify-between w-full px-4 mt-2 mb-4 text-xs text-slate-500">
+                    <span>#{player.primary_number || 'N/A'}</span>
+                    <span>{player.primary_position || 'N/A'}</span>
+                  </div>
+                </div>
               </Link>
             )) : (
               <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
@@ -467,30 +483,19 @@ const TeamPage: React.FC = () => {
             Upcoming Games
           </h2>
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {upcomingGames.length > 0 ? upcomingGames.map(game => {
-              const isHome = game.home_team_id === teamId;
-              const opponent = isHome ? game.away_team : game.home_team;
-              
-              // Need to ensure we have both home and away teams for the GameCard
-              return (
-                <div key={game.id} className="transform transition-all hover:scale-[1.02]">
-                  <GameCard 
-                    game={{
-                      ...game,
-                      astroInfluence: ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
-                      astroEdge: Math.random() * 15 + 5
-                    }}
-                    homeTeam={game.home_team || { id: game.home_team_id, name: 'Home Team', logo_url: '/placeholder-team.png' }}
-                    awayTeam={game.away_team || { id: game.away_team_id, name: 'Away Team', logo_url: '/placeholder-team.png' }}
-                    defaultLogo="/placeholder-team.png"
-                  />
-                </div>
-              );
-            }) : (
-              <p className="col-span-full text-slate-500 text-center py-10">No upcoming games scheduled</p>
-            )}
-          </div>
+          {upcomingGames.length > 0 ? (
+            <GameCarousel 
+              games={upcomingGames.map(game => ({
+                ...game,
+                astroInfluence: ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
+                astroEdge: Math.random() * 15 + 5
+              }))}
+              defaultLogo="/placeholder-team.png"
+              className="mt-6"
+            />
+          ) : (
+            <p className="text-center py-8 text-slate-500">No upcoming games scheduled</p>
+          )}
         </motion.div>
         
         {/* Team Roster */}
@@ -531,15 +536,15 @@ const TeamPage: React.FC = () => {
                             />
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-slate-900">{player.name}</div>
+                            <div className="text-sm font-medium text-slate-900">{player.full_name}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        {player.jersey_number || 'N/A'}
+                        #
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        {player.position || 'N/A'}
+                        {player.primary_position || 'N/A'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <Link to={`/team/${teamId}/player/${player.id}`} className="text-blue-600 hover:text-blue-900">
