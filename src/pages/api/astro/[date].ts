@@ -31,11 +31,32 @@ export const GET: APIRoute = async ({ params, request }) => {
     }
   ];
 
+  // Strategic insights based on moon phase
+  function getMoonPhaseInsight(phase: number): string {
+    if (phase === 0) return 'New beginnings, set intentions.';
+    if (phase < 0.25) return 'Growth and planning are favored.';
+    if (phase === 0.25) return 'Take action on goals.';
+    if (phase < 0.5) return 'Build momentum.';
+    if (phase === 0.5) return 'Full illumination, culmination of efforts.';
+    if (phase < 0.75) return 'Release and let go of what no longer serves.';
+    if (phase === 0.75) return 'Reflect and prepare for renewal.';
+    return 'Cycle is ending, rest and restore.';
+  }
+
+  const moonPhaseInsight = getMoonPhaseInsight(moonPhase);
+  const strategicInsights = [
+    {
+      type: 'moon_phase',
+      content: `Current phase: ${moonPhase}. ${moonPhaseInsight}`
+    }
+  ];
+
   return new Response(
     JSON.stringify({
       moon_phase: moonPhase,
       positions,
-      celestial_events: celestialEvents
+      celestial_events: celestialEvents,
+      strategic_insights: strategicInsights
     }),
     {
       status: 200,
