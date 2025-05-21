@@ -262,10 +262,12 @@ interface AstroData {
   };
 }
 
-// Base URL for the API - use relative URL in production, absolute in development
-const API_BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:3001/api/astro'
-  : '/api/astro';
+// Base URL for API requests - using a relative path to work in both dev and prod
+const getApiBaseUrl = () => {
+  return 'http://localhost:3001/api/astro';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface UseAstroDataReturn {
   astroData: AstroData | null;

@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/astro/route.ts",
+      "src": "api/astro.js",
       "use": "@vercel/node"
     },
     {
@@ -16,11 +16,11 @@
   "routes": [
     {
       "src": "/api/astro",
-      "dest": "/api/astro/route.ts"
+      "dest": "/api/astro.js"
     },
     {
       "src": "/api/astro/(.*)",
-      "dest": "/api/astro/route.ts"
+      "dest": "/api/astro.js"
     },
     {
       "src": "/(.*\\.(js|css|png|jpg|jpeg|svg|ico|json|txt|woff2|woff|ttf|map))",
