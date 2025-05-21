@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchProvider } from './context/SearchContext';
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
+import TeamPage from "./pages/TeamPage";
 import PlayerPage from "./pages/PlayerPage";
 import LeaguePage from "./pages/LeaguePage";
 import Home from "./pages/Home";
@@ -27,6 +28,7 @@ function AppContent() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/league/:leagueId" element={<LeaguePage />} />
           <Route path="/event/:id" element={<EventDetails />} />
+          <Route path="/team/:teamId" element={<TeamPage />} />
           <Route path="/team/:teamId/player/:playerId" element={<PlayerPage />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
