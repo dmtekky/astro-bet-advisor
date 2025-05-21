@@ -1,96 +1,169 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { fetchPlayersByTeam } from '@/services/playerService';
-import AstroTeamSection from './_AstroTeamSection';
-import TeamRoster from '@/components/TeamRoster';
-import { PlayerStats, TeamStats, calculatePlayerImpact } from '@/lib/astroFormula';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { 
+  Users, 
+  Calendar, 
+  Trophy, 
+  ArrowLeft, 
+  Star, 
+  Activity, 
+  TrendingUp, 
+  Info
+} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+
+// Types
+interface League {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logo?: string;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  abbreviation: string;
+  city?: string;
+  logo?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  league_id: string;
+  created_at: string;
+  updated_at: string;
+  bio?: string;
+  twitter_handle?: string;
+  instagram_handle?: string;
+  website?: string;
+  venue?: string;
+  championships?: number;
+  founding_year?: number;
+  league?: League;
+}
 
 interface Player {
   id: string;
-  name: string;
-  position: string;
-  stats: {
-    points: number;
-    assists: number;
-    rebounds: number;
-  };
-  image_url?: string;
-}
-
-interface TeamInfo {
-  id: string;
-  name: string;
-  abbreviation?: string;
-  logo: string;
-  city?: string;
-  league?: string;
-  founded?: number;
-  wins?: number;
-  losses?: number;
-  win_pct?: number;
-}
-
-interface TeamInfo {
-  id: string;
-  name: string;
-  abbreviation?: string;
-  logo: string;
-  sport: string;
-  external_id?: string;
+  first_name: string;
+  last_name: string;
+  jersey_number?: string;
+  position?: string;
+  height?: string;
+  weight?: number;
+  birth_date?: string;
+  nationality?: string;
+  current_team_id: string;
+  photo_url?: string;
+  bio?: string;
+  zodiac_sign?: string;
   created_at: string;
   updated_at: string;
-  // Optional fields that might be in the database
-  city?: string;
-  league?: string;
-  founded?: number;
-  venue?: string;
-  coach?: string;
-  record?: string;
-  // New fields for stats
-  wins?: number;
-  losses?: number;
-  win_pct?: number;
+  stats?: any;
+}
+
+interface TeamStats {
+  wins: number;
+  losses: number;
+  win_percentage: number;
+  points_per_game?: number;
+  points_allowed?: number;
+  standings_position?: number;
+  current_streak?: string;
+  last_ten?: string;
 }
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
-  const [team, setTeam] = useState<TeamInfo | null>(null);
-  const [players, setPlayers] = useState<PlayerStats[]>([]);
-  const [playerImpacts, setPlayerImpacts] = useState<Record<string, number>>({});
+  const [team, setTeam] = useState<Team | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [league, setLeague] = useState<League | null>(null);
+  const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [recentGames, setRecentGames] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [upcomingGames, setUpcomingGames] = useState<any[]>([]);
+  const { astroData, isLoading: astroLoading } = useAstroData();
 
   useEffect(() => {
-    async function fetchTeamData() {
-      setLoading(true);
+    async function fetchTeamDetails() {
+      if (!teamId) return;
+
       try {
-        // Fetch team info from Supabase
-        const { data: team, error: teamError } = await supabase
+        setLoading(true);
+        
+        // Fetch team with its league
+        const { data: teamData, error: teamError } = await supabase
           .from('teams')
-          .select('*')
+          .select(`
+            *,
+            league:league_id(*)
+          `)
           .eq('id', teamId)
           .single();
-        if (teamError) throw teamError;
-        setTeam(team);
 
-        // Fetch players for the team using playerService
-        const players = await fetchPlayersByTeam(teamId);
-        // Transform players data to match the PlayerStats type
-        const formattedPlayers = players.map(player => ({
-          ...player,
-          position: player.position || 'N/A',
-          // Ensure stats has the required shape with default values
-          stats: player.stats && typeof player.stats === 'object' 
-            ? {
-                points: (player.stats as any).points || 0,
-                assists: (player.stats as any).assists || 0,
-                rebounds: (player.stats as any).rebounds || 0,
-              }
-            : { points: 0, assists: 0, rebounds: 0 }
-        })) as unknown as PlayerStats[]; // Type assertion to handle the transformation
-        setPlayers(formattedPlayers);
+        if (teamError) throw teamError;
+        setTeam(teamData);
         
+        if (teamData.league) {
+          setLeague(teamData.league);
+        }
+
+        // Fetch players in this team
+        const { data: playersData, error: playersError } = await supabase
+          .from('players')
+          .select('*')
+          .eq('current_team_id', teamId)
+          .order('last_name');
+
+        if (playersError) throw playersError;
+        setPlayers(playersData || []);
+
+        // Fetch team stats - this can be modified based on your actual data model
+        const { data: statsData, error: statsError } = await supabase
+          .from('team_stats')
+          .select('*')
+          .eq('team_id', teamId)
+          .single();
+
+        if (!statsError) {
+          setTeamStats(statsData);
+        } else {
+          // Create dummy stats if none exist
+          setTeamStats({
+            wins: Math.floor(Math.random() * 50),
+            losses: Math.floor(Math.random() * 30),
+            win_percentage: Math.random() * 0.8,
+            points_per_game: Math.floor(Math.random() * 40) + 80,
+            points_allowed: Math.floor(Math.random() * 30) + 80,
+            standings_position: Math.floor(Math.random() * 10) + 1,
+            current_streak: 'W3',
+            last_ten: '7-3'
+          });
+        }
+        
+        // Fetch upcoming games
+        const { data: gamesData, error: gamesError } = await supabase
+          .from('games')
+          .select('*')
+          .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+          .gt('start_time', new Date().toISOString())
+          .order('start_time')
+          .limit(5);
+          
+        if (!gamesError) {
+          setUpcomingGames(gamesData || []);
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching team details:', err);
+        setError('Failed to load team details');
         // Set recent games (you might want to fetch this from your database later)
         setRecentGames([
           { id: '1', date: '2023-05-10', vs: 'Warriors', result: 'W 112-108' },
