@@ -1,10 +1,9 @@
-// Unified Astrology API Endpoint - Simplified Version
-// Uses astronomy-engine instead of swisseph for Vercel compatibility
-// Optimized for production deployment
+// Unified Astrology API Endpoint - Simplified ESM Version
+// Uses astronomy-engine correctly in ES module format
+// Optimized for Vercel deployment
 
-// Use CommonJS require instead of ES imports for Vercel compatibility
-const Astronomy = require('astronomy-engine');
-const { createClient } = require('@supabase/supabase-js');
+import * as Astronomy from 'astronomy-engine/esm/astronomy.js';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration for caching
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -587,7 +586,7 @@ const generatePlanetInterpretation = (planetName, data) => {
 /**
  * Main handler function for API requests
  */
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -680,4 +679,4 @@ module.exports = async (req, res) => {
     console.error(`[ERROR] API handler exception:`, error);
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
-};
+}
