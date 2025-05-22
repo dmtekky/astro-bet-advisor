@@ -159,7 +159,7 @@ export default async function handler(req, res) {
 /**
  * Calculate complete astrological data for a given date
  */
-async function calculateAstroData(date, useSidereal = false) {
+const calculateAstroData = async (date, useSidereal = false) => {
   try {
     // Create astronomy-engine time object
     const time = Astronomy.MakeTime(date);
@@ -200,107 +200,120 @@ async function calculateAstroData(date, useSidereal = false) {
     console.error("[ERROR] Calculate astro data error:", error);
     throw error;
   }
-}
+};
 
 /**
  * Calculate planetary positions using astronomy-engine
  */
-async function calculatePlanetaryPositions(time, useSidereal = false) {
+const calculatePlanetaryPositions = async (time, useSidereal = false) => {
   const positions = {};
   
   for (const planet of PLANETS) {
     try {
-      // Calculate ecliptic coordinates
+      // Get ecliptic coordinates
       const ecliptic = Astronomy.Ecliptic(planet.body, time);
       
-      // Apply ayanamsa correction for sidereal zodiac
+      // Apply ayanamsa correction for sidereal positions
       let longitude = ecliptic.elon;
       if (useSidereal) {
         longitude -= AYANAMSA_VALUE;
-        if (longitude < 0) longitude += 360;
+        // Ensure longitude is positive and less than 360
+        longitude = (longitude + 360) % 360;
       }
       
-      // Normalize to 0-360 range
-      longitude = longitude % 360;
-      if (longitude < 0) longitude += 360;
-      
-      // Calculate zodiac sign
+      // Determine zodiac sign and degree
       const signIndex = Math.floor(longitude / 30);
+      const degree = longitude % 30;
       const sign = ZODIAC_SIGNS[signIndex];
       
-      // Calculate degree in sign
-      const degree = longitude % 30;
+      // Get retrograde status (approximation)
+      let retrograde = false;
+      if (planet.name !== 'sun' && planet.name !== 'moon') {
+        // Check position in 24 hours to determine direction
+        const tomorrow = new Astronomy.Time(
+          time.ut + 1,
+          time.ut_seconds
+        );
+        const tomorrowEcliptic = Astronomy.Ecliptic(planet.body, tomorrow);
+        
+        // If tomorrow's longitude is less than today's (accounting for 0/360 boundary)
+        let tomorrowLongitude = tomorrowEcliptic.elon;
+        if (useSidereal) {
+          tomorrowLongitude -= AYANAMSA_VALUE;
+          tomorrowLongitude = (tomorrowLongitude + 360) % 360;
+        }
+        
+        // Check if the planet appears to be moving backward
+        const crossing360 = (longitude > 350 && tomorrowLongitude < 10);
+        const crossingBack = (longitude < 10 && tomorrowLongitude > 350);
+        
+        if ((!crossing360 && tomorrowLongitude < longitude) || 
+            (crossingBack && tomorrowLongitude > longitude)) {
+          retrograde = true;
+        }
+      }
       
-      // Get speed (approximated - positive is direct, negative is retrograde)
-      const prevTime = new Astronomy.AstroTime(time.tt - 1); // 1 day before
-      const prevEcliptic = Astronomy.Ecliptic(planet.body, prevTime);
-      const speed = ecliptic.elon - prevEcliptic.elon;
-      
-      // Store planet data
+      // Save position data
       positions[planet.name] = {
-        name: planet.name,
-        longitude: longitude,
-        sign: sign,
-        degree: degree,
-        retrograde: speed < 0,
-        speed: speed,
-        // Default house for simplified version
-        house: Math.floor(Math.random() * 12) + 1
+        longitude,
+        sign,
+        degree: parseFloat(degree.toFixed(2)),
+        retrograde
       };
-    } catch (error) {
-      console.error(`[ERROR] Failed to calculate position for ${planet.name}:`, error);
-      // Provide default values on error
+    } catch (err) {
+      console.error(`[ERROR] Failed to calculate position for ${planet.name}:`, err);
+      // Provide default values in case of error
       positions[planet.name] = {
-        name: planet.name,
         longitude: 0,
         sign: 'Aries',
         degree: 0,
-        retrograde: false,
-        speed: 0,
-        house: 1
+        retrograde: false
       };
     }
   }
   
   return positions;
-}
+};
 
 /**
  * Calculate moon phase using astronomy-engine
  */
-function calculateMoonPhase(time) {
+const calculateMoonPhase = (time) => {
   try {
     // Get illumination fraction (0-1)
     const illumination = Astronomy.MoonFraction(time);
     
-    // Get moon phase angle
-    const moonLon = Astronomy.Ecliptic(Astronomy.Body.Moon, time).elon;
-    const sunLon = Astronomy.Ecliptic(Astronomy.Body.Sun, time).elon;
-    let angle = (moonLon - sunLon) % 360;
-    if (angle < 0) angle += 360;
+    // Calculate phase angle in degrees (0-360)
+    const elongation = Astronomy.MoonPhase(time);
     
-    // Determine phase name
-    const phaseName = getMoonPhaseName(illumination, angle);
+    // Get phase name
+    const phaseName = getMoonPhaseName(illumination, elongation);
+    
+    // Determine if waxing or waning
+    const isWaxing = elongation < 180;
     
     return {
-      illumination,
-      angle,
-      phase: phaseName
+      illumination: parseFloat(illumination.toFixed(2)),
+      angle: parseFloat(elongation.toFixed(2)),
+      phase: phaseName,
+      isWaxing
     };
   } catch (error) {
-    console.error("[ERROR] Moon phase calculation error:", error);
+    console.error("[ERROR] Calculate moon phase error:", error);
+    // Return default values in case of error
     return {
-      illumination: 0.5,
+      illumination: 0,
       angle: 0,
-      phase: "Unknown"
+      phase: "Unknown",
+      isWaxing: true
     };
   }
-}
+};
 
 /**
  * Get moon phase name from illumination value and angle
  */
-function getMoonPhaseName(illumination, angle) {
+const getMoonPhaseName = (illumination, angle) => {
   if (angle < 10 || angle > 350) return "New Moon";
   if (angle > 80 && angle < 100) return "First Quarter";
   if (angle > 170 && angle < 190) return "Full Moon";
@@ -310,34 +323,36 @@ function getMoonPhaseName(illumination, angle) {
   if (angle < 180) return "Waxing Gibbous";
   if (angle < 270) return "Waning Gibbous";
   return "Waning Crescent";
-}
+};
 
 /**
  * Calculate aspects between planets
  */
-function calculateAspects(planetPositions) {
+const calculateAspects = (planetPositions) => {
   const aspects = [];
   const planetNames = Object.keys(planetPositions);
   
-  // Compare each planet with every other planet
   for (let i = 0; i < planetNames.length; i++) {
     for (let j = i + 1; j < planetNames.length; j++) {
-      const planet1 = planetPositions[planetNames[i]];
-      const planet2 = planetPositions[planetNames[j]];
+      const planet1 = planetNames[i];
+      const planet2 = planetNames[j];
       
-      // Calculate angular distance
-      let angle = Math.abs(planet1.longitude - planet2.longitude);
+      // Calculate the angular difference between planets
+      let angle = Math.abs(planetPositions[planet1].longitude - planetPositions[planet2].longitude);
+      
+      // Adjust for the shortest arc (less than 180 degrees)
       if (angle > 180) angle = 360 - angle;
       
-      // Get aspect type
+      // Get aspect type if within orb
       const aspectType = getAspectType(angle);
+      
       if (aspectType) {
         aspects.push({
-          planet1: planet1.name,
-          planet2: planet2.name,
+          planet1,
+          planet2,
+          angle: parseFloat(angle.toFixed(2)),
           aspect: aspectType.name,
-          angle: angle,
-          orb: aspectType.orb,
+          orb: parseFloat(Math.abs(angle - aspectType.angle).toFixed(2)),
           influence: aspectType.influence
         });
       }
@@ -345,12 +360,12 @@ function calculateAspects(planetPositions) {
   }
   
   return aspects;
-}
+};
 
 /**
  * Get aspect type based on angle
  */
-function getAspectType(angle) {
+const getAspectType = (angle) => {
   // Define aspect types with their orbs and influences
   const aspectTypes = [
     { name: 'conjunction', angle: 0, orb: 8, influence: 'strong' },
@@ -364,20 +379,20 @@ function getAspectType(angle) {
     { name: 'sesquiquadrate', angle: 135, orb: 3, influence: 'irritating' }
   ];
   
-  // Find matching aspect type
+  // Find the first aspect type where the angle is within orb
   for (const type of aspectTypes) {
     if (Math.abs(angle - type.angle) <= type.orb) {
       return type;
     }
   }
   
-  return null; // No aspect found
-}
+  return null;
+};
 
 /**
  * Calculate element distribution from planet positions
  */
-function calculateElements(planetPositions) {
+const calculateElements = (planetPositions) => {
   const elements = {
     fire: 0,
     earth: 0,
@@ -386,37 +401,49 @@ function calculateElements(planetPositions) {
   };
   
   // Count planets in each element
-  for (const planetName in planetPositions) {
-    const planet = planetPositions[planetName];
-    const sign = planet.sign;
+  Object.entries(planetPositions).forEach(([planetName, data]) => {
+    const sign = data.sign;
+    const planetWeight = PLANETS.find(p => p.name === planetName)?.weight || 1;
     
     // Add planet's weight to the corresponding element
-    for (const element in ELEMENTS) {
-      if (ELEMENTS[element].includes(sign)) {
-        elements[element] += PLANETS.find(p => p.name === planetName)?.weight || 1;
-      }
+    if (ELEMENTS.fire.includes(sign)) {
+      elements.fire += planetWeight;
+    } else if (ELEMENTS.earth.includes(sign)) {
+      elements.earth += planetWeight;
+    } else if (ELEMENTS.air.includes(sign)) {
+      elements.air += planetWeight;
+    } else if (ELEMENTS.water.includes(sign)) {
+      elements.water += planetWeight;
     }
-  }
+  });
   
-  // Calculate total weight
-  const totalWeight = Object.values(elements).reduce((sum, val) => sum + val, 0);
-  
-  // Convert to percentages
-  const percentages = {};
-  for (const element in elements) {
-    percentages[element] = Math.round((elements[element] / totalWeight) * 100);
-  }
+  // Calculate percentages
+  const total = elements.fire + elements.earth + elements.air + elements.water;
   
   return {
-    counts: elements,
-    percentages: percentages
+    fire: {
+      count: elements.fire,
+      percentage: parseFloat(((elements.fire / total) * 100).toFixed(1))
+    },
+    earth: {
+      count: elements.earth,
+      percentage: parseFloat(((elements.earth / total) * 100).toFixed(1))
+    },
+    air: {
+      count: elements.air,
+      percentage: parseFloat(((elements.air / total) * 100).toFixed(1))
+    },
+    water: {
+      count: elements.water,
+      percentage: parseFloat(((elements.water / total) * 100).toFixed(1))
+    }
   };
-}
+};
 
 /**
  * Calculate modality distribution from planet positions
  */
-function calculateModalities(planetPositions) {
+const calculateModalities = (planetPositions) => {
   const modalities = {
     cardinal: 0,
     fixed: 0,
@@ -424,94 +451,94 @@ function calculateModalities(planetPositions) {
   };
   
   // Count planets in each modality
-  for (const planetName in planetPositions) {
-    const planet = planetPositions[planetName];
-    const sign = planet.sign;
+  Object.entries(planetPositions).forEach(([planetName, data]) => {
+    const sign = data.sign;
+    const planetWeight = PLANETS.find(p => p.name === planetName)?.weight || 1;
     
     // Add planet's weight to the corresponding modality
-    for (const modality in MODALITIES) {
-      if (MODALITIES[modality].includes(sign)) {
-        modalities[modality] += PLANETS.find(p => p.name === planetName)?.weight || 1;
-      }
+    if (MODALITIES.cardinal.includes(sign)) {
+      modalities.cardinal += planetWeight;
+    } else if (MODALITIES.fixed.includes(sign)) {
+      modalities.fixed += planetWeight;
+    } else if (MODALITIES.mutable.includes(sign)) {
+      modalities.mutable += planetWeight;
     }
-  }
+  });
   
-  // Calculate total weight
-  const totalWeight = Object.values(modalities).reduce((sum, val) => sum + val, 0);
-  
-  // Convert to percentages
-  const percentages = {};
-  for (const modality in modalities) {
-    percentages[modality] = Math.round((modalities[modality] / totalWeight) * 100);
-  }
+  // Calculate percentages
+  const total = modalities.cardinal + modalities.fixed + modalities.mutable;
   
   return {
-    counts: modalities,
-    percentages: percentages
+    cardinal: {
+      count: modalities.cardinal,
+      percentage: parseFloat(((modalities.cardinal / total) * 100).toFixed(1))
+    },
+    fixed: {
+      count: modalities.fixed,
+      percentage: parseFloat(((modalities.fixed / total) * 100).toFixed(1))
+    },
+    mutable: {
+      count: modalities.mutable,
+      percentage: parseFloat(((modalities.mutable / total) * 100).toFixed(1))
+    }
   };
-}
+};
 
 /**
  * Generate overall astrological weather based on positions and aspects
  */
-function generateAstroWeather(planetPositions, aspects, moonPhase) {
+const generateAstroWeather = (planetPositions, aspects, moonPhase) => {
   // Count aspect types
   const aspectCounts = {
     harmonious: 0,  // trine, sextile
     challenging: 0, // square, opposition
-    neutral: 0      // conjunction and others
+    total: aspects.length
   };
   
-  for (const aspect of aspects) {
+  // Calculate aspect balance
+  aspects.forEach(aspect => {
     if (['trine', 'sextile'].includes(aspect.aspect)) {
       aspectCounts.harmonious++;
     } else if (['square', 'opposition'].includes(aspect.aspect)) {
       aspectCounts.challenging++;
-    } else {
-      aspectCounts.neutral++;
     }
-  }
+  });
   
-  // Check for special conditions
+  // Get sun and moon signs
   const sunSign = planetPositions.sun?.sign || 'Aries';
   const moonSign = planetPositions.moon?.sign || 'Aries';
   
-  // Generate weather description
-  let weather = {
+  // Create initial weather object
+  const weather = {
     overall: 'neutral',
     description: '',
+    moonPhase: moonPhase.phase,
     sunSign,
     moonSign,
-    moonPhase: moonPhase.phase,
     aspectBalance: 'neutral'
   };
   
-  // Determine overall weather
+  // Determine overall astrological weather
   if (aspectCounts.harmonious > aspectCounts.challenging) {
     weather.overall = 'favorable';
     weather.aspectBalance = 'harmonious';
-    weather.description = `A generally favorable day with ${aspectCounts.harmonious} harmonious aspects creating a positive atmosphere.`;
   } else if (aspectCounts.challenging > aspectCounts.harmonious) {
     weather.overall = 'challenging';
     weather.aspectBalance = 'challenging';
-    weather.description = `A potentially challenging day with ${aspectCounts.challenging} difficult aspects creating some tension.`;
-  } else {
-    weather.description = `A balanced day with mixed energies from ${aspectCounts.harmonious} harmonious and ${aspectCounts.challenging} challenging aspects.`;
   }
   
-  // Add moon phase insight
-  weather.description += ` The ${moonPhase.phase} moon in ${moonSign} suggests ${getMoonPhaseQuality(moonPhase.phase)}.`;
-  
-  // Add sun sign insight
-  weather.description += ` The Sun in ${sunSign} brings ${getSignQuality(sunSign)}.`;
+  // Generate description
+  weather.description = `The Sun in ${sunSign} brings ${getSignQuality(sunSign)}. ` +
+    `The Moon in ${moonSign} is in its ${moonPhase.phase.toLowerCase()} phase, indicating ${getMoonPhaseQuality(moonPhase.phase)}. ` +
+    `The overall cosmic weather is ${weather.overall} with ${aspectCounts.harmonious} harmonious aspects and ${aspectCounts.challenging} challenging aspects.`;
   
   return weather;
-}
+};
 
 /**
  * Get quality description for a moon phase
  */
-function getMoonPhaseQuality(phase) {
+const getMoonPhaseQuality = (phase) => {
   switch (phase) {
     case 'New Moon':
       return 'a time for new beginnings and setting intentions';
@@ -524,7 +551,7 @@ function getMoonPhaseQuality(phase) {
     case 'Full Moon':
       return 'heightened emotions and clarity';
     case 'Waning Gibbous':
-      return 'gratitude and sharing what you've learned';
+      return 'gratitude and sharing what you\'ve learned';
     case 'Last Quarter':
       return 'release and letting go of what no longer serves you';
     case 'Waning Crescent':
@@ -532,12 +559,12 @@ function getMoonPhaseQuality(phase) {
     default:
       return 'changing lunar energies';
   }
-}
+};
 
 /**
  * Get quality description for a zodiac sign
  */
-function getSignQuality(sign) {
+const getSignQuality = (sign) => {
   switch (sign) {
     case 'Aries':
       return 'energetic and pioneering energy';
@@ -566,94 +593,90 @@ function getSignQuality(sign) {
     default:
       return 'dynamic energy';
   }
-}
+};
 
 /**
  * Generate detailed interpretations for planets and aspects
  */
-function generateInterpretations(planetPositions, aspects) {
+const generateInterpretations = (planetPositions, aspects) => {
   const interpretations = {
     planets: {},
     aspects: []
   };
   
-  // Generate interpretations for each planet
-  for (const planetName in planetPositions) {
-    const planet = planetPositions[planetName];
-    interpretations.planets[planetName] = generatePlanetInterpretation(planetName, planet);
-  }
+  // Generate planet interpretations
+  Object.entries(planetPositions).forEach(([planetName, data]) => {
+    interpretations.planets[planetName] = generatePlanetInterpretation(planetName, data);
+  });
   
-  // Generate interpretations for important aspects
-  for (const aspect of aspects) {
-    // Filter to most important aspects
+  // Generate aspect interpretations
+  aspects.forEach(aspect => {
     if (['conjunction', 'opposition', 'trine', 'square'].includes(aspect.aspect)) {
-      const interpretation = {
+      interpretations.aspects.push({
         aspect: aspect.aspect,
         planets: `${aspect.planet1}-${aspect.planet2}`,
-        interpretation: `The ${aspect.aspect} between ${aspect.planet1} and ${aspect.planet2} creates ${aspect.influence} energy.`
-      };
-      
-      interpretations.aspects.push(interpretation);
+        influence: aspect.influence,
+        description: `${aspect.planet1} ${aspect.aspect} ${aspect.planet2}`
+      });
     }
-  }
+  });
   
   return interpretations;
-}
+};
 
 /**
  * Generate interpretation for a planet in a sign
  */
-function generatePlanetInterpretation(planetName, data) {
+const generatePlanetInterpretation = (planetName, data) => {
   const sign = data.sign;
   const retrograde = data.retrograde;
   
   let interpretation = '';
   
-  // Standard interpretations based on planet and sign
+  // Basic interpretation based on planet
   switch (planetName) {
     case 'sun':
-      interpretation = `Sun in ${sign} represents your core essence and vitality. ${getSignQuality(sign)}`;
+      interpretation = `Your core identity and vitality are expressed through ${sign}.`;
       break;
     case 'moon':
-      interpretation = `Moon in ${sign} reflects your emotional nature and subconscious patterns. It brings ${getSignQuality(sign)} to your emotional world.`;
+      interpretation = `Your emotional nature and instinctive responses are filtered through ${sign}.`;
       break;
     case 'mercury':
-      interpretation = `Mercury in ${sign} shapes how you think and communicate. It gives your mind ${getSignQuality(sign)}.`;
+      interpretation = `Your communication style and thought processes are influenced by ${sign}.`;
       break;
     case 'venus':
-      interpretation = `Venus in ${sign} influences how you relate to others and what you value. It attracts ${getSignQuality(sign)} into your life.`;
+      interpretation = `Your approach to relationships and what you value is colored by ${sign}.`;
       break;
     case 'mars':
-      interpretation = `Mars in ${sign} drives your actions and desires. It fuels you with ${getSignQuality(sign)}.`;
+      interpretation = `Your drive, ambition and how you take action is energized by ${sign}.`;
       break;
     case 'jupiter':
-      interpretation = `Jupiter in ${sign} shows where you find growth and meaning. It expands ${getSignQuality(sign)} in your life.`;
+      interpretation = `Your growth, expansion and good fortune are expanded through ${sign}.`;
       break;
     case 'saturn':
-      interpretation = `Saturn in ${sign} reveals your challenges and responsibilities. It brings structure through ${getSignQuality(sign)}.`;
+      interpretation = `Your sense of responsibility, limitations and life lessons are structured by ${sign}.`;
       break;
     case 'uranus':
-      interpretation = `Uranus in ${sign} indicates where you seek freedom and innovation. It awakens ${getSignQuality(sign)} in unexpected ways.`;
+      interpretation = `Your innovative thinking and need for freedom are revolutionized by ${sign}.`;
       break;
     case 'neptune':
-      interpretation = `Neptune in ${sign} represents your spiritual aspirations and illusions. It dissolves boundaries through ${getSignQuality(sign)}.`;
+      interpretation = `Your imagination, spirituality and idealism are dreamed through ${sign}.`;
       break;
     case 'pluto':
-      interpretation = `Pluto in ${sign} shows where profound transformation occurs. It intensifies ${getSignQuality(sign)} through deep change.`;
+      interpretation = `Your transformation, power and regeneration are intensified by ${sign}.`;
       break;
     default:
-      interpretation = `${planetName} in ${sign} brings ${getSignQuality(sign)}.`;
+      interpretation = `This planet is in ${sign}.`;
   }
   
-  // Add retrograde information if applicable
-  if (retrograde) {
-    interpretation += ` Currently retrograde, this energy is turned inward, prompting reflection and revision.`;
+  // Add retrograde interpretation if applicable
+  if (retrograde && planetName !== 'sun' && planetName !== 'moon') {
+    interpretation += ` As this planet is retrograde, these energies may be directed inward or require reassessment.`;
   }
   
   return {
-    planet: planetName,
-    sign: sign,
-    retrograde: retrograde,
-    interpretation: interpretation
+    sign,
+    retrograde,
+    interpretation
   };
-}
+};
