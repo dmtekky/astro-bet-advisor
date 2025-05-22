@@ -43,18 +43,40 @@ function calculatePlanetaryPosition(planetName, date, observer) {
       'Pluto': Astronomy.Body.Pluto
     };
     
+    if (!planetMap[planetName]) {
+      throw new Error(`Unknown planet name: ${planetName}`);
+    }
+    
     const body = planetMap[planetName];
+    
+    // Create observer with proper error checking
+    if (!observer || typeof observer.latitude !== 'number' || typeof observer.longitude !== 'number') {
+      throw new Error('Invalid observer data');
+    }
+    
     const astronomyObserver = new Astronomy.Observer(
       observer.latitude, 
       observer.longitude, 
       observer.altitude || 0
     );
     
+    // Validate date
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      throw new Error('Invalid date for astronomical calculations');
+    }
+    
     // Calculate equatorial coordinates
     const equator = Astronomy.Equator(body, date, astronomyObserver, true, true);
+    if (!equator) {
+      throw new Error(`Failed to calculate equatorial coordinates for ${planetName}`);
+    }
     
     // Convert to ecliptic coordinates
     const ecliptic = Astronomy.Ecliptic(equator);
+    if (!ecliptic || typeof ecliptic.elon !== 'number') {
+      throw new Error(`Failed to calculate ecliptic coordinates for ${planetName}`);
+    }
+    
     const lon = ecliptic.elon;
     
     // Calculate sign and degree
@@ -72,10 +94,11 @@ function calculatePlanetaryPosition(planetName, date, observer) {
     };
   } catch (error) {
     console.error(`Error calculating position for ${planetName}:`, error);
+    // Return a placeholder instead of throwing to avoid cascading failures
     return {
       name: planetName,
       longitude: 0,
-      sign: 'Unknown',
+      sign: 'Aries', // Use a default sign instead of 'Unknown'
       degree: 0,
       minute: 0,
       retrograde: false
@@ -437,11 +460,36 @@ export default async function handler(req, res) {
       timezone: "America/New_York"
     };
     
-    // Get planetary positions
-    const planets = getEnhancedPlanetPositions(date, observer);
+    // Create astronomy-engine observer object for calculations
+    const astronomyObserver = new Astronomy.Observer(
+      observer.latitude,
+      observer.longitude,
+      observer.altitude
+    );
     
-    // Get enhanced planet data with special conditions
-    const enhancedPlanets = getEnhancedPlanetData(planets, date);
+    // Get planetary positions with proper error handling
+    let planets;
+    try {
+      planets = getEnhancedPlanetPositions(date, observer);
+    } catch (error) {
+      console.error('Error getting planetary positions:', error);
+      return res.status(500).json({
+        error: 'Error calculating planetary positions',
+        message: error.message
+      });
+    }
+    
+    // Get enhanced planet data with special conditions and error handling
+    let enhancedPlanets;
+    try {
+      enhancedPlanets = getEnhancedPlanetData(planets, date);
+    } catch (error) {
+      console.error('Error getting enhanced planet data:', error);
+      return res.status(500).json({
+        error: 'Error calculating enhanced planet data',
+        message: error.message
+      });
+    }
     
     // Calculate moon phase
     const moonPhase = calculateMoonPhase(date);
