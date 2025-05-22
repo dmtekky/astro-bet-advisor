@@ -478,8 +478,61 @@ const Dashboard: React.FC = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Celestial Influences Panel */}
+  <div className="space-y-8">
+    {/* Elements Distribution - now at the top as a full-width bar */}
+    <div className="space-y-4">
+      <h3 className="text-md font-medium text-slate-900 flex items-center">
+        <BarChart2 className="h-4 w-4 mr-2 text-indigo-500" />
+        Elements Distribution
+      </h3>
+      <div className="w-full bg-slate-100 rounded-lg shadow-sm border border-slate-200 flex h-7 overflow-hidden">
+        {/* Fire */}
+        <div
+          className="h-full bg-red-500 transition-all duration-500"
+          style={{ width: `${elementsDistribution.fire}%`, borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }}
+        />
+        {/* Earth */}
+        <div
+          className="h-full bg-green-500 transition-all duration-500"
+          style={{ width: `${elementsDistribution.earth}%` }}
+        />
+        {/* Air (lighter blue) */}
+        <div
+          className="h-full bg-sky-300 transition-all duration-500"
+          style={{ width: `${elementsDistribution.air}%` }}
+        />
+        {/* Water */}
+        <div
+          className="h-full bg-indigo-500 transition-all duration-500"
+          style={{ width: `${elementsDistribution.water}%`, borderTopRightRadius: 8, borderBottomRightRadius: 8 }}
+        />
+      </div>
+      {/* Legend below the bar */}
+      <div className="flex flex-wrap justify-between gap-y-2 mt-2">
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
+          <span className="text-sm font-medium text-slate-700">Fire</span>
+          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.fire}%</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
+          <span className="text-sm font-medium text-slate-700">Earth</span>
+          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.earth}%</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-sky-300 mr-1"></span>
+          <span className="text-sm font-medium text-slate-700">Air</span>
+          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.air}%</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-indigo-500 mr-1"></span>
+          <span className="text-sm font-medium text-slate-700">Water</span>
+          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.water}%</span>
+        </div>
+      </div>
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Celestial Influences Panel */}
                       <div className="space-y-6">
                         <h3 className="text-md font-medium text-slate-900 flex items-center">
                           <Activity className="h-4 w-4 mr-2 text-indigo-500" />
@@ -625,105 +678,12 @@ const Dashboard: React.FC = () => {
                                   )}
                                 </div>
                               ))}
+                              <p className="mt-3 text-sm text-slate-700 leading-relaxed">
+                                {dailyRecommendation || 'Loading astrological insights...'}
+                              </p>
                             </CardContent>
                           </Card>
                         )}
-
-                      </div>
-                      
-                      {/* Elements Distribution Panel */}
-                      <div className="space-y-6">
-                        <h3 className="text-md font-medium text-slate-900 flex items-center">
-                          <BarChart2 className="h-4 w-4 mr-2 text-indigo-500" />
-                          Elements Distribution
-                        </h3>
-                        
-                        <Card className="bg-white/70 border-slate-200/70">
-                          <CardContent className="pt-6">
-                            <div className="space-y-5">
-                              {/* Fire Element */}
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                                    <span className="font-medium text-sm">Fire</span>
-                                  </div>
-                                  <span className="text-xs text-slate-500">{elementsDistribution.fire}%</span>
-                                </div>
-                                <Progress 
-                                  value={elementsDistribution.fire} 
-                                  className="h-1.5 bg-slate-100"
-                                  indicatorClassName="bg-red-500" 
-                                />
-                                <p className="text-xs text-slate-600">Energy, passion, and aggression</p>
-                              </div>
-                              
-                              {/* Earth Element */}
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                                    <span className="font-medium text-sm">Earth</span>
-                                  </div>
-                                  <span className="text-xs text-slate-500">{elementsDistribution.earth}%</span>
-                                </div>
-                                <Progress 
-                                  value={elementsDistribution.earth} 
-                                  className="h-1.5 bg-slate-100"
-                                  indicatorClassName="bg-green-500" 
-                                />
-                                <p className="text-xs text-slate-600">Stability, endurance, and reliability</p>
-                              </div>
-                              
-                              {/* Air Element */}
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-blue-400 mr-2"></div>
-                                    <span className="font-medium text-sm">Air</span>
-                                  </div>
-                                  <span className="text-xs text-slate-500">{elementsDistribution.air}%</span>
-                                </div>
-                                <Progress 
-                                  value={elementsDistribution.air} 
-                                  className="h-1.5 bg-slate-100"
-                                  indicatorClassName="bg-blue-400" 
-                                />
-                                <p className="text-xs text-slate-600">Strategy, communication, and adaptability</p>
-                              </div>
-                              
-                              {/* Water Element */}
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-indigo-500 mr-2"></div>
-                                    <span className="font-medium text-sm">Water</span>
-                                  </div>
-                                  <span className="text-xs text-slate-500">{elementsDistribution.water}%</span>
-                                </div>
-                                <Progress 
-                                  value={elementsDistribution.water} 
-                                  className="h-1.5 bg-slate-100"
-                                  indicatorClassName="bg-indigo-500" 
-                                />
-                                <p className="text-xs text-slate-600">Intuition, emotional awareness, and flow</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        {/* Daily Recommendation */}
-                        <Card className="bg-gradient-to-br from-indigo-50 to-slate-50 border-slate-200/70">
-                          <CardContent className="pt-6">
-                            <h4 className="font-medium text-slate-900 flex items-center">
-                              <TrendingUp className="h-4 w-4 mr-2 text-indigo-600" />
-                              Today's Analysis
-                            </h4>
-                            <p className="mt-3 text-sm text-slate-700 leading-relaxed">
-                              {dailyRecommendation || 'Loading astrological insights...'}
-                            </p>
-                          </CardContent>
-                        </Card>
                       </div>
                     </div>
                   </CardContent>
