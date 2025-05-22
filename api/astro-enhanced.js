@@ -1,5 +1,11 @@
-// Enhanced Vercel serverless function for astro API
+// Simplified Enhanced Vercel serverless function for astro API
 import * as Astronomy from 'astronomy-engine';
+
+// Safety check for astronomy-engine loading properly
+const isAstronomyLoaded = !!Astronomy && typeof Astronomy === 'object';
+if (!isAstronomyLoaded) {
+  console.error('Error: astronomy-engine failed to load properly');
+}
 
 // Constants for astrological calculations
 const ZODIAC_SIGNS = [
@@ -400,6 +406,8 @@ function getEnhancedPlanetData(planets, date) {
 
 // Main handler function for Vercel
 export default async function handler(req, res) {
+  console.log('Enhanced API request received:', req.url);
+  
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -409,6 +417,15 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
+  }
+  
+  // Verify astronomy-engine is loaded
+  if (!isAstronomyLoaded) {
+    console.error('Critical dependency error: astronomy-engine not properly loaded');
+    return res.status(500).json({
+      error: 'Server configuration error',
+      message: 'Critical dependencies failed to load'
+    });
   }
   
   try {
