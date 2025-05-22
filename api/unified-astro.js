@@ -2,8 +2,8 @@
 // Uses astronomy-engine correctly in ES module format
 // Optimized for Vercel deployment
 
-import * as Astronomy from 'astronomy-engine/esm/astronomy.js';
-import { createClient } from '@supabase/supabase-js';
+const Astronomy = require('astronomy-engine');
+const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration for caching
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -586,7 +586,7 @@ const generatePlanetInterpretation = (planetName, data) => {
 /**
  * Main handler function for API requests
  */
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
