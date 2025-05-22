@@ -17,6 +17,12 @@
       }
     }
   ],
+  
+  "rewrites": [
+    { "source": "/api/astro", "destination": "/api/astro.js" },
+    { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
 
   "headers": [
     {
