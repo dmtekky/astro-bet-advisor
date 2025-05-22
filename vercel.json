@@ -17,24 +17,6 @@
       }
     }
   ],
-  
-  "routes": [
-    {
-      "src": "/api/astro",
-      "dest": "/api/astro.js"
-    },
-    {
-      "src": "/api/astro-enhanced",
-      "dest": "/api/astro-enhanced.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
 
   "headers": [
     {
