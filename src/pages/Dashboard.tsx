@@ -492,51 +492,41 @@ const Dashboard: React.FC = () => {
       </div>
       
       <div className="relative">
-        <div className="w-full bg-slate-100/80 rounded-full shadow-inner border border-slate-200/50 flex h-4 overflow-hidden">
-          {/* Fire */}
+        <div className="w-full bg-slate-100/80 rounded-full shadow-inner border border-slate-200/50 flex h-4 overflow-hidden relative">
+          {/* Background gradient that blends all colors */}
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+              background: `linear-gradient(
+                90deg,
+                rgba(239, 68, 68, 0.7) 0%,
+                rgba(16, 185, 129, 0.7) 25%,
+                rgba(56, 189, 248, 0.7) 50%,
+                rgba(99, 102, 241, 0.7) 75%,
+                rgba(99, 102, 241, 0.7) 100%
+              )`,
+              filter: 'saturate(1.2) contrast(1.1)',
+              mixBlendMode: 'multiply'
+            }}
+          />
+          
+          {/* Individual bars with transparency to show through gradient */}
           <div
-            className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-700"
+            className="h-full bg-gradient-to-r from-red-500/90 to-red-500/70 transition-all duration-1000 ease-out"
             style={{ width: `${elementsDistribution.fire}%` }}
           />
-          {/* Earth */}
           <div
-            className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
+            className="h-full bg-gradient-to-r from-green-500/90 to-green-500/70 transition-all duration-1000 ease-out"
             style={{ width: `${elementsDistribution.earth}%` }}
           />
-          {/* Air (lighter blue) */}
           <div
-            className="h-full bg-gradient-to-r from-sky-300 to-sky-200 transition-all duration-700"
+            className="h-full bg-gradient-to-r from-sky-300/90 to-sky-300/70 transition-all duration-1000 ease-out"
             style={{ width: `${elementsDistribution.air}%` }}
           />
-          {/* Water */}
           <div
-            className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-700"
+            className="h-full bg-gradient-to-r from-indigo-500/90 to-indigo-500/70 transition-all duration-1000 ease-out"
             style={{ width: `${elementsDistribution.water}%` }}
           />
-        </div>
-        
-        {/* Floating percentage indicators */}
-        <div className="absolute -top-2 right-0 flex space-x-1">
-          {elementsDistribution.fire > 0 && (
-            <span className="text-[10px] font-medium bg-red-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
-              {elementsDistribution.fire}%
-            </span>
-          )}
-          {elementsDistribution.earth > 0 && (
-            <span className="text-[10px] font-medium bg-green-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
-              {elementsDistribution.earth}%
-            </span>
-          )}
-          {elementsDistribution.air > 0 && (
-            <span className="text-[10px] font-medium bg-sky-300 text-slate-800 px-1.5 py-0.5 rounded-full shadow-sm">
-              {elementsDistribution.air}%
-            </span>
-          )}
-          {elementsDistribution.water > 0 && (
-            <span className="text-[10px] font-medium bg-indigo-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
-              {elementsDistribution.water}%
-            </span>
-          )}
         </div>
       </div>
       
