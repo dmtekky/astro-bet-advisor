@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlayerStats } from '@/lib/astroFormula';
+import { PlayerStats } from '../../lib/astroFormula';
 
 interface TeamRosterProps {
   players: PlayerStats[];

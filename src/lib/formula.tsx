@@ -9,7 +9,7 @@
  * - OAS (Odds Adjustment Score): Final betting odds adjustment
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 import { getZodiacSign, getMoonPhaseName } from '@/lib/astroCalc';
 import { format } from 'date-fns';
 
