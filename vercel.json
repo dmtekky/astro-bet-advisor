@@ -3,7 +3,13 @@
   "builds": [
     {
       "src": "api/astro.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": { "runtime": "nodejs20.x" }
+    },
+    {
+      "src": "api/astro-enhanced.js",
+      "use": "@vercel/node",
+      "config": { "runtime": "nodejs20.x" }
     },
     {
       "src": "package.json",

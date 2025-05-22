@@ -316,3 +316,6 @@ function getRetrogradeInfluence(planet) {
   
   return influences[planet] || 'Retrograde motion';
 }
+
+// The handler function is already exported as default at the top of the file
+// No need for a second export
