@@ -20,6 +20,21 @@
     }
   ],
 
+  "routes": [
+    {
+      "src": "/api/astro-enhanced",
+      "dest": "/api/astro-enhanced.js"
+    },
+    {
+      "src": "/api/astro",
+      "dest": "/api/astro.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+
   "headers": [
     {
       "source": "/api/(.*)",
