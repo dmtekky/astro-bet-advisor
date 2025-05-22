@@ -1,1089 +1,697 @@
-import * as React from 'react';
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../components/ui/use-toast';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { ArrowLeft, BarChart2, Activity, Award, Star } from 'lucide-react';
-import { Tooltip } from 'react-tooltip';
-import { useAstroData } from '../hooks/useAstroData';
-import { getZodiacSign } from '../lib/astroCalc';
-import { Separator } from '../components/ui/separator';
-import { Skeleton } from '../components/ui/skeleton';
-import { ErrorBoundary } from 'react-error-boundary';
-import type { FallbackProps } from 'react-error-boundary';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/components/ui/use-toast';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Calendar, ChevronLeft, Star, TrendingUp, Activity, BarChart2, Award, Moon, Sun, Info } from 'lucide-react';
+import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase';
+import { useAstroData } from '@/hooks/useAstroData';
+import { getZodiacSign } from '@/lib/astroCalc';
 
-// Helper function to format birth date string
-const formatBirthDate = (dateStr: string | null | undefined): string | null => {
-  if (!dateStr) return null;
-  try {
-    // If it's already in YYYY-MM-DD format, return as is
-    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return dateStr;
-    }
-    // Otherwise, try to parse it
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-  } catch {
-    return null;
-  }
-};
-
-// Types
-import type { Player, Team } from '../types';
-import type { AISResult, Ephemeris } from '../lib/formula';
-
-// Cache for player data to prevent unnecessary API calls
-const playerCache = new Map<string, { player: any; team: any; timestamp: number }>();
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache expiry
-
-interface PlayerWithStats extends Player {
+// Type definitions
+interface Team {
   id: string;
   name: string;
-  first_name: string;
-  last_name: string;
+  logo_url: string;
+  city: string;
+  venue: string;
+  conference: string;
+  division: string;
+  abbreviation: string;
+  primary_color: string;
+  secondary_color: string;
+  league_id: string;
+}
+
+interface Player {
+  id: string;
   full_name: string;
-  position: string;
+  first_name?: string;
+  last_name?: string;
+  headshot_url?: string;
+  primary_position?: string;
+  position?: string;
+  primary_number?: number;
+  jersey_number?: string;
+  current_team_id?: string;
+  team_id?: string;
   birth_date?: string;
-  stats: {
-    points_per_game: number;
-    rebounds_per_game: number;
-    assists_per_game: number;
-    steals_per_game: number;
-    blocks_per_game: number;
-    field_goal_percentage: number;
-    three_point_percentage: number;
-    free_throw_percentage: number;
-    games_played: number;
-    minutes_per_game: number;
-  };
-  forecast?: string;
+  height?: string;
+  weight?: string;
+  college?: string;
+  draft_year?: number;
+  draft_round?: number;
+  draft_pick?: number;
+  nationality?: string;
+  status?: string;
 }
 
-interface PlayerAIS extends AISResult {
-  dominant_house?: string;
-  key_attributes?: string[];
-  forecast?: string;
+interface PlayerStats {
+  player_id: string;
+  points_per_game?: number;
+  rebounds_per_game?: number;
+  assists_per_game?: number;
+  steals_per_game?: number;
+  blocks_per_game?: number;
+  field_goal_percentage?: number;
+  three_point_percentage?: number;
+  free_throw_percentage?: number;
+  games_played?: number;
+  minutes_per_game?: number;
+  batting_average?: number;
+  home_runs?: number;
+  rbis?: number;
+  stolen_bases?: number;
+  era?: number;
+  wins?: number;
+  strikeouts?: number;
+  touchdowns?: number;
+  passing_yards?: number;
+  rushing_yards?: number;
+  sacks?: number;
+  interceptions?: number;
+  goals?: number;
+  assists?: number;
+  save_percentage?: number;
 }
 
-// Format astrological influences from API data
-const formatApiAstroInfluences = (data: any) => {
-  if (!data) return [];
-  
-  const influences = [];
-  
-  // Add sun sign influence
-  if (data.sun) {
-    influences.push({
-      name: 'Sun Sign',
-      impact: 0.8, // High impact
-      description: `Sun in ${data.sun.sign} indicates ${data.sun.sign} traits are emphasized.`
-    });
-  }
-  
-  // Add moon phase influence
-  if (data.moon) {
-    influences.push({
-      name: 'Moon Phase',
-      impact: 0.7, // High impact
-      description: `${data.moon.phase_name} Moon influences emotions and instincts.`
-    });
-  }
-  
-  // Add dominant element influence
-  if (data.elements) {
-    const dominantElement = Object.entries(data.elements).reduce((a, b) => 
-      a[1] > b[1] ? a : b, ['', 0]
-    );
-    
-    if (dominantElement[0]) {
-      influences.push({
-        name: 'Dominant Element',
-        impact: 0.6, // Medium impact
-        description: `Strong ${dominantElement[0]} energy influences the current astrological climate.`
-      });
-    }
-  }
-  
-  // Add any significant aspects
-  if (data.aspectsList && data.aspectsList.length > 0) {
-    // Just take the first significant aspect for now
-    const significantAspect = data.aspectsList[0];
-    influences.push({
-      name: `Aspect: ${significantAspect.from} ${significantAspect.type} ${significantAspect.to}`,
-      impact: 0.5, // Medium impact
-      description: `This aspect suggests ${significantAspect.influence?.description || 'significant astrological activity'}`
-    });
-  }
-  
-  return influences;
-};
-
-// Generate forecast based on API data
-const generateForecastFromApiData = (data: any, player: any) => {
-  if (!data || !player) return 'No astrological data available.';
-  
-  const playerName = player.full_name || 'This player';
-  const playerPosition = player.position || 'athlete';
-  
-  // Base forecast on the most significant aspects and positions
-  const aspects = data.aspectsList || [];
-  const significantAspect = aspects[0];
-  
-  let forecast = `${playerName} has a strong ${data.sun?.sign || 'cosmic'} influence today. `;
-  
-  // Add moon phase info
-  if (data.moon) {
-    forecast += `The ${data.moon.phase_name} Moon enhances ${playerPosition}'s ${data.moon.illumination > 0.5 ? 'emotional expression' : 'intuitive abilities'}. `;
-  }
-  
-  // Add dominant element info
-  if (data.elements) {
-    const dominantElement = Object.entries(data.elements).reduce((a, b) => 
-      a[1] > b[1] ? a : b, ['', 0]
-    );
-    
-    if (dominantElement[0]) {
-      forecast += `The strong ${dominantElement[0]} energy suggests ${getElementInfluence(dominantElement[0] as string, playerPosition)}. `;
-    }
-  }
-  
-  // Add significant aspect info if available
-  if (significantAspect) {
-    forecast += `The ${significantAspect.from} ${significantAspect.type} ${significantAspect.to} aspect indicates ${significantAspect.influence?.description || 'a significant astrological influence'}. `;
-  }
-  
-  // Add retrograde info if applicable
-  if (data.mercury?.retrograde) {
-    forecast += 'With Mercury retrograde, focus on reviewing strategies rather than making major changes. ';
-  }
-  
-  return forecast;
-};
-
-// Helper function to get element influence text
-const getElementInfluence = (element: string, position: string) => {
-  const influences: Record<string, string> = {
-    fire: `a passionate and energetic performance from ${position}`,
-    earth: `a grounded and practical approach from ${position}`,
-    air: `strong communication and strategic thinking from ${position}`,
-    water: `heightened intuition and emotional awareness from ${position}`
-  };
-  
-  return influences[element.toLowerCase()] || `a balanced performance from ${position}`;
-};
-
-// Helper functions for astrological calculations
-function getAspectValue(aspect: number): { value: number; type: string } {
-  if (aspect >= 0 && aspect <= 10) return { value: 1, type: 'conjunction' };
-  if (aspect >= 55 && aspect <= 65) return { value: 0.75, type: 'sextile' };
-  if (aspect >= 85 && aspect <= 95) return { value: 0.5, type: 'square' };
-  if (aspect >= 115 && aspect <= 125) return { value: 0.75, type: 'trine' };
-  if (aspect >= 175 && aspect <= 185) return { value: 0.25, type: 'opposition' };
-  return { value: 0, type: 'none' };
+interface AstrologyInfluence {
+  name: string;
+  impact: number;
+  description: string;
+  icon?: React.ReactNode;
 }
-
-function getHouseName(houseNumber: number): string {
-  const houses = [
-    'Identity', 'Wealth', 'Communication', 'Home',
-    'Creativity', 'Service', 'Relationships', 'Transformation',
-    'Philosophy', 'Career', 'Community', 'Spirituality'
-  ];
-  return houses[houseNumber - 1] || 'Unknown';
-}
-
-function determineKeyAttributes(ephemeris: any, player: PlayerWithStats): string[] {
-  const attributes: string[] = [];
-  
-  // Dominant element
-  const elements = {
-    fire: ephemeris.fire || 0,
-    earth: ephemeris.earth || 0,
-    air: ephemeris.air || 0,
-    water: ephemeris.water || 0
-  };
-  
-  const dominantElement = Object.entries(elements)
-    .sort((a, b) => b[1] - a[1])[0][0];
-    
-  switch (dominantElement) {
-    case 'fire': 
-      attributes.push('Energetic', 'Passionate');
-      break;
-    case 'earth':
-      attributes.push('Stable', 'Disciplined');
-      break;
-    case 'air':
-      attributes.push('Strategic', 'Adaptable');
-      break;
-    case 'water':
-      attributes.push('Intuitive', 'Emotional');
-      break;
-  }
-  
-  // Based on moon phase
-  if (ephemeris.moon_phase < 0.25) attributes.push('Building Energy');
-  else if (ephemeris.moon_phase < 0.5) attributes.push('Peak Performance');
-  else if (ephemeris.moon_phase < 0.75) attributes.push('Releasing');
-  else attributes.push('Restoring');
-  
-  // Add position-based attribute
-  if (player.position) {
-    if (player.position.includes('Guard')) {
-      attributes.push('Playmaking');
-    } else if (player.position.includes('Forward')) {
-      attributes.push('Versatility');
-    } else if (player.position.includes('Center')) {
-      attributes.push('Strength');
-    }
-  }
-  
-  return attributes;
-}
-
-// Convert astrological influence data to UI format
-function formatAstroInfluences(influences: any) {
-  if (!influences) return [];
-  
-  const impacts = [];
-  
-  // Add zodiac sign influence
-  if (influences.zodiacSign) {
-    impacts.push({
-      name: `Sun Sign (${influences.zodiacSign.value})`,
-      impact: Math.round((influences.zodiacSign.score - 0.5) * 20), // Convert 0-1 to -10 to 10
-      description: influences.zodiacSign.description,
-      element: influences.zodiacSign.element,
-      icon: getZodiacSignIcon(influences.zodiacSign.value)
-    });
-  }
-  
-  // Add moon phase if available
-  if (influences.moonPhase) {
-    const moonImpact = Math.round((influences.moonPhase.score - 0.5) * 20);
-    impacts.push({
-      name: `Moon Phase (${influences.moonPhase.value})`,
-      impact: moonImpact,
-      description: influences.moonPhase.description,
-      illumination: influences.moonPhase.illumination,
-      icon: '🌙'
-    });
-  }
-  
-  // Add current transits
-  if (influences.currentTransits) {
-    Object.entries(influences.currentTransits).forEach(([planet, sign]) => {
-      if (typeof sign === 'string') {
-        impacts.push({
-          name: `Current ${planet.charAt(0).toUpperCase() + planet.slice(1)} Sign`,
-          value: sign,
-          icon: getZodiacSignIcon(sign),
-          description: `The ${planet} is currently in ${sign}`
-        });
-      }
-    });
-  }
-  
-  // Add elements if available
-  if (influences.elements) {
-    Object.entries(influences.elements).forEach(([element, value]) => {
-      if (typeof value === 'number') {
-        impacts.push({
-          name: `${element.charAt(0).toUpperCase() + element.slice(1)} Element`,
-          value: `${Math.round(value * 100)}%`,
-          description: `Influence of ${element} element on current astrological conditions`
-        });
-      }
-    });
-  }
-  
-  // Add aspects if available
-  if (influences.aspects) {
-    Object.entries(influences.aspects).forEach(([aspect, value]) => {
-      if (typeof value === 'number' && value > 0.5) { // Only show strong aspects
-        const [planet1, planet2] = aspect.split('-');
-        impacts.push({
-          name: `${planet1} - ${planet2} Aspect`,
-          value: `${Math.round(value * 100)}%`,
-          description: `Strength of ${planet1}-${planet2} aspect (${getAspectStrengthDescription(value)})`
-        });
-      }
-    });
-  }
-  
-  return impacts;
-}
-
-// Helper function to get aspect strength description
-function getAspectStrengthDescription(strength: number): string {
-  if (strength > 0.9) return 'Very Strong';
-  if (strength > 0.7) return 'Strong';
-  if (strength > 0.5) return 'Moderate';
-  return 'Weak';
-}
-
-// Helper function to get zodiac icon
-function getZodiacSignIcon(sign: string): string {
-  const icons: Record<string, string> = {
-    Aries: '♈',
-    Taurus: '♉',
-    Gemini: '♊',
-    Cancer: '♋',
-    Leo: '♌',
-    Virgo: '♍',
-    Libra: '♎',
-    Scorpio: '♏',
-    Sagittarius: '♐',
-    Capricorn: '♑',
-    Aquarius: '♒',
-    Pisces: '♓'
-  };
-  return icons[sign] || '★';
-}
-
-function getTopImpact(impacts: any[]) {
-  if (!impacts.length) return { name: 'No Data', impact: 0, description: 'No astrological data available' };
-  return impacts.reduce((max, curr) => (Math.abs(curr.impact) > Math.abs(max.impact) ? curr : max), impacts[0]);
-}
-
-function getSortedImpacts(impacts: any[]) {
-  return [...impacts].sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
-}
-
-const generatePlayerAstroForecast = (data: any): string => {
-  if (!data) return 'No astrological data available';
-  
-  const { influences, score } = data;
-  
-  // Use a generic player name since we don't have access to the player object here
-  const playerName = 'This player';
-  
-  let forecast = `${playerName}'s astrological forecast shows `;
-  
-  // Base forecast on overall score
-  if (score > 0.7) {
-    forecast += 'very favorable cosmic conditions. ';
-  } else if (score > 0.5) {
-    forecast += 'generally positive cosmic alignment. ';
-  } else if (score > 0.3) {
-    forecast += 'mixed cosmic influences. ';
-  } else {
-    forecast += 'challenging astrological conditions. ';
-  }
-  
-  // Add zodiac sign influence
-  if (influences?.zodiacSign) {
-    forecast += `The ${influences.zodiacSign.value} sun sign is ${influences.zodiacSign.score > 0.5 ? 'well-positioned' : 'facing challenges'} in the current cosmic configuration. `;
-  }
-  
-  // Add moon phase influence
-  if (influences?.moonPhase) {
-    const illumination = influences.moonPhase.illumination || 50;
-    forecast += `The ${influences.moonPhase.value} (${Math.round(illumination)}% illumination) ${influences.moonPhase.score > 0.5 ? 'enhances' : 'may affect'} intuition and emotional balance. `;
-  }
-  
-  // Add Mercury retrograde influence if applicable
-  if (influences?.mercuryRetrograde?.value) {
-    forecast += 'Mercury retrograde suggests being cautious with communication and decision-making. ';
-  }
-  
-  return forecast;
-};
-
-const formatAspectName = (aspect: string): string => {
-  return aspect.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
-};
-
-// Helper function to get sign forecast
-const getSignForecast = (sign: string): string => {
-  const forecasts: Record<string, string> = {
-    Aries: "a competitive and energetic performance",
-    Taurus: "a steady and determined approach to the game",
-    Gemini: "versatility and quick thinking on the field",
-    Cancer: "strong emotional connection to the game",
-    Leo: "a confident and dominant presence",
-    Virgo: "attention to detail and technical precision",
-    Libra: "strong teamwork and balanced performance",
-    Scorpio: "intense focus and strategic play",
-    Sagittarius: "optimism and risk-taking on the field",
-    Capricorn: "a disciplined and ambitious approach",
-    Aquarius: "unconventional and innovative play style",
-    Pisces: "intuitive and creative performance"
-  };
-  return forecasts[sign] || "a solid performance";
-};
-
-// Helper function to get moon phase forecast
-const getMoonPhaseForecast = (phase: string, illumination: number): string => {
-  const forecasts: Record<string, string> = {
-    'New Moon': "new beginnings and fresh energy for the game",
-    'Waxing Crescent': "growing potential and building momentum",
-    'First Quarter': "overcoming challenges and taking action",
-    'Waxing Gibbous': "refining skills and preparing for success",
-    'Full Moon': "peak performance and high energy levels",
-    'Waning Gibbous': "sharing knowledge and teamwork",
-    'Last Quarter': "letting go of past mistakes and learning",
-    'Waning Crescent': "reflection and preparation for the next cycle"
-  };
-  
-  return forecasts[phase] || `a ${illumination > 50 ? 'strong' : 'subtle'} lunar influence`;
-};
-
-// Helper function to get element forecast
-const getElementForecast = (element: string): string => {
-  const forecasts: Record<string, string> = {
-    fire: "passion, energy, and competitive spirit",
-    earth: "stability, endurance, and practical play",
-    air: "quick thinking, strategy, and communication",
-    water: "intuition, adaptability, and emotional connection"
-  };
-  return forecasts[element] || "a balanced approach to the game";
-};
-
-// Helper function to get aspect forecast
-const getAspectForecast = (aspect: string): string => {
-  const forecasts: Record<string, string> = {
-    'sun-moon': 'harmony between conscious and subconscious play',
-    'sun-mercury': 'clear thinking and communication',
-    'sun-venus': 'harmony and social connections',
-    'sun-mars': 'strong willpower and physical energy',
-    'moon-venus': 'emotional connection and team chemistry',
-    'moon-mars': 'emotional drive and physical energy',
-    'mercury-venus': 'creative communication and social skills',
-    'mercury-mars': 'quick thinking and decisive action',
-    'venus-mars': 'passion and physical expression'
-  };
-  
-  return forecasts[aspect.toLowerCase()] || 'a significant influence on performance';
-};
 
 const PlayerPage: React.FC = () => {
   const { playerId, teamId } = useParams<{ playerId: string; teamId: string }>();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // State for player data
-  const [player, setPlayer] = useState<PlayerWithStats | null>(null);
+  const [player, setPlayer] = useState<Player | null>(null);
   const [team, setTeam] = useState<Team | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [AIS, setAIS] = useState<any>(null);
-  const [playerStats, setPlayerStats] = useState<any>(null);
-  const [ephemeris, setEphemeris] = useState<Ephemeris | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
+  const [forecast, setForecast] = useState<string>('');
 
-  // Format and use the player's birthdate for astrological data
-  const playerBirthDate = formatBirthDate(player?.birth_date);
-  const { astroData, loading: loadingAstro, error: apiError } = useAstroData(playerBirthDate || new Date());
-
-  // Add debug logging to verify the birthdate being used
-  useEffect(() => {
-    console.log('Player birth date:', {
-      raw: player?.birth_date,
-      formatted: playerBirthDate,
-      usingCurrentDate: !playerBirthDate
-    });
-  }, [player?.birth_date, playerBirthDate]);
-
-  // Navigate back function with useCallback to prevent recreation
-  const handleNavigateBack = useCallback(() => {
-    navigate(`/team/${teamId}`);
-  }, [navigate, teamId]);
-
-  // Error handler for API errors
-  const handleApiError = useCallback((error: Error | null) => {
-    if (error) {
-      console.error('API Error:', error);
-      toast({
-        title: 'Astrological Data Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  // Handle API errors
-  useEffect(() => {
-    handleApiError(apiError);
-  }, [apiError, handleApiError]);
-
-  // Fetch player data with caching
-  const fetchPlayerData = useCallback(async () => {
-    if (!playerId) {
-      setError('Player ID is required');
-      setLoading(false);
-      return;
-    }
-
-    // Check cache first
-    const cachedData = playerCache.get(playerId);
-    const now = Date.now();
-
-    if (cachedData && (now - cachedData.timestamp) < CACHE_EXPIRY) {
-      setPlayer(cachedData.player);
-      setTeam(cachedData.team);
-      setLoading(false);
-      return;
-    }
-
+  // Format player's birthdate
+  const formatBirthDate = useCallback((dateStr: string | null | undefined): string | null => {
+    if (!dateStr) return null;
     try {
-      setLoading(true);
+      // If it's already in YYYY-MM-DD format, return as is
+      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+      // Otherwise, try to parse it
+      const date = new Date(dateStr);
+      return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
+    } catch {
+      return null;
+    }
+  }, []);
 
-      // Fetch player data
-      const { data: playerData, error: playerError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .single();
+  // Get birth date formatted
+  const playerBirthDate = formatBirthDate(player?.birth_date);
+  
+  // Fetch astrological data using the hook
+  const { astroData, loading: loadingAstro, error: astroError } = useAstroData(playerBirthDate || new Date());
 
-      // Optionally fetch team data if playerData.team_id exists
-      let teamData = null;
-      if (playerData && playerData.team_id) {
-        const { data: team, error: teamError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('id', playerData.team_id)
-          .single();
-        if (!teamError) teamData = team;
+  // Helper function to get team/player color styles
+  const getPlayerColorStyles = useCallback((player: Player | null, team: Team | null) => {
+    // Use team colors if available, otherwise use player-specific colors
+    const primaryColor = team?.primary_color || '#4338ca'; // Default to indigo if no team color
+    const secondaryColor = team?.secondary_color || '#6366f1';
+    
+    return {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      gradientBg: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}10)`,
+      borderColor: `${primaryColor}40`,
+      accentColor: primaryColor,
+    };
+  }, []);
+
+  // Handle retry functionality
+  const handleRetry = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+  }, []);
+
+  // Fetch player data
+  useEffect(() => {
+    const fetchPlayerData = async () => {
+      if (!playerId) {
+        setError('Player ID is missing');
+        setLoading(false);
+        return;
       }
 
-      // Debug logging
-      console.log('[PlayerPage] playerId:', playerId);
-      console.log('[PlayerPage] playerError:', playerError);
-      console.log('[PlayerPage] playerData:', playerData);
+      try {
+        setLoading(true);
+        setError(null);
 
-      if (playerError) throw playerError;
-      if (!playerData) throw new Error('Player not found');
+        // Fetch player details
+        const { data: playerData, error: playerError } = await supabase
+          .from('players')
+          .select('*')
+          .eq('id', playerId)
+          .single();
 
-      // Fetch player stats
-      const { data: statsData, error: statsError } = await supabase
-        .from('baseball_stats')
-        .select('*')
-        .eq('player_id', playerId);
-
-      if (statsError && statsError.code !== 'PGRST116') throw statsError;
-
-      // Process player data
-      const playerWithStats: PlayerWithStats = {
-        ...playerData,
-        stats: statsData || {},
-        points_per_game: statsData?.points_per_game || 0,
-        rebounds_per_game: statsData?.rebounds_per_game || 0,
-        assists_per_game: statsData?.assists_per_game || 0,
-        steals_per_game: statsData?.steals_per_game || 0,
-        blocks_per_game: statsData?.blocks_per_game || 0,
-        field_goal_percentage: statsData?.field_goal_percentage || 0,
-        three_point_percentage: statsData?.three_point_percentage || 0,
-        free_throw_percentage: statsData?.free_throw_percentage || 0,
-        games_played: statsData?.games_played || 0,
-        minutes_per_game: statsData?.minutes_per_game || 0,
-      };
-
-      // Update cache
-      playerCache.set(playerId, {
-        player: playerWithStats,
-        team: playerData.teams,
-        timestamp: now,
-      });
-
-      setPlayer(playerWithStats);
-      setTeam(playerData.teams);
-      // baseball_stats now returns an array; pick the most recent or process as needed
-setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
-    } catch (err) {
-      console.error('Error fetching player data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load player data');
-      toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to load player data',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, toast]);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchPlayerData();
-
-    // Cleanup cache on unmount
-    return () => {
-      // Optional: Clean up old cache entries
-      const now = Date.now();
-      // Convert to array first to avoid Map iteration issues
-      Array.from(playerCache.entries()).forEach(([key, value]) => {
-        if (now - value.timestamp > CACHE_EXPIRY) {
-          playerCache.delete(key);
+        if (playerError) {
+          console.error('Error fetching player:', playerError);
+          setError(playerError.message);
+          setLoading(false);
+          return;
         }
-      });
+
+        setPlayer(playerData);
+
+        // Fetch team details if available
+        if (playerData.team_id || playerData.current_team_id) {
+          const teamId = playerData.team_id || playerData.current_team_id;
+          const { data: teamData, error: teamError } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('id', teamId)
+            .single();
+
+          if (!teamError) {
+            setTeam(teamData);
+          } else {
+            console.error('Error fetching team:', teamError);
+          }
+        }
+
+        // Fetch player stats
+        const sportsTables = ['baseball_stats', 'basketball_stats', 'football_stats', 'hockey_stats'];
+        
+        for (const table of sportsTables) {
+          const { data: statsData, error: statsError } = await supabase
+            .from(table)
+            .select('*')
+            .eq('player_id', playerId)
+            .limit(1);
+          
+          if (!statsError && statsData && statsData.length > 0) {
+            setPlayerStats(statsData[0]);
+            break;
+          }
+        }
+      } catch (err: any) {
+        console.error('Error in player page:', err);
+        setError(err.message || 'An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [fetchPlayerData]);
 
-  // Format the astrological data for display - memoized
-  const astroImpacts = useMemo(() => {
-    if (!astroData) return [];
-    return formatApiAstroInfluences(astroData);
-  }, [astroData]);
+    fetchPlayerData();
+  }, [playerId, retryCount]);
 
-  // Generate forecast when astro data or player changes - memoized
-  const astroForecast = useMemo(() => {
-    if (!astroData || !player) return '';
-    return generateForecastFromApiData(astroData, player);
+  // Process astrological data
+  useEffect(() => {
+    if (astroData && player) {
+      // Format astrological influences
+      const influences: AstrologyInfluence[] = [];
+      
+      // Add sun sign influence
+      if (astroData.sun) {
+        influences.push({
+          name: 'Sun Sign',
+          impact: 0.8,
+          description: `${player.full_name}'s Sun in ${astroData.sun.sign} ${getSunSignDescription(astroData.sun.sign)}`,
+          icon: <Sun className="h-5 w-5 text-amber-500" />
+        });
+      }
+      
+      // Add moon phase influence
+      if (astroData.moon) {
+        influences.push({
+          name: 'Moon Phase',
+          impact: 0.7,
+          description: `${astroData.moon.phase_name} Moon ${getMoonPhaseDescription(astroData.moon.phase_name)}`,
+          icon: <Moon className="h-5 w-5 text-slate-400" />
+        });
+      }
+      
+      // Add dominant element influence if available
+      if (astroData.elements?.dominant) {
+        influences.push({
+          name: 'Dominant Element',
+          impact: 0.6,
+          description: `Strong ${astroData.elements.dominant} energy ${getElementDescription(astroData.elements.dominant)}`,
+          icon: getElementIcon(astroData.elements.dominant)
+        });
+      }
+      
+      // Add retrograde influence if available
+      if (astroData.planets?.mercury?.retrograde) {
+        influences.push({
+          name: 'Mercury Retrograde',
+          impact: 0.5,
+          description: "Mercury retrograde may affect communication and decision-making",
+          icon: <Info className="h-5 w-5 text-orange-500" />
+        });
+      }
+      
+      setAstroInfluences(influences);
+      
+      // Generate forecast
+      setForecast(generateForecast(player, astroData));
+    }
   }, [astroData, player]);
 
-  // Memoize derived values for better performance
-  const { topImpact, sortedImpacts } = useMemo(() => {
-    return {
-      topImpact: getTopImpact(astroImpacts),
-      sortedImpacts: getSortedImpacts(astroImpacts),
+  // Helper functions for astrological descriptions
+  function getSunSignDescription(sign: string): string {
+    const descriptions: Record<string, string> = {
+      'Aries': 'suggests aggressive play and quick decision-making',
+      'Taurus': 'indicates consistency and resilience on the field',
+      'Gemini': 'brings versatility and adaptability to various situations',
+      'Cancer': 'provides intuitive defense and protective play',
+      'Leo': 'brings leadership and spotlight-worthy performances',
+      'Virgo': 'offers precision and methodical approach to the game',
+      'Libra': 'enables balanced play and fair sportsmanship',
+      'Scorpio': 'delivers intensity and strategic depth',
+      'Sagittarius': 'creates opportunities through optimistic play',
+      'Capricorn': 'ensures disciplined performance and long-term success',
+      'Aquarius': 'brings innovative tactics and unexpected plays',
+      'Pisces': 'enables intuitive teamwork and fluid movement'
     };
-  }, [astroImpacts]);
-
-  // Memoize loading state
-  const loadingView = useMemo(() => (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="mt-4 text-lg font-medium">Analyzing cosmic influences...</p>
-      </div>
-    </div>
-  ), []);
-
-  // Memoize error view
-  const errorView = useMemo(() => (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Player not found</h1>
-        <p className="text-gray-400 mb-6">{error || "The player you're looking for doesn't exist or has been moved."}</p>
-        <Button onClick={handleNavigateBack} variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-        </Button>
-      </div>
-    </div>
-  ), [error, handleNavigateBack]);
-
-  // Memoize insight section
-  const insightSection = useMemo(() => (
-    apiError ? (
-      <div className="bg-red-900/50 text-white p-4 rounded-lg mb-6">
-        {apiError instanceof Error ? apiError.message : String(apiError)}
-      </div>
-    ) : (
-      <div className="bg-gradient-to-r from-indigo-900 to-black text-white p-4 rounded-lg mb-6 flex items-center gap-2">
-        <span
-          className="font-semibold text-lg"
-          data-tooltip-id="top-impact-tip"
-          data-tooltip-content={topImpact.description}
-        >
-          {topImpact.impact > 0 ? "+" : ""}{topImpact.impact}%
-        </span>
-        <Tooltip id="top-impact-tip" />
-      </div>
-    )
-  ), [apiError, topImpact]);
-
-  // Memoize the zodiac sign calculation
-  const zodiacSign = useMemo(() => player?.birth_date ? getZodiacSign(new Date(player.birth_date)) : 'Unknown', [player?.birth_date]);
-  const zodiacIcon = useMemo(() => getZodiacSignIcon(zodiacSign), [zodiacSign]);
-
-  // Early returns with memoized components
-  if (loading || loadingAstro) return loadingView;
-  if (!player) return errorView;
-
-
-  return (
-    <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }) => (
-        <div className="max-w-7xl mx-auto py-8 px-4 text-center">
-          <h2 className="text-2xl font-bold text-red-500">Something went wrong</h2>
-          <p className="mt-2 mb-4">There was an error displaying this player's information</p>
-          <p className="text-sm text-gray-400 mb-4">{error?.message}</p>
-          <div className="space-x-2">
-            <Button onClick={resetErrorBoundary} variant="outline">
-              Try Again
-            </Button>
-            <Button onClick={handleNavigateBack} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
-          </div>
-        </div>
-      )}
-    >
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        {insightSection}
-
-        <Button
-          variant="ghost"
-          onClick={handleNavigateBack}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Team
-        </Button>
-
-        {/* Player Header */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 mb-8 shadow-lg">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center text-5xl">
-              {zodiacIcon || '🏀'}
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold">{player.name}</h1>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Badge variant="secondary" className="text-base py-1 px-3">
-                      {player.position || 'N/A'}
-                    </Badge>
-                    {team && (
-                      <Link
-                        to={`/team/${team.id}`}
-                        className="text-yellow-400 hover:underline flex items-center"
-                      >
-                        {team.name}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-
-                {/* AIS Score */}
-                {AIS && (
-                  <div className="bg-gray-800 bg-opacity-60 p-4 rounded-lg border border-gray-700">
-                    <div className="text-sm text-gray-400 mb-1">Astrological Impact Score</div>
-                    <div className="text-3xl font-bold text-yellow-400">
-                      {(AIS.score * 100).toFixed(0)}<span className="text-lg text-gray-400">/100</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats and Astrology */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Player Stats */}
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart2 className="h-5 w-5" />
-                  Season Averages
-                </CardTitle>
-                <CardDescription>Current season statistics and performance metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {playerStats ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Points" value={playerStats.points} icon={<Activity className="h-4 w-4" />} />
-                    <StatCard label="Rebounds" value={playerStats.rebounds} icon={<BarChart2 className="h-4 w-4" />} />
-                    <StatCard label="Assists" value={playerStats.assists} icon={<Award className="h-4 w-4" />} />
-                    <StatCard label="Steals" value={playerStats.steals} icon="🏃" />
-                    <StatCard label="Blocks" value={playerStats.blocks} icon="✋" />
-                    <StatCard label="FG%" value={playerStats.fgPercentage} icon="🏀" />
-                    <StatCard label="3P%" value={playerStats.threePointPercentage} icon="🎯" />
-                    <StatCard label="FT%" value={playerStats.ftPercentage} icon="🏀" />
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No statistics available for this player.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Cosmic Influence */}
-          <div className="col-span-1">
-            <Card className="h-full">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5" />
-                  Cosmic Influence
-                </CardTitle>
-                <CardDescription className="text-white/80">
-                  Astrological factors affecting performance
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {apiError ? (
-                  <div className="p-4 text-center">
-                    <p className="text-destructive">Error loading astrological data</p>
-                    <p className="text-sm text-muted-foreground">{apiError instanceof Error ? apiError.message : String(apiError)}</p>
-                  </div>
-                ) : astroImpacts.length === 0 ? (
-                  <div className="p-4 text-center">
-                    <p className="text-amber-600">No astrological influences found</p>
-                    <p className="text-sm text-muted-foreground">Debug info: {JSON.stringify({ hasAIS: !!AIS, influencesLength: astroImpacts.length })}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Top impact */}
-                    {topImpact && (
-                      <div className="rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 p-4 border border-purple-100">
-                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                          <span className="text-xl">🌟</span> Primary Influence
-                        </h3>
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl">
-                            {topImpact.impact > 0 ? '+' : ''}{topImpact.impact || 0}
-                          </div>
-                          <div>
-                            <p className="font-medium">{topImpact.name || 'Unknown'}</p>
-                            <p className="text-sm text-muted-foreground">{topImpact.description || 'No description available'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* All influences */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">All Cosmic Factors</h3>
-                      <div className="space-y-3">
-                        {sortedImpacts.length > 0 ? (
-                          sortedImpacts.map((impact, i) => (
-                            <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${impact.impact > 0 ? 'bg-emerald-500' : impact.impact < 0 ? 'bg-red-500' : 'bg-gray-400'}`}>
-                                {impact.impact > 0 ? '+' : ''}{impact.impact}
-                              </div>
-                              <div>
-                                <p className="font-medium">{impact.name}</p>
-                                <p className="text-xs text-muted-foreground">{impact.description}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-4 text-center bg-muted/30 rounded">
-                            <p>No cosmic factors available</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Forecast */}
-                    <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <span className="text-xl">🔮</span> Astrological Forecast
-                      </h3>
-                      <p className="text-sm">{AIS?.forecast || astroForecast || 'No forecast available'}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Detailed Astrological Insights */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 rounded-lg border border-gray-700 mb-8 shadow-lg">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-400" />
-            Detailed Astrological Insights
-          </h3>
-
-          {loadingAstro ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-6 w-12" />
-                </div>
-              ))}
-            </div>
-          ) : apiError ? (
-            <div className="p-4 rounded-md bg-red-900/20 border border-red-800/40 text-red-400">
-              <p className="font-medium mb-1">Error Loading Astrological Data</p>
-              <p className="text-sm">{apiError instanceof Error ? apiError.message : String(apiError)}</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Key Attributes */}
-              {AIS?.key_attributes && AIS.key_attributes.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="text-lg font-medium mb-2 text-yellow-400">Key Attributes</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {AIS.key_attributes.map((attr, i) => (
-                      <Badge key={i} variant="secondary" className="bg-gray-800/60">{attr}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Cosmic Factors */}
-              <div className="mb-4">
-                <h4 className="text-lg font-medium mb-2 text-yellow-400">Cosmic Factors</h4>
-                <div className="space-y-2">
-                  {sortedImpacts.length > 0 ? (
-                    sortedImpacts.map((impact) => (
-                      <div key={impact.name} className="flex items-center justify-between p-2 rounded-md bg-gray-800/40 hover:bg-gray-800/60">
-                        <span className="text-sm">{impact.name}</span>
-                        <Badge
-                          variant="outline"
-                          className={`${impact.impact > 0 ? 'border-green-800 text-green-400' : 'border-red-800 text-red-400'}`}
-                        >
-                          {impact.impact > 0 ? "+" : ""}{impact.impact}%
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-400 text-sm p-3 bg-gray-800/30 rounded-md">No astrological data available</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Forecast */}
-              <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
-                <h4 className="text-lg font-medium mb-2 text-yellow-400 flex items-center gap-2">
-                  <span className="text-xl">🔮</span> Performance Forecast
-                </h4>
-                <p className="text-sm text-gray-300">{AIS?.forecast || astroForecast || 'No forecast available for this player.'}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </ErrorBoundary>
-  );
-};
-
-// Helper function to generate a simple astrological forecast based on available data
-function generateSimpleForecast(player: PlayerWithStats, influences: any): string {
-  if (!player || !influences) return 'No forecast available';
-  
-  const playerName = player.name || `${player.first_name} ${player.last_name}`;
-  const positiveTraits = ['strong', 'favorable', 'excellent', 'powerful', 'exceptional'];
-  const negativeTraits = ['challenging', 'difficult', 'testing', 'demanding', 'tough'];
-  const neutralTraits = ['balanced', 'neutral', 'moderate', 'mixed', 'variable'];
-  
-  // Helper to get a random trait based on a value (0-1)
-  const getTrait = (value: number, traits: string[]): string => {
-    return traits[Math.floor(value * traits.length) % traits.length];
-  };
-  
-  let forecast = `${playerName}'s astrological forecast shows `;
-  
-  // Use zodiac sign if available
-  const zodiacSign = player.birth_date ? getZodiacSign(new Date(player.birth_date)) : 'Unknown';
-  const moonPhase = influences?.moonPhase?.value || 'Unknown';
-  const mercuryRetrograde = influences?.mercuryRetrograde?.value || false;
-  
-  // Generate a score based on available data (simplified)
-  const score = Math.random(); // Fallback random score if we can't calculate
-  
-  if (score > 0.7) {
-    forecast += `an overall ${getTrait(score, positiveTraits)} alignment. `;
-    forecast += `As a ${zodiacSign}, the stars indicate strong performance potential. `;
-  } else if (score < 0.4) {
-    forecast += `a ${getTrait(1 - score, negativeTraits)} astrological period. `;
-    forecast += `The celestial configuration suggests some challenges ahead for ${zodiacSign} energy. `;
-  } else {
-    forecast += `a ${getTrait(score, neutralTraits)} astrological outlook. `;
-    forecast += `The planetary alignment shows a mix of influences for ${zodiacSign}. `;
+    return descriptions[sign] || 'influences overall playing style';
   }
-  
-  // Add moon phase insights
-  if (moonPhase) {
-    forecast += `The current ${moonPhase} moon phase affects your emotional balance and intuition. `;
+
+  function getMoonPhaseDescription(phase: string): string {
+    const descriptions: Record<string, string> = {
+      'New Moon': 'indicates potential for new beginnings and fresh strategies',
+      'Waxing Crescent': 'suggests building momentum and growing confidence',
+      'First Quarter': 'brings decisive action and breakthrough moments',
+      'Waxing Gibbous': 'indicates refining skills and preparing for peak performance',
+      'Full Moon': 'highlights peak performance and maximum visibility',
+      'Waning Gibbous': 'suggests sharing experience and mentoring teammates',
+      'Last Quarter': 'brings critical assessment and strategic adjustments',
+      'Waning Crescent': 'indicates reflection and preparation for renewal'
+    };
+    return descriptions[phase] || 'influences emotional rhythm';
   }
-  
-  // Add Mercury retrograde insights if applicable
-  if (mercuryRetrograde) {
-    forecast += 'Be aware of potential communication issues due to Mercury retrograde. ';
+
+  function getElementDescription(element: string): string {
+    const descriptions: Record<string, string> = {
+      'fire': 'enhances passion, energy, and competitive drive',
+      'earth': 'provides stability, endurance, and practical execution',
+      'air': 'improves communication, strategy, and mental agility',
+      'water': 'deepens intuition, emotional awareness, and flow state'
+    };
+    return descriptions[element.toLowerCase()] || 'influences playing style';
   }
-  
-  // Add position-specific insights
-  if (player.position) {
-    if (['PG', 'SG'].includes(player.position)) {
-      forecast += 'Your guard position benefits from current cosmic alignments enhancing quick thinking and court vision. ';
-    } else if (['SF', 'PF'].includes(player.position)) {
-      forecast += 'Your forward position is energized by current planetary positions, boosting your scoring potential. ';
-    } else if (player.position === 'C') {
-      forecast += 'As a center, the current cosmic alignment enhances your defensive presence and rebounding ability. ';
+
+  function getElementIcon(element: string): React.ReactNode {
+    switch (element.toLowerCase()) {
+      case 'fire':
+        return <Activity className="h-5 w-5 text-red-500" />;
+      case 'earth':
+        return <Award className="h-5 w-5 text-green-600" />;
+      case 'air':
+        return <TrendingUp className="h-5 w-5 text-sky-400" />;
+      case 'water':
+        return <BarChart2 className="h-5 w-5 text-blue-500" />;
+      default:
+        return <Star className="h-5 w-5 text-yellow-500" />;
     }
   }
-  
-  return forecast.trim();
-}
 
-// StatCard component for displaying player statistics
-const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) => (
-  <div className="flex flex-col items-center p-4 rounded-lg bg-gray-900">
-    <div className="flex items-center gap-2 mb-2">
-      {icon && <span className="text-yellow-400">{icon}</span>}
-      <span className="text-sm text-gray-400">{label}</span>
-    </div>
-    <div className="text-xl font-bold">{value}</div>
-  </div>
-);
+  function generateForecast(player: Player, astroData: any): string {
+    if (!player || !astroData) return '';
 
-// Helper to format factor names for display
-function formatFactorName(factor: string): string {
-  return factor
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-// Helper to get performance impact level and description
-function getPerformanceImpact(score: number): { level: string; description: string } {
-  if (score >= 0.8) {
-    return { 
-      level: 'Elite Performance', 
-      description: 'Exceptional cosmic alignment for peak performance' 
-    };
-  } else if (score >= 0.6) {
-    return { 
-      level: 'Strong Impact', 
-      description: 'Favorable conditions for above-average performance' 
-    };
-  } else if (score >= 0.4) {
-    return { 
-      level: 'Moderate Impact', 
-      description: 'Average cosmic influence on performance' 
-    };
-  } else {
-    return { 
-      level: 'Below Average', 
-      description: 'Challenging cosmic conditions' 
-    };
+    const playerName = player.full_name;
+    const position = player.primary_position || player.position || 'player';
+    
+    let forecast = `${playerName}'s astrological profile shows `;
+    
+    // Add sun sign influence
+    if (astroData.sun?.sign) {
+      forecast += `a ${astroData.sun.sign} Sun, which ${getSunSignDescription(astroData.sun.sign)}. `;
+    }
+    
+    // Add moon phase influence
+    if (astroData.moon?.phase_name) {
+      forecast += `The current ${astroData.moon.phase_name} ${getMoonPhaseDescription(astroData.moon.phase_name)}. `;
+    }
+    
+    // Add element influence
+    if (astroData.elements?.dominant) {
+      forecast += `With dominant ${astroData.elements.dominant} energy, ${playerName} ${getElementDescription(astroData.elements.dominant)}. `;
+    }
+    
+    // Add aspect influence if available
+    if (astroData.aspects && astroData.aspects.length > 0) {
+      const significantAspect = astroData.aspects[0];
+      forecast += `The ${significantAspect.p1} ${significantAspect.aspect} ${significantAspect.p2} aspect suggests ${getAspectDescription(significantAspect.aspect)}. `;
+    }
+    
+    // Add retrograde mention if applicable
+    if (astroData.planets?.mercury?.retrograde) {
+      forecast += `With Mercury in retrograde, ${playerName} should focus on clear communication and avoiding mistakes in critical moments. `;
+    }
+    
+    return forecast;
   }
-}
 
-// Helper to get top 4 influences
-function getTopInfluences(factors: Record<string, number>): [string, number][] {
-  return Object.entries(factors)
-    .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-    .slice(0, 4);
-}
-
-// Helper to get impact details for each factor
-function getFactorImpact(factor: string, value: number) {
-  const positive = value > 0;
-  const absValue = Math.abs(value);
-  let description = '';
-  
-  // Customize descriptions based on factor type
-  switch(factor) {
-    case 'moon_phase':
-      description = positive ? 'Ideal lunar phase for performance' : 'Challenging lunar conditions';
-      break;
-    case 'moon_sign':
-      description = positive ? 'Favorable moon sign alignment' : 'Moon sign may affect consistency';
-      break;
-    case 'mercury_retrograde':
-      description = positive ? 'Clear communication' : 'Potential for miscommunication';
-      break;
-    case 'sun_mars_aspect':
-      description = positive ? 'Enhanced energy and drive' : 'May need extra motivation';
-      break;
-    default:
-      description = positive ? 'Positive influence' : 'Challenging influence';
+  function getAspectDescription(aspect: string): string {
+    const descriptions: Record<string, string> = {
+      'Conjunction': 'intense focus and energy concentration',
+      'Opposition': 'balance between competing priorities',
+      'Trine': 'natural flow and harmonious teamwork',
+      'Square': 'overcoming challenges through determination',
+      'Sextile': 'opportunities for strategic advantage'
+    };
+    return descriptions[aspect] || 'notable cosmic influence';
   }
-  
-  return {
-    positive,
-    value: `${positive ? '+' : ''}${(value * 100).toFixed(0)}%`,
-    description
+
+  // Format stat for display with appropriate units
+  const formatStat = (value: number | undefined, type: string): string => {
+    if (value === undefined) return 'N/A';
+    
+    if (type.includes('percentage')) {
+      return `${(value * 100).toFixed(1)}%`;
+    }
+    
+    if (type === 'era') {
+      return value.toFixed(2);
+    }
+    
+    return value.toFixed(1);
   };
-}
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
+        <div className="container mx-auto">
+          <div className="flex items-center mb-8">
+            <Skeleton className="h-16 w-16 rounded-full mr-4" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          
+          <div className="mb-12">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} className="h-32 w-full rounded-lg" />
+              ))}
+            </div>
+          </div>
+          
+          <div className="mb-12">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
+        <div className="container mx-auto">
+          <div className="max-w-2xl mx-auto">
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+              <Button 
+                onClick={handleRetry}
+                variant="outline"
+                className="mt-4 w-fit"
+              >
+                Retry
+              </Button>
+            </Alert>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const playerColors = getPlayerColorStyles(player, team);
+
+  return (
+    <div 
+      className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8"
+      style={{ background: playerColors.gradientBg }}
+    >
+      <div className="container mx-auto">
+        {/* Navigation */}
+        <Button 
+          variant="ghost"
+          size="sm"
+          className="mb-6 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+          onClick={() => navigate(`/team/${teamId}`)}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back to Team
+        </Button>
+        
+        {/* Player Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row items-center md:items-start mb-12 p-6 bg-white rounded-lg shadow-sm"
+          style={{ borderLeft: `4px solid ${playerColors.primary}` }}
+        >
+          <img 
+            src={player?.headshot_url || '/placeholder-player.png'} 
+            alt={player?.full_name || 'Player'}
+            className="w-32 h-32 mb-4 md:mb-0 md:mr-6 object-cover rounded-lg"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder-player.png';
+            }}
+          />
+          
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl font-bold">{player?.full_name}</h1>
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start my-3">
+              {player?.primary_position && (
+                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
+                  {player.primary_position || player.position}
+                </Badge>
+              )}
+              {player?.jersey_number && (
+                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
+                  #{player.jersey_number || player.primary_number}
+                </Badge>
+              )}
+              {team?.name && (
+                <Badge 
+                  className="text-white hover:opacity-90"
+                  style={{ backgroundColor: playerColors.primary }}
+                >
+                  {team.name}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="text-slate-600 mt-2 space-y-1">
+              {player?.birth_date && (
+                <p className="flex items-center justify-center md:justify-start">
+                  <Calendar className="h-4 w-4 mr-2 opacity-70" />
+                  Born: {format(new Date(player.birth_date), 'MMMM d, yyyy')}
+                  {playerBirthDate && (
+                    <Badge className="ml-2 text-xs bg-slate-100 text-slate-700">
+                      {getZodiacSign(playerBirthDate)}
+                    </Badge>
+                  )}
+                </p>
+              )}
+              {(player?.height || player?.weight) && (
+                <p className="flex items-center justify-center md:justify-start">
+                  <Activity className="h-4 w-4 mr-2 opacity-70" />
+                  {player.height && `${player.height}`}{player.height && player.weight ? ' • ' : ''}
+                  {player.weight && `${player.weight} lbs`}
+                </p>
+              )}
+              {player?.college && (
+                <p className="flex items-center justify-center md:justify-start">
+                  <Award className="h-4 w-4 mr-2 opacity-70" />
+                  {player.college}
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Player Stats */}
+        {playerStats && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
+              <BarChart2 className="mr-2 h-6 w-6" style={{ color: playerColors.primary }} />
+              Statistics
+            </h2>
+            
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+              {playerStats.points_per_game !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Points Per Game</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.points_per_game, 'points')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.rebounds_per_game !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Rebounds Per Game</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.rebounds_per_game, 'rebounds')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.assists_per_game !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Assists Per Game</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.assists_per_game, 'assists')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.field_goal_percentage !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">FG Percentage</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.field_goal_percentage, 'percentage')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.batting_average !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Batting Average</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.batting_average, 'average')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.home_runs !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Home Runs</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.home_runs, 'count')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.touchdowns !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Touchdowns</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.touchdowns, 'count')}</div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {playerStats.passing_yards !== undefined && (
+                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-sm text-slate-500 mb-2">Passing Yards</div>
+                    <div className="text-3xl font-bold">{formatStat(playerStats.passing_yards, 'yards')}</div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Cosmic Influence */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <Star className="mr-2 h-6 w-6" style={{ color: playerColors.primary }} />
+            Cosmic Influence
+          </h2>
+          
+          <Card className="bg-white/80 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-2">Astrological Forecast</h3>
+                <p className="text-slate-600">{forecast || 'Analyzing cosmic influences...'}</p>
+              </div>
+              
+              <Separator className="my-6" />
+              
+              <h3 className="text-xl font-bold mb-4">Key Influences</h3>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                {astroInfluences.map((influence, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-lg bg-slate-50 border border-slate-100"
+                    style={{ borderLeft: `3px solid ${playerColors.primary}` }}
+                  >
+                    <div className="flex items-center mb-2">
+                      {influence.icon || <Star className="h-5 w-5 mr-2 text-amber-500" />}
+                      <h4 className="font-semibold">{influence.name}</h4>
+                    </div>
+                    <p className="text-sm text-slate-600">{influence.description}</p>
+                    <div className="mt-2 w-full bg-slate-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full" 
+                        style={{ 
+                          width: `${influence.impact * 100}%`, 
+                          backgroundColor: playerColors.primary
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                {astroInfluences.length === 0 && loadingAstro && (
+                  <div className="col-span-2 text-center py-6">
+                    <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-slate-500">Analyzing cosmic influences...</p>
+                  </div>
+                )}
+                
+                {astroInfluences.length === 0 && !loadingAstro && astroError && (
+                  <div className="col-span-2 text-center py-6">
+                    <p className="text-red-500">{astroError instanceof Error ? astroError.message : 'Error loading astrological data'}</p>
+                  </div>
+                )}
+                
+                {astroInfluences.length === 0 && !loadingAstro && !astroError && (
+                  <div className="col-span-2 text-center py-6">
+                    <p className="text-slate-500">No astrological data available for this player.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
 
 export default PlayerPage;
