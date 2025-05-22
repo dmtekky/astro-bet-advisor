@@ -2,8 +2,9 @@
 // Uses astronomy-engine instead of swisseph for Vercel compatibility
 // Optimized for production deployment
 
-import * as Astronomy from 'astronomy-engine';
-import { createClient } from '@supabase/supabase-js';
+// Use CommonJS require instead of ES imports for Vercel compatibility
+const Astronomy = require('astronomy-engine');
+const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration for caching
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -57,104 +58,6 @@ const AYANAMSA_VALUE = 24.1;
 // Cache for ephemeris data to minimize recalculation
 const ephemerisCache = {};
 const CACHE_TTL = 3600000; // 1 hour in milliseconds
-
-/**
- * Main handler function for API requests
- */
-export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
-  
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  try {
-    // Parse date from query string or use current date
-    const dateStr = req.query.date || new Date().toISOString().split('T')[0];
-    const useSidereal = req.query.sidereal === 'true';
-    
-    // Parse the date string
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
-    }
-    
-    // Check cache
-    const cacheKey = `${dateStr}-${useSidereal ? 'sidereal' : 'tropical'}`;
-    if (ephemerisCache[cacheKey] && (Date.now() - ephemerisCache[cacheKey].timestamp < CACHE_TTL)) {
-      console.log(`[INFO] Cache hit for ${cacheKey}`);
-      return res.status(200).json(ephemerisCache[cacheKey].data);
-    }
-    
-    // If using Supabase cache
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('astro_cache')
-          .select('*')
-          .eq('date', dateStr)
-          .eq('sidereal', useSidereal)
-          .single();
-        
-        if (data && !error) {
-          console.log(`[INFO] Supabase cache hit for ${cacheKey}`);
-          // Update memory cache as well
-          ephemerisCache[cacheKey] = {
-            data: JSON.parse(data.data),
-            timestamp: Date.now()
-          };
-          return res.status(200).json(JSON.parse(data.data));
-        }
-      } catch (err) {
-        console.error(`[ERROR] Supabase cache error:`, err);
-        // Continue if cache fails
-      }
-    }
-    
-    // Calculate astrological data
-    console.log(`[INFO] Calculating astro data for ${dateStr} (sidereal: ${useSidereal})`);
-    const astroData = await calculateAstroData(date, useSidereal);
-    
-    // Store in memory cache
-    ephemerisCache[cacheKey] = {
-      data: astroData,
-      timestamp: Date.now()
-    };
-    
-    // Store in Supabase cache if available
-    if (supabase) {
-      try {
-        const { error } = await supabase
-          .from('astro_cache')
-          .upsert({
-            date: dateStr,
-            sidereal: useSidereal,
-            data: JSON.stringify(astroData),
-            created_at: new Date().toISOString()
-          });
-        
-        if (error) {
-          console.error(`[ERROR] Supabase cache update error:`, error);
-        }
-      } catch (err) {
-        console.error(`[ERROR] Supabase cache update exception:`, err);
-        // Continue even if cache update fails
-      }
-    }
-    
-    // Return the calculated data
-    return res.status(200).json(astroData);
-  } catch (error) {
-    console.error(`[ERROR] API handler exception:`, error);
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
-  }
-}
 
 /**
  * Calculate complete astrological data for a given date
@@ -679,4 +582,102 @@ const generatePlanetInterpretation = (planetName, data) => {
     retrograde,
     interpretation
   };
+};
+
+/**
+ * Main handler function for API requests
+ */
+module.exports = async (req, res) => {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
+  
+  // Handle preflight request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  try {
+    // Parse date from query string or use current date
+    const dateStr = req.query.date || new Date().toISOString().split('T')[0];
+    const useSidereal = req.query.sidereal === 'true';
+    
+    // Parse the date string
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
+    }
+    
+    // Check cache
+    const cacheKey = `${dateStr}-${useSidereal ? 'sidereal' : 'tropical'}`;
+    if (ephemerisCache[cacheKey] && (Date.now() - ephemerisCache[cacheKey].timestamp < CACHE_TTL)) {
+      console.log(`[INFO] Cache hit for ${cacheKey}`);
+      return res.status(200).json(ephemerisCache[cacheKey].data);
+    }
+    
+    // If using Supabase cache
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('astro_cache')
+          .select('*')
+          .eq('date', dateStr)
+          .eq('sidereal', useSidereal)
+          .single();
+        
+        if (data && !error) {
+          console.log(`[INFO] Supabase cache hit for ${cacheKey}`);
+          // Update memory cache as well
+          ephemerisCache[cacheKey] = {
+            data: JSON.parse(data.data),
+            timestamp: Date.now()
+          };
+          return res.status(200).json(JSON.parse(data.data));
+        }
+      } catch (err) {
+        console.error(`[ERROR] Supabase cache error:`, err);
+        // Continue if cache fails
+      }
+    }
+    
+    // Calculate astrological data
+    console.log(`[INFO] Calculating astro data for ${dateStr} (sidereal: ${useSidereal})`);
+    const astroData = await calculateAstroData(date, useSidereal);
+    
+    // Store in memory cache
+    ephemerisCache[cacheKey] = {
+      data: astroData,
+      timestamp: Date.now()
+    };
+    
+    // Store in Supabase cache if available
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('astro_cache')
+          .upsert({
+            date: dateStr,
+            sidereal: useSidereal,
+            data: JSON.stringify(astroData),
+            created_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error(`[ERROR] Supabase cache update error:`, error);
+        }
+      } catch (err) {
+        console.error(`[ERROR] Supabase cache update exception:`, err);
+        // Continue even if cache update fails
+      }
+    }
+    
+    // Return the calculated data
+    return res.status(200).json(astroData);
+  } catch (error) {
+    console.error(`[ERROR] API handler exception:`, error);
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
 };
