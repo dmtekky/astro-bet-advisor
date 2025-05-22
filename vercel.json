@@ -10,20 +10,24 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/unified-astro.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "dist",
+        "installCommand": "npm install --ignore-scripts && npm run build"
       }
     }
   ],
-  
   "rewrites": [
     { "source": "/api/astro", "destination": "/api/astro.js" },
     { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
+    { "source": "/api/unified-astro", "destination": "/api/unified-astro.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-
   "headers": [
     {
       "source": "/api/(.*)",
