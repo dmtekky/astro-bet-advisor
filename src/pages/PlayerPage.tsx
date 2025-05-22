@@ -191,7 +191,8 @@ const PlayerPage: React.FC = () => {
         }
 
         // Fetch player stats
-        const sportsTables = ['baseball_stats', 'basketball_stats', 'football_stats', 'hockey_stats'];
+        // 'hockey_stats' commented out to avoid 404 errors if the table does not exist
+const sportsTables = ['baseball_stats', 'basketball_stats', 'football_stats'];
         
         for (const table of sportsTables) {
           const { data: statsData, error: statsError } = await supabase
@@ -509,18 +510,38 @@ const PlayerPage: React.FC = () => {
                   Born: {format(new Date(player.birth_date), 'MMMM d, yyyy')}
                   {playerBirthDate && (
                     <Badge className="ml-2 text-xs bg-slate-100 text-slate-700">
-                      {getZodiacSign(playerBirthDate)}
+                      {getZodiacSign(new Date(playerBirthDate))}
                     </Badge>
                   )}
                 </p>
               )}
-              {(player?.height || player?.weight) && (
-                <p className="flex items-center justify-center md:justify-start">
-                  <Activity className="h-4 w-4 mr-2 opacity-70" />
-                  {player.height && `${player.height}`}{player.height && player.weight ? ' • ' : ''}
-                  {player.weight && `${player.weight} lbs`}
-                </p>
-              )}
+              {/* Enhanced Bio Grid */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+  {player?.height && (
+    <p className="flex items-center">
+      <Activity className="h-4 w-4 mr-2 opacity-70" />
+      Height: {player.height}
+    </p>
+  )}
+  {player?.weight && (
+    <p className="flex items-center">
+      <Activity className="h-4 w-4 mr-2 opacity-70" />
+      Weight: {player.weight} lbs
+    </p>
+  )}
+  {player?.nationality && (
+    <p className="flex items-center">
+      <Award className="h-4 w-4 mr-2 opacity-70" />
+      Nationality: {player.nationality}
+    </p>
+  )}
+  {player?.handedness && (
+    <p className="flex items-center">
+      <BarChart2 className="h-4 w-4 mr-2 opacity-70" />
+      Handedness: {player.handedness}
+    </p>
+  )}
+</div>
               {player?.college && (
                 <p className="flex items-center justify-center md:justify-start">
                   <Award className="h-4 w-4 mr-2 opacity-70" />
@@ -581,23 +602,134 @@ const PlayerPage: React.FC = () => {
                 </Card>
               )}
               
-              {playerStats.batting_average !== undefined && (
-                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="text-sm text-slate-500 mb-2">Batting Average</div>
-                    <div className="text-3xl font-bold">{formatStat(playerStats.batting_average, 'average')}</div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {playerStats.home_runs !== undefined && (
-                <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="text-sm text-slate-500 mb-2">Home Runs</div>
-                    <div className="text-3xl font-bold">{formatStat(playerStats.home_runs, 'count')}</div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Baseball Stats Only, with Tooltips */}
+{playerStats.batting_average !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">Batting Average</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.batting_average, 'average')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Hits divided by at-bats. MLB average ~.250</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.on_base_percentage !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">OBP</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.on_base_percentage, 'percentage')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>On-base percentage: times reached base per plate appearance</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.slugging_percentage !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">SLG</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.slugging_percentage, 'percentage')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Slugging: total bases per at-bat</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.ops !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">OPS</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.ops, 'number')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>On-base plus slugging</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.home_runs !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">Home Runs</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.home_runs, 'count')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Total home runs</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.rbis !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">RBIs</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.rbis, 'count')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Runs batted in</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.stolen_bases !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">Stolen Bases</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.stolen_bases, 'count')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Total stolen bases</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{playerStats.war !== undefined && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-sm text-slate-500 mb-2">WAR</div>
+            <div className="text-3xl font-bold">{formatStat(playerStats.war, 'number')}</div>
+          </CardContent>
+        </Card>
+      </TooltipTrigger>
+      <TooltipContent>Wins Above Replacement</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
               
               {playerStats.touchdowns !== undefined && (
                 <Card className="bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow">
@@ -620,7 +752,7 @@ const PlayerPage: React.FC = () => {
           </motion.div>
         )}
         
-        {/* Cosmic Influence */}
+        {/* Enhanced Cosmic Influence */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -634,61 +766,230 @@ const PlayerPage: React.FC = () => {
           
           <Card className="bg-white/80 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-6">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-2">Astrological Forecast</h3>
-                <p className="text-slate-600">{forecast || 'Analyzing cosmic influences...'}</p>
-              </div>
-              
-              <Separator className="my-6" />
-              
-              <h3 className="text-xl font-bold mb-4">Key Influences</h3>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                {astroInfluences.map((influence, index) => (
-                  <div
-                    key={index}
-                    className="p-4 rounded-lg bg-slate-50 border border-slate-100"
-                    style={{ borderLeft: `3px solid ${playerColors.primary}` }}
-                  >
-                    <div className="flex items-center mb-2">
-                      {influence.icon || <Star className="h-5 w-5 mr-2 text-amber-500" />}
-                      <h4 className="font-semibold">{influence.name}</h4>
+              {/* Astrological Overview */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4">Astrological Profile</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Zodiac Wheel */}
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <h4 className="font-semibold mb-3 text-center">Zodiac Wheel</h4>
+                    <div className="relative w-48 h-48 mx-auto">
+                      {/* Zodiac Circle */}
+                      <div className="absolute inset-0 rounded-full border-8 border-slate-200"></div>
+                      {/* Signs */}
+                      {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg, i) => {
+                        const sign = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 
+                                      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][i];
+                        // Determine highlight for Sun, Moon, Ascendant
+                        let highlight = '';
+                        if (astroData?.sun?.sign === sign) highlight = 'sun';
+                        else if (astroData?.moon?.sign === sign) highlight = 'moon';
+                        else if (astroData?.ascendant === sign) highlight = 'asc';
+                        return (
+                          <div 
+                            key={sign}
+                            className={`absolute w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold border-2 ${
+                              highlight === 'sun' ? 'bg-yellow-400 text-black border-yellow-600 shadow-lg' :
+                              highlight === 'moon' ? 'bg-indigo-400 text-white border-indigo-600 shadow-lg' :
+                              highlight === 'asc' ? 'bg-pink-500 text-white border-pink-700 shadow-lg' :
+                              'bg-slate-100 text-slate-700 border-slate-300'
+                            }`}
+                            style={{
+                              left: '50%',
+                              top: '50%',
+                              transform: `rotate(${deg}deg) translate(84px) rotate(-${deg}deg)`,
+                              transformOrigin: '0 0',
+                            }}
+                          >
+                            {sign[0]}
+                          </div>
+                        );
+                      })}
+                      {/* No player initial in center */}
                     </div>
-                    <p className="text-sm text-slate-600">{influence.description}</p>
-                    <div className="mt-2 w-full bg-slate-200 rounded-full h-1.5">
+                    {/* Legend for planet highlights */}
+                    <div className="mt-4 flex justify-center gap-6 text-xs text-slate-600">
+                      <div className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-yellow-400 border-2 border-yellow-600"></span>Sun</div>
+                      <div className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-indigo-400 border-2 border-indigo-600"></span>Moon</div>
+                    </div>
+                  </div>
+
+                  {/* Elemental Balance */}
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <h4 className="font-semibold mb-3 text-center">Elemental Balance</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { name: 'Fire', value: astroData?.elements?.fire || 0, color: '#ef4444' },
+                        { name: 'Earth', value: astroData?.elements?.earth || 0, color: '#22c55e' },
+                        { name: 'Air', value: astroData?.elements?.air || 0, color: '#3b82f6' },
+                        { name: 'Water', value: astroData?.elements?.water || 0, color: '#8b5cf6' },
+                      ].map((el) => (
+                        <div key={el.name} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span>{el.name}</span>
+                            <span className="font-medium">{Math.round((el.value / 3) * 100)}%</span>
+                          </div>
+                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full" 
+                              style={{ 
+                                width: `${(el.value / 3) * 100}%`,
+                                backgroundColor: el.color
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Current Transits */}
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <h4 className="font-semibold mb-3 text-center">Current Transits</h4>
+                    <div className="space-y-3">
+                      {[
+                        { name: 'Mercury', aspect: 'Trine Mars', effect: 'Enhanced communication' },
+                        { name: 'Venus', aspect: 'Square Jupiter', effect: 'Luck in relationships' },
+                        { name: 'Mars', aspect: 'Conjunct Sun', effect: 'High energy' },
+                      ].map((transit) => (
+                        <div key={transit.name} className="flex items-start">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 mr-2">
+                            {transit.name[0]}
+                          </div>
+                          <div>
+                            <div className="font-medium">{transit.name} {transit.aspect}</div>
+                            <div className="text-xs text-slate-500">{transit.effect}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Astrological Forecast */}
+              <div className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-100">
+                <h3 className="text-xl font-bold mb-3 text-slate-800">Astrological Forecast</h3>
+                <p className="text-slate-700 leading-relaxed">
+                  {forecast || 'Analyzing cosmic influences...'}
+                </p>
+              </div>
+
+              {/* Planetary Influences */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4">Planetary Influences</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {astroInfluences.length > 0 ? (
+                    astroInfluences.map((influence, index) => (
+                      <div
+                        key={index}
+                        className="p-4 rounded-lg bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+                        style={{ borderLeft: `3px solid ${playerColors.primary}` }}
+                      >
+                        <div className="flex items-center mb-2">
+                          {influence.icon || <Star className="h-5 w-5 mr-2 text-amber-500" />}
+                          <h4 className="font-semibold text-slate-800">{influence.name}</h4>
+                        </div>
+                        <p className="text-sm text-slate-600 mb-3">{influence.description}</p>
+                        <div className="flex items-center">
+                          <div className="w-full bg-slate-100 rounded-full h-2 mr-2">
+                            <div 
+                              className="h-2 rounded-full" 
+                              style={{ 
+                                width: `${influence.impact * 100}%`,
+                                background: `linear-gradient(90deg, ${playerColors.primary}, ${playerColors.secondary || '#6366f1'})`
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-slate-500">
+                            {Math.round(influence.impact * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : loadingAstro ? (
+                    <div className="col-span-3 text-center py-6">
+                      <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      <p className="mt-4 text-slate-500">Analyzing cosmic influences...</p>
+                    </div>
+                  ) : astroError ? (
+                    <div className="col-span-3 text-center py-6">
+                      <p className="text-red-500">
+                        {astroError instanceof Error ? astroError.message : 'Error loading astrological data'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="col-span-3 text-center py-6">
+                      <p className="text-slate-500">No astrological data available for this player.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Aspect Grid */}
+              {astroData?.aspects?.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-4">Key Aspects</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {astroData.aspects.slice(0, 6).map((aspect, i) => (
                       <div 
-                        className="h-1.5 rounded-full" 
-                        style={{ 
-                          width: `${influence.impact * 100}%`, 
-                          backgroundColor: playerColors.primary
-                        }}
-                      />
-                    </div>
+                        key={i}
+                        className="p-3 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium">{aspect.p1} {aspect.aspect} {aspect.p2}</span>
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                            {aspect.orb.toFixed(1)}°
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600">
+                          {getAspectDescription(aspect.aspect)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                
-                {astroInfluences.length === 0 && loadingAstro && (
-                  <div className="col-span-2 text-center py-6">
-                    <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="mt-4 text-slate-500">Analyzing cosmic influences...</p>
-                  </div>
-                )}
-                
-                {astroInfluences.length === 0 && !loadingAstro && astroError && (
-                  <div className="col-span-2 text-center py-6">
-                    <p className="text-red-500">{astroError instanceof Error ? astroError.message : 'Error loading astrological data'}</p>
-                  </div>
-                )}
-                
-                {astroInfluences.length === 0 && !loadingAstro && !astroError && (
-                  <div className="col-span-2 text-center py-6">
-                    <p className="text-slate-500">No astrological data available for this player.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
+      {/* Recent Games Section (Placeholder) */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="mb-12"
+      >
+        <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <BarChart2 className="mr-2 h-6 w-6" style={{ color: playerColors.primary }} />
+          Recent Games
+        </h2>
+        <Card className="bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            {/* Placeholder for recent games chart/list */}
+            <div className="text-slate-500">Recent games data coming soon...</div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Career Highlights Section (Placeholder) */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="mb-12"
+      >
+        <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <Award className="mr-2 h-6 w-6" style={{ color: playerColors.primary }} />
+          Career Highlights
+        </h2>
+        <Card className="bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            {/* Placeholder for career highlights */}
+            <div className="text-slate-500">Career highlights coming soon...</div>
+          </CardContent>
+        </Card>
+      </motion.div>
       </div>
     </div>
   );
