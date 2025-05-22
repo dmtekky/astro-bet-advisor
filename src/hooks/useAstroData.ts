@@ -11,21 +11,24 @@ import type { AspectType, CelestialBody, ZodiacSign } from '../types/astrology';
 // Base URL for API requests
 const getApiBaseUrl = () => {
   // Check if we're in a browser environment
-  if (typeof window === 'undefined') return '/api/astro-enhanced';
+  if (typeof window === 'undefined') return '/api/unified-astro';
   
   // In production (Vercel), use relative URL
   if (window.location.hostname !== 'localhost') {
-    return '/api/astro-enhanced';
+    return '/api/unified-astro';
   }
   
   // In development, use the local API server
-  return 'http://localhost:3001/api/astro-enhanced';
+  return 'http://localhost:3001/api/unified-astro';
 };
 
 const API_BASE_URL = getApiBaseUrl();
 
 // API Response type (matches the structure returned by the API)
 interface ApiResponse {
+  // Sidereal specific properties
+  sidereal?: boolean;
+  ayanamsa?: number;
   date: string;
   query_time: string;
   observer?: {
@@ -40,6 +43,8 @@ interface ApiResponse {
     degree: number;
     minute?: number;
     retrograde?: boolean;
+    speed?: number;
+    house?: number;
   };
   moon: {
     sign: string;
@@ -50,6 +55,8 @@ interface ApiResponse {
     minute?: number;
     retrograde?: boolean;
     illumination?: number;
+    speed?: number;
+    house?: number;
   };
   mercury?: {
     sign: string;
@@ -58,8 +65,9 @@ interface ApiResponse {
     minute?: number;
     retrograde?: boolean;
     speed?: number;
+    house?: number;
   };
-  positions: Array<{
+  positions?: Array<{
     planet: string;
     longitude: number;
     sign: string;
@@ -69,7 +77,7 @@ interface ApiResponse {
     speed?: number;
     house?: number;
   }>;
-  aspects: Array<{
+  aspects?: Array<{
     name: string;
     aspect: string;
     orb: number;
@@ -159,7 +167,9 @@ interface ApiResponse {
 }
 
 // Our transformed data model
-export interface AstroData {
+interface AstroData {
+  sidereal?: boolean;
+  ayanamsa?: number;
   date: string;
   queryTime: string;
   observer?: {
@@ -220,7 +230,7 @@ export interface AstroData {
       ic: number;
     };
   };
-  aspects: Record<string, string>; // For backward compatibility
+  aspects: Record<string, string>;
   aspectsList: Array<{
     from: string;
     to: string;
@@ -255,10 +265,18 @@ export interface AstroData {
     fixed: number;
     mutable: number;
   };
+  // For debugging - positions array from the API
+  positions?: Array<{
+    planet: string;
+    longitude: number;
+    sign: string;
+    degree: number;
+    retrograde?: boolean;
+  }>;
 }
 
 // Return type for the hook
-export interface UseAstroDataReturn {
+interface UseAstroDataReturn {
   astroData: AstroData | null;
   loading: boolean;
   error: Error | null;
@@ -267,30 +285,30 @@ export interface UseAstroDataReturn {
 
 // Fetch function for SWR
 const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`API request failed with status ${res.status}`);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
   }
-  return res.json() as Promise<ApiResponse>;
+  return response.json();
 };
 
 // Get icon for zodiac sign (helper function)
 const getZodiacIcon = (sign: string): string => {
-  const icons: Record<string, string> = {
-    'Aries': '♈',
-    'Taurus': '♉',
-    'Gemini': '♊',
-    'Cancer': '♋',
-    'Leo': '♌',
-    'Virgo': '♍',
-    'Libra': '♎',
-    'Scorpio': '♏',
-    'Sagittarius': '♐',
-    'Capricorn': '♑',
-    'Aquarius': '♒',
-    'Pisces': '♓',
+  const signMap: Record<string, string> = {
+    aries: '♈',
+    taurus: '♉',
+    gemini: '♊',
+    cancer: '♋',
+    leo: '♌',
+    virgo: '♍',
+    libra: '♎',
+    scorpio: '♏',
+    sagittarius: '♐',
+    capricorn: '♑',
+    aquarius: '♒',
+    pisces: '♓'
   };
-  return icons[sign] || '✨';
+  return signMap[sign.toLowerCase()] || '?';
 };
 
 /**
@@ -298,31 +316,27 @@ const getZodiacIcon = (sign: string): string => {
  * @param dateParam - Date to get data for, defaults to current date
  * @returns Astrological data, loading state, and error
  */
-export function useAstroData(dateParam: Date | string = new Date()): UseAstroDataReturn {
-  // Format date parameter consistently
-  const dateStr = useMemo(() => {
-    if (dateParam instanceof Date) {
-      return dateParam.toISOString().split('T')[0];
-    } else if (typeof dateParam === 'string') {
-      const match = dateParam.match(/^\d{4}-\d{2}-\d{2}/);
-      return match ? match[0] : new Date().toISOString().split('T')[0];
-    }
-    return new Date().toISOString().split('T')[0];
-  }, [dateParam]);
+export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDataReturn => {
+  // Format date as YYYY-MM-DD
+  const dateStr = typeof dateParam === 'string' 
+    ? dateParam 
+    : dateParam.toISOString().split('T')[0];
 
   // Fetch data from API
   const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
-    `${API_BASE_URL}?date=${dateStr}`,
+    `${API_BASE_URL}?date=${dateStr}&sidereal=true`,
     fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       shouldRetryOnError: true,
-      dedupingInterval: 3600000, // 1 hour - planetary data doesn't change quickly
+      dedupingInterval: 3600000, // 1 hour
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // Only retry up to 3 times
         if (retryCount >= 3) return;
-        setTimeout(() => revalidate({ retryCount }), 1000);
-      },
+        // Retry after 5 seconds
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      }
     }
   );
 
@@ -332,13 +346,30 @@ export function useAstroData(dateParam: Date | string = new Date()): UseAstroDat
   }, [mutate]);
 
   // Console log for debugging
-  console.log('API Response:', { apiData, error, isLoading });
+  console.log('Sidereal API Response:', { 
+    apiData: {
+      sun: apiData?.sun,
+      moon: apiData?.moon,
+      sidereal: apiData?.sidereal,
+      ayanamsa: apiData?.ayanamsa,
+      date: apiData?.date,
+      planets: apiData?.planets,
+      positions: apiData?.positions?.filter((p: any) => p.planet.toLowerCase() === 'sun')
+    }, 
+    error, 
+    isLoading 
+  });
+  
+  // Log the full API URL being called
+  console.log('API URL:', `${API_BASE_URL}?date=${dateStr}&sidereal=true`);
 
   // Transform API data to our internal model
   const transformedData = useMemo((): AstroData | null => {
     if (!apiData) return null;
 
     try {
+      console.log('Raw API Data:', JSON.stringify(apiData, null, 2));
+      
       // Extract necessary data
       const { 
         sun, 
@@ -353,81 +384,133 @@ export function useAstroData(dateParam: Date | string = new Date()): UseAstroDat
         patterns,
         current_hour,
         next_event,
-        lunar_nodes
+        lunar_nodes,
+        sidereal,
+        ayanamsa,
+        planets
       } = apiData;
+
+      console.log('Sidereal mode:', sidereal, 'Ayanamsa:', ayanamsa);
+      console.log('Sun data:', sun);
+      console.log('Planets data:', planets);
 
       // Create planetary data
       const planetData: Record<string, CelestialBody> = {};
       
-      // Add all planets from positions
-      if (positions && Array.isArray(positions)) {
-        positions.forEach(p => {
-          if (p && typeof p === 'object') {
-            const planetKey = (p.planet || '').toLowerCase();
+      // IMPORTANT: First priority - use planets object from API
+      if (planets && typeof planets === 'object') {
+        console.log('Processing planets from API planets object');
+        Object.entries(planets).forEach(([key, value]) => {
+          if (value && typeof value === 'object') {
+            const planetKey = key.toLowerCase();
+            console.log(`Adding planet ${planetKey} from planets object:`, value);
             planetData[planetKey] = {
-              name: p.planet,
-              longitude: p.longitude || 0,
-              sign: (p.sign || 'Aries') as ZodiacSign,
-              degree: p.degree || 0,
-              retrograde: Boolean(p.retrograde),
-              speed: p.speed || 0,
-              house: p.house || (houses ? Math.floor((p.longitude || 0) / 30) % 12 + 1 : undefined)
+              name: value.name || key,
+              longitude: value.longitude || 0,
+              sign: (value.sign || 'Aries') as ZodiacSign,
+              degree: value.degree || 0,
+              retrograde: Boolean(value.retrograde),
+              speed: value.speed || 1,
+              house: value.house || (houses ? Math.floor((value.longitude || 0) / 30) % 12 + 1 : undefined)
             };
           }
         });
       }
+      
+      // Second priority - use positions array
+      if (positions && Array.isArray(positions)) {
+        console.log('Processing planets from positions array');
+        positions.forEach(p => {
+          if (p && typeof p === 'object') {
+            const planetKey = (p.planet || '').toLowerCase();
+            // Only add if not already added from planets object
+            if (!planetData[planetKey]) {
+              console.log(`Adding planet ${planetKey} from positions array:`, p);
+              planetData[planetKey] = {
+                name: p.planet,
+                longitude: p.longitude || 0,
+                sign: (p.sign || 'Aries') as ZodiacSign,
+                degree: p.degree || 0,
+                retrograde: Boolean(p.retrograde),
+                speed: p.speed || 0,
+                house: p.house || (houses ? Math.floor((p.longitude || 0) / 30) % 12 + 1 : undefined)
+              };
+            }
+          }
+        });
+      }
 
-
-      // Ensure we have sun and moon data
-      if (sun) {
+      // Third priority - use direct sun/moon objects if not already added
+      if (sun && !planetData.sun) {
+        console.log('Adding Sun from direct sun object:', sun);
         planetData.sun = {
           name: 'Sun',
           longitude: sun.longitude || 0,
           sign: (sun.sign || 'Aries') as ZodiacSign,
           degree: sun.degree || 0,
-          retrograde: false,
-          speed: 1,
-          house: houses ? Math.floor((sun.longitude || 0) / 30) % 12 + 1 : undefined
+          retrograde: Boolean(sun.retrograde),
+          speed: sun.speed || 0.9833, // Average speed of the Sun in degrees per day
+          house: sun.house || 1 // Default house
         };
+        
+        // If we have houses, calculate the house position
+        if (houses && houses.cusps?.length > 0) {
+          const sunLongitude = sun.longitude || 0;
+          // Find which house the Sun is in
+          for (let i = 0; i < 12; i++) {
+            const cusp1 = houses.cusps[i];
+            const cusp2 = houses.cusps[(i + 1) % 12];
+            
+            // Handle the 12th house (crosses 360/0 degrees)
+            if (i === 11 && cusp1 > cusp2) {
+              if (sunLongitude >= cusp1 || sunLongitude < cusp2) {
+                planetData.sun.house = i + 1;
+                break;
+              }
+            } else if (sunLongitude >= cusp1 && sunLongitude < cusp2) {
+              planetData.sun.house = i + 1;
+              break;
+            }
+          }
+        }
       }
+      
+      // Final check on Sun data
+      console.log('Final Sun data:', planetData.sun);
 
-
-      if (moon) {
-        // Create a moon object with all required properties
-        const moonData: CelestialBody = {
+      // Add moon data if not already added
+      if (moon && !planetData.moon) {
+        console.log('Adding Moon from direct moon object:', moon);
+        planetData.moon = {
           name: 'Moon',
           longitude: moon.longitude || 0,
           sign: (moon.sign || 'Cancer') as ZodiacSign,
           degree: moon.degree || 0,
           retrograde: Boolean(moon.retrograde),
-          speed: 13,
-          house: houses ? Math.floor((moon.longitude || 0) / 30) % 12 + 1 : undefined,
-          phase: moon.phase_name || 'New Moon',
-          phaseValue: typeof moon.phase === 'number' ? moon.phase : 0,
-          phase_name: moon.phase_name || 'New Moon',
-          illumination: moon.illumination || 0
+          speed: moon.speed || 13, // Moon moves about 13 degrees per day
+          house: moon.house || (houses ? Math.floor((moon.longitude || 0) / 30) % 12 + 1 : undefined)
         };
-        planetData.moon = moonData;
       }
 
-      if (mercury) {
+      // Add mercury data if not already added
+      if (mercury && !planetData.mercury) {
+        console.log('Adding Mercury from direct mercury object:', mercury);
         planetData.mercury = {
           name: 'Mercury',
           longitude: mercury.longitude || 0,
           sign: (mercury.sign || 'Gemini') as ZodiacSign,
           degree: mercury.degree || 0,
           retrograde: Boolean(mercury.retrograde),
-          speed: typeof mercury.speed === 'number' ? mercury.speed : 1,
-          house: houses ? Math.floor((mercury.longitude || 0) / 30) % 12 + 1 : undefined
+          speed: mercury.speed || 1,
+          house: mercury.house || (houses ? Math.floor((mercury.longitude || 0) / 30) % 12 + 1 : undefined)
         };
       }
-
 
       // Create aspects map (for backward compatibility)
       const aspectsMap: Record<string, string> = {};
       
       // Process aspects into more usable structure
-      const processedAspects = (Array.isArray(aspects) ? aspects : []).map(a => {
+      const aspectsList = (Array.isArray(aspects) ? aspects : []).map(a => {
         if (!a || typeof a !== 'object') return null;
         
         const parts = (a.name || '').split(' ');
@@ -456,116 +539,63 @@ export function useAstroData(dateParam: Date | string = new Date()): UseAstroDat
         influence: { description: string; strength: number };
       }>;
 
-      // Transform elements to simple form
-      const simpleElements = {
-        fire: elements?.fire?.score || 0.25,
-        earth: elements?.earth?.score || 0.25,
-        air: elements?.air?.score || 0.25,
-        water: elements?.water?.score || 0.25
-      };
-
-      // Transform modalities to simple form
-      const simpleModalities = {
-        cardinal: modalities?.cardinal?.score || 0.33,
-        fixed: modalities?.fixed?.score || 0.33,
-        mutable: modalities?.mutable?.score || 0.34
-      };
-
-      // Return transformed data with current_hour and next_event
+      // Final debug check of the planetary data
+      console.log('Final planetary data:', {
+        sun: planetData.sun,
+        moon: planetData.moon,
+        mercury: planetData.mercury
+      });
+      
+      // Return the transformed data
       return {
-        date: apiData.date || new Date().toISOString(),
-        queryTime: apiData.query_time || new Date().toISOString(),
-        observer: apiData.observer || {
-          latitude: 40.7128,
-          longitude: -74.0060,
-          timezone: 'America/New_York'
-        },
-        sun: planetData.sun || {
-          name: 'Sun',
-          sign: 'Aries',
-          longitude: 0,
-          degree: 0,
-          retrograde: false,
-          speed: 1
-        },
+        sidereal,
+        ayanamsa,
+        date: apiData.date,
+        queryTime: apiData.query_time,
+        observer: apiData.observer,
+        sun: planetData.sun,
         moon: {
-          name: 'Moon',
-          sign: 'Cancer' as ZodiacSign,
-          longitude: 0,
-          degree: 0,
-          retrograde: false,
-          speed: 13,
-          house: 4,
-          phase: 'New Moon',
-          phaseValue: 0,
-          phase_name: 'New Moon',
-          illumination: 0
-        } as CelestialBody,
-        mercury: planetData.mercury || {
-          name: 'Mercury',
-          sign: 'Gemini',
-          longitude: 0,
-          degree: 0,
-          retrograde: false,
-          speed: 1,
-          house: 3
+          ...planetData.moon,
+          phase: moon?.phase,
+          phaseValue: moon?.phase,
+          phase_name: moon?.phase_name,
+          illumination: moon?.illumination
         },
-        current_hour: current_hour || {
-          ruler: 'Sun',
-          influence: 'A time of new beginnings',
-          sign: 'Aries',
-          is_positive: true
-        },
-        lunar_nodes: lunar_nodes || {
-          north_node: {
-            sign: 'Taurus',
-            degree: 15,
-            house: 2
-          },
-          south_node: {
-            sign: 'Scorpio',
-            degree: 15,
-            house: 8
-          },
-          next_transit: {
-            type: 'lunar_node',
-            sign: 'Aries',
-            date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            description: 'North Node enters Aries'
-          },
-          karmic_lessons: [
-            'Learning to value stability and tangible results',
-            'Releasing obsessive or controlling behaviors'
-          ]
-        },
-        next_event: next_event || {
-          name: 'New Moon in Aries',
-          date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          description: 'A time for new beginnings and fresh starts',
-          intensity: 'high' as const,
-          type: 'new_moon',
-          sign: 'Aries'
-        },
+        mercury: planetData.mercury,
         planets: planetData,
         houses: houses ? {
           system: houses.system || 'placidus',
           cusps: Array.isArray(houses.cusps) ? houses.cusps : Array(12).fill(0).map((_, i) => i * 30),
-          angles: {
-            asc: houses.angles?.asc || 0,
-            mc: houses.angles?.mc || 0,
-            dsc: houses.angles?.dsc || 180,
-            ic: houses.angles?.ic || 90
+          angles: houses.angles || {
+            asc: 0,
+            mc: 90,
+            dsc: 180,
+            ic: 270
           }
         } : undefined,
         aspects: aspectsMap,
-        aspectsList: processedAspects,
-        patterns: Array.isArray(patterns) ? patterns : [],
-        dignities: typeof dignities === 'object' ? dignities : {},
-        elements: simpleElements,
-        modalities: simpleModalities
+        aspectsList: aspectsList,
+        patterns: apiData.patterns,
+        dignities: apiData.dignities,
+        elements: {
+          fire: elements?.fire?.score || 0,
+          earth: elements?.earth?.score || 0,
+          air: elements?.air?.score || 0,
+          water: elements?.water?.score || 0
+        },
+        modalities: {
+          cardinal: modalities?.cardinal?.score || 0,
+          fixed: modalities?.fixed?.score || 0,
+          mutable: modalities?.mutable?.score || 0
+        },
+        current_hour: apiData.current_hour,
+        next_event: apiData.next_event,
+        lunar_nodes: apiData.lunar_nodes,
+        // Add positions array for debugging
+        positions: apiData.positions
       };
     } catch (error) {
-      console.error('Error transforming API data:', error);
+      console.error('Error transforming astrological data:', error);
       return null;
     }
   }, [apiData]);
@@ -573,7 +603,9 @@ export function useAstroData(dateParam: Date | string = new Date()): UseAstroDat
   return {
     astroData: transformedData,
     loading: isLoading,
-    error,
+    error: error as Error,
     refreshData
   };
-}
+};
+
+export default useAstroData;
