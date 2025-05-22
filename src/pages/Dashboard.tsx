@@ -678,15 +678,26 @@ const Dashboard: React.FC = () => {
                                   )}
                                 </div>
                               ))}
-                              <p className="mt-3 text-sm text-slate-700 leading-relaxed">
-                                {dailyRecommendation || 'Loading astrological insights...'}
-                              </p>
                             </CardContent>
                           </Card>
                         )}
+                        
+                        {/* Daily Recommendation */}
+                        <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-slate-50 border-slate-200/70">
+                          <CardContent className="pt-6">
+                            <h4 className="font-medium text-slate-900 flex items-center">
+                              <TrendingUp className="h-4 w-4 mr-2 text-indigo-600" />
+                              Today's Analysis
+                            </h4>
+                            <p className="mt-3 text-sm text-slate-700 leading-relaxed">
+                              {dailyRecommendation || 'Loading astrological insights...'}
+                            </p>
+                          </CardContent>
+                        </Card>
                       </div>
                     </div>
-                  </CardContent>
+                  </div>
+                </CardContent>
                   <CardFooter className="pt-0 pb-4 justify-center">
                     <p className="text-xs text-slate-500">
                       Data updated at {selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · 
