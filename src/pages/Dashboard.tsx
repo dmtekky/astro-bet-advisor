@@ -499,13 +499,19 @@ const Dashboard: React.FC = () => {
             style={{
               background: `linear-gradient(
                 90deg,
-                rgba(239, 68, 68, 0.7) 0%,
-                rgba(16, 185, 129, 0.7) 25%,
-                rgba(56, 189, 248, 0.7) 50%,
-                rgba(99, 102, 241, 0.7) 75%,
-                rgba(99, 102, 241, 0.7) 100%
+                rgba(239, 68, 68, 0.6) 0%,
+                rgba(239, 68, 68, 0.4) 10%,
+                rgba(255, 165, 0, 0.4) 20%,
+                rgba(16, 185, 129, 0.6) 30%,
+                rgba(16, 185, 129, 0.4) 40%,
+                rgba(56, 189, 248, 0.6) 50%,
+                rgba(56, 189, 248, 0.4) 60%,
+                rgba(99, 102, 241, 0.6) 70%,
+                rgba(99, 102, 241, 0.4) 80%,
+                rgba(99, 102, 241, 0.3) 90%,
+                rgba(99, 102, 241, 0.2) 100%
               )`,
-              filter: 'saturate(1.2) contrast(1.1)',
+              filter: 'saturate(1.3) contrast(1.15) brightness(1.05)',
               mixBlendMode: 'multiply'
             }}
           />
