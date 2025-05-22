@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --no-optional",
+  "framework": "vite",
+  "nodeVersion": "18.x",
   "builds": [
     {
       "src": "api/astro.js",
@@ -17,8 +21,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
-        "installCommand": "npm run build"
+        "distDir": "dist"
       }
     }
   ],
