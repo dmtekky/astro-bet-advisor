@@ -485,7 +485,6 @@ const Dashboard: React.FC = () => {
                           <Activity className="h-4 w-4 mr-2 text-indigo-500" />
                           Celestial Influences
                         </h3>
-                        
                         <div className="space-y-4">
                           {astroInfluences.length === 0 ? (
                             <div className="text-center py-4 text-slate-500">
@@ -517,6 +516,119 @@ const Dashboard: React.FC = () => {
                             ))
                           )}
                         </div>
+
+                        {/* Moon & Void Status Panel */}
+                        {(astroData?.moonPhase || astroData?.moon_phase || astroData?.voidMoon || astroData?.void_of_course_moon) && (
+                          <Card className="bg-white/70 border-slate-200/70">
+                            <CardHeader>
+                              <h4 className="font-medium text-slate-900 flex items-center">
+                                <Moon className="h-4 w-4 mr-2 text-indigo-400" />
+                                Moon & Void Status
+                              </h4>
+                            </CardHeader>
+                            <CardContent className="pt-2 space-y-2">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <div className="text-xs text-slate-500">Phase</div>
+                                  <div className="font-semibold text-slate-800">
+                                    {astroData?.moonPhase?.phase || astroData?.moon_phase?.phase_name || '—'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-slate-500">Illumination</div>
+                                  <div className="font-semibold text-slate-800">
+                                    {astroData?.moonPhase?.illumination !== undefined
+                                      ? `${Math.round(astroData.moonPhase.illumination * 100)}%`
+                                      : astroData?.moon_phase?.illumination !== undefined
+                                        ? `${Math.round(astroData.moon_phase.illumination * 100)}%`
+                                        : '—'}
+                                  </div>
+                                </div>
+                                {astroData?.voidMoon?.isVoid !== undefined || astroData?.void_of_course_moon?.is_void !== undefined ? (
+                                  <div>
+                                    <div className="text-xs text-slate-500">Void of Course</div>
+                                    <div className="font-semibold text-slate-800">
+                                      {(astroData?.voidMoon?.isVoid ?? astroData?.void_of_course_moon?.is_void) ? 'Yes' : 'No'}
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
+                              {astroData?.voidMoon?.isVoid || astroData?.void_of_course_moon?.is_void ? (
+                                <div className="text-xs text-amber-700 mt-1">
+                                  Void from {astroData?.voidMoon?.start || astroData?.void_of_course_moon?.start || '—'} to {astroData?.voidMoon?.end || astroData?.void_of_course_moon?.end || '—'}
+                                </div>
+                              ) : null}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Modalities Distribution Panel (optional) */}
+                        {astroData?.modalities && (
+                          <Card className="bg-white/70 border-slate-200/70">
+                            <CardHeader>
+                              <h4 className="font-medium text-slate-900 flex items-center">
+                                <BarChart2 className="h-4 w-4 mr-2 text-indigo-400" />
+                                Modalities Distribution
+                              </h4>
+                            </CardHeader>
+                            <CardContent className="pt-2 space-y-2">
+                              {['cardinal', 'fixed', 'mutable'].map((mod) => (
+                                <div key={mod} className="flex justify-between items-center">
+                                  <span className="capitalize text-sm text-slate-700">{mod}</span>
+                                  <span className="text-xs text-slate-500">
+                                    {astroData.modalities[mod]?.score ?? 0}%
+                                  </span>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Planetary Interpretations Panel */}
+                        {astroData?.interpretations?.planets && Object.keys(astroData.interpretations.planets).length > 0 && (
+                          <Card className="bg-white/70 border-slate-200/70">
+                            <CardHeader>
+                              <h4 className="font-medium text-slate-900 flex items-center">
+                                <Sun className="h-4 w-4 mr-2 text-amber-400" />
+                                Planetary Interpretations
+                              </h4>
+                            </CardHeader>
+                            <CardContent className="pt-2 space-y-2">
+                              {Object.entries(astroData.interpretations.planets).map(([planet, interp]) => (
+                                <div key={planet} className="mb-2">
+                                  <span className="font-semibold text-indigo-700 mr-2 capitalize">{planet}:</span>
+                                  <span className="text-sm text-slate-700">{interp}</span>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Aspects & Influences Panel */}
+                        {astroData?.aspects && astroData.aspects.length > 0 && (
+                          <Card className="bg-white/70 border-slate-200/70">
+                            <CardHeader>
+                              <h4 className="font-medium text-slate-900 flex items-center">
+                                <Star className="h-4 w-4 mr-2 text-indigo-600" />
+                                Aspects & Influences
+                              </h4>
+                            </CardHeader>
+                            <CardContent className="pt-2 space-y-2">
+                              {astroData.aspects.map((aspect, idx) => (
+                                <div key={idx} className="mb-2">
+                                  <span className="font-semibold text-indigo-700 mr-2">
+                                    {aspect.planets.join(' ')} {aspect.type} ({aspect.angle}°)
+                                  </span>
+                                  <span className="text-sm text-slate-700">{aspect.influence}</span>
+                                  {aspect.interpretation && (
+                                    <div className="text-xs text-slate-500 mt-1">{aspect.interpretation}</div>
+                                  )}
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        )}
+
                       </div>
                       
                       {/* Elements Distribution Panel */}
