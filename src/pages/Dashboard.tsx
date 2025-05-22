@@ -478,60 +478,107 @@ const Dashboard: React.FC = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6">
-  <div className="space-y-8">
+  <div className="space-y-6">
     {/* Elements Distribution - now at the top as a full-width bar */}
-    <div className="space-y-4">
-      <h3 className="text-md font-medium text-slate-900 flex items-center">
-        <BarChart2 className="h-4 w-4 mr-2 text-indigo-500" />
-        Elements Distribution
-      </h3>
-      <div className="w-full bg-slate-100 rounded-lg shadow-sm border border-slate-200 flex h-7 overflow-hidden">
-        {/* Fire */}
-        <div
-          className="h-full bg-red-500 transition-all duration-500"
-          style={{ width: `${elementsDistribution.fire}%`, borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }}
-        />
-        {/* Earth */}
-        <div
-          className="h-full bg-green-500 transition-all duration-500"
-          style={{ width: `${elementsDistribution.earth}%` }}
-        />
-        {/* Air (lighter blue) */}
-        <div
-          className="h-full bg-sky-300 transition-all duration-500"
-          style={{ width: `${elementsDistribution.air}%` }}
-        />
-        {/* Water */}
-        <div
-          className="h-full bg-indigo-500 transition-all duration-500"
-          style={{ width: `${elementsDistribution.water}%`, borderTopRightRadius: 8, borderBottomRightRadius: 8 }}
-        />
+    <div className="space-y-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-slate-200/70 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h3 className="text-md font-medium text-slate-800 flex items-center">
+          <BarChart2 className="h-4 w-4 mr-2 text-indigo-500" />
+          Elements Distribution
+        </h3>
+        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+          Today's Energy
+        </span>
       </div>
+      
+      <div className="relative">
+        <div className="w-full bg-slate-100/80 rounded-full shadow-inner border border-slate-200/50 flex h-4 overflow-hidden">
+          {/* Fire */}
+          <div
+            className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-700"
+            style={{ width: `${elementsDistribution.fire}%` }}
+          />
+          {/* Earth */}
+          <div
+            className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
+            style={{ width: `${elementsDistribution.earth}%` }}
+          />
+          {/* Air (lighter blue) */}
+          <div
+            className="h-full bg-gradient-to-r from-sky-300 to-sky-200 transition-all duration-700"
+            style={{ width: `${elementsDistribution.air}%` }}
+          />
+          {/* Water */}
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-700"
+            style={{ width: `${elementsDistribution.water}%` }}
+          />
+        </div>
+        
+        {/* Floating percentage indicators */}
+        <div className="absolute -top-2 right-0 flex space-x-1">
+          {elementsDistribution.fire > 0 && (
+            <span className="text-[10px] font-medium bg-red-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
+              {elementsDistribution.fire}%
+            </span>
+          )}
+          {elementsDistribution.earth > 0 && (
+            <span className="text-[10px] font-medium bg-green-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
+              {elementsDistribution.earth}%
+            </span>
+          )}
+          {elementsDistribution.air > 0 && (
+            <span className="text-[10px] font-medium bg-sky-300 text-slate-800 px-1.5 py-0.5 rounded-full shadow-sm">
+              {elementsDistribution.air}%
+            </span>
+          )}
+          {elementsDistribution.water > 0 && (
+            <span className="text-[10px] font-medium bg-indigo-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
+              {elementsDistribution.water}%
+            </span>
+          )}
+        </div>
+      </div>
+      
       {/* Legend below the bar */}
-      <div className="flex flex-wrap justify-between gap-y-2 mt-2">
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
-          <span className="text-sm font-medium text-slate-700">Fire</span>
-          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.fire}%</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
-          <span className="text-sm font-medium text-slate-700">Earth</span>
-          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.earth}%</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-sky-300 mr-1"></span>
-          <span className="text-sm font-medium text-slate-700">Air</span>
-          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.air}%</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-indigo-500 mr-1"></span>
-          <span className="text-sm font-medium text-slate-700">Water</span>
-          <span className="ml-1 text-xs text-slate-500">{elementsDistribution.water}%</span>
-        </div>
+      <div className="grid grid-cols-4 gap-2 mt-3">
+        {[
+          { name: 'Fire', color: 'bg-red-500', value: elementsDistribution.fire },
+          { name: 'Earth', color: 'bg-green-500', value: elementsDistribution.earth },
+          { name: 'Air', color: 'bg-sky-300', value: elementsDistribution.air },
+          { name: 'Water', color: 'bg-indigo-500', value: elementsDistribution.water }
+        ].map((item) => (
+          <div key={item.name} className="flex flex-col items-center">
+            <div className="flex items-center">
+              <span className={`w-2.5 h-2.5 rounded-full ${item.color} mr-1.5`}></span>
+              <span className="text-xs font-medium text-slate-600">{item.name}</span>
+            </div>
+            <span className="text-xs font-semibold text-slate-800">{item.value}%</span>
+          </div>
+        ))}
       </div>
     </div>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    {/* Today's Analysis Card */}
+    <Card className="border-slate-200/70 bg-gradient-to-br from-indigo-50/80 to-slate-50/80 backdrop-blur-sm overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-600"></div>
+      <CardContent className="pt-6 pb-5">
+        <div className="flex items-start">
+          <div className="p-2 bg-indigo-100 rounded-lg mr-3 mt-0.5">
+            <TrendingUp className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-slate-800 flex items-center">
+              Today's Astrological Analysis
+            </h4>
+            <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+              {dailyRecommendation || 'Analyzing today\'s celestial patterns...'}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
       {/* Celestial Influences Panel */}
                       <div className="space-y-6">
                         <h3 className="text-md font-medium text-slate-900 flex items-center">
