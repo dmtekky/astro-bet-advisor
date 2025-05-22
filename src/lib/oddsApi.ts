@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database.types';
+import type { Database } from '../types/database.types';
 
 // Create a supabase client with the updated database types
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';

@@ -1,52 +1,26 @@
-import * as React from 'react';
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../components/ui/use-toast';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { ArrowLeft, BarChart2, Activity, Award, Star } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
-import { useAstroData } from '../hooks/useAstroData';
-import { getZodiacSign } from '../lib/astroCalc';
-import { Separator } from '../components/ui/separator';
-import { Skeleton } from '../components/ui/skeleton';
+import { useAstroData } from '@/hooks/useAstroData';
+import { getZodiacSign } from '@/lib/astroCalc';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { FallbackProps } from 'react-error-boundary';
-
-// Helper function to format birth date string
-const formatBirthDate = (dateStr: string | null | undefined): string | null => {
-  if (!dateStr) return null;
-  try {
-    // If it's already in YYYY-MM-DD format, return as is
-    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return dateStr;
-    }
-    // Otherwise, try to parse it
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-  } catch {
-    return null;
-  }
-};
 
 // Types
-import type { Player, Team } from '../types';
-import type { AISResult, Ephemeris } from '../lib/formula';
-
-// Cache for player data to prevent unnecessary API calls
-const playerCache = new Map<string, { player: any; team: any; timestamp: number }>();
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache expiry
+import type { Player, Team } from '@/types';
+import type { AISResult, Ephemeris } from '@/lib/formula';
 
 interface PlayerWithStats extends Player {
-  id: string;
-  name: string;
   first_name: string;
   last_name: string;
   full_name: string;
-  position: string;
-  birth_date?: string;
   stats: {
     points_per_game: number;
     rebounds_per_game: number;
@@ -472,26 +446,104 @@ const PlayerPage: React.FC = () => {
   const [AIS, setAIS] = useState<any>(null);
   const [playerStats, setPlayerStats] = useState<any>(null);
   const [ephemeris, setEphemeris] = useState<Ephemeris | null>(null);
-
-  // Format and use the player's birthdate for astrological data
-  const playerBirthDate = formatBirthDate(player?.birth_date);
-  const { astroData, loading: loadingAstro, error: apiError } = useAstroData(playerBirthDate || new Date());
-
-  // Add debug logging to verify the birthdate being used
-  useEffect(() => {
-    console.log('Player birth date:', {
-      raw: player?.birth_date,
-      formatted: playerBirthDate,
-      usingCurrentDate: !playerBirthDate
-    });
-  }, [player?.birth_date, playerBirthDate]);
-
+  
+  // Use the enhanced API for astrological data with cache key
+  const cacheKey = playerId || 'default';
+  const { astroData, loading: loadingAstro, error: apiError } = useAstroData(undefined, cacheKey);
+  
   // Navigate back function with useCallback to prevent recreation
   const handleNavigateBack = useCallback(() => {
     navigate(`/team/${teamId}`);
   }, [navigate, teamId]);
 
-  // Error handler for API errors
+  // 1. OPTIMIZATION: Data fetching with caching and error handling
+  useEffect(() => {
+    const fetchPlayerData = async () => {
+      try {
+        setLoading(true);
+        
+        // Check cache first for player data
+        if (playerId && cache.has(`player-${playerId}`)) {
+          const cachedData = cache.get(`player-${playerId}`);
+          setPlayer(cachedData.player);
+          setTeam(cachedData.team);
+          setLoading(false);
+          return;
+        }
+        
+        if (!playerId) {
+          throw new Error('Player ID is required');
+        }
+        
+        // Fetch player data
+        const { data: playerData, error: playerError } = await supabase
+          .from('players')
+          .select('*, teams(*)')
+          .eq('id', playerId)
+          .single();
+          
+        if (playerError) throw playerError;
+        if (!playerData) throw new Error('Player not found');
+        
+        // Fetch player stats
+        const { data: statsData, error: statsError } = await supabase
+          .from('player_stats')
+          .select('*')
+          .eq('player_id', playerId)
+          .single();
+          
+        if (statsError && statsError.code !== 'PGRST116') throw statsError;
+        
+        // Process player data
+        const playerWithStats: PlayerWithStats = {
+          ...playerData,
+          stats: statsData || {},
+          points_per_game: statsData?.points_per_game || 0,
+          rebounds_per_game: statsData?.rebounds_per_game || 0,
+          assists_per_game: statsData?.assists_per_game || 0,
+          steals_per_game: statsData?.steals_per_game || 0,
+          blocks_per_game: statsData?.blocks_per_game || 0,
+          field_goal_percentage: statsData?.field_goal_percentage || 0,
+          three_point_percentage: statsData?.three_point_percentage || 0,
+          free_throw_percentage: statsData?.free_throw_percentage || 0,
+          games_played: statsData?.games_played || 0,
+          minutes_per_game: statsData?.minutes_per_game || 0,
+        };
+        
+        // Store in cache
+        cache.set(`player-${playerId}`, {
+          player: playerWithStats,
+          team: playerData.teams
+        });
+        
+        setPlayer(playerWithStats);
+        setTeam(playerData.teams);
+      } catch (err) {
+        console.error('Error fetching player data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load player data');
+        toast({
+          title: 'Error',
+          description: err instanceof Error ? err.message : 'Failed to load player data',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPlayerData();
+    
+    // Cache cleanup
+    return () => {
+      // Only cleanup cache if it's grown too large (keep last 50 players)
+      if (cache.size > 50) {
+        const keysToDelete = Array.from(cache.keys()).slice(0, cache.size - 50);
+        keysToDelete.forEach(key => cache.delete(key));
+      }
+    };
+  }, [playerId, toast]);
+  
+  // 2. OPTIMIZATION: Update error state if API error occurs - memoized with useCallback
   const handleApiError = useCallback((error: Error | null) => {
     if (error) {
       console.error('API Error:', error);
@@ -502,131 +554,19 @@ const PlayerPage: React.FC = () => {
       });
     }
   }, [toast]);
-
-  // Handle API errors
+  
   useEffect(() => {
     handleApiError(apiError);
   }, [apiError, handleApiError]);
-
-  // Fetch player data with caching
-  const fetchPlayerData = useCallback(async () => {
-    if (!playerId) {
-      setError('Player ID is required');
-      setLoading(false);
-      return;
-    }
-
-    // Check cache first
-    const cachedData = playerCache.get(playerId);
-    const now = Date.now();
-
-    if (cachedData && (now - cachedData.timestamp) < CACHE_EXPIRY) {
-      setPlayer(cachedData.player);
-      setTeam(cachedData.team);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Fetch player data
-      const { data: playerData, error: playerError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .single();
-
-      // Optionally fetch team data if playerData.team_id exists
-      let teamData = null;
-      if (playerData && playerData.team_id) {
-        const { data: team, error: teamError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('id', playerData.team_id)
-          .single();
-        if (!teamError) teamData = team;
-      }
-
-      // Debug logging
-      console.log('[PlayerPage] playerId:', playerId);
-      console.log('[PlayerPage] playerError:', playerError);
-      console.log('[PlayerPage] playerData:', playerData);
-
-      if (playerError) throw playerError;
-      if (!playerData) throw new Error('Player not found');
-
-      // Fetch player stats
-      const { data: statsData, error: statsError } = await supabase
-        .from('baseball_stats')
-        .select('*')
-        .eq('player_id', playerId);
-
-      if (statsError && statsError.code !== 'PGRST116') throw statsError;
-
-      // Process player data
-      const playerWithStats: PlayerWithStats = {
-        ...playerData,
-        stats: statsData || {},
-        points_per_game: statsData?.points_per_game || 0,
-        rebounds_per_game: statsData?.rebounds_per_game || 0,
-        assists_per_game: statsData?.assists_per_game || 0,
-        steals_per_game: statsData?.steals_per_game || 0,
-        blocks_per_game: statsData?.blocks_per_game || 0,
-        field_goal_percentage: statsData?.field_goal_percentage || 0,
-        three_point_percentage: statsData?.three_point_percentage || 0,
-        free_throw_percentage: statsData?.free_throw_percentage || 0,
-        games_played: statsData?.games_played || 0,
-        minutes_per_game: statsData?.minutes_per_game || 0,
-      };
-
-      // Update cache
-      playerCache.set(playerId, {
-        player: playerWithStats,
-        team: playerData.teams,
-        timestamp: now,
-      });
-
-      setPlayer(playerWithStats);
-      setTeam(playerData.teams);
-      // baseball_stats now returns an array; pick the most recent or process as needed
-setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
-    } catch (err) {
-      console.error('Error fetching player data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load player data');
-      toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to load player data',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, toast]);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchPlayerData();
-
-    // Cleanup cache on unmount
-    return () => {
-      // Optional: Clean up old cache entries
-      const now = Date.now();
-      // Convert to array first to avoid Map iteration issues
-      Array.from(playerCache.entries()).forEach(([key, value]) => {
-        if (now - value.timestamp > CACHE_EXPIRY) {
-          playerCache.delete(key);
-        }
-      });
-    };
-  }, [fetchPlayerData]);
-
+  
+  // 3. OPTIMIZATION: Memoize expensive calculations
+  
   // Format the astrological data for display - memoized
   const astroImpacts = useMemo(() => {
     if (!astroData) return [];
     return formatApiAstroInfluences(astroData);
   }, [astroData]);
-
+  
   // Generate forecast when astro data or player changes - memoized
   const astroForecast = useMemo(() => {
     if (!astroData || !player) return '';
@@ -637,10 +577,12 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
   const { topImpact, sortedImpacts } = useMemo(() => {
     return {
       topImpact: getTopImpact(astroImpacts),
-      sortedImpacts: getSortedImpacts(astroImpacts),
+      sortedImpacts: getSortedImpacts(astroImpacts)
     };
   }, [astroImpacts]);
 
+  // 4. OPTIMIZATION: Memoize JSX sections to prevent unnecessary re-renders
+  
   // Memoize loading state
   const loadingView = useMemo(() => (
     <div className="flex items-center justify-center min-h-screen">
@@ -651,7 +593,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
     </div>
   ), []);
 
-  // Memoize error view
+  // Memoize error state
   const errorView = useMemo(() => (
     <div className="max-w-7xl mx-auto py-8 px-4">
       <div className="text-center py-12">
@@ -672,9 +614,9 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
       </div>
     ) : (
       <div className="bg-gradient-to-r from-indigo-900 to-black text-white p-4 rounded-lg mb-6 flex items-center gap-2">
-        <span
-          className="font-semibold text-lg"
-          data-tooltip-id="top-impact-tip"
+        <span 
+          className="font-semibold text-lg" 
+          data-tooltip-id="top-impact-tip" 
           data-tooltip-content={topImpact.description}
         >
           {topImpact.impact > 0 ? "+" : ""}{topImpact.impact}%
@@ -684,44 +626,37 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
     )
   ), [apiError, topImpact]);
 
-  // Memoize the zodiac sign calculation
-  const zodiacSign = useMemo(() => player?.birth_date ? getZodiacSign(new Date(player.birth_date)) : 'Unknown', [player?.birth_date]);
-  const zodiacIcon = useMemo(() => getZodiacSignIcon(zodiacSign), [zodiacSign]);
-
   // Early returns with memoized components
   if (loading || loadingAstro) return loadingView;
   if (!player) return errorView;
 
-
+  // Memoize the zodiac sign calculation
+  const zodiacSign = player.birth_date ? getZodiacSign(new Date(player.birth_date)) : 'Unknown';
+  const zodiacIcon = getZodiacSignIcon(zodiacSign);
+  
   return (
     <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }) => (
+      fallback={
         <div className="max-w-7xl mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl font-bold text-red-500">Something went wrong</h2>
           <p className="mt-2 mb-4">There was an error displaying this player's information</p>
-          <p className="text-sm text-gray-400 mb-4">{error?.message}</p>
-          <div className="space-x-2">
-            <Button onClick={resetErrorBoundary} variant="outline">
-              Try Again
-            </Button>
-            <Button onClick={handleNavigateBack} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
-          </div>
+          <Button onClick={handleNavigateBack} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+          </Button>
         </div>
-      )}
+      }
     >
       <div className="max-w-7xl mx-auto py-8 px-4">
         {insightSection}
-
-        <Button
-          variant="ghost"
+        
+        <Button 
+          variant="ghost" 
           onClick={handleNavigateBack}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Team
         </Button>
-
+        
         {/* Player Header */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 mb-8 shadow-lg">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -737,7 +672,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                       {player.position || 'N/A'}
                     </Badge>
                     {team && (
-                      <Link
+                      <Link 
                         to={`/team/${team.id}`}
                         className="text-yellow-400 hover:underline flex items-center"
                       >
@@ -746,7 +681,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                     )}
                   </div>
                 </div>
-
+                
                 {/* AIS Score */}
                 {AIS && (
                   <div className="bg-gray-800 bg-opacity-60 p-4 rounded-lg border border-gray-700">
@@ -760,7 +695,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
             </div>
           </div>
         </div>
-
+        
         {/* Stats and Astrology */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Player Stats */}
@@ -813,7 +748,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                 ) : astroImpacts.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-amber-600">No astrological influences found</p>
-                    <p className="text-sm text-muted-foreground">Debug info: {JSON.stringify({ hasAIS: !!AIS, influencesLength: astroImpacts.length })}</p>
+                    <p className="text-sm text-muted-foreground">Debug info: {JSON.stringify({hasAIS: !!AIS, influencesLength: astroImpacts.length})}</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -834,7 +769,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                         </div>
                       </div>
                     )}
-
+                    
                     {/* All influences */}
                     <div>
                       <h3 className="text-lg font-semibold mb-3">All Cosmic Factors</h3>
@@ -858,7 +793,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                         )}
                       </div>
                     </div>
-
+                    
                     {/* Forecast */}
                     <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
                       <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
@@ -872,14 +807,14 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
             </Card>
           </div>
         </div>
-
+        
         {/* Detailed Astrological Insights */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 rounded-lg border border-gray-700 mb-8 shadow-lg">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-400" />
             Detailed Astrological Insights
           </h3>
-
+          
           {loadingAstro ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -907,7 +842,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                   </div>
                 </div>
               )}
-
+              
               {/* Cosmic Factors */}
               <div className="mb-4">
                 <h4 className="text-lg font-medium mb-2 text-yellow-400">Cosmic Factors</h4>
@@ -916,8 +851,8 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                     sortedImpacts.map((impact) => (
                       <div key={impact.name} className="flex items-center justify-between p-2 rounded-md bg-gray-800/40 hover:bg-gray-800/60">
                         <span className="text-sm">{impact.name}</span>
-                        <Badge
-                          variant="outline"
+                        <Badge 
+                          variant="outline" 
                           className={`${impact.impact > 0 ? 'border-green-800 text-green-400' : 'border-red-800 text-red-400'}`}
                         >
                           {impact.impact > 0 ? "+" : ""}{impact.impact}%
@@ -929,7 +864,7 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
                   )}
                 </div>
               </div>
-
+              
               {/* Forecast */}
               <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
                 <h4 className="text-lg font-medium mb-2 text-yellow-400 flex items-center gap-2">
@@ -944,6 +879,23 @@ setPlayerStats(Array.isArray(statsData) ? statsData[0] ?? null : statsData);
     </ErrorBoundary>
   );
 };
+
+// Helper component for stat cards
+function StatCard({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center p-4 rounded-lg bg-gray-900">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-sm text-gray-400">{label}</span>
+        {typeof icon === 'string' ? (
+          <span>{icon}</span>
+        ) : (
+          icon
+        )}
+      </div>
+      <div className="text-xl font-bold">{value}</div>
+    </div>
+  );
+}
 
 // Helper function to generate a simple astrological forecast based on available data
 function generateSimpleForecast(player: PlayerWithStats, influences: any): string {
@@ -1003,17 +955,6 @@ function generateSimpleForecast(player: PlayerWithStats, influences: any): strin
   
   return forecast.trim();
 }
-
-// StatCard component for displaying player statistics
-const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) => (
-  <div className="flex flex-col items-center p-4 rounded-lg bg-gray-900">
-    <div className="flex items-center gap-2 mb-2">
-      {icon && <span className="text-yellow-400">{icon}</span>}
-      <span className="text-sm text-gray-400">{label}</span>
-    </div>
-    <div className="text-xl font-bold">{value}</div>
-  </div>
-);
 
 // Helper to format factor names for display
 function formatFactorName(factor: string): string {

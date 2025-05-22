@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Sport } from '@/types/sports';
+import type { Sport } from '../types/sports';
 
 export const fetchGames = async (sport: Sport['key']) => {
   try {
