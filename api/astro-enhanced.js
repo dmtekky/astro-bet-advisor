@@ -1,17 +1,294 @@
 // Enhanced Vercel serverless function for astro API
 import * as Astronomy from 'astronomy-engine';
-import { 
-  calculatePlanetaryPosition,
-  calculateAspect,
-  calculateHouses, 
-  calculateMoonPhase,
-  getMoonPhaseName,
-  calculateElementalBalance,
-  calculateModalBalance,
-  detectAspectPatterns,
-  calculateDignity,
-  longitudeToSign
-} from '../src/lib/astroUtils';
+
+// Constants for astrological calculations
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 
+  'Leo', 'Virgo', 'Libra', 'Scorpio', 
+  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+];
+
+const ELEMENTS = {
+  fire: ['Aries', 'Leo', 'Sagittarius'],
+  earth: ['Taurus', 'Virgo', 'Capricorn'],
+  air: ['Gemini', 'Libra', 'Aquarius'],
+  water: ['Cancer', 'Scorpio', 'Pisces']
+};
+
+const MODALITIES = {
+  cardinal: ['Aries', 'Cancer', 'Libra', 'Capricorn'],
+  fixed: ['Taurus', 'Leo', 'Scorpio', 'Aquarius'],
+  mutable: ['Gemini', 'Virgo', 'Sagittarius', 'Pisces']
+};
+
+// Utility Functions
+function longitudeToSign(longitude) {
+  const signIndex = Math.floor(longitude / 30) % 12;
+  return ZODIAC_SIGNS[signIndex];
+}
+
+function calculatePlanetaryPosition(planetName, date, observer) {
+  try {
+    // Map planet names to Astronomy.Body constants
+    const planetMap = {
+      'Sun': Astronomy.Body.Sun,
+      'Moon': Astronomy.Body.Moon,
+      'Mercury': Astronomy.Body.Mercury,
+      'Venus': Astronomy.Body.Venus,
+      'Mars': Astronomy.Body.Mars,
+      'Jupiter': Astronomy.Body.Jupiter,
+      'Saturn': Astronomy.Body.Saturn,
+      'Uranus': Astronomy.Body.Uranus,
+      'Neptune': Astronomy.Body.Neptune,
+      'Pluto': Astronomy.Body.Pluto
+    };
+    
+    const body = planetMap[planetName];
+    const astronomyObserver = new Astronomy.Observer(
+      observer.latitude, 
+      observer.longitude, 
+      observer.altitude || 0
+    );
+    
+    // Calculate equatorial coordinates
+    const equator = Astronomy.Equator(body, date, astronomyObserver, true, true);
+    
+    // Convert to ecliptic coordinates
+    const ecliptic = Astronomy.Ecliptic(equator);
+    const lon = ecliptic.elon;
+    
+    // Calculate sign and degree
+    const sign = longitudeToSign(lon);
+    const degree = Math.floor(lon % 30);
+    const minute = Math.floor((lon % 1) * 60);
+    
+    return {
+      name: planetName,
+      longitude: lon,
+      sign: sign,
+      degree: degree,
+      minute: minute,
+      retrograde: false // Will be calculated later for applicable planets
+    };
+  } catch (error) {
+    console.error(`Error calculating position for ${planetName}:`, error);
+    return {
+      name: planetName,
+      longitude: 0,
+      sign: 'Unknown',
+      degree: 0,
+      minute: 0,
+      retrograde: false
+    };
+  }
+}
+
+function calculateMoonPhase(date) {
+  try {
+    // MoonPhase returns phase angle in degrees (0-360)
+    // Convert to 0-1 range
+    return Astronomy.MoonPhase(date) / 360;
+  } catch (error) {
+    console.error('Error calculating moon phase:', error);
+    return 0;
+  }
+}
+
+function getMoonPhaseName(phase) {
+  if (phase < 0.03 || phase > 0.97) return 'New Moon';
+  if (phase < 0.22) return 'Waxing Crescent';
+  if (phase < 0.28) return 'First Quarter';
+  if (phase < 0.47) return 'Waxing Gibbous';
+  if (phase < 0.53) return 'Full Moon';
+  if (phase < 0.72) return 'Waning Gibbous';
+  if (phase < 0.78) return 'Last Quarter';
+  return 'Waning Crescent';
+}
+
+function calculateAspect(planet1, planet2) {
+  // Skip if it's the same planet
+  if (planet1.name === planet2.name) return null;
+  
+  // Calculate angle between planets
+  let angle = Math.abs(planet1.longitude - planet2.longitude);
+  if (angle > 180) angle = 360 - angle;
+  
+  // Define aspects with their orbs and influences
+  const aspects = [
+    { type: 'Conjunction', angle: 0, orb: 8, influence: { type: 'Harmonious', description: 'Blending of energies' } },
+    { type: 'Opposition', angle: 180, orb: 8, influence: { type: 'Challenging', description: 'Tension and awareness' } },
+    { type: 'Trine', angle: 120, orb: 8, influence: { type: 'Harmonious', description: 'Ease and flow' } },
+    { type: 'Square', angle: 90, orb: 7, influence: { type: 'Challenging', description: 'Friction and growth' } },
+    { type: 'Sextile', angle: 60, orb: 6, influence: { type: 'Harmonious', description: 'Opportunity' } }
+  ];
+  
+  // Check if any aspect is within orb
+  for (const aspect of aspects) {
+    const orb = Math.abs(angle - aspect.angle);
+    if (orb <= aspect.orb) {
+      return {
+        from: planet1.name,
+        to: planet2.name,
+        type: aspect.type,
+        orb: orb.toFixed(2),
+        exact: orb < 1,
+        influence: aspect.influence
+      };
+    }
+  }
+  
+  return null;
+}
+
+function calculateHouses(date, latitude, longitude) {
+  try {
+    // Simple placeholder implementation - in a real app would use a proper house system
+    const houses = [];
+    for (let i = 1; i <= 12; i++) {
+      houses.push({
+        number: i,
+        cusp: (i - 1) * 30,
+        sign: ZODIAC_SIGNS[(i - 1) % 12]
+      });
+    }
+    return houses;
+  } catch (error) {
+    console.error('Error calculating houses:', error);
+    return [];
+  }
+}
+
+function calculateElementalBalance(planets) {
+  const elements = {
+    fire: 0,
+    earth: 0,
+    air: 0,
+    water: 0
+  };
+  
+  Object.values(planets).forEach(planet => {
+    // Determine which element the sign belongs to
+    Object.entries(ELEMENTS).forEach(([element, signs]) => {
+      if (signs.includes(planet.sign)) {
+        elements[element]++;
+      }
+    });
+  });
+  
+  // Calculate percentages
+  const total = Object.values(elements).reduce((sum, count) => sum + count, 0);
+  const percentages = {};
+  
+  Object.entries(elements).forEach(([element, count]) => {
+    percentages[element] = {
+      count,
+      percentage: Math.round((count / total) * 100)
+    };
+  });
+  
+  return percentages;
+}
+
+function calculateModalBalance(planets) {
+  const modalities = {
+    cardinal: 0,
+    fixed: 0,
+    mutable: 0
+  };
+  
+  Object.values(planets).forEach(planet => {
+    // Determine which modality the sign belongs to
+    Object.entries(MODALITIES).forEach(([modality, signs]) => {
+      if (signs.includes(planet.sign)) {
+        modalities[modality]++;
+      }
+    });
+  });
+  
+  // Calculate percentages
+  const total = Object.values(modalities).reduce((sum, count) => sum + count, 0);
+  const percentages = {};
+  
+  Object.entries(modalities).forEach(([modality, count]) => {
+    percentages[modality] = {
+      count,
+      percentage: Math.round((count / total) * 100)
+    };
+  });
+  
+  return percentages;
+}
+
+function calculateDignity(planetName, sign) {
+  // Simplified dignity calculation
+  const rulerships = {
+    'Aries': 'Mars',
+    'Taurus': 'Venus',
+    'Gemini': 'Mercury',
+    'Cancer': 'Moon',
+    'Leo': 'Sun',
+    'Virgo': 'Mercury',
+    'Libra': 'Venus',
+    'Scorpio': 'Pluto',
+    'Sagittarius': 'Jupiter',
+    'Capricorn': 'Saturn',
+    'Aquarius': 'Uranus',
+    'Pisces': 'Neptune'
+  };
+  
+  const exaltations = {
+    'Sun': 'Aries',
+    'Moon': 'Taurus',
+    'Mercury': 'Virgo',
+    'Venus': 'Pisces',
+    'Mars': 'Capricorn',
+    'Jupiter': 'Cancer',
+    'Saturn': 'Libra'
+  };
+  
+  const detriments = {
+    'Sun': 'Aquarius',
+    'Moon': 'Capricorn',
+    'Mercury': 'Sagittarius',
+    'Venus': 'Aries',
+    'Mars': 'Libra',
+    'Jupiter': 'Gemini',
+    'Saturn': 'Cancer'
+  };
+  
+  const falls = {
+    'Sun': 'Libra',
+    'Moon': 'Scorpio',
+    'Mercury': 'Pisces',
+    'Venus': 'Virgo',
+    'Mars': 'Cancer',
+    'Jupiter': 'Capricorn',
+    'Saturn': 'Aries'
+  };
+  
+  const status = {
+    ruler: rulerships[sign] === planetName,
+    exaltation: exaltations[planetName] === sign,
+    detriment: detriments[planetName] === sign,
+    fall: falls[planetName] === sign
+  };
+  
+  // Calculate dignity score
+  let score = 0;
+  if (status.ruler) score += 5;
+  if (status.exaltation) score += 4;
+  if (status.detriment) score -= 4;
+  if (status.fall) score -= 5;
+  
+  return { score, status };
+}
+
+function detectAspectPatterns(aspects) {
+  // Simplified pattern detection
+  // In a real implementation, this would contain logic to detect grand trines,
+  // T-squares, grand crosses, etc.
+  return [];
+}
 
 // Import specific types and functions from astronomy-engine
 const { Body, Observer } = Astronomy;
@@ -141,7 +418,7 @@ export default async function handler(req, res) {
     
     if (dateParam) {
       // Validate date format (YYYY-MM-DD)
-      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(dateParam)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
         return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
       }
       date = new Date(dateParam);
