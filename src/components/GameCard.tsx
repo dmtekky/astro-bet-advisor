@@ -10,6 +10,13 @@ interface GameCardProps {
   game: Game & {
     astroEdge?: number;
     astroInfluence?: string;
+    astroPrediction?: string;
+    homeEdge?: number;
+    // Additional astrological data
+    moonPhase?: string;
+    sunSign?: string;
+    dominantElement?: string;
+    confidence?: number;
   };
   astroData?: AstrologicalData;
   loading?: boolean;
@@ -198,6 +205,70 @@ const GameCard: React.FC<GameCardProps> = ({ game, astroData, loading, error, ho
               <span>Start Time</span>
               <span className="font-medium">{formatGameTime(game.start_time)}</span>
             </div>
+            
+            {/* Astrological Prediction */}
+            {(game.astroPrediction || game.astroInfluence || game.homeEdge !== undefined) && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-1 mb-2">
+                  <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">✨ Cosmic Insight</span>
+                  {game.homeEdge !== undefined && (
+                    <div className="ml-auto flex items-center gap-1">
+                      <div 
+                        className="h-2.5 bg-gray-200 rounded-full overflow-hidden w-20"
+                        title={`Cosmic edge: ${Math.round(game.homeEdge * 100)}% favoring ${game.homeEdge > 0.5 ? 'home' : 'away'} team`}
+                      >
+                        <div 
+                          className={`h-full ${game.homeEdge > 0.5 ? 'bg-indigo-600' : 'bg-purple-600'} dark:bg-indigo-500`} 
+                          style={{ width: `${Math.round(Math.abs(game.homeEdge - 0.5) * 200)}%`, marginLeft: game.homeEdge > 0.5 ? '50%' : '0' }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {game.astroPrediction || game.astroInfluence || 
+                    `The cosmic alignment ${game.homeEdge && game.homeEdge > 0.5 ? 'favors the home team' : 
+                      game.homeEdge && game.homeEdge < 0.5 ? 'favors the away team' : 
+                      'shows a balanced matchup'}.`
+                  }
+                </p>
+                
+                {/* Additional astrological details */}
+                <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-gray-500">
+                  <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
+                    <span className="text-indigo-500">☽</span>
+                    <span>{game.moonPhase || 'Moon Phase'}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
+                    <span className="text-orange-500">☉</span>
+                    <span>{game.sunSign || 'Sun Sign'}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
+                    <span className="text-purple-500">★</span>
+                    <span className="capitalize">{game.dominantElement || 'Elements'}</span>
+                  </div>
+                </div>
+                
+                {/* Confidence indicator */}
+                {game.confidence !== undefined && (
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
+                    <span>Cosmic Confidence:</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden mr-1">
+                        <div 
+                          className={`h-full ${game.confidence > 0.75 ? 'bg-green-500' : game.confidence > 0.6 ? 'bg-blue-500' : 'bg-indigo-500'}`} 
+                          style={{ width: `${Math.round(game.confidence * 100)}%` }}
+                        />
+                      </div>
+                      <span>{Math.round(game.confidence * 100)}%</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

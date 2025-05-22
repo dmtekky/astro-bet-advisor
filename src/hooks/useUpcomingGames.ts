@@ -168,25 +168,34 @@ export function useUpcomingGames(options: UseUpcomingGamesOptions = {}) {
           return;
         }
 
-        // Fetch leagues to map IDs to keys
-        const { data: leaguesData, error: leaguesError } = await supabase
-          .from('leagues')
-          .select('id, key');
-
-        if (leaguesError) {
-          console.error('Error fetching leagues:', leaguesError);
-        }
-
-        // Create a map of league ID to league key
+        // Initialize an empty league map - we'll try to fetch leagues if possible
         const leagueMap = new Map<string, string>();
-        leaguesData?.forEach(league => {
-          leagueMap.set(league.id, league.key);
-        });
+        
+        try {
+          // Try to fetch leagues to map IDs to keys
+          const { data: leaguesData, error: leaguesError } = await supabase
+            .from('leagues')
+            .select('id, key')
+            .limit(100); // Add a limit to prevent timeouts
+            
+          if (!leaguesError && leaguesData) {
+            // Create a map of league ID to league key
+            leaguesData.forEach(league => {
+              if (league.id && league.key) {
+                leagueMap.set(league.id, league.key);
+              }
+            });
+          } else if (leaguesError) {
+            console.warn('Could not fetch leagues, using fallback mapping:', leaguesError);
+          }
+        } catch (err) {
+          console.warn('Error fetching leagues, using fallback mapping:', err);
+        }
 
         // Map the database fields to match the GameCard component's expected structure
         const mappedGames = gamesData.map((game: any) => {
           // Get the league key from the map, or use the ID if not found
-          const leagueKey = game.league_id ? leagueMap.get(game.league_id) || game.league_id : '';
+          const leagueKey = game.league_id ? (leagueMap.get(game.league_id) || game.league_id) : '';
           
           return {
             id: game.id?.toString() || `game-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

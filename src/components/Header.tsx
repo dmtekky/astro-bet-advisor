@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  location?: {
+    pathname: string;
+  };
+}
+
+const Header: React.FC<HeaderProps> = () => {
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaguesOpen, setIsLeaguesOpen] = useState(false);
-  const location = useLocation();
   
   // Keep leagues menu open if we're on a league page
   useEffect(() => {
@@ -26,16 +32,21 @@ const Header: React.FC = () => {
     { to: '/upcoming-games', label: 'Games' },
   ];
 
+  // Don't render header on home page
+  if (location.pathname === '/') return null;
+  
   return (
-    <header className="bg-gray-900 text-white shadow-lg fixed w-full z-50">
-      <div className="container mx-auto px-4 py-3">
+    <header className="fixed w-full z-50 shadow-lg">
+      {/* Frosted glass effect using CSS */}
+      <div className="absolute inset-0 backdrop-blur-md bg-white/80 -z-10"></div>
+      <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black text-xl">
-              🌕
+          {/* Logo - Clickable to return to dashboard */}
+          <Link to="/dashboard" className="flex items-center space-x-2 group transition-all duration-700 ease-[cubic-bezier(0.16, 1, 0.3, 1)]">
+            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.16, 1, 0.3, 1)] group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600">
+              {/* Empty circle - moon emoji removed */}
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-pink-600 transition-all duration-700 ease-[cubic-bezier(0.16, 1, 0.3, 1)]">
               Full Moon Odds
             </span>
           </Link>
@@ -46,11 +57,11 @@ const Header: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                className={`px-4 py-2.5 rounded-md text-base font-medium ${
                   location.pathname === link.to
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                    ? 'bg-transparent text-gray-800 font-semibold'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                } transition-all duration-500 ease-[cubic-bezier(0.4, 0, 0.2, 1)] transform hover:scale-105`}
               >
                 {link.label}
               </Link>
@@ -59,11 +70,11 @@ const Header: React.FC = () => {
             {/* Leagues Dropdown */}
             <div className="relative group">
               <button
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                className={`px-4 py-2.5 rounded-md text-base font-medium flex items-center ${
                   location.pathname.startsWith('/league/')
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                    ? 'bg-transparent text-gray-800 font-semibold'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                } transition-all duration-500 ease-[cubic-bezier(0.4, 0, 0.2, 1)] transform hover:scale-105`}
                 onClick={() => setIsLeaguesOpen(!isLeaguesOpen)}
                 aria-expanded={isLeaguesOpen}
                 aria-haspopup="true"
@@ -73,7 +84,7 @@ const Header: React.FC = () => {
               </button>
               
               <div 
-                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 ${
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-transparent ring-1 ring-black ring-opacity-5 ${
                   isLeaguesOpen ? 'block' : 'hidden group-hover:block'
                 } z-50`}
               >
@@ -86,8 +97,8 @@ const Header: React.FC = () => {
                         league.comingSoon 
                           ? 'text-gray-500 cursor-not-allowed' 
                           : location.pathname === `/league/${league.id}`
-                            ? 'bg-gray-700 text-white'
-                            : 'text-gray-300 hover:bg-gray-700'
+                            ? 'bg-transparent text-white'
+                            : 'text-gray-300 hover:bg-transparent'
                       }`}
                       onClick={(e) => {
                         if (league.comingSoon) {
@@ -135,8 +146,8 @@ const Header: React.FC = () => {
                   to={link.to}
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
                     location.pathname === link.to
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      ? 'bg-transparent text-white'
+                      : 'text-gray-300 hover:bg-transparent hover:text-white'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -156,7 +167,7 @@ const Header: React.FC = () => {
                       className={`block px-3 py-2 rounded-md text-base font-medium ${
                         league.comingSoon
                           ? 'text-gray-500 cursor-not-allowed'
-                          : 'text-gray-300 hover:bg-gray-700'
+                          : 'text-gray-300 hover:bg-transparent'
                       }`}
                       onClick={(e) => {
                         if (league.comingSoon) {

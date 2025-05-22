@@ -41,6 +41,8 @@
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    background-color: #f9fafb !important; /* Lightest Tailwind gray */
+    color: #111827 !important; /* Tailwind gray-900 */
   }
   
   /* Custom scrollbar */
@@ -126,32 +128,32 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --background: 210 40% 98%; /* light gray */
+    --foreground: 222 47% 11%; /* dark text */
 
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%; /* white cards */
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 252 59% 48%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 20%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 33% 95%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 217 33% 20%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217 33% 95%;
+    --muted-foreground: 222 47% 11%;
 
-    --accent: 217 33% 20%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 217 33% 90%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
+    --border: 217 33% 85%;
+    --input: 217 33% 85%;
     --ring: 212 100% 47%;
     
     --radius: 0.5rem;

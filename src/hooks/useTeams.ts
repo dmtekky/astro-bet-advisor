@@ -29,21 +29,58 @@ export function useTeams(leagueKey?: string) {
       
       try {
         console.log(`Looking up league with key: ${leagueKey}`);
+        
+        // First try to get from cache if available
+        const cacheKey = `league_${leagueKey}`;
+        const cachedLeague = localStorage.getItem(cacheKey);
+        
+        if (cachedLeague) {
+          try {
+            const leagueData = JSON.parse(cachedLeague);
+            console.log('Using cached league data:', leagueData);
+            setResolvedLeagueId(leagueData.id);
+            return;
+          } catch (e) {
+            console.warn('Error parsing cached league data, fetching fresh:', e);
+          }
+        }
+        
+        // If not in cache or invalid, fetch from API
         const { data: leagueData, error: leagueError } = await supabase
           .from('leagues')
           .select('id, name, key')
           .eq('key', leagueKey)
           .single();
           
-        if (leagueError) {
+        if (leagueError || !leagueData) {
           console.warn(`Could not find league with key: ${leagueKey}`, leagueError);
-          setResolvedLeagueId(null);
-        } else if (leagueData) {
-          console.log('Found league:', leagueData);
-          setResolvedLeagueId(leagueData.id);
+          // Try a case-insensitive search as fallback
+          let caseInsensitiveData = null;
+          try {
+            const { data } = await supabase
+              .from('leagues')
+              .select('id, name, key')
+              .ilike('key', leagueKey)
+              .single();
+            caseInsensitiveData = data;
+          } catch (e) {
+            console.warn('Case-insensitive league search failed:', e);
+          }
+            
+          if (caseInsensitiveData) {
+            console.log('Found league with case-insensitive search:', caseInsensitiveData);
+            // Cache the result
+            localStorage.setItem(cacheKey, JSON.stringify(caseInsensitiveData));
+            setResolvedLeagueId(caseInsensitiveData.id);
+          } else {
+            console.warn('No league data found for key (case-insensitive):', leagueKey);
+            setResolvedLeagueId(null);
+          }
         } else {
-          console.warn('No league data returned for key:', leagueKey);
-          setResolvedLeagueId(null);
+          console.log('Found league:', leagueData);
+          // Cache the result
+          localStorage.setItem(cacheKey, JSON.stringify(leagueData));
+          setResolvedLeagueId(leagueData.id);
         }
       } catch (err) {
         console.error('Error resolving league ID:', err);

@@ -13,6 +13,7 @@ import { Calendar, ChevronLeft, Star, TrendingUp, Activity, BarChart2, Award, Mo
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useAstroData } from '@/hooks/useAstroData';
+import AstroDisclosure from '@/components/AstroDisclosure';
 import { getZodiacSign } from '@/lib/astroCalc';
 
 // Type definitions

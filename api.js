@@ -1,5 +1,6 @@
 import express from 'express';
 import { getMoonPhase, getPlanetPositions, getZodiacSign } from './src/lib/astroCalculations.js';
+import unifiedAstroHandler from './api/unified-astro.js';
 
 const app = express();
 const port = 3001; // Changed to match Vite proxy configuration
@@ -41,6 +42,28 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
+});
+
+// Unified astrology endpoint - serves both Dashboard and Players pages
+app.get(['/api/unified-astro/:date', '/api/unified-astro'], (req, res) => {
+  try {
+    // Call the unified handler
+    unifiedAstroHandler(req, res);
+  } catch (error) {
+    console.error('Error in unified-astro endpoint:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
+});
+
+// Maintain sidereal-astro endpoint for backward compatibility
+app.get(['/api/sidereal-astro/:date', '/api/sidereal-astro'], (req, res) => {
+  try {
+    // Redirect to unified handler
+    unifiedAstroHandler(req, res);
+  } catch (error) {
+    console.error('Error in sidereal-astro endpoint:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
 });
 
 // Main API endpoint for astro data - supports both URL param (/api/astro/:date) and query param (/api/astro?date=)
