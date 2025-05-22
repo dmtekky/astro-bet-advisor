@@ -1,30 +1,15 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --no-optional",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "nodeVersion": "18.x",
-  "builds": [
-    {
-      "src": "api/astro.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/astro-enhanced.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/unified-astro.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ],
+  },
   "rewrites": [
     { "source": "/api/astro", "destination": "/api/astro.js" },
     { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
