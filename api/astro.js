@@ -1,21 +1,5 @@
 // Vercel serverless function for astro API
-// Use dynamic import for compatibility with Vercel serverless environment
-let Astronomy;
-try {
-  Astronomy = require('astronomy-engine');
-} catch (e) {
-  console.error('Failed to load astronomy-engine:', e);
-  // Fallback for ESM
-  try {
-    import('astronomy-engine').then(module => {
-      Astronomy = module;
-    }).catch(err => {
-      console.error('Failed to load astronomy-engine (ESM):', err);
-    });
-  } catch (importErr) {
-    console.error('All attempts to load astronomy-engine failed:', importErr);
-  }
-}
+import * as Astronomy from 'astronomy-engine';
 
 // Import specific types and functions from astronomy-engine
 const { Body, Observer, MoonPhase } = Astronomy;
