@@ -8,6 +8,7 @@ console.log("--- UNIFIED ASTRO API SCRIPT STARTED ---");
 const DEPLOYMENT_VERSION_FIXED = "fixed_js_v20250523_1505";
 console.log(`[DEPLOY_CHECK] unified-astro.fixed.js loaded. Version: ${DEPLOYMENT_VERSION_FIXED}`);
 const DEPLOYMENT_VERSION_FIXED_TS = "v_fixed_js_moon_lon_check_TS_" + new Date().toISOString();
+console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (after declaration):', DEPLOYMENT_VERSION_FIXED_TS);
 const Astronomy = require('astronomy-engine');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -786,6 +787,7 @@ const generatePlanetInterpretation = (planetName, data) => {
 /**
  * Main handler function for API requests
  */
+console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (before module.exports):', DEPLOYMENT_VERSION_FIXED_TS);
 module.exports = async (req, res) => {
   console.log(`[DEPLOY_CHECK_HANDLER_TS] unified-astro.fixed.js handler invoked. Version: ${DEPLOYMENT_VERSION_FIXED_TS}`);
   // Enable CORS
