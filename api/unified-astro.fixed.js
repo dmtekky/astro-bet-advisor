@@ -195,9 +195,10 @@ const calculatePlanetaryPositions = async (time, useSidereal = false) => {
       if (planet.name !== 'sun' && planet.name !== 'moon') {
         // Calculate actual retrograde status by comparing its position today vs yesterday.
         // We use the tropical longitude ('elong') for speed calculation before any sidereal adjustment.
-        const timeYesterday = new Date(time.getTime() - (24 * 60 * 60 * 1000)); // 24 hours before current time
-        const elongToday = elong; // 'elong' is already the tropical longitude for the current 'time' (from line 135)
-        const elongYesterday = Astronomy.EclipticLongitude(planet.body, timeYesterday);
+        const jsDateYesterday = new Date(time.date.getTime() - (24 * 60 * 60 * 1000)); // 24 hours before current time
+        const timeYesterdayForCalc = Astronomy.MakeTime(jsDateYesterday);
+        const elongToday = elong; // 'elong' is already the tropical longitude for the current 'time'
+        const elongYesterday = Astronomy.EclipticLongitude(planet.body, timeYesterdayForCalc);
 
         let diff = elongToday - elongYesterday;
 
@@ -344,7 +345,7 @@ const calculateAspects = (planetPositions, time) => {
             angle: aspectType.angle,
             orb: parseFloat(diff.toFixed(2)),
             strength: parseFloat(strength.toFixed(2)),
-            applying: isApplying(planetPositions[planet1], planetPositions[planet2], aspectType.angle, time, Astronomy)
+            applying: isApplying(planetPositions[planet1], planetPositions[planet2], aspectType.angle, time, Astronomy, planet1, planet2)
           });
           
           // Only count the closest aspect between two planets
@@ -360,7 +361,7 @@ const calculateAspects = (planetPositions, time) => {
 /**
  * Determine if an aspect is applying or separating
  */
-const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronomyLib) => {
+const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronomyLib, planet1Name, planet2Name) => {
   // Use tropical longitudes for aspect progression calculation
   const lon1_current = planetData1.tropicalLongitude;
   const lon2_current = planetData2.tropicalLongitude;
@@ -373,9 +374,23 @@ const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronom
   const currentOrb = Math.abs(currentDistance - aspectAngle);
 
   // Calculate positions 1 hour in the future
-  const futureTime = new Date(currentTime.getTime() + (60 * 60 * 1000)); // 1 hour later
-  const lon1_future = astronomyLib.EclipticLongitude(PLANETS.find(p => p.name === planetData1.name).body, futureTime);
-  const lon2_future = astronomyLib.EclipticLongitude(PLANETS.find(p => p.name === planetData2.name).body, futureTime);
+  const jsDateFuture = new Date(currentTime.date.getTime() + (60 * 60 * 1000)); // 1 hour later
+  const futureTimeForCalc = Astronomy.MakeTime(jsDateFuture);
+
+  const planet1Definition = PLANETS.find(p => p.name === planet1Name);
+  const planet2Definition = PLANETS.find(p => p.name === planet2Name);
+
+  if (!planet1Definition || !planet1Definition.body) {
+    console.error(`[ERROR] isApplying: Could not find body for planet1: ${planet1Name}`);
+    return false; 
+  }
+  if (!planet2Definition || !planet2Definition.body) {
+    console.error(`[ERROR] isApplying: Could not find body for planet2: ${planet2Name}`);
+    return false; 
+  }
+
+  const lon1_future = astronomyLib.EclipticLongitude(planet1Definition.body, futureTimeForCalc);
+  const lon2_future = astronomyLib.EclipticLongitude(planet2Definition.body, futureTimeForCalc);
 
   // Calculate future orb
   let futureDistance = Math.abs(lon1_future - lon2_future);
