@@ -27,7 +27,7 @@ const API_BASE_URL = getApiBaseUrl();
 // API Response type (matches the actual API response structure)
 interface ApiResponse {
   date: string;
-  query_time: string;
+  query_time?: string;
   sidereal?: boolean;
   ayanamsa?: number;
   observer?: {
@@ -36,16 +36,25 @@ interface ApiResponse {
     timezone: string;
   };
   planets: Record<string, {
-    name: string;
+    name?: string;
     longitude: number;
     sign: string;
-    degree: number;
+    degrees?: number;
+    degree?: number;
     minute?: number;
     retrograde?: boolean;
+    weight?: number;
+    error?: boolean;
   }>;
-  moon_phase: {
+  // Support both API response formats
+  moon_phase?: {
     illumination: number | null;
     phase_name: string;
+  };
+  moonPhase?: {
+    illumination: number | null;
+    angle?: number;
+    phase: string;
   };
   void_of_course_moon?: {
     is_void: boolean;
@@ -211,7 +220,8 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
         if (retryCount >= 3) return;
         // Retry after 5 seconds
         setTimeout(() => revalidate({ retryCount }), 5000);
-      }
+      },
+      fallbackData: null // Provide fallback to prevent undefined errors
     }
   );
 
@@ -267,14 +277,20 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
         Object.entries(planets).forEach(([key, value]) => {
           if (value && typeof value === 'object') {
             const planetKey = key.toLowerCase();
+            // Use any type to handle different interpretations structures
+            const anyInterpretations = interpretations as any;
+            const interpretation = anyInterpretations?.planets?.[planetKey]?.interpretation || 
+                                 anyInterpretations?.[planetKey] || undefined;
+            
             planetData[planetKey] = {
               name: value.name || key,
-              longitude: value.longitude,
+              longitude: value.longitude || 0,
               sign: value.sign as ZodiacSign,
-              degree: value.degree, // API uses 'degree' not 'degrees'
+              // Handle both degree and degrees properties
+              degree: value.degree || value.degrees || 0,
               retrograde: Boolean(value.retrograde),
               speed: 1, // Default speed (required by CelestialBody type)
-              interpretation: interpretations?.[planetKey] || undefined
+              interpretation: interpretation
             };
           }
         });
@@ -283,30 +299,54 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
       // Map aspects
       const mappedAspects = Array.isArray(aspects)
         ? aspects.map(a => {
+            // Handle different aspect structures
+            const anyAspect = a as any; // Use any type to access potentially missing properties
+            const planets = Array.isArray(anyAspect.planets) ? anyAspect.planets : 
+                          (anyAspect.from && anyAspect.to ? [anyAspect.from, anyAspect.to] : []);
+            
             // Find matching interpretation if available
-            const aspectKey = `${a.planets[0]} ${a.type} ${a.planets[1]}`;
-            const aspectInterpretation = interpretations?.aspects?.find(
-              i => i.aspect === aspectKey
-            )?.interpretation || '';
+            const aspectKey = planets.length >= 2 ? `${planets[0]} ${anyAspect.type} ${planets[1]}` : '';
+            const anyInterpretations = interpretations as any;
+            const aspectInterpretation = anyInterpretations?.aspects && Array.isArray(anyInterpretations.aspects) ?
+              anyInterpretations.aspects.find((i: any) => i.aspect === aspectKey)?.interpretation || '' : '';
             
             return {
-              planets: a.planets,
-              type: a.type,
-              angle: a.angle,
-              orb: a.orb,
-              influence: a.influence,
+              planets: planets,
+              type: anyAspect.type || '',
+              angle: anyAspect.angle || 0,
+              orb: anyAspect.orb || 0,
+              influence: anyAspect.influence || '',
               interpretation: aspectInterpretation
             };
           })
         : [];
 
-      // Map planet interpretations
+      // Map planet interpretations - handle both API response formats
       const planetInterpretations: Record<string, string> = {};
-      Object.keys(interpretations || {}).forEach(key => {
-        if (key !== 'aspects' && typeof interpretations[key] === 'string') {
-          planetInterpretations[key] = interpretations[key];
-        }
-      });
+      
+      // Use any type to handle different interpretations structures
+      const anyInterpretations = interpretations as any;
+      
+      // Handle flat structure
+      if (anyInterpretations && typeof anyInterpretations === 'object') {
+        Object.keys(anyInterpretations).forEach(key => {
+          if (key !== 'aspects' && key !== 'planets' && typeof anyInterpretations[key] === 'string') {
+            planetInterpretations[key] = anyInterpretations[key];
+          }
+        });
+      }
+      
+      // Handle nested structure
+      if (anyInterpretations?.planets && typeof anyInterpretations.planets === 'object') {
+        Object.keys(anyInterpretations.planets).forEach(key => {
+          const planetInterp = anyInterpretations.planets[key];
+          if (typeof planetInterp === 'object' && planetInterp.interpretation) {
+            planetInterpretations[key] = planetInterp.interpretation;
+          } else if (typeof planetInterp === 'string') {
+            planetInterpretations[key] = planetInterp;
+          }
+        });
+      }
 
       // Compose final AstroData
       return {
@@ -317,8 +357,9 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
         observer,
         planets: planetData,
         moonPhase: {
-          illumination: moon_phase?.illumination || 0,
-          phase: moon_phase?.phase_name || 'Unknown'
+          // Handle both API response formats
+          illumination: moon_phase?.illumination || apiData.moonPhase?.illumination || 0,
+          phase: moon_phase?.phase_name || apiData.moonPhase?.phase || 'Unknown'
         },
         voidMoon: void_of_course_moon ? {
           isVoid: void_of_course_moon.is_void,

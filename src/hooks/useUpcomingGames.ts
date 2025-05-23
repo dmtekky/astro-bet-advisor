@@ -122,7 +122,11 @@ export function useUpcomingGames(options: UseUpcomingGamesOptions = {}) {
       try {
         let query = supabase
           .from('games')
-          .select('*')
+          .select(`
+            *,
+            home_team:home_team_id(*),
+            away_team:away_team_id(*)
+          `)
           .order('game_time_utc', { ascending: true })
           .limit(limit)
           .range(offset, offset + limit - 1);

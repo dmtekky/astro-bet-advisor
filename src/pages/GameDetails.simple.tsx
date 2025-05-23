@@ -12,7 +12,7 @@ import type { Game, Team } from '@/types';
 import { useAstroData } from '@/hooks/useAstroData';
 import { GamePredictionData, createDefaultPredictionData, createDefaultCelestialBody } from '@/types/gamePredictions';
 import { predictGameOutcome } from '@/utils/sportsPredictions';
-import type { AstroData, ZodiacSign } from '@/types/astrology';
+import type { AstroData } from '@/types/astrology';
 
 interface DetailedGame extends Omit<Game, 'league'> {
   home_team: Team | null;
@@ -62,7 +62,12 @@ const GameDetails: React.FC = () => {
   
   // Fetch astrological data
   const { astroData, loading: astroLoading } = useAstroData(
-    game?.start_time
+    game?.start_time,
+    {
+      latitude: game?.venue?.latitude || 0,
+      longitude: game?.venue?.longitude || 0,
+      timezone: 'UTC',
+    }
   );
   
   // Generate game prediction
@@ -80,7 +85,7 @@ const GameDetails: React.FC = () => {
       league: game.league?.name || '',
     };
     
-    // Create prediction data with proper handling of API response format
+    // Create prediction data
     const predictionData: GamePredictionData = {
       ...createDefaultPredictionData(),
       date: astroData.date || new Date().toISOString(),
@@ -91,130 +96,21 @@ const GameDetails: React.FC = () => {
         timezone: astroData.observer?.timezone || 'UTC',
         altitude: astroData.observer?.altitude || 0
       },
-      // Handle sun data from different sources
-      sun: (() => {
-        const sunData = astroData.planets?.sun;
-        if (!sunData) return createDefaultCelestialBody('Sun');
-        return {
-          name: 'Sun',
-          sign: (sunData.sign || 'Aries') as ZodiacSign,
-          longitude: sunData.longitude || 0,
-          latitude: 0,
-          distance: 1,
-          speed: 0,
-          degree: sunData.degree || 0,
-          minute: 0,
-          house: 1,
-          retrograde: Boolean(sunData.retrograde),
-          declination: 0,
-          rightAscension: 0,
-          phase: 0,
-          phaseValue: 0,
-          phase_name: `Sun in ${sunData.sign}`,
-          magnitude: 0,
-          illumination: 1,
-          dignity: {
-            score: 0,
-            status: {
-              ruler: false,
-              exaltation: false,
-              detriment: false,
-              fall: false,
-              triplicity: false,
-              term: false,
-              face: false,
-            },
-            essentialScore: 0,
-            accidentalScore: 0,
-            mutualReception: [],
-          }
-        };
-      })(),
-      // Handle moon data from different sources
-      moon: (() => {
-        const moonData = astroData.planets?.moon;
-        if (!moonData) return createDefaultCelestialBody('Moon');
-        return {
-          name: 'Moon',
-          sign: (moonData.sign || 'Aries') as ZodiacSign,
-          longitude: moonData.longitude || 0,
-          latitude: 0,
-          distance: 1,
-          speed: 0,
-          degree: moonData.degree || 0,
-          minute: 0,
-          house: 1,
-          retrograde: Boolean(moonData.retrograde),
-          declination: 0,
-          rightAscension: 0,
-          phase: 0,
-          phaseValue: 0,
-          phase_name: astroData.moonPhase?.phase || 'New Moon',
-          magnitude: 0,
-          illumination: astroData.moonPhase?.illumination || 0,
-          dignity: {
-            score: 0,
-            status: {
-              ruler: false,
-              exaltation: false,
-              detriment: false,
-              fall: false,
-              triplicity: false,
-              term: false,
-              face: false,
-            },
-            essentialScore: 0,
-            accidentalScore: 0,
-            mutualReception: [],
-          }
-        };
-      })(),
+      sun: astroData.sun || createDefaultCelestialBody('Sun'),
+      moon: astroData.moon || createDefaultCelestialBody('Moon'),
       planets: astroData.planets || {},
       aspects: astroData.aspects || [],
       moonPhase: {
-        name: astroData.moonPhase?.phase || 'New Moon',
-        value: 0, // Default value if not available
+        name: astroData.moonPhase?.name || 'New Moon',
+        value: astroData.moonPhase?.value || 0,
         illumination: astroData.moonPhase?.illumination || 0
       },
-      // Handle elements data from different API formats
-      elements: (() => {
-        // If we have the expected format, use it directly
-        if (astroData.elements?.fire?.score !== undefined) {
-          return astroData.elements;
-        }
-        
-        // If we have percentages format, convert it
-        const anyAstroData = astroData as any;
-        if (anyAstroData.elements?.percentages) {
-          const percentages = anyAstroData.elements.percentages;
-          return {
-            fire: { score: percentages.fire || 0, planets: [] },
-            earth: { score: percentages.earth || 0, planets: [] },
-            water: { score: percentages.water || 0, planets: [] },
-            air: { score: percentages.air || 0, planets: [] }
-          };
-        }
-        
-        // If we have counts format, convert it
-        if (anyAstroData.elements?.counts) {
-          const counts = anyAstroData.elements.counts;
-          const total = (counts.fire || 0) + (counts.earth || 0) + (counts.water || 0) + (counts.air || 0) || 1;
-          return {
-            fire: { score: (counts.fire || 0) / total, planets: [] },
-            earth: { score: (counts.earth || 0) / total, planets: [] },
-            water: { score: (counts.water || 0) / total, planets: [] },
-            air: { score: (counts.air || 0) / total, planets: [] }
-          };
-        }
-        
-        // Default fallback
-        return {
-          fire: { score: 0.25, planets: [] },
-          earth: { score: 0.25, planets: [] },
-          water: { score: 0.25, planets: [] },
-          air: { score: 0.25, planets: [] }
-        };
-      })()
+      elements: astroData.elements || {
+        fire: { score: 0, planets: [] },
+        earth: { score: 0, planets: [] },
+        water: { score: 0, planets: [] },
+        air: { score: 0, planets: [] }
+      }
     };
     
     // Ensure home_team and away_team are properly typed as Team or undefined
@@ -395,10 +291,10 @@ const GameDetails: React.FC = () => {
                     <strong>Prediction:</strong> {gamePrediction?.prediction || 'No prediction available'}
                   </p>
                   <p className="text-slate-400 text-sm mb-2">
-                    <strong>Moon Phase:</strong> {astroData.moonPhase?.phase || 'Unknown'}
+                    <strong>Moon Phase:</strong> {astroData.moonPhase?.name || 'Unknown'}
                   </p>
                   <p className="text-slate-400 text-sm mb-2">
-                    <strong>Sun Sign:</strong> {astroData.planets?.sun?.sign || 'Unknown'}
+                    <strong>Sun Sign:</strong> {astroData.sun?.sign || 'Unknown'}
                   </p>
                   <p className="text-slate-400 text-sm">
                     <strong>Confidence:</strong> {gamePrediction ? `${Math.round(gamePrediction.confidence * 100)}%` : 'N/A'}
