@@ -272,7 +272,8 @@ const Dashboard: React.FC = () => {
   // Create a memoized function to get game-specific predictions
   const getGamePrediction = useCallback(
     (game: Game, homeTeam?: Team, awayTeam?: Team) => {
-      const rawAstro = gameAstroData;
+      console.log('%%%%% CHECKING ASTRODATA IN getGamePrediction:', astroData);
+      const rawAstro = astroData;
       if (!rawAstro) {
         console.warn(`No astro data for game ${game.id} in getGamePrediction`);
         return null;
@@ -285,7 +286,7 @@ const Dashboard: React.FC = () => {
       }
       return predictGameOutcome(transformedAstro, game, homeTeam, awayTeam);
     },
-    [gameAstroData, transformHookDataToGamePredictionData]
+    [astroData, transformHookDataToGamePredictionData]
   );
 
   // Helper function to find a team with proper type casting
