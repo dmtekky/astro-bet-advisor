@@ -126,14 +126,34 @@ const calculatePlanetaryPositions = async (time, useSidereal = false) => {
       // Use Astronomy.Horizon to calculate position directly
       // This is a simplified approach that will still work for our purposes
       // We'll use the longitude directly from the horizontal coordinates
-      let elong;
-      if (planet.name === 'sun') {
-        elong = Astronomy.SunLongitude(time);
-      } else if (planet.name === 'moon') {
-        elong = Astronomy.MoonLongitude(time);
-      } else {
-        elong = Astronomy.EclipticLongitude(planet.body, time);
-      }
+          let elong;
+          const planetNameLower = planet.name.toLowerCase();
+
+          if (planetNameLower === 'sun') {
+            const sunPos = Astronomy.SunPosition(time);
+            // console.log(`SunPosition raw object for ${planet.name} at ${time}:`, JSON.stringify(sunPos));
+            if (sunPos && typeof sunPos.lon === 'number') {
+              elong = sunPos.lon;
+            } else {
+              console.error(`Error: SunPosition did not return expected data for ${planet.name}. Received:`, sunPos);
+              throw new Error(`Failed to get longitude from SunPosition for ${planet.name}`);
+            }
+          } else if (planetNameLower === 'moon') {
+            const moonPos = Astronomy.EclipticGeoMoon(time);
+            // console.log(`EclipticGeoMoon raw object for ${planet.name} at ${time}:`, JSON.stringify(moonPos));
+            if (moonPos && typeof moonPos.lon === 'number') {
+              elong = moonPos.lon;
+            } else {
+              console.error(`Error: EclipticGeoMoon did not return expected data for ${planet.name}. Received:`, moonPos);
+              throw new Error(`Failed to get longitude from EclipticGeoMoon for ${planet.name}`);
+            }
+          } else {
+            if (!planet.body) {
+                console.error(`Error: planet.body is undefined for ${planet.name}. Cannot calculate EclipticLongitude.`);
+                throw new Error(`planet.body is undefined for ${planet.name}`);
+            }
+            elong = Astronomy.EclipticLongitude(planet.body, time);
+          }
       let longitude = elong;
       
       // Log success
