@@ -18,8 +18,9 @@ import { useAstroData } from '@/hooks/useAstroData';
 import type { Team } from '@/types';
 import type { Game } from '@/types';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
+import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhase, CelestialBody, Aspect } from '@/types/astrology';
 import type { GamePredictionData } from '@/types/gamePredictions';
-import type { CelestialBody, Aspect, AspectType } from '@/types/astrology';
+import { createDefaultCelestialBody } from '@/types/gamePredictions';
 
 // Extend the Team interface to include additional properties used in the component
 interface ExtendedTeam extends Omit<Team, 'logo' | 'logo_url' | 'external_id'> {
@@ -158,144 +159,133 @@ const Dashboard: React.FC = () => {
     day: 'numeric',
   });
 
-  // Get sports predictions from astrological data
-  const sportsPredictions = useMemo(() => {
-    if (!astroData) return null;
-    
-    // Helper to create a default celestial body
-    const createDefaultCelestialBody = (name: string): CelestialBody => ({
-      name,
-      sign: 'Aries',
-      longitude: 0,
-      latitude: 0,
-      speed: 0,
-      house: 1,
-      retrograde: false,
-      degree: 0,
-      minute: 0
-    });
+  // Type alias for astroData from the hook, used by the transformer
+  type HookAstroData = ReturnType<typeof useAstroData>['astroData'];
 
-    // Helper to process moon phase data
-    const getMoonPhase = () => {
-      if (astroData.moonPhase && typeof astroData.moonPhase === 'object') {
-        const mp = astroData.moonPhase as any;
-        return {
-          name: typeof mp.name === 'string' ? mp.name : 'New Moon',
-          value: typeof mp.value === 'number' ? mp.value : 0,
-          illumination: typeof mp.illumination === 'number' ? mp.illumination : 0
+  // Standalone transformer function
+  const transformHookDataToGamePredictionData = (hookData: HookAstroData): GamePredictionData | null => {
+    if (!hookData) return null;
+
+    const observerData = hookData.observer || { latitude: 0, longitude: 0, timezone: 'UTC' };
+
+    const planetsData: Record<string, CelestialBody> = {};
+    let sunBody: CelestialBody | undefined;
+    let moonBody: CelestialBody | undefined;
+
+    if (hookData.planets) {
+      for (const key in hookData.planets) {
+        const p = hookData.planets[key];
+        if (!p) continue; // Skip if planet data is null or undefined
+
+        const baseBody = createDefaultCelestialBody(p.name || key, (p.sign as ZodiacSign) || 'Aries');
+        
+        const celestialBody: CelestialBody = {
+          ...baseBody,
+          name: p.name || key,
+          longitude: p.longitude,
+          sign: (p.sign as ZodiacSign) || 'Aries',
+          degree: p.degree ?? (p as any).degrees ?? 0,
+          minute: p.minute ?? 0,
+          retrograde: p.retrograde ?? false,
+          speed: (p as any).speed ?? baseBody.speed,
+          latitude: (p as any).latitude ?? baseBody.latitude,
+          distance: (p as any).distance ?? baseBody.distance,
+          house: (p as any).house ?? baseBody.house,
+          declination: (p as any).declination ?? baseBody.declination,
+          rightAscension: (p as any).rightAscension ?? baseBody.rightAscension,
+          phase: (p as any).phase ?? baseBody.phase,
+          phaseValue: (p as any).phaseValue ?? baseBody.phaseValue,
+          phase_name: (p as any).phase_name ?? baseBody.phase_name,
+          magnitude: (p as any).magnitude ?? baseBody.magnitude,
+          illumination: (p as any).illumination ?? baseBody.illumination,
+          dignity: (p as any).dignity ?? baseBody.dignity,
         };
+        planetsData[key.toLowerCase()] = celestialBody; // Ensure consistent casing for keys
+        if (key.toLowerCase() === 'sun') sunBody = celestialBody;
+        if (key.toLowerCase() === 'moon') moonBody = celestialBody;
       }
-      return {
-        name: 'New Moon',
-        value: 0,
-        illumination: 0
-      };
+    }
+
+    const finalSunData = sunBody || createDefaultCelestialBody('Sun', (hookData.planets?.sun?.sign as ZodiacSign) || 'Aries');
+    const finalMoonData = moonBody || createDefaultCelestialBody('Moon', (hookData.planets?.moon?.sign as ZodiacSign) || 'Aries');
+    
+    const moonPhaseData: MoonPhase = {
+      name: hookData.moonPhase?.phase || 'New Moon',
+      value: (hookData.moonPhase as any)?.angle ?? (hookData.moonPhase as any)?.value ?? 0,
+      illumination: hookData.moonPhase?.illumination ?? 0,
+      angle: (hookData.moonPhase as any)?.angle ?? 0, 
+      emoji: (hookData.moonPhase as any)?.emoji || '',
     };
 
-    // Helper to process elements data
-    const getElements = () => {
-      if (astroData.elements && typeof astroData.elements === 'object') {
-        const defaultElement = { score: 0, planets: [] as string[] };
-        const elements = astroData.elements as any;
-        
-        const processElement = (element: any) => ({
-          score: typeof element?.score === 'number' ? element.score : 0,
-          planets: Array.isArray(element?.planets) 
-            ? element.planets
-                .filter((p: any): p is string => typeof p === 'string')
-                .map(String)
-                .filter(Boolean)
-                .slice(0, 10)
-            : []
-        });
-        
-        return {
-          fire: elements.fire ? processElement(elements.fire) : { ...defaultElement },
-          earth: elements.earth ? processElement(elements.earth) : { ...defaultElement },
-          water: elements.water ? processElement(elements.water) : { ...defaultElement },
-          air: elements.air ? processElement(elements.air) : { ...defaultElement }
-        };
-      }
-      
-      // Default empty elements
+    const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
+    const aspectsData: Aspect[] = (hookData.aspects || []).map(hookAspect => {
+      const aspectType = hookAspect.type.toLowerCase() as AspectType;
       return {
+        from: hookAspect.planets[0],
+        to: hookAspect.planets[1],
+        type: aspectType,
+        orb: hookAspect.orb,
+        influence: { 
+          description: (hookAspect as any).interpretation || (hookAspect as any).influence?.description || 'General influence',
+          strength: (hookAspect as any).influence?.strength ?? 0.5,
+          area: (hookAspect as any).influence?.area ?? [],
+        },
+        exact: Math.abs(hookAspect.orb) < 1, 
+      };
+    }).filter(aspect => validAspectTypes.includes(aspect.type));
+    
+    const gamePredictionInput: GamePredictionData = {
+      date: hookData.date,
+      queryTime: hookData.queryTime || new Date().toISOString(),
+      observer: {
+        latitude: observerData.latitude,
+        longitude: observerData.longitude,
+        timezone: observerData.timezone,
+        altitude: 0, 
+      },
+      sun: finalSunData,
+      moon: finalMoonData,
+      planets: planetsData,
+      aspects: aspectsData,
+      moonPhase: moonPhaseData,
+      elements: hookData.elements || {
         fire: { score: 0, planets: [] },
         earth: { score: 0, planets: [] },
         water: { score: 0, planets: [] },
-        air: { score: 0, planets: [] }
-      };
-    };
-    
-    // Process aspects
-    const processAspects = () => {
-      if (!astroData.aspects || !Array.isArray(astroData.aspects)) {
-        return [];
-      }
-      
-      return astroData.aspects.map(aspect => {
-        // Safely extract aspect properties with defaults
-        const aspectType: AspectType = 
-          (typeof aspect.type === 'string' && 
-           ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(aspect.type))
-            ? aspect.type as AspectType
-            : 'conjunction';
-        
-        // Safely extract influence object
-        const influence = (() => {
-          if (!aspect.influence || typeof aspect.influence !== 'object') {
-            return {
-              description: 'Neutral influence',
-              strength: 0.5,
-              area: []
-            };
-          }
-          
-          const infl = aspect.influence as Partial<AspectInfluence>;
-          return {
-            description: typeof infl.description === 'string' ? infl.description : 'Neutral influence',
-            strength: typeof infl.strength === 'number' ? Math.max(0, Math.min(1, infl.strength)) : 0.5,
-            area: Array.isArray(infl.area) ? infl.area.filter((a): a is string => typeof a === 'string') : []
-          };
-        })();
-        
-        return {
-          from: Array.isArray(aspect.planets) && aspect.planets[0] ? String(aspect.planets[0]) : '',
-          to: Array.isArray(aspect.planets) && aspect.planets[1] ? String(aspect.planets[1]) : '',
-          type: aspectType,
-          orb: typeof aspect.orb === 'number' ? aspect.orb : 0,
-          exact: !!(aspect as any).exact,
-          influence
-        } as Aspect;
-      });
-    };
-    
-    // Create the prediction data object
-    const predictionData: GamePredictionData = {
-      ...astroData,
-      // Ensure required properties are present
-      sun: astroData.planets?.sun || createDefaultCelestialBody('Sun'),
-      moon: astroData.planets?.moon || createDefaultCelestialBody('Moon'),
-      observer: {
-        latitude: astroData.observer?.latitude || 0,
-        longitude: astroData.observer?.longitude || 0,
-        timezone: astroData.observer?.timezone || 'UTC',
-        altitude: 0 // Default altitude
+        air: { score: 0, planets: [] },
       },
-      planets: astroData.planets || {},
-      aspects: processAspects(),
-      moonPhase: getMoonPhase(),
-      elements: getElements()
+      modalities: hookData.modalities as ModalBalance | undefined,
+      houses: hookData.houses as any, 
+      patterns: hookData.patterns as any, 
+      dignities: hookData.dignities as any, 
     };
-    
-    return calculateSportsPredictions(predictionData);
-  }, [astroData]);
+    return gamePredictionInput;
+  };
+
+  // Get sports predictions from astrological data
+  const sportsPredictions = useMemo(() => {
+    if (!astroData) return null;
+    const transformedData = transformHookDataToGamePredictionData(astroData);
+    return calculateSportsPredictions(transformedData);
+  }, [astroData, transformHookDataToGamePredictionData]);
 
   // Create a memoized function to get game-specific predictions
   const getGamePrediction = useCallback(
     (game: Game, homeTeam?: Team, awayTeam?: Team) => {
-      return predictGameOutcome(game, homeTeam, awayTeam, astroData);
+      const rawAstro = gameAstroData[game.id];
+      if (!rawAstro) {
+        console.warn(`No astro data for game ${game.id} in getGamePrediction`);
+        return null;
+      }
+      // Ensure rawAstro is treated as HookAstroData, which might be AstroData | null | undefined
+      const transformedAstro = transformHookDataToGamePredictionData(rawAstro as HookAstroData);
+      if (!transformedAstro) {
+        console.warn(`Failed to transform astro data for game ${game.id}`);
+        return null;
+      }
+      return predictGameOutcome(transformedAstro, game, homeTeam, awayTeam);
     },
-    [astroData]
+    [gameAstroData, transformHookDataToGamePredictionData]
   );
 
   // Helper function to find a team with proper type casting
@@ -303,15 +293,13 @@ const Dashboard: React.FC = () => {
     const team = teamMap?.[teamId] as ExtendedTeam | undefined;
     if (!team) return undefined;
     
-    // Create a new team object with all required properties
     const teamData: Team = {
       id: team.id || teamId,
       name: team.name || 'Unknown Team',
       abbreviation: team.abbreviation || team.name?.substring(0, 3).toUpperCase() || 'TBD',
       logo_url: team.logo_url || team.logo || DEFAULT_LOGO,
-      sport: 'baseball_mlb'
+      sport: 'baseball_mlb' 
     };
-    
     // Add external_id if it exists
     if (team.external_id !== undefined) {
       (teamData as any).external_id = String(team.external_id);
