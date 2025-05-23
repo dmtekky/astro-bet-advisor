@@ -66,16 +66,45 @@ const Dashboard: React.FC = () => {
     error: astroError 
   } = useAstroData(selectedDate);
 
-  // DEBUGGING: Print the full astroData and the sun sign used for display
-  // (These will appear every render)
-  // You can remove these after confirming the bug.
-  console.log('DASHBOARD RENDER: FULL astroData:', astroData);
-  if (astroData && astroData.planets && astroData.planets.sun) {
-    console.log('DASHBOARD RENDER: astroData.planets.sun:', astroData.planets.sun);
-  }
-  if (astroData?.planets?.sun?.sign) {
-    console.log('DASHBOARD RENDER: Sun sign:', astroData.planets.sun.sign);
-  }
+  // Add this useEffect to log the astroData when it changes
+  useEffect(() => {
+    if (astroData) {
+      console.log('AstroData from API:', {
+        date: astroData.date,
+        sidereal: astroData.sidereal,
+        sunSign: astroData.sunSign,
+        elements: astroData.elements,
+        moonPhase: astroData.moonPhase,
+        planets: Object.keys(astroData.planets || {}),
+        aspects: astroData.aspects?.length,
+        interpretations: Object.keys(astroData.interpretations?.planets || {})
+      });
+    }
+  }, [astroData]);
+
+  // Add this useEffect to log the astroData when it changes
+  useEffect(() => {
+    if (astroData) {
+      console.log('astroData:', JSON.stringify({
+        // Only include the most relevant parts to avoid console clutter
+        date: astroData.date,
+        sidereal: astroData.sidereal,
+        sunSign: astroData.sunSign,
+        planets: {
+          sun: astroData.planets?.sun,
+          moon: astroData.planets?.moon
+        },
+        moonPhase: astroData.moonPhase,
+        elements: astroData.elements,
+        modalities: astroData.modalities,
+        astroWeather: astroData.astroWeather,
+        interpretations: {
+          planets: Object.keys(astroData.interpretations?.planets || {})
+        },
+        aspects: astroData.aspects?.length
+      }, null, 2));
+    }
+  }, [astroData]);
 
   // State for astrological influences
   const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
@@ -86,10 +115,64 @@ const Dashboard: React.FC = () => {
     air: 0
   });
 
-  // Calculate loading and error states
-  const isLoading = gamesLoading || teamsLoading || astroLoading;
-  const hasError = gamesError || teamsError || astroError;
+  // Calculate loading and error states for games and teams
+  const isGamesOrTeamsLoading = gamesLoading || teamsLoading;
+  const hasGamesOrTeamsError = gamesError || teamsError;
   const errorMessage = gamesError?.message || teamsError?.message || astroError?.message;
+  
+  // Handle astro data loading state
+  if (astroLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading astrological data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Handle astro data error state
+  if (astroError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center p-6 max-w-md mx-auto bg-red-50 rounded-lg">
+            <div className="text-red-500 text-4xl mb-3">⚠️</div>
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">Error Loading Data</h2>
+            <p className="text-slate-600 mb-4">We couldn't load the astrological data. Please try again later.</p>
+            <p className="text-sm text-red-600 mb-4">{astroError.message}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // If we have no astro data, show a message
+  if (!astroData) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-slate-600">No astrological data available. Please try again later.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+  
+  // Extract sun sign data for easy access
+  const sunSign = astroData.sunSign;
+  const sunDegree = astroData.planets?.sun?.degree;
+  const sunMinute = astroData.planets?.sun?.minute || 0;
 
   // Group games by date
   const groupedGames = useMemo(() => 
@@ -304,9 +387,12 @@ const Dashboard: React.FC = () => {
 
   function getSunSportsInfluences(astroData: any): { text: string; color: string }[] {
     const influences: { text: string; color: string }[] = [];
-
-    if (astroData?.sun?.sign) {
-      const sign = astroData.sun.sign;
+    
+    if (!astroData) return influences;
+    
+    // Use the sunSign property directly from the API response
+    if (astroData.sunSign) {
+      const sign = astroData.sunSign;
       const element = getSunElement(sign);
 
       influences.push({
@@ -315,8 +401,8 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    if (astroData?.sun?.degree) {
-      const degree = Math.round(astroData.sun.degree);
+    if (astroData.planets?.sun?.degree !== undefined) {
+      const degree = Math.round(astroData.planets.sun.degree);
       influences.push({
         text: `The Sun is at ${degree}°, which may indicate ${getDegreeImpact(degree)} performance`,
         color: 'bg-orange-500'
@@ -392,8 +478,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          {isLoading ? (
-            // Loading state
+          {isGamesOrTeamsLoading ? (
+            // Loading state for games and teams
             <div className="space-y-8">
               <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                 <CardHeader className="pb-3">
@@ -418,8 +504,8 @@ const Dashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          ) : hasError ? (
-            // Error state
+          ) : hasGamesOrTeamsError ? (
+            // Error state for games and teams
             <Alert variant="destructive" className="bg-white/70 backdrop-blur-sm">
               <AlertDescription>
                 {errorMessage || 'An error occurred while loading data. Please try again later.'}
@@ -676,23 +762,23 @@ const Dashboard: React.FC = () => {
                             <Sun className="h-7 w-7 text-amber-500 drop-shadow-lg animate-spin-slow" />
                             <div className="flex-1 flex items-center">
                               <CardTitle className="text-lg font-bold text-amber-700 tracking-wide flex items-center gap-2">
-                                Sun in {astroData?.sun?.sign || astroData?.planets?.sun?.sign || '—'}
+                                Sun in {sunSign || '—'}
                                 <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-700 text-xs font-semibold shadow">
-                                  {getSunElement(astroData?.sun?.sign || astroData?.planets?.sun?.sign)}
+                                  {getSunElement(sunSign || '')}
                                 </span>
                                 <span className="ml-auto text-xs font-bold text-amber-600 bg-amber-100 rounded-full px-2 py-0.5 shadow">
-                                  {astroData?.sun?.degree !== undefined || astroData?.planets?.sun?.degree !== undefined
-                                    ? `${Math.round(astroData.sun?.degree || astroData.planets?.sun?.degree)}° ${astroData.sun?.minute || astroData.planets?.sun?.minute || 0}'`
+                                  {sunDegree !== undefined
+                                    ? `${Math.round(sunDegree)}° ${sunMinute}'`
                                     : '—'}
                                 </span>
                               </CardTitle>
                             </div>
                           </CardHeader>
-                          {astroData?.sun?.sign || astroData?.planets?.sun?.sign ? (
+                          {sunSign && (
                             <p className="text-sm text-amber-800 mt-1 pl-9">
-                              The Sun in {astroData.sun?.sign || astroData.planets?.sun?.sign} brings {getSunSignImpact(astroData.sun?.sign || astroData.planets?.sun?.sign)} energy to today's games
+                              The Sun in {sunSign} brings {getSunSignImpact(sunSign)} energy to today's games
                             </p>
-                          ) : null}
+                          )}
                           <CardContent className="pt-0 pb-4">
                             <div className="mt-2 space-y-2">
                               {getSunSportsInfluences(astroData).map((influence, i) => (
@@ -791,7 +877,7 @@ const Dashboard: React.FC = () => {
                             </Card>
                           )}
 
-{/* Modalities Distribution Panel (optional) */}
+                          {/* Modalities Distribution Panel (optional) */}
                           {astroData?.modalities && (
                             <Card className="bg-white/70 border-slate-200/70">
                               <CardHeader>
