@@ -365,8 +365,6 @@ const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronom
   // Use tropical longitudes for aspect progression calculation
   const lon1_current = planetData1.tropicalLongitude;
   const lon2_current = planetData2.tropicalLongitude;
-  const retrograde1 = planetData1.retrograde;
-  const retrograde2 = planetData2.retrograde;
 
   // Calculate current orb
   let currentDistance = Math.abs(lon1_current - lon2_current);
@@ -377,20 +375,38 @@ const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronom
   const jsDateFuture = new Date(currentTime.date.getTime() + (60 * 60 * 1000)); // 1 hour later
   const futureTimeForCalc = Astronomy.MakeTime(jsDateFuture);
 
-  const planet1Definition = PLANETS.find(p => p.name === planet1Name);
-  const planet2Definition = PLANETS.find(p => p.name === planet2Name);
+  let lon1_future;
+  let lon2_future;
 
-  if (!planet1Definition || !planet1Definition.body) {
-    console.error(`[ERROR] isApplying: Could not find body for planet1: ${planet1Name}`);
-    return false; 
-  }
-  if (!planet2Definition || !planet2Definition.body) {
-    console.error(`[ERROR] isApplying: Could not find body for planet2: ${planet2Name}`);
-    return false; 
+  // Calculate future longitude for planet1
+  const planet1NameLower = planet1Name.toLowerCase();
+  if (planet1NameLower === 'sun') {
+    lon1_future = astronomyLib.SunPosition(futureTimeForCalc).elon;
+  } else if (planet1NameLower === 'moon') {
+    lon1_future = astronomyLib.EclipticGeoMoon(futureTimeForCalc).lon;
+  } else {
+    const planet1Definition = PLANETS.find(p => p.name === planet1Name);
+    if (!planet1Definition || !planet1Definition.body) {
+      console.error(`[ERROR] isApplying: Could not find body for planet1: ${planet1Name}`);
+      return false; 
+    }
+    lon1_future = astronomyLib.EclipticLongitude(planet1Definition.body, futureTimeForCalc);
   }
 
-  const lon1_future = astronomyLib.EclipticLongitude(planet1Definition.body, futureTimeForCalc);
-  const lon2_future = astronomyLib.EclipticLongitude(planet2Definition.body, futureTimeForCalc);
+  // Calculate future longitude for planet2
+  const planet2NameLower = planet2Name.toLowerCase();
+  if (planet2NameLower === 'sun') {
+    lon2_future = astronomyLib.SunPosition(futureTimeForCalc).elon;
+  } else if (planet2NameLower === 'moon') {
+    lon2_future = astronomyLib.EclipticGeoMoon(futureTimeForCalc).lon;
+  } else {
+    const planet2Definition = PLANETS.find(p => p.name === planet2Name);
+    if (!planet2Definition || !planet2Definition.body) {
+      console.error(`[ERROR] isApplying: Could not find body for planet2: ${planet2Name}`);
+      return false; 
+    }
+    lon2_future = astronomyLib.EclipticLongitude(planet2Definition.body, futureTimeForCalc);
+  }
 
   // Calculate future orb
   let futureDistance = Math.abs(lon1_future - lon2_future);
@@ -398,8 +414,6 @@ const isApplying = (planetData1, planetData2, aspectAngle, currentTime, astronom
   const futureOrb = Math.abs(futureDistance - aspectAngle);
 
   // If the orb is smaller in the future, the aspect is applying.
-  // This basic check works for most cases. More complex scenarios involve exact speeds.
-  // A very small tolerance to account for floating point inaccuracies.
   const tolerance = 0.0001; 
   return futureOrb < currentOrb - tolerance;
 };
