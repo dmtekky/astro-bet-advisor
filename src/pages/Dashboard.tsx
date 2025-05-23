@@ -272,7 +272,7 @@ const Dashboard: React.FC = () => {
   // Create a memoized function to get game-specific predictions
   const getGamePrediction = useCallback(
     (game: Game, homeTeam?: Team, awayTeam?: Team) => {
-      const rawAstro = gameAstroData[game.id];
+      const rawAstro = gameAstroData;
       if (!rawAstro) {
         console.warn(`No astro data for game ${game.id} in getGamePrediction`);
         return null;
