@@ -15,9 +15,30 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 import { Calendar, BarChart2, TrendingUp, Activity, ChevronRight, Sun, Moon, Info, Star } from 'lucide-react';
 import { useAstroData } from '@/hooks/useAstroData';
-import type { Team } from '@/hooks/useTeams';
+import type { Team } from '@/types';
 import type { Game } from '@/types';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
+import type { GamePredictionData } from '@/types/gamePredictions';
+import type { CelestialBody, Aspect, AspectType } from '@/types/astrology';
+
+// Extend the Team interface to include additional properties used in the component
+interface ExtendedTeam extends Omit<Team, 'logo' | 'logo_url' | 'external_id'> {
+  logo_url?: string;
+  logo?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  record?: string;
+  wins?: number;
+  losses?: number;
+  external_id?: string | number;
+}
+
+// Helper type for aspect influence
+interface AspectInfluence {
+  description: string;
+  strength: number;
+  area?: string[];
+}
 
 // Type definitions
 interface AstrologyInfluence {
@@ -115,64 +136,14 @@ const Dashboard: React.FC = () => {
     air: 0
   });
 
-  // Calculate loading and error states for games and teams
-  const isGamesOrTeamsLoading = gamesLoading || teamsLoading;
-  const hasGamesOrTeamsError = gamesError || teamsError;
-  const errorMessage = gamesError?.message || teamsError?.message || astroError?.message;
-  
-  // Handle astro data loading state
-  if (astroLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading astrological data...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  // Calculate loading and error states
+  const isLoading = astroLoading || gamesLoading || teamsLoading;
+  const error = astroError || gamesError || teamsError;
 
-  // Handle astro data error state
-  if (astroError) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center p-6 max-w-md mx-auto bg-red-50 rounded-lg">
-            <div className="text-red-500 text-4xl mb-3">⚠️</div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">Error Loading Data</h2>
-            <p className="text-slate-600 mb-4">We couldn't load the astrological data. Please try again later.</p>
-            <p className="text-sm text-red-600 mb-4">{astroError.message}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // If we have no astro data, show a message
-  if (!astroData) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-slate-600">No astrological data available. Please try again later.</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-  
   // Extract sun sign data for easy access
-  const sunSign = astroData.sunSign;
-  const sunDegree = astroData.planets?.sun?.degree;
-  const sunMinute = astroData.planets?.sun?.minute || 0;
+  const sunSign = astroData?.sunSign || 'Unknown';
+  const sunDegree = astroData?.planets?.sun?.degree || 0;
+  const sunMinute = astroData?.planets?.sun?.minute || 0;
 
   // Group games by date
   const groupedGames = useMemo(() => 
@@ -189,7 +160,134 @@ const Dashboard: React.FC = () => {
 
   // Get sports predictions from astrological data
   const sportsPredictions = useMemo(() => {
-    return calculateSportsPredictions(astroData);
+    if (!astroData) return null;
+    
+    // Helper to create a default celestial body
+    const createDefaultCelestialBody = (name: string): CelestialBody => ({
+      name,
+      sign: 'Aries',
+      longitude: 0,
+      latitude: 0,
+      speed: 0,
+      house: 1,
+      retrograde: false,
+      degree: 0,
+      minute: 0
+    });
+
+    // Helper to process moon phase data
+    const getMoonPhase = () => {
+      if (astroData.moonPhase && typeof astroData.moonPhase === 'object') {
+        const mp = astroData.moonPhase as any;
+        return {
+          name: typeof mp.name === 'string' ? mp.name : 'New Moon',
+          value: typeof mp.value === 'number' ? mp.value : 0,
+          illumination: typeof mp.illumination === 'number' ? mp.illumination : 0
+        };
+      }
+      return {
+        name: 'New Moon',
+        value: 0,
+        illumination: 0
+      };
+    };
+
+    // Helper to process elements data
+    const getElements = () => {
+      if (astroData.elements && typeof astroData.elements === 'object') {
+        const defaultElement = { score: 0, planets: [] as string[] };
+        const elements = astroData.elements as any;
+        
+        const processElement = (element: any) => ({
+          score: typeof element?.score === 'number' ? element.score : 0,
+          planets: Array.isArray(element?.planets) 
+            ? element.planets
+                .filter((p: any): p is string => typeof p === 'string')
+                .map(String)
+                .filter(Boolean)
+                .slice(0, 10)
+            : []
+        });
+        
+        return {
+          fire: elements.fire ? processElement(elements.fire) : { ...defaultElement },
+          earth: elements.earth ? processElement(elements.earth) : { ...defaultElement },
+          water: elements.water ? processElement(elements.water) : { ...defaultElement },
+          air: elements.air ? processElement(elements.air) : { ...defaultElement }
+        };
+      }
+      
+      // Default empty elements
+      return {
+        fire: { score: 0, planets: [] },
+        earth: { score: 0, planets: [] },
+        water: { score: 0, planets: [] },
+        air: { score: 0, planets: [] }
+      };
+    };
+    
+    // Process aspects
+    const processAspects = () => {
+      if (!astroData.aspects || !Array.isArray(astroData.aspects)) {
+        return [];
+      }
+      
+      return astroData.aspects.map(aspect => {
+        // Safely extract aspect properties with defaults
+        const aspectType: AspectType = 
+          (typeof aspect.type === 'string' && 
+           ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(aspect.type))
+            ? aspect.type as AspectType
+            : 'conjunction';
+        
+        // Safely extract influence object
+        const influence = (() => {
+          if (!aspect.influence || typeof aspect.influence !== 'object') {
+            return {
+              description: 'Neutral influence',
+              strength: 0.5,
+              area: []
+            };
+          }
+          
+          const infl = aspect.influence as Partial<AspectInfluence>;
+          return {
+            description: typeof infl.description === 'string' ? infl.description : 'Neutral influence',
+            strength: typeof infl.strength === 'number' ? Math.max(0, Math.min(1, infl.strength)) : 0.5,
+            area: Array.isArray(infl.area) ? infl.area.filter((a): a is string => typeof a === 'string') : []
+          };
+        })();
+        
+        return {
+          from: Array.isArray(aspect.planets) && aspect.planets[0] ? String(aspect.planets[0]) : '',
+          to: Array.isArray(aspect.planets) && aspect.planets[1] ? String(aspect.planets[1]) : '',
+          type: aspectType,
+          orb: typeof aspect.orb === 'number' ? aspect.orb : 0,
+          exact: !!(aspect as any).exact,
+          influence
+        } as Aspect;
+      });
+    };
+    
+    // Create the prediction data object
+    const predictionData: GamePredictionData = {
+      ...astroData,
+      // Ensure required properties are present
+      sun: astroData.planets?.sun || createDefaultCelestialBody('Sun'),
+      moon: astroData.planets?.moon || createDefaultCelestialBody('Moon'),
+      observer: {
+        latitude: astroData.observer?.latitude || 0,
+        longitude: astroData.observer?.longitude || 0,
+        timezone: astroData.observer?.timezone || 'UTC',
+        altitude: 0 // Default altitude
+      },
+      planets: astroData.planets || {},
+      aspects: processAspects(),
+      moonPhase: getMoonPhase(),
+      elements: getElements()
+    };
+    
+    return calculateSportsPredictions(predictionData);
   }, [astroData]);
 
   // Create a memoized function to get game-specific predictions
@@ -200,14 +298,34 @@ const Dashboard: React.FC = () => {
     [astroData]
   );
 
-  // Helper function to find a team
+  // Helper function to find a team with proper type casting
   const findTeam = (teamId: string): Team | undefined => {
-    return teamMap?.[teamId];
+    const team = teamMap?.[teamId] as ExtendedTeam | undefined;
+    if (!team) return undefined;
+    
+    // Create a new team object with all required properties
+    const teamData: Team = {
+      id: team.id || teamId,
+      name: team.name || 'Unknown Team',
+      abbreviation: team.abbreviation || team.name?.substring(0, 3).toUpperCase() || 'TBD',
+      logo_url: team.logo_url || team.logo || DEFAULT_LOGO,
+      sport: 'baseball_mlb'
+    };
+    
+    // Add external_id if it exists
+    if (team.external_id !== undefined) {
+      (teamData as any).external_id = String(team.external_id);
+    }
+    
+    // Add optional properties if they exist
+    if (team.city) teamData.city = team.city;
+    
+    return teamData;
   };
 
   // Process astrological data when it's available
   useEffect(() => {
-    if (astroData) {
+    if (astroData && !astroLoading) {
       console.log('AstroData received:', astroData);
       
       // Initialize element scores
@@ -478,7 +596,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          {isGamesOrTeamsLoading ? (
+          {isLoading ? (
             // Loading state for games and teams
             <div className="space-y-8">
               <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
@@ -504,11 +622,11 @@ const Dashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          ) : hasGamesOrTeamsError ? (
-            // Error state for games and teams
+          ) : error ? (
+            // Error state
             <Alert variant="destructive" className="bg-white/70 backdrop-blur-sm">
               <AlertDescription>
-                {errorMessage || 'An error occurred while loading data. Please try again later.'}
+                {error.message || 'An error occurred while loading data. Please try again later.'}
               </AlertDescription>
             </Alert>
           ) : (
