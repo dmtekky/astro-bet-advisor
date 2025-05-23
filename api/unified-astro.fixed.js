@@ -144,20 +144,20 @@ const calculatePlanetaryPositions = async (time, useSidereal = false) => {
           if (planetNameLower === 'sun') {
             const sunPos = Astronomy.SunPosition(time);
             // console.log(`SunPosition raw object for ${planet.name} at ${time}:`, JSON.stringify(sunPos));
-            if (sunPos && typeof sunPos.lon === 'number') {
-              elong = sunPos.lon;
+            if (sunPos && typeof sunPos.elon === 'number') {
+              elong = sunPos.elon;
             } else {
               console.error(`Error: SunPosition did not return expected data for ${planet.name}. Received:`, sunPos);
-              throw new Error(`Failed to get longitude from SunPosition for ${planet.name}`);
+              throw new Error(`Failed to get ecliptic longitude (elon) from SunPosition for ${planet.name}`);
             }
           } else if (planetNameLower === 'moon') {
             const moonPos = Astronomy.EclipticGeoMoon(time);
             // console.log(`EclipticGeoMoon raw object for ${planet.name} at ${time}:`, JSON.stringify(moonPos));
-            if (moonPos && typeof moonPos.lon === 'number') {
-              elong = moonPos.lon;
+            if (moonPos && typeof moonPos.elon === 'number') {
+              elong = moonPos.elon;
             } else {
               console.error(`Error: EclipticGeoMoon did not return expected data for ${planet.name}. Received:`, moonPos);
-              throw new Error(`Failed to get longitude from EclipticGeoMoon for ${planet.name}`);
+              throw new Error(`Failed to get ecliptic longitude (elon) from EclipticGeoMoon for ${planet.name}`);
             }
           } else {
             if (!planet.body) {
