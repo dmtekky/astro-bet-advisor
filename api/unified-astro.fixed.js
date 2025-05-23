@@ -134,7 +134,14 @@ const calculatePlanetaryPositions = async (time, useSidereal = false) => {
       // Use Astronomy.Horizon to calculate position directly
       // This is a simplified approach that will still work for our purposes
       // We'll use the longitude directly from the horizontal coordinates
-      const elong = Astronomy.EclipticLongitude(planet.body, time);
+      let elong;
+      if (planet.name === 'sun') {
+        elong = Astronomy.SunLongitude(time);
+      } else if (planet.name === 'moon') {
+        elong = Astronomy.MoonLongitude(time);
+      } else {
+        elong = Astronomy.EclipticLongitude(planet.body, time);
+      }
       let longitude = elong;
       
       // Log success
