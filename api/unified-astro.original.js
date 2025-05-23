@@ -7,6 +7,11 @@ const Astronomy = require('astronomy-engine');
 // Unique log for deployment verification
 const DEPLOYMENT_VERSION_UNIFIED = "unified_js_v20250523_1505"; 
 console.log(`[DEPLOY_CHECK] unified-astro.js loaded. Version: ${DEPLOYMENT_VERSION_UNIFIED}`);
+
+// Timestamped version for detailed logging
+const DEPLOYMENT_VERSION_UNIFIED_TS = "v_unified_js_moon_lon_check_TS_" + new Date().toISOString();
+console.log(`[DEPLOY_CHECK] unified-astro.js loaded with timestamped version: ${DEPLOYMENT_VERSION_UNIFIED_TS}`);
+
 const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration for caching
@@ -17,8 +22,6 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const DEPLOYMENT_VERSION_UNIFIED_TS = "v_unified_js_moon_lon_check_TS_" + new Date().toISOString();
-  console.log(`[DEPLOY_CHECK] unified-astro.js loaded with timestamped version: ${DEPLOYMENT_VERSION_UNIFIED_TS}`);
 }
 
 // Zodiac signs in order
