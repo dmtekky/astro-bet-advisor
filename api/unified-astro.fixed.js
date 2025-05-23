@@ -3,6 +3,10 @@
 // Optimized for Vercel deployment
 
 console.log("--- UNIFIED ASTRO API SCRIPT STARTED ---");
+
+// Unique log for deployment verification
+const DEPLOYMENT_VERSION_FIXED = "fixed_js_v20250523_1505";
+console.log(`[DEPLOY_CHECK] unified-astro.fixed.js loaded. Version: ${DEPLOYMENT_VERSION_FIXED}`);
 const Astronomy = require('astronomy-engine');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -780,7 +784,8 @@ const generatePlanetInterpretation = (planetName, data) => {
 /**
  * Main handler function for API requests
  */
-module.exports = async function (req, res) {
+module.exports = async (req, res) => {
+  console.log(`[DEPLOY_CHECK_HANDLER] unified-astro.fixed.js handler invoked. Version: ${DEPLOYMENT_VERSION_FIXED}`);
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
