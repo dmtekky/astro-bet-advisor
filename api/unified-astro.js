@@ -17,6 +17,8 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const DEPLOYMENT_VERSION_UNIFIED_TS = "v_unified_js_moon_lon_check_TS_" + new Date().toISOString();
+  console.log(`[DEPLOY_CHECK] unified-astro.js loaded with timestamped version: ${DEPLOYMENT_VERSION_UNIFIED_TS}`);
 }
 
 // Zodiac signs in order
@@ -745,7 +747,7 @@ const generatePlanetInterpretation = (planetName, data) => {
  * Main handler function for API requests
  */
 module.exports = async (req, res) => {
-  console.log(`[DEPLOY_CHECK_HANDLER] unified-astro.js handler invoked. Version: ${DEPLOYMENT_VERSION_UNIFIED}`);
+  console.log(`[DEPLOY_CHECK_HANDLER_TS] unified-astro.js handler invoked. Version: ${DEPLOYMENT_VERSION_UNIFIED_TS}`);
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
