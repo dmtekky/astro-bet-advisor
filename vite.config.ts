@@ -18,8 +18,19 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          configure: (proxy, options) => {
+            proxy.on('error', (err, req, res) => {
+              console.log('Vite Proxy Error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              console.log('Vite Proxying request:', req.method, req.url, 'to', options.target + proxyReq.path);
+            });
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              console.log('Vite Received response from target:', proxyRes.statusCode, req.url);
+            });
+          }
         }
       }
     },
@@ -42,14 +53,18 @@ export default defineConfig(({ mode }) => {
     },
     
     plugins: [
-      react(),
+      react({
+        jsxImportSource: '@emotion/react',
+      }),
       mode === 'development' && componentTagger(),
     ].filter(Boolean),
     
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
+        '@': path.resolve(__dirname, './src'),
+        '@components': path.resolve(__dirname, './src/components'),
+        '@lib': path.resolve(__dirname, './src/lib')
+      }
     },
   };
 });

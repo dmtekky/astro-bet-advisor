@@ -19,7 +19,7 @@ const getApiBaseUrl = () => {
   }
   
   // In development, use the local API server
-  return 'http://localhost:3001/api/unified-astro';
+  return '/api/unified-astro';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -169,6 +169,7 @@ interface UseAstroDataReturn {
 
 // Fetch function for SWR
 const fetcher = async (url: string) => {
+  console.log('[Fetcher] Attempting to fetch URL:', url);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`API request failed with status ${response.status}`);
@@ -207,8 +208,9 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
     : dateParam.toISOString().split('T')[0];
 
   // Fetch data from API
+  const apiUrl = `${API_BASE_URL}?date=${dateStr}&sidereal=true&t=${Date.now()}`;
   const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
-    `${API_BASE_URL}?date=${dateStr}&sidereal=true`,
+    apiUrl,
     fetcher,
     {
       revalidateOnFocus: false,
