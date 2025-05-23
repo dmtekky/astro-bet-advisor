@@ -5,7 +5,7 @@
   "installCommand": "npm install && npm uninstall swisseph",
   "outputDirectory": "dist",
   "functions": {
-    "api/*.js": {
+    "api/*.cjs": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -13,7 +13,7 @@
   "rewrites": [
     { "source": "/api/astro", "destination": "/api/astro.js" },
     { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
-    { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
+    { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.cjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
