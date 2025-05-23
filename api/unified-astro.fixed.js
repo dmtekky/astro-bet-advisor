@@ -153,11 +153,11 @@ const calculatePlanetaryPositions = async (time, useSidereal = false) => {
           } else if (planetNameLower === 'moon') {
             const moonPos = Astronomy.EclipticGeoMoon(time);
             // console.log(`EclipticGeoMoon raw object for ${planet.name} at ${time}:`, JSON.stringify(moonPos));
-            if (moonPos && typeof moonPos.elon === 'number') {
-              elong = moonPos.elon;
+            if (moonPos && typeof moonPos.lon === 'number') {
+              elong = moonPos.lon;
             } else {
               console.error(`Error: EclipticGeoMoon did not return expected data for ${planet.name}. Received:`, moonPos);
-              throw new Error(`Failed to get ecliptic longitude (elon) from EclipticGeoMoon for ${planet.name}`);
+              throw new Error(`Failed to get longitude (lon) from EclipticGeoMoon for ${planet.name}`);
             }
           } else {
             if (!planet.body) {
