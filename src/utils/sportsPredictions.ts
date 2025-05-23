@@ -1,8 +1,34 @@
-// src/utils/sportsPredictionsNew.ts
-import type { AstroData } from '@/hooks/useAstroData';
-import type { Game } from '@/types';
-// Import Team from hooks for Dashboard compatibility
-import type { Team } from '@/hooks/useTeams';
+// src/utils/sportsPredictions.ts
+import type { 
+  AstroData, 
+  CelestialBody, 
+  AspectType,
+  Aspect
+} from '@/types/astrology';
+import type { Game, Team } from '@/types';
+import type { GamePredictionData } from '@/types/gamePredictions';
+
+// Extended interface to match the actual data structure
+type ExtendedAstroData = Omit<AstroData, 'aspects' | 'elements' | 'moon' | 'sun' | 'planets'> & {
+  moon?: CelestialBody & { phase_name?: string; illumination?: number; phase?: string };
+  sun?: CelestialBody & { sign?: string; retrograde?: boolean };
+  planets?: Record<string, CelestialBody & { sign?: string; retrograde?: boolean }>;
+  elements?: {
+    fire: { score: number; planets: string[] };
+    earth: { score: number; planets: string[] };
+    water: { score: number; planets: string[] };
+    air: { score: number; planets: string[] };
+  };
+  aspects?: Array<Aspect | {
+    from: string;
+    to: string;
+    type: string;
+    angle?: number;
+    orb?: number;
+    influence?: string | { description: string; strength: number; area: string[] };
+    planets?: string[];
+  }>;
+};
 
 // Define prediction result type
 export interface PredictionResult {
@@ -32,46 +58,102 @@ export interface GameOutcomePrediction {
   sunSign: string;
   tags: string[];
   confidence: number;
+  reasoning?: string;
+  predicted_winner?: string | null;
 }
+
+// Export GameOutcomePrediction as SportsPrediction for backward compatibility
+export type SportsPrediction = GameOutcomePrediction;
 
 /**
  * Calculate sports prediction based on astrological data
  */
-export function calculateSportsPredictions(astroData: AstroData | null): PredictionResult | null {
+export function calculateSportsPredictions(astroData: GamePredictionData | null): PredictionResult | null {
   if (!astroData) return null;
   
-  // Extract key data from astro data
-  const moonPhase = astroData.moon?.phase_name || '';
-  const moonIllumination = typeof astroData.moon?.illumination === 'number' 
-    ? astroData.moon.illumination : 0;
-  const sunSign = astroData.sun?.sign || astroData.planets?.sun?.sign || '';
-  const mercuryRetrograde = astroData.mercury?.retrograde || 
-    (astroData.planets?.mercury as any)?.retrograde || false;
+  // Extract key data from astro data with safe fallbacks
+  const moonPhase = (() => {
+    if (astroData.moon?.phase_name) return astroData.moon.phase_name;
+    if (astroData.moonPhase?.name) return astroData.moonPhase.name;
+    return 'New Moon'; // Default fallback
+  })();
   
-  // Calculate element distribution scores
-  const elements = astroData.elements || { fire: 0, earth: 0, water: 0, air: 0 };
+  const moonIllumination = (() => {
+    if (typeof astroData.moon?.illumination === 'number') return astroData.moon.illumination;
+    if (typeof astroData.moonPhase?.illumination === 'number') return astroData.moonPhase.illumination;
+    return 0; // Default fallback
+  })();
   
-  // Convert to proper format if needed
-  let fireScore = 0;
-  let earthScore = 0;
-  let waterScore = 0;
-  let airScore = 0;
+  // Handle sun sign - check both direct property and planets object
+  const sunSign = (() => {
+    if (astroData.sun?.sign) return String(astroData.sun.sign);
+    if (astroData.planets?.sun?.sign) return String(astroData.planets.sun.sign);
+    return 'Aries'; // Default fallback
+  })();
   
-  if (typeof elements.fire === 'number') {
-    fireScore = elements.fire;
-    earthScore = elements.earth;
-    waterScore = elements.water;
-    airScore = elements.air;
-  } else if (elements.fire && typeof elements.fire === 'object') {
-    // @ts-ignore - Handle potential missing properties
-    fireScore = elements.fire.score || 0;
-    // @ts-ignore
-    earthScore = elements.earth?.score || 0;
-    // @ts-ignore
-    waterScore = elements.water?.score || 0;
-    // @ts-ignore
-    airScore = elements.air?.score || 0;
+  // Handle mercury retrograde
+  const mercuryRetrograde = (() => {
+    if (astroData.planets?.mercury?.retrograde !== undefined) 
+      return Boolean(astroData.planets.mercury.retrograde);
+    return false;
+  })();
+  
+  // Check for significant aspects that might affect the game
+  const significantAspects = (astroData.aspects || []).filter(aspect => {
+    // Handle both Aspect type and the simplified aspect format
+    const from = 'from' in aspect ? String(aspect.from || '') : '';
+    const to = 'to' in aspect ? String(aspect.to || '') : '';
+    
+    // Check if any of the planets in the aspect are significant
+    return [from, to].some(p => 
+      p && (p.includes('Sun') || p.includes('Moon') || p.includes('Mercury'))
+    );
+  });
+
+  // Add aspect influences to tags
+  const tags: string[] = [];
+  if (significantAspects.length > 0) {
+    tags.push('Significant aspects present');
   }
+  
+  // Calculate element distribution scores with safe access
+  const defaultElements = { 
+    fire: { score: 0, planets: [] }, 
+    earth: { score: 0, planets: [] }, 
+    water: { score: 0, planets: [] }, 
+    air: { score: 0, planets: [] } 
+  };
+  
+  const elements = astroData.elements || defaultElements;
+  
+  // Extract scores safely with proper type checking
+  const fireScore = (() => {
+    if (!elements.fire) return 0;
+    if (typeof elements.fire === 'number') return elements.fire;
+    if (typeof elements.fire.score === 'number') return elements.fire.score;
+    return 0;
+  })();
+  
+  const earthScore = (() => {
+    if (!elements.earth) return 0;
+    if (typeof elements.earth === 'number') return elements.earth;
+    if (typeof elements.earth.score === 'number') return elements.earth.score;
+    return 0;
+  })();
+  
+  const waterScore = (() => {
+    if (!elements.water) return 0;
+    if (typeof elements.water === 'number') return elements.water;
+    if (typeof elements.water.score === 'number') return elements.water.score;
+    return 0;
+  })();
+  
+  const airScore = (() => {
+    if (!elements.air) return 0;
+    if (typeof elements.air === 'number') return elements.air;
+    if (typeof elements.air.score === 'number') return elements.air.score;
+    return 0;
+  })();
   
   const totalElements = fireScore + earthScore + waterScore + airScore || 100;
   
@@ -186,33 +268,62 @@ export function predictGameOutcome(
   game: Game, 
   homeTeam: Team | undefined, 
   awayTeam: Team | undefined, 
-  astroData: AstroData | null
+  astroData: GamePredictionData | null
 ): GameOutcomePrediction | null {
   if (!astroData || !homeTeam || !awayTeam) {
     return null;
   }
   
-  // Extract key astrological data
-  const moonPhase = astroData.moon?.phase_name || '';
-  const sunSign = astroData.sun?.sign || '';
+  // Extract key astrological data with proper type checking and fallbacks
+  const moonPhase = (() => {
+    if (astroData.moon?.phase_name) return astroData.moon.phase_name;
+    if (astroData.moonPhase?.name) return astroData.moonPhase.name;
+    return 'New Moon'; // Default fallback
+  })();
+    
+  const sunSign = (() => {
+    if (astroData.sun?.sign) return String(astroData.sun.sign);
+    if (astroData.planets?.sun?.sign) return String(astroData.planets.sun.sign);
+    return 'Aries'; // Default fallback
+  })();
   
-  // Get dominant element
-  const elements = astroData.elements || { fire: 0, earth: 0, water: 0, air: 0 };
-  let elementValues: Record<string, number> = {};
+  // Get dominant element with proper type checking
+  const defaultElements = { 
+    fire: { score: 0, planets: [] }, 
+    earth: { score: 0, planets: [] }, 
+    water: { score: 0, planets: [] }, 
+    air: { score: 0, planets: [] } 
+  };
   
-  if (typeof elements.fire === 'number') {
-    elementValues = elements as Record<string, number>;
-  } else {
-    // Handle case where elements have a score property
-    Object.entries(elements).forEach(([key, value]) => {
-      if (typeof value === 'object' && value !== null) {
-        // @ts-ignore
-        elementValues[key] = value.score || 0;
-      } else {
-        elementValues[key] = 0;
-      }
-    });
-  }
+  const elements = astroData.elements || defaultElements;
+  
+  // Extract element scores safely with proper type checking
+  const elementValues = {
+    fire: (() => {
+      if (!elements.fire) return 0;
+      if (typeof elements.fire === 'number') return elements.fire;
+      if (typeof elements.fire.score === 'number') return elements.fire.score;
+      return 0;
+    })(),
+    earth: (() => {
+      if (!elements.earth) return 0;
+      if (typeof elements.earth === 'number') return elements.earth;
+      if (typeof elements.earth.score === 'number') return elements.earth.score;
+      return 0;
+    })(),
+    water: (() => {
+      if (!elements.water) return 0;
+      if (typeof elements.water === 'number') return elements.water;
+      if (typeof elements.water.score === 'number') return elements.water.score;
+      return 0;
+    })(),
+    air: (() => {
+      if (!elements.air) return 0;
+      if (typeof elements.air === 'number') return elements.air;
+      if (typeof elements.air.score === 'number') return elements.air.score;
+      return 0;
+    })()
+  };
   
   const dominantElement = Object.entries(elementValues)
     .sort((a, b) => b[1] - a[1])[0]?.[0] || '';
@@ -246,6 +357,13 @@ export function predictGameOutcome(
     sunSign
   );
   
+  // Determine predicted winner based on win probability
+  const predicted_winner = homeEdge > 0.5 
+    ? 'home' 
+    : homeEdge < 0.5 
+      ? 'away' 
+      : null;
+
   return {
     homeWinProbability: homeEdge,
     awayWinProbability: 1 - homeEdge,
@@ -254,7 +372,8 @@ export function predictGameOutcome(
     moonPhase,
     sunSign,
     tags: [dominantElement, moonPhase.toLowerCase().replace(/\s+/g, '_')],
-    confidence: 0.7 + Math.abs(homeEdge - 0.5) // Higher confidence when edge is stronger
+    confidence: 0.7 + Math.abs(homeEdge - 0.5), // Higher confidence when edge is stronger
+    predicted_winner
   };
 }
 

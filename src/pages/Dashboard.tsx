@@ -188,16 +188,7 @@ const Dashboard: React.FC = () => {
       
       console.log('UI Sun sign:', sunSign, 'astroData.planets.sun:', astroData.planets?.sun);
       
-      if (sunSign) {
-        const signText = isSidereal ? `${sunSign} (Sidereal)` : sunSign;
-        
-        influences.push({
-          name: 'Sun Position',
-          impact: 0.8,
-          description: `The Sun in ${signText} brings ${getSunSignImpact(sunSign)} energy to today's games`,
-          icon: <Sun className="h-5 w-5 text-amber-500" />
-        });
-      }
+      // Sun Position is now handled in a dedicated, visually distinct panel below the Moon & Void Status panel. Remove from influences.
       
       // Add moon phase influence if available
       const moonPhase = astroData.moon?.phase_name || (astroData.planets?.moon as any)?.phase_name;
@@ -291,6 +282,61 @@ const Dashboard: React.FC = () => {
       'water': 'intuition and flow'
     };
     return impacts[element.toLowerCase()] || 'performance';
+  }
+
+  function getSunElement(sign: string): string {
+    const elements: Record<string, string> = {
+      'Aries': 'Fire',
+      'Taurus': 'Earth',
+      'Gemini': 'Air',
+      'Cancer': 'Water',
+      'Leo': 'Fire',
+      'Virgo': 'Earth',
+      'Libra': 'Air',
+      'Scorpio': 'Water',
+      'Sagittarius': 'Fire',
+      'Capricorn': 'Earth',
+      'Aquarius': 'Air',
+      'Pisces': 'Water'
+    };
+    return elements[sign] || '—';
+  }
+
+  function getSunSportsInfluences(astroData: any): { text: string; color: string }[] {
+    const influences: { text: string; color: string }[] = [];
+
+    if (astroData?.sun?.sign) {
+      const sign = astroData.sun.sign;
+      const element = getSunElement(sign);
+
+      influences.push({
+        text: `The Sun in ${sign} brings ${getSunSignImpact(sign)} energy to today's games`,
+        color: element === 'Fire' ? 'bg-red-500' : element === 'Earth' ? 'bg-green-500' : element === 'Air' ? 'bg-sky-300' : 'bg-indigo-500'
+      });
+    }
+
+    if (astroData?.sun?.degree) {
+      const degree = Math.round(astroData.sun.degree);
+      influences.push({
+        text: `The Sun is at ${degree}°, which may indicate ${getDegreeImpact(degree)} performance`,
+        color: 'bg-orange-500'
+      });
+    }
+
+    return influences;
+  }
+
+  function getDegreeImpact(degree: number): string {
+    const impacts: Record<string, string> = {
+      '0-10': 'strong start',
+      '11-20': 'building momentum',
+      '21-30': 'peak performance'
+    };
+    const range = Object.keys(impacts).find((r) => {
+      const [start, end] = r.split('-').map((n) => parseInt(n));
+      return degree >= start && degree <= end;
+    });
+    return impacts[range] || 'variable';
   }
 
   // Update the daily recommendation to use real data
@@ -415,27 +461,36 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               {dateGames.map((game) => {
-                                const homeTeam = game.home_team ? findTeam(game.home_team) : undefined;
-                                const awayTeam = game.away_team ? findTeam(game.away_team) : undefined;
+                                console.log('[Dashboard] Game ID:', game.id);
+                                console.log('[Dashboard] Game Object:', game);
+                                
+                                // Extract team data from the game object (from nested relations)
+                                const homeTeamData = typeof game.home_team === 'object' ? game.home_team : findTeam(game.home_team);
+                                const awayTeamData = typeof game.away_team === 'object' ? game.away_team : findTeam(game.away_team);
                                 
                                 // Use our memoized function to get game prediction
-                                const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
+                                const gamePrediction = getGamePrediction(game, homeTeamData, awayTeamData);
+                                
+                                // Create a clean game object with all necessary fields
+                                const gameWithPrediction = {
+                                  ...game,
+                                  // Ensure we're using the team IDs, not the full team objects
+                                  home_team: homeTeamData?.id || game.home_team,
+                                  away_team: awayTeamData?.id || game.away_team,
+                                  astroPrediction: gamePrediction?.prediction,
+                                  homeEdge: gamePrediction?.homeWinProbability,
+                                  moonPhase: gamePrediction?.moonPhase,
+                                  sunSign: gamePrediction?.sunSign,
+                                  dominantElement: gamePrediction?.dominantElement,
+                                  confidence: gamePrediction?.confidence
+                                };
                                 
                                 return (
                                   <GameCard
                                     key={game.id}
-                                    game={{
-                                      ...game,
-                                      astroPrediction: gamePrediction?.prediction,
-                                      homeEdge: gamePrediction?.homeWinProbability,
-                                      // Pass additional astrological data
-                                      moonPhase: gamePrediction?.moonPhase,
-                                      sunSign: gamePrediction?.sunSign,
-                                      dominantElement: gamePrediction?.dominantElement,
-                                      confidence: gamePrediction?.confidence
-                                    }}
-                                    homeTeam={homeTeam as any} // Type cast to avoid type error
-                                    awayTeam={awayTeam as any} // Type cast to avoid type error
+                                    game={gameWithPrediction}
+                                    homeTeam={homeTeamData}
+                                    awayTeam={awayTeamData}
                                     defaultLogo={DEFAULT_LOGO}
                                   />
                                 );
@@ -478,269 +533,347 @@ const Dashboard: React.FC = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6">
-  <div className="space-y-6">
-    {/* Elements Distribution - now at the top as a full-width bar */}
-    <div className="space-y-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-slate-200/70 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-md font-medium text-slate-800 flex items-center">
-          <BarChart2 className="h-4 w-4 mr-2 text-indigo-500" />
-          Elements Distribution
-        </h3>
-        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-          Today's Energy
-        </span>
-      </div>
-      
-      <div className="relative">
-        <div className="w-full bg-slate-100/80 rounded-full shadow-inner border border-slate-200/50 flex h-4 overflow-hidden relative">
-          {/* Background gradient that blends all colors */}
-          <div 
-            className="absolute inset-0 w-full h-full"
-            style={{
-              background: `linear-gradient(
-                90deg,
-                rgba(239, 68, 68, 0.6) 0%,
-                rgba(239, 68, 68, 0.4) 10%,
-                rgba(255, 165, 0, 0.4) 20%,
-                rgba(16, 185, 129, 0.6) 30%,
-                rgba(16, 185, 129, 0.4) 40%,
-                rgba(56, 189, 248, 0.6) 50%,
-                rgba(56, 189, 248, 0.4) 60%,
-                rgba(99, 102, 241, 0.6) 70%,
-                rgba(99, 102, 241, 0.4) 80%,
-                rgba(99, 102, 241, 0.3) 90%,
-                rgba(99, 102, 241, 0.2) 100%
-              )`,
-              filter: 'saturate(1.3) contrast(1.15) brightness(1.05)',
-              mixBlendMode: 'multiply'
-            }}
-          />
-          
-          {/* Individual bars with transparency to show through gradient */}
-          <div
-            className="h-full bg-gradient-to-r from-red-500/90 to-red-500/70 transition-all duration-1000 ease-out"
-            style={{ width: `${elementsDistribution.fire}%` }}
-          />
-          <div
-            className="h-full bg-gradient-to-r from-green-500/90 to-green-500/70 transition-all duration-1000 ease-out"
-            style={{ width: `${elementsDistribution.earth}%` }}
-          />
-          <div
-            className="h-full bg-gradient-to-r from-sky-300/90 to-sky-300/70 transition-all duration-1000 ease-out"
-            style={{ width: `${elementsDistribution.air}%` }}
-          />
-          <div
-            className="h-full bg-gradient-to-r from-indigo-500/90 to-indigo-500/70 transition-all duration-1000 ease-out"
-            style={{ width: `${elementsDistribution.water}%` }}
-          />
-        </div>
-      </div>
-      
-      {/* Legend below the bar */}
-      <div className="grid grid-cols-4 gap-2 mt-3">
-        {[
-          { name: 'Fire', color: 'bg-red-500', value: elementsDistribution.fire },
-          { name: 'Earth', color: 'bg-green-500', value: elementsDistribution.earth },
-          { name: 'Air', color: 'bg-sky-300', value: elementsDistribution.air },
-          { name: 'Water', color: 'bg-indigo-500', value: elementsDistribution.water }
-        ].map((item) => (
-          <div key={item.name} className="flex flex-col items-center">
-            <div className="flex items-center">
-              <span className={`w-2.5 h-2.5 rounded-full ${item.color} mr-1.5`}></span>
-              <span className="text-xs font-medium text-slate-600">{item.name}</span>
-            </div>
-            <span className="text-xs font-semibold text-slate-800">{item.value}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-    
-    {/* Today's Analysis Card */}
-    <Card className="border-slate-200/70 bg-gradient-to-br from-indigo-50/80 to-slate-50/80 backdrop-blur-sm overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-600"></div>
-      <CardContent className="pt-6 pb-5">
-        <div className="flex items-start">
-          <div className="p-2 bg-indigo-100 rounded-lg mr-3 mt-0.5">
-            <TrendingUp className="h-4 w-4 text-indigo-600" />
-          </div>
-          <div>
-            <h4 className="font-medium text-slate-800 flex items-center">
-              Today's Astrological Analysis
-            </h4>
-            <p className="mt-2 text-sm text-slate-700 leading-relaxed">
-              {dailyRecommendation || 'Analyzing today\'s celestial patterns...'}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-      {/* Celestial Influences Panel */}
-                      <div className="space-y-6">
-                        <h3 className="text-md font-medium text-slate-900 flex items-center">
-                          <Activity className="h-4 w-4 mr-2 text-indigo-500" />
-                          Celestial Influences
-                        </h3>
-                        <div className="space-y-4">
-                          {astroInfluences.length === 0 ? (
-                            <div className="text-center py-4 text-slate-500">
-                              <p>No astrological data available for today.</p>
-                            </div>
-                          ) : (
-                            astroInfluences.map((influence, index) => (
-                              <Card key={index} className="bg-white/70 border-slate-200/70">
-                                <CardContent className="pt-4">
-                                  <div className="flex items-start gap-3">
-                                    <div className="mt-0.5">
-                                      {influence.icon}
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-slate-900">{influence.name}</h4>
-                                      <p className="text-sm text-slate-600 mt-1">{influence.description}</p>
-                                      <div className="mt-2">
-                                        <Progress 
-                                          value={influence.impact * 100} 
-                                          className="h-1.5 bg-slate-100"
-                                          indicatorClassName={`bg-indigo-${Math.round(influence.impact * 10) * 100}`}
-                                        />
-                                        <p className="text-xs text-slate-500 mt-1 text-right">{Math.round(influence.impact * 100)}% Impact</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))
-                          )}
+                    <div className="space-y-6">
+                      {/* Elements Distribution - now at the top as a full-width bar */}
+                      <div className="space-y-4 bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-xl border border-slate-700/50 shadow-lg">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-md font-medium text-slate-100 flex items-center">
+                            <BarChart2 className="h-4 w-4 mr-2 text-indigo-400" />
+                            Elements Distribution
+                          </h3>
+                          <span className="text-xs font-medium text-slate-300 bg-slate-700/50 px-2 py-1 rounded-full border border-slate-600/50">
+                            Today's Energy
+                          </span>
                         </div>
-
-                        {/* Moon & Void Status Panel */}
-                        {(astroData?.moonPhase || astroData?.moon_phase || astroData?.voidMoon || astroData?.void_of_course_moon) && (
-                          <Card className="bg-white/70 border-slate-200/70">
-                            <CardHeader>
-                              <h4 className="font-medium text-slate-900 flex items-center">
-                                <Moon className="h-4 w-4 mr-2 text-indigo-400" />
-                                Moon & Void Status
-                              </h4>
-                            </CardHeader>
-                            <CardContent className="pt-2 space-y-2">
-                              <div className="flex items-center gap-4">
-                                <div>
-                                  <div className="text-xs text-slate-500">Phase</div>
-                                  <div className="font-semibold text-slate-800">
-                                    {astroData?.moonPhase?.phase || astroData?.moon_phase?.phase_name || '—'}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-slate-500">Illumination</div>
-                                  <div className="font-semibold text-slate-800">
-                                    {astroData?.moonPhase?.illumination !== undefined
-                                      ? `${Math.round(astroData.moonPhase.illumination * 100)}%`
-                                      : astroData?.moon_phase?.illumination !== undefined
-                                        ? `${Math.round(astroData.moon_phase.illumination * 100)}%`
-                                        : '—'}
-                                  </div>
-                                </div>
-                                {astroData?.voidMoon?.isVoid !== undefined || astroData?.void_of_course_moon?.is_void !== undefined ? (
-                                  <div>
-                                    <div className="text-xs text-slate-500">Void of Course</div>
-                                    <div className="font-semibold text-slate-800">
-                                      {(astroData?.voidMoon?.isVoid ?? astroData?.void_of_course_moon?.is_void) ? 'Yes' : 'No'}
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-                              {astroData?.voidMoon?.isVoid || astroData?.void_of_course_moon?.is_void ? (
-                                <div className="text-xs text-amber-700 mt-1">
-                                  Void from {astroData?.voidMoon?.start || astroData?.void_of_course_moon?.start || '—'} to {astroData?.voidMoon?.end || astroData?.void_of_course_moon?.end || '—'}
-                                </div>
-                              ) : null}
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {/* Modalities Distribution Panel (optional) */}
-                        {astroData?.modalities && (
-                          <Card className="bg-white/70 border-slate-200/70">
-                            <CardHeader>
-                              <h4 className="font-medium text-slate-900 flex items-center">
-                                <BarChart2 className="h-4 w-4 mr-2 text-indigo-400" />
-                                Modalities Distribution
-                              </h4>
-                            </CardHeader>
-                            <CardContent className="pt-2 space-y-2">
-                              {['cardinal', 'fixed', 'mutable'].map((mod) => (
-                                <div key={mod} className="flex justify-between items-center">
-                                  <span className="capitalize text-sm text-slate-700">{mod}</span>
-                                  <span className="text-xs text-slate-500">
-                                    {astroData.modalities[mod]?.score ?? 0}%
-                                  </span>
-                                </div>
-                              ))}
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {/* Planetary Interpretations Panel */}
-                        {astroData?.interpretations?.planets && Object.keys(astroData.interpretations.planets).length > 0 && (
-                          <Card className="bg-white/70 border-slate-200/70">
-                            <CardHeader>
-                              <h4 className="font-medium text-slate-900 flex items-center">
-                                <Sun className="h-4 w-4 mr-2 text-amber-400" />
-                                Planetary Interpretations
-                              </h4>
-                            </CardHeader>
-                            <CardContent className="pt-2 space-y-2">
-                              {Object.entries(astroData.interpretations.planets).map(([planet, interp]) => (
-                                <div key={planet} className="mb-2">
-                                  <span className="font-semibold text-indigo-700 mr-2 capitalize">{planet}:</span>
-                                  <span className="text-sm text-slate-700">{interp}</span>
-                                </div>
-                              ))}
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {/* Aspects & Influences Panel */}
-                        {astroData?.aspects && astroData.aspects.length > 0 && (
-                          <Card className="bg-white/70 border-slate-200/70">
-                            <CardHeader>
-                              <h4 className="font-medium text-slate-900 flex items-center">
-                                <Star className="h-4 w-4 mr-2 text-indigo-600" />
-                                Aspects & Influences
-                              </h4>
-                            </CardHeader>
-                            <CardContent className="pt-2 space-y-2">
-                              {astroData.aspects.map((aspect, idx) => (
-                                <div key={idx} className="mb-2">
-                                  <span className="font-semibold text-indigo-700 mr-2">
-                                    {aspect.planets.join(' ')} {aspect.type} ({aspect.angle}°)
-                                  </span>
-                                  <span className="text-sm text-slate-700">{aspect.influence}</span>
-                                  {aspect.interpretation && (
-                                    <div className="text-xs text-slate-500 mt-1">{aspect.interpretation}</div>
-                                  )}
-                                </div>
-                              ))}
-                            </CardContent>
-                          </Card>
-                        )}
                         
-                        {/* Daily Recommendation */}
-                        <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-slate-50 border-slate-200/70">
-                          <CardContent className="pt-6">
-                            <h4 className="font-medium text-slate-900 flex items-center">
-                              <TrendingUp className="h-4 w-4 mr-2 text-indigo-600" />
-                              Today's Analysis
-                            </h4>
-                            <p className="mt-3 text-sm text-slate-700 leading-relaxed">
-                              {dailyRecommendation || 'Loading astrological insights...'}
+                        <div className="relative">
+                          <div className="w-full bg-slate-700/50 rounded-full shadow-inner border border-slate-600/30 flex h-4 overflow-hidden relative">
+                            {/* Background glow effect */}
+                            <div 
+                              className="absolute inset-0 w-full h-full rounded-full"
+                              style={{
+                                background: `linear-gradient(
+                                  90deg,
+                                  rgba(239, 68, 68, 0.15) 0%,
+                                  rgba(16, 185, 129, 0.15) 33%,
+                                  rgba(56, 189, 248, 0.15) 66%,
+                                  rgba(99, 102, 241, 0.15) 100%
+                                )`,
+                                filter: 'blur(4px)'
+                              }}
+                            />
+                            
+                            {/* Individual bars with new gradient styling */}
+                            <div
+                              className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                              style={{ 
+                                width: `${elementsDistribution.fire}%`,
+                                clipPath: 'polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0% 100%)'
+                              }}
+                            />
+                            <div
+                              className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                              style={{ 
+                                width: `${elementsDistribution.earth}%`,
+                                marginLeft: '-8px',
+                                clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0% 100%)'
+                              }}
+                            />
+                            <div
+                              className="h-full bg-gradient-to-r from-sky-400 to-sky-300 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(56,189,248,0.6)]"
+                              style={{ 
+                                width: `${elementsDistribution.air}%`,
+                                marginLeft: '-8px',
+                                clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0% 100%)'
+                              }}
+                            />
+                            <div
+                              className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(99,102,241,0.6)]"
+                              style={{ 
+                                width: `${elementsDistribution.water}%`,
+                                marginLeft: '-8px',
+                                clipPath: 'polygon(8px 0, 100% 0, 100% 100%, 0% 100%)',
+                                borderTopRightRadius: '9999px',
+                                borderBottomRightRadius: '9999px'
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Legend below the bar */}
+                        <div className="grid grid-cols-4 gap-1.5 mt-3">
+                          {[
+                            { 
+                              name: 'Fire', 
+                              color: 'bg-gradient-to-r from-red-500 to-red-400',
+                              glow: 'shadow-[0_0_8px_rgba(239,68,68,0.6)]',
+                              value: elementsDistribution.fire 
+                            },
+                            { 
+                              name: 'Earth', 
+                              color: 'bg-gradient-to-r from-green-500 to-green-400',
+                              glow: 'shadow-[0_0_8px_rgba(16,185,129,0.6)]',
+                              value: elementsDistribution.earth 
+                            },
+                            { 
+                              name: 'Air', 
+                              color: 'bg-gradient-to-r from-sky-400 to-sky-300',
+                              glow: 'shadow-[0_0_8px_rgba(56,189,248,0.6)]',
+                              value: elementsDistribution.air 
+                            },
+                            { 
+                              name: 'Water', 
+                              color: 'bg-gradient-to-r from-indigo-500 to-indigo-400',
+                              glow: 'shadow-[0_0_8px_rgba(99,102,241,0.6)]',
+                              value: elementsDistribution.water 
+                            }
+                          ].map((item) => (
+                            <div key={item.name} className="flex flex-col items-center">
+                              <div className="flex items-center space-x-2 px-2 py-1 rounded-md bg-slate-700/30 border border-slate-600/30">
+                                <div className={`h-3 w-3 rounded-sm ${item.color} ${item.glow}`}></div>
+                                <span className="text-xs font-medium text-slate-200">
+                                  {item.name}
+                                </span>
+                                <span className="text-xs font-semibold text-white ml-auto">
+                                  {item.value}%
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Today's Analysis Card */}
+                      <Card className="border-slate-200/70 bg-gradient-to-br from-indigo-50/80 to-slate-50/80 backdrop-blur-sm overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-600"></div>
+                        <CardContent className="pt-6 pb-5">
+                          <div className="flex items-start">
+                            <div className="p-2 bg-indigo-100 rounded-lg mr-3 mt-0.5">
+                              <TrendingUp className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-slate-800 flex items-center">
+                                Today's Astrological Analysis
+                              </h4>
+                              <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+                                {dailyRecommendation || 'Analyzing today\'s celestial patterns...'}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Sun Position Panel - visually distinct */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, ease: 'easeOut' }}
+                        className="mt-4"
+                      >
+                        <Card className="relative overflow-visible border-0 shadow-xl bg-gradient-to-br from-yellow-50/90 to-amber-100/80 backdrop-blur-lg">
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[96%] h-1.5 rounded-b-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-600 blur-sm opacity-80 animate-pulse" />
+                          <CardHeader className="pb-2 flex flex-row items-center gap-2">
+                            <Sun className="h-7 w-7 text-amber-500 drop-shadow-lg animate-spin-slow" />
+                            <div className="flex-1 flex items-center">
+                              <CardTitle className="text-lg font-bold text-amber-700 tracking-wide flex items-center gap-2">
+                                Sun in {astroData?.sun?.sign || astroData?.planets?.sun?.sign || '—'}
+                                <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-700 text-xs font-semibold shadow">
+                                  {getSunElement(astroData?.sun?.sign || astroData?.planets?.sun?.sign)}
+                                </span>
+                                <span className="ml-auto text-xs font-bold text-amber-600 bg-amber-100 rounded-full px-2 py-0.5 shadow">
+                                  {astroData?.sun?.degree !== undefined || astroData?.planets?.sun?.degree !== undefined
+                                    ? `${Math.round(astroData.sun?.degree || astroData.planets?.sun?.degree)}° ${astroData.sun?.minute || astroData.planets?.sun?.minute || 0}'`
+                                    : '—'}
+                                </span>
+                              </CardTitle>
+                            </div>
+                          </CardHeader>
+                          {astroData?.sun?.sign || astroData?.planets?.sun?.sign ? (
+                            <p className="text-sm text-amber-800 mt-1 pl-9">
+                              The Sun in {astroData.sun?.sign || astroData.planets?.sun?.sign} brings {getSunSignImpact(astroData.sun?.sign || astroData.planets?.sun?.sign)} energy to today's games
                             </p>
+                          ) : null}
+                          <CardContent className="pt-0 pb-4">
+                            <div className="mt-2 space-y-2">
+                              {getSunSportsInfluences(astroData).map((influence, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                  <div className={`w-2.5 h-2.5 rounded-full ${influence.color} shadow`} />
+                                  <span className="text-sm text-amber-900 font-medium drop-shadow-sm">
+                                    {influence.text}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </CardContent>
                         </Card>
+                      </motion.div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                        {/* Celestial Influences Panel */}
+                        <div className="space-y-6">
+                          <h3 className="text-md font-medium text-slate-900 flex items-center">
+                            <Activity className="h-4 w-4 mr-2 text-indigo-500" />
+                            Celestial Influences
+                          </h3>
+                          <div className="space-y-4">
+                            {astroInfluences.length === 0 ? (
+                              <div className="text-center py-4 text-slate-500">
+                                <p>No astrological data available for today.</p>
+                              </div>
+                            ) : (
+                              astroInfluences.map((influence, index) => (
+                                <Card key={index} className="bg-white/70 border-slate-200/70">
+                                  <CardContent className="pt-4">
+                                    <div className="flex items-start gap-3">
+                                      <div className="mt-0.5">
+                                        {influence.icon}
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium text-slate-900">{influence.name}</h4>
+                                        <p className="text-sm text-slate-600 mt-1">{influence.description}</p>
+                                        <div className="mt-2">
+                                          <Progress 
+                                            value={influence.impact * 100} 
+                                            className="h-1.5 bg-slate-100"
+                                          />
+                                          <p className="text-xs text-slate-500 mt-1 text-right">{Math.round(influence.impact * 100)}% Impact</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))
+                            )}
+                          </div>
+
+                          {/* Moon & Void Status Panel */}
+                          {(astroData?.moonPhase || astroData?.moon_phase || astroData?.voidMoon || astroData?.void_of_course_moon) && (
+                            <Card className="bg-white/70 border-slate-200/70">
+                              <CardHeader>
+                                <h4 className="font-medium text-slate-900 flex items-center">
+                                  <Moon className="h-4 w-4 mr-2 text-indigo-400" />
+                                  Moon & Void Status
+                                </h4>
+                              </CardHeader>
+                              <CardContent className="pt-2 space-y-2">
+                                <div className="flex items-center gap-4">
+                                  <div>
+                                    <div className="text-xs text-slate-500">Phase</div>
+                                    <div className="font-semibold text-slate-800">
+                                      {astroData?.moonPhase?.phase || astroData?.moon_phase?.phase_name || '—'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-slate-500">Illumination</div>
+                                    <div className="font-semibold text-slate-800">
+                                      {astroData?.moonPhase?.illumination !== undefined
+                                        ? `${Math.round(astroData.moonPhase.illumination * 100)}%`
+                                        : astroData?.moon_phase?.illumination !== undefined
+                                          ? `${Math.round(astroData.moon_phase.illumination * 100)}%`
+                                          : '—'}
+                                    </div>
+                                  </div>
+                                  {astroData?.voidMoon?.isVoid !== undefined || astroData?.void_of_course_moon?.is_void !== undefined ? (
+                                    <div>
+                                      <div className="text-xs text-slate-500">Void of Course</div>
+                                      <div className="font-semibold text-slate-800">
+                                        {(astroData?.voidMoon?.isVoid ?? astroData?.void_of_course_moon?.is_void) ? 'Yes' : 'No'}
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+                                {astroData?.voidMoon?.isVoid || astroData?.void_of_course_moon?.is_void ? (
+                                  <div className="text-xs text-amber-700 mt-1">
+                                    Void from {astroData?.voidMoon?.start || astroData?.void_of_course_moon?.start || '—'} to {astroData?.voidMoon?.end || astroData?.void_of_course_moon?.end || '—'}
+                                  </div>
+                                ) : null}
+                              </CardContent>
+                            </Card>
+                          )}
+
+{/* Modalities Distribution Panel (optional) */}
+                          {astroData?.modalities && (
+                            <Card className="bg-white/70 border-slate-200/70">
+                              <CardHeader>
+                                <h4 className="font-medium text-slate-900 flex items-center">
+                                  <BarChart2 className="h-4 w-4 mr-2 text-indigo-400" />
+                                  Modalities Distribution
+                                </h4>
+                              </CardHeader>
+                              <CardContent className="pt-2 space-y-2">
+                                {['cardinal', 'fixed', 'mutable'].map((mod) => (
+                                  <div key={mod} className="flex justify-between items-center">
+                                    <span className="capitalize text-sm text-slate-700">{mod}</span>
+                                    <span className="text-xs text-slate-500">
+                                      {astroData.modalities[mod]?.score ?? 0}%
+                                    </span>
+                                  </div>
+                                ))}
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Planetary Interpretations Panel */}
+                          {astroData?.interpretations?.planets && Object.keys(astroData.interpretations.planets).length > 0 && (
+                            <Card className="bg-white/70 border-slate-200/70">
+                              <CardHeader>
+                                <h4 className="font-medium text-slate-900 flex items-center">
+                                  <Sun className="h-4 w-4 mr-2 text-amber-400" />
+                                  Planetary Interpretations
+                                </h4>
+                              </CardHeader>
+                              <CardContent className="pt-2 space-y-2">
+                                {Object.entries(astroData.interpretations.planets).map(([planet, interp]) => (
+                                  <div key={planet} className="mb-2">
+                                    <span className="font-semibold text-indigo-700 mr-2 capitalize">{planet}:</span>
+                                    <span className="text-sm text-slate-700">{interp}</span>
+                                  </div>
+                                ))}
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Aspects & Influences Panel */}
+                          {astroData?.aspects && astroData.aspects.length > 0 && (
+                            <Card className="bg-white/70 border-slate-200/70">
+                              <CardHeader>
+                                <h4 className="font-medium text-slate-900 flex items-center">
+                                  <Star className="h-4 w-4 mr-2 text-indigo-600" />
+                                  Aspects & Influences
+                                </h4>
+                              </CardHeader>
+                              <CardContent className="pt-2 space-y-2">
+                                {astroData.aspects.map((aspect, idx) => (
+                                  <div key={idx} className="mb-2">
+                                    <span className="font-semibold text-indigo-700 mr-2">
+                                      {aspect.planets.join(' ')} {aspect.type} ({aspect.angle}°)
+                                    </span>
+                                    <span className="text-sm text-slate-700">{aspect.influence}</span>
+                                    {aspect.interpretation && (
+                                      <div className="text-xs text-slate-500 mt-1">{aspect.interpretation}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </CardContent>
+                            </Card>
+                          )}
+                          
+                          {/* Daily Recommendation */}
+                          <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-slate-50 border-slate-200/70">
+                            <CardContent className="pt-6">
+                              <h4 className="font-medium text-slate-900 flex items-center">
+                                <TrendingUp className="h-4 w-4 mr-2 text-indigo-600" />
+                                Today's Analysis
+                              </h4>
+                              <p className="mt-3 text-sm text-slate-700 leading-relaxed">
+                                {dailyRecommendation || 'Loading astrological insights...'}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
+                  </CardContent>
                   <CardFooter className="pt-0 pb-4 justify-center">
                     <p className="text-xs text-slate-500">
                       Data updated at {selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · 

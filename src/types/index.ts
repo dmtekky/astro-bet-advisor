@@ -55,18 +55,85 @@ export interface AstrologicalData {
   timestamp: number;
 }
 
+export interface Venue {
+  id: string;
+  name: string;
+  city: string;
+  state?: string;
+  country?: string;
+  capacity?: number;
+  surface?: string;
+  image_url?: string;
+}
+
+export interface League {
+  id: string;
+  name: string;
+  abbreviation?: string;
+  sport: Sport;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+}
+
+export interface Outcome {
+  name: string;
+  price: number;
+  point?: number;
+}
+
+export interface Market {
+  market_key: string;
+  market_name?: string;
+  last_update?: string;
+  outcomes: Outcome[];
+}
+
+export interface Bookmaker {
+  bookmaker_key: string;
+  bookmaker_name: string;
+  last_update: string;
+  markets: Market[];
+  // Additional properties for compatibility with different API formats
+  key?: string;
+  title?: string;
+}
+
 export interface Game {
   id: string;
   sport: Sport;
   home_team_id: string;
   away_team_id: string;
   start_time: string;
+  commence_time?: string;
   status: string;
   score_home?: number;
   score_away?: number;
   external_id?: string;
   league?: string;
   league_id?: string;
+  venue_id?: string;
   odds?: number | string | null;
   oas?: number | string | null;
+  completed?: boolean;
+  astroPrediction?: string;
+  confidence?: number;
+  moonPhase?: string;
+  sunSign?: string;
+  dominantElement?: string;
+  astroInfluence?: string;
+  homeEdge?: number;
+}
+
+export interface GameOutcomePrediction {
+  homeWinProbability: number;
+  awayWinProbability: number;
+  prediction: string;
+  dominantElement: string;
+  moonPhase: string;
+  sunSign: string;
+  tags: string[];
+  confidence: number;
+  reasoning?: string;
+  predicted_winner?: string | null;
 }
