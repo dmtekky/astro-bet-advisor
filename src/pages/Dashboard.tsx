@@ -238,8 +238,8 @@ const Dashboard: React.FC = () => {
     const aspectsData: Aspect[] = (hookData.aspects || []).map(hookAspect => {
       const aspectType = hookAspect.type.toLowerCase() as AspectType;
       return {
-        from: hookAspect.planets[0],
-        to: hookAspect.planets[1],
+        from: hookAspect.planets[0]?.name || 'Unknown Planet',
+        to: hookAspect.planets[1]?.name || 'Unknown Planet',
         type: aspectType,
         orb: hookAspect.orb,
         influence: { 
