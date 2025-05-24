@@ -7,8 +7,9 @@ console.log("--- UNIFIED ASTRO API SCRIPT STARTED ---");
 // Unique log for deployment verification
 const DEPLOYMENT_VERSION_FIXED = "fixed_js_v20250523_1505";
 console.log(`[DEPLOY_CHECK] unified-astro.fixed.js loaded. Version: ${DEPLOYMENT_VERSION_FIXED}`);
-const DEPLOYMENT_VERSION_FIXED_TS = "v_fixed_js_moon_lon_check_TS_" + new Date().toISOString();
-console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (after declaration):', DEPLOYMENT_VERSION_FIXED_TS);
+// Define version as a global variable to ensure it's accessible throughout the module
+global.DEPLOYMENT_VERSION_FIXED_TS = "v_fixed_js_moon_lon_check_TS_" + new Date().toISOString();
+console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (after declaration):', global.DEPLOYMENT_VERSION_FIXED_TS);
 const Astronomy = require('astronomy-engine');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -20,7 +21,7 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  console.log(`[DEPLOY_CHECK_TS] unified-astro.fixed.js loaded. Version: ${DEPLOYMENT_VERSION_FIXED_TS}`);
+  console.log(`[DEPLOY_CHECK_TS] unified-astro.fixed.js loaded. Version: ${global.DEPLOYMENT_VERSION_FIXED_TS}`);
 }
 
 // Zodiac signs in order
@@ -816,9 +817,9 @@ const generatePlanetInterpretation = (planetName, data) => {
 /**
  * Main handler function for API requests
  */
-console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (before module.exports):', DEPLOYMENT_VERSION_FIXED_TS);
+console.log('[DEBUG] DEPLOYMENT_VERSION_FIXED_TS (before module.exports):', global.DEPLOYMENT_VERSION_FIXED_TS);
 module.exports = async (req, res) => {
-  console.log(`[DEPLOY_CHECK_HANDLER_TS] unified-astro.fixed.js handler invoked. Version: ${DEPLOYMENT_VERSION_FIXED_TS}`);
+  console.log(`[DEPLOY_CHECK_HANDLER_TS] unified-astro.fixed.js handler invoked. Version: ${global.DEPLOYMENT_VERSION_FIXED_TS}`);
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
