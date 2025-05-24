@@ -743,39 +743,106 @@ const Dashboard: React.FC = () => {
                       </CardContent>
                     </Card>
 
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                      <CardHeader>
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300">
+                      <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Moon className="h-5 w-5 mr-2 text-slate-400" /> Lunar & Void Status
+                          <Moon className="h-5 w-5 mr-2 text-indigo-500" /> Lunar & Void Status
                         </CardTitle>
-                        <CardDescription>
-                          {astroData.moon?.phase_name ? `${astroData.moon.phase_name} Moon. ` : ''}
-                          {astroData.moon?.is_void_of_course ? 'Moon is Void of Course.' : 'Moon is not Void of Course.'}
+                        <CardDescription className="text-slate-600">
+                          {astroData.moonPhase?.phase ? `${astroData.moonPhase.phase} Moon` : 'Moon Phase Unknown'}
+                          {astroData.voidMoon ? (astroData.voidMoon.isVoid ? ' • Void of Course' : ' • Not Void of Course') : ''}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-2">
-                        {astroData.moon?.phase_name && (
-                          <div className="flex items-start space-x-2">
-                            <Sparkles className="h-4 w-4 mt-0.5 text-purple-500 flex-shrink-0" />
-                            <p className="text-sm text-slate-600">
-                              {getMoonPhaseImpact(astroData.moon.phase_name)}
-                            </p>
+                      <CardContent className="space-y-3 pt-2">
+                        {/* Moon Phase Section with Visualization */}
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-md">
+                          <div className="flex items-center mb-2">
+                            <div className="relative w-10 h-10 bg-slate-800 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                              {/* Moon phase visualization */}
+                              <div 
+                                className="absolute inset-0 bg-white rounded-full" 
+                                style={{
+                                  clipPath: `inset(0 ${50 - (astroData.moonPhase?.illumination || 0) * 50}% 0 0)`,
+                                  opacity: 0.9
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-indigo-700">{astroData.moonPhase?.phase || 'Unknown Phase'}</h4>
+                              <p className="text-xs text-slate-500">
+                                {astroData.moonPhase?.illumination !== null && astroData.moonPhase?.illumination !== undefined
+                                  ? `${Math.round((astroData.moonPhase.illumination) * 100)}% illuminated`
+                                  : 'Illumination unknown'}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-600 mt-1">
+                            {astroData.moonPhase?.phase && getMoonPhaseImpact(astroData.moonPhase.phase)}
+                          </p>
+                        </div>
+                        
+                        {/* Void of Course Status */}
+                        {astroData.voidMoon && (
+                          <div className={`bg-gradient-to-r ${astroData.voidMoon.isVoid ? 'from-amber-50 to-red-50' : 'from-emerald-50 to-teal-50'} p-3 rounded-md`}>
+                            <div className="flex items-start space-x-2">
+                              {astroData.voidMoon.isVoid ? (
+                                <AlertTriangle className="h-5 w-5 mt-0.5 text-amber-500 flex-shrink-0" />
+                              ) : (
+                                <CheckCircle className="h-5 w-5 mt-0.5 text-emerald-500 flex-shrink-0" />
+                              )}
+                              <div>
+                                <h4 className={`font-medium ${astroData.voidMoon.isVoid ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                  {astroData.voidMoon.isVoid ? 'Moon is Void of Course' : 'Moon is Not Void of Course'}
+                                </h4>
+                                <p className="text-sm text-slate-600 mt-1">
+                                  {astroData.voidMoon.isVoid ? (
+                                    <>
+                                      Void period: {astroData.voidMoon.start ? format(new Date(astroData.voidMoon.start), 'MMM d, h:mm a') : 'N/A'} to {astroData.voidMoon.end ? format(new Date(astroData.voidMoon.end), 'MMM d, h:mm a') : 'N/A'}
+                                      {astroData.voidMoon.nextSign && <><br />Next entering: <span className="font-medium">{astroData.voidMoon.nextSign}</span></>}
+                                      <br /><br />
+                                      <span className="text-amber-700 font-medium">Betting Insight:</span> During Void of Course periods, outcomes tend to be unpredictable. Consider delaying major bets or reducing stake sizes.
+                                    </>
+                                  ) : (
+                                    <>
+                                      The Moon is actively forming aspects with other planets, creating a more predictable energy flow for events and outcomes.
+                                      <br /><br />
+                                      <span className="text-emerald-700 font-medium">Betting Insight:</span> This is generally a favorable time for making informed betting decisions based on your research and analysis.
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        {astroData.moon?.is_void_of_course && (
-                          <div className="flex items-start space-x-2">
-                            <AlertTriangle className="h-4 w-4 mt-0.5 text-red-500 flex-shrink-0" />
-                            <p className="text-sm text-slate-600">
-                              Void of Course from {astroData.moon.voc_start ? format(new Date(astroData.moon.voc_start), 'p') : 'N/A'} to {astroData.moon.voc_end ? format(new Date(astroData.moon.voc_end), 'p') : 'N/A'}, next entering {astroData.moon.voc_next_sign}.
-                            </p>
+                        
+                        {/* Technical Measurement */}
+                        <div className="bg-white p-3 rounded-md border border-slate-200">
+                          <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
+                            <Activity className="h-4 w-4 mr-1 text-slate-400" /> Lunar Technical Analysis
+                          </h4>
+                          <div className="space-y-2">
+                            <div>
+                              <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                <span>Moon Speed</span>
+                                <span>{astroData.planets?.moon?.speed ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day` : 'Unknown'}</span>
+                              </div>
+                              <Progress 
+                                value={astroData.planets?.moon?.speed ? Math.min(Math.abs(astroData.planets.moon.speed) / 15 * 100, 100) : 50} 
+                                className="h-2"
+                              />
+                            </div>
+                            <div>
+                              <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                <span>Lunar Sign Position</span>
+                                <span>{astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ''}` : 'Unknown'}</span>
+                              </div>
+                              <Progress 
+                                value={astroData.planets?.moon?.degree ? (astroData.planets.moon.degree / 30) * 100 : 50} 
+                                className="h-2"
+                              />
+                            </div>
                           </div>
-                        )}
-                        {!astroData.moon?.is_void_of_course && (
-                           <div className="flex items-start space-x-2">
-                             <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                             <p className="text-sm text-slate-600">The Moon is actively influencing events.</p>
-                           </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
 
