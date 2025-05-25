@@ -147,12 +147,163 @@ const Dashboard: React.FC = () => {
 
   // State for astrological influences
   const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
-  const [elementsDistribution, setElementsDistribution] = useState<ElementsDistribution>({
-    fire: 0,
-    earth: 0,
-    water: 0,
-    air: 0
-  });
+  // Helper function to calculate elemental distribution from astroData
+  function getElementsDistribution(data: any): ElementsDistribution {
+    const distribution: ElementsDistribution = { fire: 0, earth: 0, water: 0, air: 0 };
+    if (!data || !data.planets) {
+      // Return a default balanced distribution if no data, or handle as preferred
+      return { fire: 25, earth: 25, water: 25, air: 25 };
+    }
+
+    const signToElement: { [key: string]: keyof ElementsDistribution } = {
+      'Aries': 'fire', 'Leo': 'fire', 'Sagittarius': 'fire',
+      'Taurus': 'earth', 'Virgo': 'earth', 'Capricorn': 'earth',
+      'Gemini': 'air', 'Libra': 'air', 'Aquarius': 'air',
+      'Cancer': 'water', 'Scorpio': 'water', 'Pisces': 'water',
+    };
+
+    let totalPoints = 0;
+    for (const planetKey in data.planets) {
+      const planet = data.planets[planetKey];
+      if (planet && planet.sign) {
+        const element = signToElement[planet.sign];
+        if (element) {
+          distribution[element]++;
+          totalPoints++;
+        }
+      }
+    }
+
+    if (totalPoints === 0) {
+      return { fire: 25, earth: 25, water: 25, air: 25 }; // Default if no planets contributed
+    }
+
+    // Calculate percentages and round them
+    let firePct = Math.round((distribution.fire / totalPoints) * 100);
+    let earthPct = Math.round((distribution.earth / totalPoints) * 100);
+    let waterPct = Math.round((distribution.water / totalPoints) * 100);
+    let airPct = Math.round((distribution.air / totalPoints) * 100);
+
+    // Adjust to ensure sum is 100 due to rounding
+    let sumPct = firePct + earthPct + waterPct + airPct;
+    if (sumPct !== 100) {
+      const diff = 100 - sumPct;
+      // A simple way to adjust: add/subtract difference to/from the largest percentage
+      const percentages = [{name: 'fire', value: firePct}, {name: 'earth', value: earthPct}, {name: 'water', value: waterPct}, {name: 'air', value: airPct}];
+      percentages.sort((a,b) => b.value - a.value);
+      if (percentages[0].name === 'fire') firePct += diff;
+      else if (percentages[0].name === 'earth') earthPct += diff;
+      else if (percentages[0].name === 'water') waterPct += diff;
+      else airPct += diff;
+    }
+
+    return {
+      fire: firePct,
+      earth: earthPct,
+      water: waterPct,
+      air: airPct,
+    };
+  }
+
+  const elementsDistribution = useMemo(() => getElementsDistribution(astroData), [astroData]);
+
+  function getDynamicElementalInterpretation(distribution: ElementsDistribution): string {
+    const { fire, earth, water, air } = distribution;
+    const elementsOriginal = [
+      { name: 'Fire', value: fire },
+      { name: 'Earth', value: earth },
+      { name: 'Water', value: water },
+      { name: 'Air', value: air },
+    ];
+
+    const sortedElements = [...elementsOriginal].sort((a, b) => b.value - a.value);
+    const [first, second, third, fourth] = sortedElements;
+
+    const dominantThr = 35;
+    const strongThr = 28;
+    const lackingThr = 15;
+    // const moderateLowThr = 16;
+    // const moderateHighThr = 27;
+
+    let interpretation = '';
+
+    // Scenario 1: Two Dominant Elements
+    if (first.value >= dominantThr && second.value >= strongThr) {
+      if ((first.name === 'Fire' && second.name === 'Air') || (first.name === 'Air' && second.name === 'Fire')) {
+        interpretation = "An absolute inferno of Fire meeting a whirlwind of Air! Brace for a spectacle of breathtaking speed, audacious offensive assaults, and genius-level playmaking. Star players will be gunning for legendary status. But this high-wire act courts disaster: expect shocking defensive breakdowns, high-profile errors under pressure, and teams risking burnout. This is a matchup where the scoreboard might explode!";
+      } else if ((first.name === 'Fire' && second.name === 'Earth') || (first.name === 'Earth' && second.name === 'Fire')) {
+        interpretation = "A titanic clash of raw Firepower against immovable Earth! Expect brutal physicality, where explosive offensive bursts meet ironclad defensive stands. Games could turn on moments of individual brilliance overcoming sheer resilience, or disciplined strategy quelling aggressive onslaughts. Player endurance and the ability to absorb punishment will be paramount.";
+      } else if ((first.name === 'Fire' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Fire')) {
+        interpretation = "A seething cauldron of Fire and Water! Today's contests will be fought with raw, untamed emotion. Expect simmering rivalries to erupt, with players riding a tidal wave of adrenaline. This volatile brew can forge legendary, clutch moments OR trigger epic meltdowns under the spotlight. Psychological fortitude will be as crucial as physical skill.";
+      } else if ((first.name === 'Earth' && second.name === 'Air') || (first.name === 'Air' && second.name === 'Earth')) {
+        interpretation = "Strategic Air intellect versus methodical Earth power! This is a chess match on the grandest scale. Expect calculated risks and innovative game plans trying to dismantle disciplined, resilient opponents. Will quick thinking and adaptability outmaneuver sheer persistence, or will relentless pressure expose tactical flaws? Mental toughness meets physical grind.";
+      } else if ((first.name === 'Earth' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Earth')) {
+        interpretation = "Deep Water intuition flows into formidable Earth structures. Teams might display incredible synergy, turning disciplined defense into fluid, opportunistic attacks. Player instincts combined with unwavering team strategy can create an almost unbreakable force. However, if the emotional Water gets muddied or Earth's foundations crack, it could lead to surprising collapses.";
+      } else if ((first.name === 'Air' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Air')) {
+        interpretation = "The unpredictable currents of Water meet the strategic gusts of Air! Expect a dazzling display of creative playmaking, where intuitive flashes are backed by intelligent execution. Teams that can 'feel' the game's rhythm while outthinking their opponents will thrive. However, this blend can also lead to over-complication or emotional decisions overriding sound strategy. Genius or chaos could prevail.";
+      }
+    } 
+    // Scenario 2: One Element Clearly Dominant
+    else if (first.value >= dominantThr) {
+      if (first.name === 'Fire') {
+        interpretation = "Pure Fire fuels the arena today! This is where individual brilliance can single-handedly dominate. Expect aggressive, attacking play from the get-go, with teams pushing the tempo relentlessly. Records could be challenged, but so could composure – watch for explosive tempers or costly, overzealous penalties. Underdogs banking on a defensive grind will struggle immensely.";
+      } else if (first.name === 'Earth') {
+        interpretation = "The relentless power of Earth shapes today's battlefield! Expect a masterclass in defensive discipline, physical dominance, and unwavering resolve. Teams built on solid foundations and methodical execution will grind opponents into submission. Low-scoring, gritty affairs are likely, where every inch is fought for. Flashy plays give way to sheer willpower.";
+      } else if (first.name === 'Air') {
+        interpretation = "The game will be played at the speed of thought with Air ascendant! Prepare for strategic masterminds to dictate play, with dazzling displays of skill, quick adaptation, and telepathic teamwork. Teams that can out-think and outmaneuver their rivals will soar. However, an over-reliance on intellect can lead to paralysis by analysis or vulnerability to raw, unpredictable power.";
+      } else if (first.name === 'Water') {
+        interpretation = "A tidal wave of Water energy floods the competition! Intuition, team synergy, and emotional intensity will define victory. Expect players to tap into a collective consciousness, making instinctive, game-changing plays. Momentum will be king, capable of carrying teams to stunning heights or dragging them into despair. Clutch performances under immense pressure are on the cards.";
+      }
+    }
+
+    // Scenario 3: One Element Lacking (can be an additional insight or primary if no dominant scenario)
+    let lackingInterpretation = '';
+    if (fourth.value <= lackingThr) {
+      const lackingElement = fourth.name;
+      if (lackingElement === 'Fire') {
+        lackingInterpretation = "A critical lack of Fire could extinguish offensive sparks! Teams might struggle for aggression, killer instinct, and the individual brilliance needed to break deadlocks. Expect cautious play, possibly leading to stalemates or low-energy contests decided by errors rather than daring.";
+      } else if (lackingElement === 'Earth') {
+        lackingInterpretation = "Dangerously low Earth energy means the very foundation of disciplined play is crumbling! Watch for chaotic execution, a shocking lack of fundamentals, and teams utterly failing to protect a lead. This is prime territory for monumental upsets, as even elite teams might look amateurish.";
+      } else if (lackingElement === 'Air') {
+        lackingInterpretation = "A deficit in Air could lead to strategic meltdowns! Teams may suffer from poor decision-making, an inability to adapt, and breakdowns in communication. Expect sloppy plays, mental errors, and an inability to exploit opponents' weaknesses. Raw talent alone won't save the day if the game plan is incoherent.";
+      } else if (lackingElement === 'Water') {
+        lackingInterpretation = "Low Water energy can drain the passion from the game! Teams might lack cohesion, struggle to find rhythm, or fail to connect emotionally with the stakes. Expect mechanical performances, a lack of intuitive plays, and difficulty mounting comebacks when adversity strikes. Resilience will be tested.";
+      }
+      if (interpretation && lackingInterpretation) {
+        interpretation += ` Additionally, ${lackingInterpretation.charAt(0).toLowerCase() + lackingInterpretation.slice(1)}`;
+      } else if (lackingInterpretation) {
+        interpretation = lackingInterpretation;
+      }
+    }
+
+    // Scenario 4: Balanced State (if no other strong scenarios hit)
+    if (!interpretation && elementsOriginal.every(el => el.value > lackingThr && el.value < dominantThr )) {
+       // Check for a more tightly balanced scenario
+        const allModerate = elementsOriginal.every(el => el.value >= (lackingThr + 5) && el.value <= (strongThr -3)); // e.g. all between 20-25
+        if (allModerate) {
+            interpretation = "A truly balanced elemental field means today's victory will be forged by superior all-around execution and strategic genius. No single approach will dominate; teams must be masters of adaptation, exploiting subtle shifts in momentum. This is where coaching prowess and deep rosters shine, potentially leading to a chess match decided by fine margins.";
+        } else {
+            // General prominent element if not strictly balanced but no other rule hit
+            if (first.value >= strongThr) { // A less dominant 'first' element
+                let prominentQuality = '';
+                switch (first.name) {
+                    case 'Fire': prominentQuality = 'aggressive plays and individual efforts'; break;
+                    case 'Earth': prominentQuality = 'strong defensive plays and resilience'; break;
+                    case 'Air': prominentQuality = 'smart strategies and adaptability'; break;
+                    case 'Water': prominentQuality = 'intuitive teamwork and emotional drive'; break;
+                }
+                interpretation = `While no single element overwhelmingly dominates, ${first.name} provides a significant undercurrent of ${prominentQuality}. Expect this to subtly shape game dynamics, favoring teams that can tap into this leading energy while remaining versatile against other influences.`;
+            }
+        }
+    }
+
+    // Fallback if no specific interpretation was set
+    if (!interpretation) {
+      interpretation = "Today's unique elemental cocktail creates an unpredictable arena! Elite athletes will need to draw on every ounce of skill, strategy, and instinct. Look for moments where the sheer will to win defies the patterns, and where unexpected heroes can emerge from the complex interplay of energies. Anything can happen!";
+    }
+
+    return interpretation;
+  }
 
   // Calculate loading and error states
   const isLoading = astroLoading || gamesLoading || teamsLoading;
@@ -343,7 +494,6 @@ const Dashboard: React.FC = () => {
       // Process elements from astroData
       if (astroData.elements) {
         const elements = astroData.elements as any;
-        
         if (typeof elements.fire === 'number') {
           fireScore = elements.fire || 0;
           earthScore = elements.earth || 0;
@@ -355,18 +505,9 @@ const Dashboard: React.FC = () => {
           waterScore = elements.water?.score || 0;
           airScore = elements.air?.score || 0;
         }
-      }
-      
-      // Only update if we have valid element data
+      } // Closes if (astroData.elements)
+
       const totalElements = fireScore + earthScore + waterScore + airScore;
-      if (totalElements > 0) {
-        setElementsDistribution({
-          fire: Math.round((fireScore / totalElements) * 100),
-          earth: Math.round((earthScore / totalElements) * 100),
-          water: Math.round((waterScore / totalElements) * 100),
-          air: Math.round((airScore / totalElements) * 100)
-        });
-      }
 
       // Format astrological influences
       const influences: AstrologyInfluence[] = [];
@@ -526,7 +667,7 @@ const Dashboard: React.FC = () => {
     }
 
     if (astroData.planets?.sun?.degree !== undefined) {
-      const degree = Math.round(astroData.planets.sun.degree);
+      const degree = Math.floor(astroData.planets.sun.degree);
       influences.push({
         text: `The Sun is at ${degree}°, which may indicate ${getDegreeImpact(degree)} performance`,
         color: 'bg-orange-500'
@@ -551,11 +692,121 @@ const Dashboard: React.FC = () => {
 
   // Helper function to format degrees and minutes for display
   function formatDegreesMinutes(degrees: number, minutes: number): string {
-    return `${Math.round(degrees)}°${minutes ? ` ${minutes}'` : ''}`;
+    return `${Math.floor(degrees)}°${minutes ? ` ${minutes}'` : ''}`;
   }
 
+  // Helper function to get moon aspect message based on phase and sign with sports focus
+  const getMoonAspectMessage = (phase: string | undefined, sign: string | undefined): string => {
+    if (!phase) return 'Analyzing lunar influences on sports performance';
+    
+    const phaseMessages: Record<string, string> = {
+      'New Moon': 'Fresh energy for new strategies and underdogs',
+      'Waxing Crescent': 'Building momentum for teams on the rise',
+      'First Quarter': 'Peak performance conditions emerging',
+      'Waxing Gibbous': 'Fine-tuning and strategic adjustments',
+      'Full Moon': 'Peak intensity and high-stakes performance',
+      'Waning Gibbous': 'Experienced teams have the advantage',
+      'Last Quarter': 'Upsets and unexpected outcomes likely',
+      'Waning Crescent': 'Veteran teams may outperform'
+    };
+
+    const signInfluence = sign ? ` • Favoring ${sign} athletes` : '';
+    return `${phaseMessages[phase] || 'Favorable conditions'}${signInfluence}`;
+  };
+
+  // Helper function to get sports-focused moon aspect description
+  const getMoonAspectDescription = (moonPhase: any, moonSign: string | undefined): string => {
+    if (!moonPhase) return 'Analyzing lunar influences on competitive performance.';
+    
+    const illumination = moonPhase.illumination || 0;
+    const isWaxing = moonPhase.phase === 'Waxing' || moonPhase.phase === 'First Quarter' || moonPhase.phase === 'Waxing Gibbous';
+    const isWaning = moonPhase.phase === 'Waning' || moonPhase.phase === 'Last Quarter' || moonPhase.phase === 'Waning Gibbous';
+    
+    let description = 'Current lunar phase ';
+    
+    if (isWaxing) {
+      description += 'favors teams building momentum. ';
+      description += 'Look for squads that improve as the game progresses. ';
+      if (illumination > 0.7) {
+        description += 'Peak performance conditions expected. ';
+      }
+    } else if (isWaning) {
+      description += 'may benefit experienced teams. ';
+      description += 'Watch for veteran players making key plays. ';
+      if (illumination < 0.3) {
+        description += 'Potential for unexpected outcomes increases. ';
+      }
+    } else if (moonPhase.phase === 'Full Moon') {
+      description = 'Peak intensity conditions. Expect high-energy performances ';
+      description += 'and potential for standout individual efforts. ';
+    } else if (moonPhase.phase === 'New Moon') {
+      description = 'Fresh start energy. Underdogs may surprise, ';
+      description += 'and new strategies could prove effective. ';
+    }
+
+    if (moonSign) {
+      const signStrengths: Record<string, {traits: string, sports: string}> = {
+        'Aries': {
+          traits: 'aggressive play, strong starts, physicality',
+          sports: 'football, hockey, sprinting'
+        },
+        'Taurus': {
+          traits: 'endurance, consistency, strong defense',
+          sports: 'baseball, golf, wrestling'
+        },
+        'Gemini': {
+          traits: 'quick thinking, adaptability, fast breaks',
+          sports: 'basketball, tennis, soccer midfielders'
+        },
+        'Cancer': {
+          traits: 'team chemistry, home advantage, emotional plays',
+          sports: 'team sports, swimming, water polo'
+        },
+        'Leo': {
+          traits: 'leadership, clutch performances, showmanship',
+          sports: 'basketball, gymnastics, figure skating'
+        },
+        'Virgo': {
+          traits: 'precision, technical skills, strategy',
+          sports: 'baseball, golf, figure skating'
+        },
+        'Libra': {
+          traits: 'teamwork, fair play, balanced attack',
+          sports: 'basketball, tennis doubles, volleyball'
+        },
+        'Scorpio': {
+          traits: 'intensity, comebacks, mental toughness',
+          sports: 'boxing, martial arts, football defense'
+        },
+        'Sagittarius': {
+          traits: 'risk-taking, long shots, adventurous play',
+          sports: 'basketball, horse racing, archery'
+        },
+        'Capricorn': {
+          traits: 'discipline, strong defense, late-game strength',
+          sports: 'football, weightlifting, cycling'
+        },
+        'Aquarius': {
+          traits: 'unconventional strategies, surprise plays',
+          sports: 'basketball, soccer, extreme sports'
+        },
+        'Pisces': {
+          traits: 'creativity, intuition, fluid movement',
+          sports: 'soccer, swimming, figure skating'
+        }
+      };
+      
+      const signData = signStrengths[moonSign] || { traits: 'competitive edge', sports: 'various sports' };
+      description += `\n\n${moonSign} Influence:\n`;
+      description += `• Strengths: ${signData.traits}\n`;
+      description += `• Favors: ${signData.sports}`;
+    }
+    
+    return description;
+  };
+
   // Helper function to get color class for element
-  function getElementColor(element: keyof ElementsDistribution): string {
+  const getElementColor = (element: keyof ElementsDistribution): string => {
     const colors: Record<keyof ElementsDistribution, string> = {
       fire: 'bg-red-500',
       earth: 'bg-green-500',
@@ -642,9 +893,9 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             // No global error, proceed to render the main layout with individual section loading
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Upcoming Games Section (lg:col-span-2) */}
-              <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 gap-8">
+              {/* Upcoming Games Section (Full width) */}
+              <div className="space-y-8">
                 {(gamesLoading && (!games || games.length === 0)) ? (
                   // Skeletons for Games section
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
@@ -710,110 +961,255 @@ const Dashboard: React.FC = () => {
                 ) : null}
               </div>
 
-              {/* Astrological Insights Section (lg:col-span-1) */}
-              <div className="lg:col-span-1 space-y-6">
+              {/* Astrological Insights Section */}
+              <div className="mt-12">
+                <div className="flex items-center mb-6">
+                  <h2 className="text-2xl font-bold text-slate-800">Astrological Insights</h2>
+                  <span className="ml-3 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
+                    {format(selectedDate, 'MMMM d, yyyy')}
+                  </span>
+                </div>
+                {/* Elemental Balance Full-Width Card */}
+                <Card className="w-full mb-8 border border-slate-200/50 bg-white/70 backdrop-blur-sm shadow-md">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                      Elemental Balance
+                    </CardTitle>
+                    <CardDescription className="text-slate-600">Distribution of planetary energies by element.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="w-full flex items-center mt-2 mb-4">
+                      {/* Segmented horizontal bar for elements */}
+                      <div className="flex w-full h-6 rounded-full overflow-hidden border border-slate-200">
+                        <div className="h-full" style={{width: `${elementsDistribution.fire}%`, background: 'linear-gradient(90deg, #f87171 60%, #fbbf24 100%)'}} title={`Fire: ${elementsDistribution.fire}%`} />
+                        <div className="h-full" style={{width: `${elementsDistribution.earth}%`, background: 'linear-gradient(90deg, #34d399 60%, #a7f3d0 100%)'}} title={`Earth: ${elementsDistribution.earth}%`} />
+                        <div className="h-full" style={{width: `${elementsDistribution.water}%`, background: 'linear-gradient(90deg, #60a5fa 60%, #818cf8 100%)'}} title={`Water: ${elementsDistribution.water}%`} />
+                        <div className="h-full" style={{width: `${elementsDistribution.air}%`, background: 'linear-gradient(90deg, #f472b6 60%, #a78bfa 100%)'}} title={`Air: ${elementsDistribution.air}%`} />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap justify-between text-sm font-medium text-slate-700">
+                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#f87171'}}></span>fire {elementsDistribution.fire}%</span>
+                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#34d399'}}></span>earth {elementsDistribution.earth}%</span>
+                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#60a5fa'}}></span>water {elementsDistribution.water}%</span>
+                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#f472b6'}}></span>air {elementsDistribution.air}%</span>
+                    </div>
+                    {elementsDistribution && (elementsDistribution.fire + elementsDistribution.earth + elementsDistribution.water + elementsDistribution.air > 0) && (
+                      <div className="mt-4 pt-4 border-t border-slate-200/60">
+                        <p className="text-sm text-slate-700 leading-relaxed">
+                          {getDynamicElementalInterpretation(elementsDistribution)}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {/* Other astrology cards below */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(astroLoading && !astroData) ? (
                   // Skeletons for Astro section
                   <>
                     <Skeleton className="h-48 rounded-xl" />
                     <Skeleton className="h-64 rounded-xl" />
-                    <Skeleton className="h-56 rounded-xl" />
+                    <Skeleton className="h-56 rounded-xl md:col-span-2" />
                   </>
                 ) : astroData ? (
                   // Actual Astro content
                   <>
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Sun className="h-5 w-5 mr-2 text-yellow-500" /> Solar Influence
-                        </CardTitle>
-                        <CardDescription>
-                          The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {getSunSportsInfluences(astroData).map((influence, index) => (
-                          <div key={`sun-influence-${index}`} className="flex items-start space-x-2">
-                            <span className={`mt-1 inline-block h-2 w-2 rounded-full ${influence.color}`} />
-                            <p className="text-sm text-slate-600">
-                              {influence.text}
-                            </p>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
+  <CardHeader className="pb-2">
+    <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+      <Sun className="h-5 w-5 mr-2 text-yellow-500" /> Solar Influence
+    </CardTitle>
+    <CardDescription className="text-slate-600">
+      The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-3 pt-2">
+    {/* Sun Visualization Section */}
+    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
+      <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
+        <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+          {/* Sun visualization */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Sun className="h-32 w-32 md:h-40 md:w-40 text-yellow-400 drop-shadow-lg animate-pulse" />
+            <div className="absolute w-full h-full rounded-full" style={{
+              boxShadow: '0 0 80px 30px rgba(252, 211, 77, 0.4)',
+              pointerEvents: 'none',
+              background: 'radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)'
+            }} />
+          </div>
+        </div>
+        <div className="text-center md:text-left flex-1">
+          <h4 className="text-2xl font-bold text-yellow-700 mb-1">
+            Sun Position
+          </h4>
+          <p className="text-sm text-yellow-600 mb-2">
+            {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)})
+          </p>
+          <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
+            Element: {getSunElement(sunSign)}
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
+            <p className="text-base text-slate-700 leading-relaxed">
+              {getSunSportsInfluences(astroData)[0]?.text || 'The Sun’s current sign sets the tone for vitality and momentum.'}
+            </p>
+          </div>
+          {/* Sun Details */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-white p-3 rounded-lg border border-slate-100">
+              <div className="text-xs uppercase text-slate-500 font-medium mb-1">Sun Sign</div>
+              <div className="font-semibold text-yellow-700">{sunSign}</div>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100">
+              <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
+              <div className="font-semibold text-yellow-700">{sunDegree ? `${Math.floor(sunDegree)}°` : '—'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {/* Solar Influence Details */}
+    <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
+      <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-4 w-4 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
+      <ul className="list-disc pl-5 space-y-1">
+        {getSunSportsInfluences(astroData).map((influence, index) => (
+          <li key={`sun-influence-${index}`} className="text-sm text-slate-700">{influence.text}</li>
+        ))}
+      </ul>
+    </div>
+  </CardContent>
+</Card>
 
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300">
+
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300 md:col-span-2">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Moon className="h-5 w-5 mr-2 text-indigo-500" /> Lunar & Void Status
                         </CardTitle>
                         <CardDescription className="text-slate-600">
-                          {astroData.moonPhase?.phase ? `${astroData.moonPhase.phase} Moon` : 'Moon Phase Unknown'}
                           {astroData.voidMoon ? (astroData.voidMoon.isVoid ? ' • Void of Course' : ' • Not Void of Course') : ''}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3 pt-2">
                         {/* Moon Phase Section with Visualization */}
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-md">
-                          <div className="flex items-center mb-2">
-                            <div className="relative w-10 h-10 bg-slate-800 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
+                          <div className="flex flex-col items-center md:flex-row md:items-start">
+                            <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
                               {/* Moon phase visualization */}
                               <div 
-                                className="absolute inset-0 bg-white rounded-full" 
+                                className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out" 
                                 style={{
                                   clipPath: `inset(0 ${50 - (astroData.moonPhase?.illumination || 0) * 50}% 0 0)`,
-                                  opacity: 0.9
+                                  opacity: 0.95,
+                                  boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.8)'
+                                }}
+                              >
+                                {/* Add some subtle craters */}
+                                <div className="absolute w-4 h-4 bg-slate-200/30 rounded-full top-1/3 left-1/4"></div>
+                                <div className="absolute w-5 h-5 bg-slate-300/40 rounded-full top-2/3 left-1/2"></div>
+                                <div className="absolute w-3 h-3 bg-slate-200/50 rounded-full top-1/4 left-3/4"></div>
+                                <div className="absolute w-6 h-6 bg-slate-300/30 rounded-full top-3/4 left-1/3"></div>
+                                <div className="absolute w-3.5 h-3.5 bg-slate-200/40 rounded-full top-1/5 left-1/2"></div>
+                              </div>
+                              {/* Glow effect */}
+                              <div 
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                  boxShadow: '0 0 60px 15px rgba(99, 102, 241, 0.4)',
+                                  pointerEvents: 'none',
+                                  background: 'radial-gradient(circle at 30% 30%, rgba(199, 210, 254, 0.3), transparent 60%)'
                                 }}
                               />
                             </div>
-                            <div>
-                              <h4 className="font-medium text-indigo-700">{astroData.moonPhase?.phase || 'Unknown Phase'}</h4>
-                              <p className="text-xs text-slate-500">
-                                {astroData.moonPhase?.illumination !== null && astroData.moonPhase?.illumination !== undefined
-                                  ? `${Math.round((astroData.moonPhase.illumination) * 100)}% illuminated`
-                                  : 'Illumination unknown'}
+                            <div className="text-center md:text-left flex-1">
+                              <h4 className="text-2xl font-bold text-indigo-800 mb-1">
+                                Moon Phase
+                              </h4>
+                              <p className="text-sm text-indigo-600 mb-2">
+                                {astroData.moonPhase?.phase || 'Current phase unknown'}
                               </p>
-                            </div>
-                          </div>
-                          <p className="text-sm text-slate-600 mt-1">
-                            {astroData.moonPhase?.phase && getMoonPhaseImpact(astroData.moonPhase.phase)}
-                          </p>
-                        </div>
-                        
-                        {/* Void of Course Status */}
-                        {astroData.voidMoon && (
-                          <div className={`bg-gradient-to-r ${astroData.voidMoon.isVoid ? 'from-amber-50 to-red-50' : 'from-emerald-50 to-teal-50'} p-3 rounded-md`}>
-                            <div className="flex items-start space-x-2">
-                              {astroData.voidMoon.isVoid ? (
-                                <AlertTriangle className="h-5 w-5 mt-0.5 text-amber-500 flex-shrink-0" />
-                              ) : (
-                                <CheckCircle className="h-5 w-5 mt-0.5 text-emerald-500 flex-shrink-0" />
-                              )}
-                              <div>
-                                <h4 className={`font-medium ${astroData.voidMoon.isVoid ? 'text-amber-700' : 'text-emerald-700'}`}>
-                                  {astroData.voidMoon.isVoid ? 'Moon is Void of Course' : 'Moon is Not Void of Course'}
-                                </h4>
-                                <p className="text-sm text-slate-600 mt-1">
-                                  {astroData.voidMoon.isVoid ? (
-                                    <>
-                                      Void period: {astroData.voidMoon.start ? format(new Date(astroData.voidMoon.start), 'MMM d, h:mm a') : 'N/A'} to {astroData.voidMoon.end ? format(new Date(astroData.voidMoon.end), 'MMM d, h:mm a') : 'N/A'}
-                                      {astroData.voidMoon.nextSign && <><br />Next entering: <span className="font-medium">{astroData.voidMoon.nextSign}</span></>}
-                                      <br /><br />
-                                      <span className="text-amber-700 font-medium">Betting Insight:</span> During Void of Course periods, outcomes tend to be unpredictable. Consider delaying major bets or reducing stake sizes.
-                                    </>
-                                  ) : (
-                                    <>
-                                      The Moon is actively forming aspects with other planets, creating a more predictable energy flow for events and outcomes.
-                                      <br /><br />
-                                      <span className="text-emerald-700 font-medium">Betting Insight:</span> This is generally a favorable time for making informed betting decisions based on your research and analysis.
-                                    </>
-                                  )}
+                              <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
+                                {astroData.moonPhase?.illumination !== null && astroData.moonPhase?.illumination !== undefined
+                                  ? `🌕 ${Math.round((astroData.moonPhase.illumination) * 100)}% Illuminated`
+                                  : '🌑 Illumination unknown'}
+                              </div>
+                              <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
+                                <p className="text-base text-slate-700 leading-relaxed">
+                                  {astroData.moonPhase?.phase && getMoonPhaseImpact(astroData.moonPhase.phase)}
                                 </p>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Moon Sign</div>
+                                  <div className="font-semibold text-indigo-700">
+                                    {astroData.planets?.moon?.sign || 'Unknown'}
+                                  </div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
+                                  <div className="font-semibold text-indigo-700">
+                                    {astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Void of Course Status */}
+                              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
+                                <div className="p-3 border-b border-amber-100">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-medium text-slate-800 flex items-center text-sm">
+                                      <div className={`w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 ${astroData.voidMoon?.isVoid ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                      Void of Course Status
+                                    </h4>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${astroData.voidMoon?.isVoid ? 'bg-red-100 text-red-800' : 'bg-red-50 text-red-700'}`}>
+                                      {astroData.voidMoon?.isVoid ? 'Active' : 'Inactive'}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="p-3">
+                                  <p className="text-sm text-slate-700 mb-2">
+                                    {astroData.voidMoon?.isVoid 
+                                      ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
+                                      : getMoonAspectMessage(astroData.moonPhase?.phase, astroData.planets?.moon?.sign)}
+                                  </p>
+                                  
+                                  {astroData.voidMoon?.isVoid && (
+                                    <div className="space-y-3 mt-3">
+                                      <div>
+                                        <div className="w-full bg-amber-100 rounded-full h-1.5 mb-1">
+                                          <div 
+                                            className="bg-amber-500 h-1.5 rounded-full transition-all duration-500 ease-out"
+                                            style={{
+                                              width: `${Math.max(5, Math.min(100, (new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime()) * 100))}%`
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex justify-between text-[10px] text-amber-700">
+                                          <span>Started: {new Date(astroData.voidMoon.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                          <span>Ends: {new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className={`p-2 rounded-lg border text-xs ${astroData.voidMoon.isVoid ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
+                                        <p className={`font-medium mb-1 ${astroData.voidMoon.isVoid ? 'text-red-800' : 'text-slate-700'}`}>
+                                          {astroData.voidMoon.isVoid 
+                                            ? '⚠️ Void of Course Moon'
+                                            : '✓ Strong Lunar Aspects'}
+                                        </p>
+                                        <p className={astroData.voidMoon.isVoid ? 'text-red-700' : 'text-slate-600'}>
+                                          {astroData.voidMoon.isVoid
+                                            ? 'The moon is not making any major aspects. Game outcomes may be more unpredictable during this period.'
+                                            : getMoonAspectDescription(astroData.moonPhase, astroData.planets?.moon?.sign)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        )}
+                        </div>
                         
                         {/* Technical Measurement */}
                         <div className="bg-white p-3 rounded-md border border-slate-200">
@@ -846,7 +1242,7 @@ const Dashboard: React.FC = () => {
                       </CardContent>
                     </Card>
 
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
@@ -872,36 +1268,8 @@ const Dashboard: React.FC = () => {
                       </CardContent>
                     </Card>
 
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <BarChart className="h-5 w-5 mr-2 text-teal-500" /> Elemental Balance
-                        </CardTitle>
-                        <CardDescription>Distribution of planetary energies by element.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {Object.keys(elementsDistribution).length > 0 && (elementsDistribution.fire + elementsDistribution.earth + elementsDistribution.water + elementsDistribution.air > 0) ? (
-                          <div className="space-y-2">
-                            {(Object.keys(elementsDistribution) as Array<keyof ElementsDistribution>).map((element) => (
-                              <div key={element} className="flex items-center">
-                                <span className="w-16 text-sm capitalize text-slate-600">{element}</span>
-                                <div className="flex-1 bg-slate-200 rounded-full h-2.5 dark:bg-slate-700 mr-2">
-                                  <div 
-                                    className={`h-2.5 rounded-full ${getElementColor(element)}`}
-                                    style={{ width: `${elementsDistribution[element]}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm text-slate-500 w-8 text-right">{elementsDistribution[element]}%</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-500">Elemental balance data is currently unavailable.</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
+
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Lightbulb className="h-5 w-5 mr-2 text-amber-500" /> Daily Astro Tip
@@ -925,6 +1293,7 @@ const Dashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 ) : null}
+                </div>
               </div>
             </div>
           )}
