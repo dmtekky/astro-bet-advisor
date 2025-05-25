@@ -2,14 +2,16 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ChevronLeft, Home, Info } from 'lucide-react';
-import type { Game, Team } from '@/types'; 
+import type { Game, Team, Player, PlayerSeasonStats, Aspect, AspectType, CelestialBody as GlobalCelestialBody } from '@/types'; 
 import { useAstroData } from '@/hooks/useAstroData';
+import { calculatePlayerImpactScore } from '@/utils/playerAnalysis';
 import { GamePredictionData, createDefaultPredictionData, createDefaultCelestialBody } from '@/types/gamePredictions';
 import { predictGameOutcome } from '@/utils/sportsPredictions';
 import type { AstroData, ZodiacSign } from '@/types/astrology';
@@ -21,6 +23,11 @@ interface DetailedGame extends Omit<Game, 'league'> {
   league: any | null;
 }
 
+interface PlayerDisplayData extends Player {
+  seasonStats?: PlayerSeasonStats | null;
+  impactScore?: number;
+}
+
 const GameDetails: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const location = useLocation();
@@ -29,6 +36,15 @@ const GameDetails: React.FC = () => {
   const [game, setGame] = useState<DetailedGame | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [homeTeamRoster, setHomeTeamRoster] = useState<PlayerDisplayData[]>([]);
+  const [awayTeamRoster, setAwayTeamRoster] = useState<PlayerDisplayData[]>([]);
+  const [homePlayerStats, setHomePlayerStats] = useState<Record<string, PlayerSeasonStats>>({}); 
+  const [awayPlayerStats, setAwayPlayerStats] = useState<Record<string, PlayerSeasonStats>>({}); 
+  const [rostersLoading, setRostersLoading] = useState<boolean>(true);
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
+  const [dataFetchError, setDataFetchError] = useState<string | null>(null); // For new data fetching errors
+
+  const TARGET_SEASON = 2025;
   
   // Fetch game data
   useEffect(() => {
@@ -59,6 +75,116 @@ const GameDetails: React.FC = () => {
     
     fetchGameDetails();
   }, [gameId]);
+
+  // Effect to fetch team rosters
+  useEffect(() => {
+    const fetchRosters = async () => {
+      if (!game || !game.home_team_id || !game.away_team_id) {
+        if (game && (!game.home_team_id || !game.away_team_id)) {
+            // Game loaded but team IDs are missing
+            setDataFetchError('Game data is missing team IDs for roster fetching.');
+            setRostersLoading(false);
+        }
+        // If game is null, main loading is still in progress or gameId was invalid
+        return;
+      }
+
+      setRostersLoading(true);
+      setDataFetchError(null); // Clear previous specific errors
+      try {
+        // console.log(`Fetching rosters for home: ${game.home_team_id}, away: ${game.away_team_id}`);
+        const [homeRosterResult, awayRosterResult] = await Promise.all([
+          supabase.from('players').select('*').eq('team_id', game.home_team_id),
+          supabase.from('players').select('*').eq('team_id', game.away_team_id),
+        ]);
+
+        if (homeRosterResult.error) throw new Error(`Home roster: ${homeRosterResult.error.message}`);
+        if (awayRosterResult.error) throw new Error(`Away roster: ${awayRosterResult.error.message}`);
+
+        setHomeTeamRoster(homeRosterResult.data as PlayerDisplayData[]);
+        setAwayTeamRoster(awayRosterResult.data as PlayerDisplayData[]);
+        // console.log('Rosters fetched:', homeRosterResult.data, awayRosterResult.data);
+      } catch (err: any) {
+        console.error('Error fetching team rosters:', err);
+        setDataFetchError(err.message || 'Failed to load team rosters');
+      } finally {
+        setRostersLoading(false);
+      }
+    };
+
+    if (game) { // Only attempt to fetch if game details are present
+        fetchRosters();
+    }
+  }, [game]); // Depends on the game object (which includes home_team_id and away_team_id)
+
+  // Effect to fetch player season stats
+  useEffect(() => {
+    const fetchPlayerStats = async () => {
+      if (rostersLoading || (homeTeamRoster.length === 0 && awayTeamRoster.length === 0)) {
+        // If rosters are still loading, wait.
+        // If rosters are done loading (rostersLoading is false) and both are empty, then no stats to fetch.
+        if (!rostersLoading) {
+            setStatsLoading(false);
+        }
+        return;
+      }
+
+      setStatsLoading(true);
+      setDataFetchError(null); // Clear previous specific errors
+      try {
+        const playerIds = [...homeTeamRoster, ...awayTeamRoster].map(p => p.id).filter(id => id); // Ensure IDs are valid
+        if (playerIds.length === 0) {
+          // console.log('No player IDs to fetch stats for.');
+          setStatsLoading(false);
+          return;
+        }
+        // console.log(`Fetching stats for ${playerIds.length} players for season ${TARGET_SEASON}`);
+
+        const { data: statsData, error: statsError } = await supabase
+          .from('player_season_stats')
+          .select('*')
+          .in('player_id', playerIds)
+          .eq('season', TARGET_SEASON);
+
+        if (statsError) throw statsError;
+
+        const statsMapHome: Record<string, PlayerSeasonStats> = {};
+        const statsMapAway: Record<string, PlayerSeasonStats> = {};
+
+        (statsData as PlayerSeasonStats[]).forEach(stat => {
+          if (homeTeamRoster.some(p => p.id === stat.player_id)) {
+            statsMapHome[stat.player_id] = stat;
+            setHomeTeamRoster(prevRoster => 
+              prevRoster.map(p => 
+                p.id === stat.player_id 
+                  ? { ...p, seasonStats: stat, impactScore: calculatePlayerImpactScore(stat) } 
+                  : p
+              )
+            );
+          } else if (awayTeamRoster.some(p => p.id === stat.player_id)) {
+            statsMapAway[stat.player_id] = stat;
+            setAwayTeamRoster(prevRoster => 
+              prevRoster.map(p => 
+                p.id === stat.player_id 
+                  ? { ...p, seasonStats: stat, impactScore: calculatePlayerImpactScore(stat) } 
+                  : p
+              )
+            );
+          }
+        });
+        setHomePlayerStats(statsMapHome);
+        setAwayPlayerStats(statsMapAway);
+        // console.log('Player stats fetched and mapped:', statsMapHome, statsMapAway);
+      } catch (err: any) {
+        console.error('Error fetching player season stats:', err);
+        setDataFetchError(err.message || 'Failed to load player season stats');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchPlayerStats();
+  }, [homeTeamRoster, awayTeamRoster, rostersLoading, TARGET_SEASON]); // Depends on rosters and their loading state
   
   // Fetch astrological data
   const { astroData, loading: astroLoading } = useAstroData(
@@ -89,7 +215,7 @@ const GameDetails: React.FC = () => {
         latitude: astroData.observer?.latitude || 0,
         longitude: astroData.observer?.longitude || 0,
         timezone: astroData.observer?.timezone || 'UTC',
-        altitude: astroData.observer?.altitude || 0
+        altitude: 0, // astroData.observer from useAstroData does not provide altitude
       },
       // Handle sun data from different sources
       sun: (() => {
@@ -149,7 +275,7 @@ const GameDetails: React.FC = () => {
           rightAscension: 0,
           phase: 0,
           phaseValue: 0,
-          phase_name: astroData.moonPhase?.phase || 'New Moon',
+          phase_name: astroData.moonPhase?.name || 'New Moon',
           magnitude: 0,
           illumination: astroData.moonPhase?.illumination || 0,
           dignity: {
@@ -170,9 +296,9 @@ const GameDetails: React.FC = () => {
         };
       })(),
       planets: astroData.planets || {},
-      aspects: astroData.aspects || [],
+      aspects: convertHookAspectsToPredictionAspects(astroData.aspects || []),
       moonPhase: {
-        name: astroData.moonPhase?.phase || 'New Moon',
+        name: astroData.moonPhase?.name || 'New Moon',
         value: 0, // Default value if not available
         illumination: astroData.moonPhase?.illumination || 0
       },
@@ -332,10 +458,21 @@ const GameDetails: React.FC = () => {
     );
   }
   
+  // Sort players by impact score to get top players
+  const getTopPlayers = (roster: PlayerDisplayData[], count: number = 3) => {
+    return roster
+      .filter(player => player.impactScore !== undefined)
+      .sort((a, b) => (b.impactScore ?? 0) - (a.impactScore ?? 0))
+      .slice(0, count);
+  };
+
+  const topHomePlayers = getTopPlayers(homeTeamRoster);
+  const topAwayPlayers = getTopPlayers(awayTeamRoster);
+
   // Main render
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-8 bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen text-white">
+      <div className="p-4 md:p-8 min-h-screen">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -347,72 +484,235 @@ const GameDetails: React.FC = () => {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        
-        <div className="flex justify-between items-center mb-6">
-          <Button variant="outline" onClick={() => navigate(-1)} className="bg-slate-700/50 border-slate-600 hover:bg-slate-600/70 text-slate-200">
-            <ChevronLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
-        </div>
-        
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-slate-800/70 border-slate-700 shadow-xl overflow-hidden">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold text-slate-200 mb-4">Game Information</h2>
-              <div className="flex justify-between mb-4">
-                <div className="text-center flex-1">
-                  <h3 className="font-semibold text-slate-300">{game.home_team?.name}</h3>
-                </div>
-                <div className="text-center">vs</div>
-                <div className="text-center flex-1">
-                  <h3 className="font-semibold text-slate-300">{game.away_team?.name}</h3>
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-slate-400 text-sm mb-2">
-                  <strong>Status:</strong> {game.status}
-                </p>
-                <p className="text-slate-400 text-sm mb-2">
-                  <strong>Start Time:</strong> {new Date(game.start_time).toLocaleString()}
-                </p>
-                <p className="text-slate-400 text-sm">
-                  <strong>League:</strong> {game.league?.name || 'Unknown'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-slate-800/70 border-slate-700 shadow-xl overflow-hidden">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold text-slate-200 mb-4">Astrological Prediction</h2>
-              {astroLoading ? (
-                <div className="flex flex-col items-center justify-center h-40">
-                  <Skeleton className="h-16 w-16 rounded-full bg-slate-700 mb-4" />
-                  <Skeleton className="h-4 w-32 bg-slate-700" />
-                </div>
-              ) : astroData ? (
+
+        {/* Team Info and Top Players Section */}
+        {game && game.home_team && game.away_team && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+            {/* Home Team Column */}
+            <Card className="flex flex-col">
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <Avatar className="h-16 w-16">
+                  {game.home_team.logo_url ? <AvatarImage src={game.home_team.logo_url} alt={`${game.home_team.name} logo`} /> : null}
+                  <AvatarFallback>{game.home_team?.name?.substring(0,2).toUpperCase() || 'HT'}</AvatarFallback>
+                </Avatar>
                 <div>
-                  <p className="text-slate-300 mb-4">
-                    <strong>Prediction:</strong> {gamePrediction?.prediction || 'No prediction available'}
-                  </p>
-                  <p className="text-slate-400 text-sm mb-2">
-                    <strong>Moon Phase:</strong> {astroData.moonPhase?.phase || 'Unknown'}
-                  </p>
-                  <p className="text-slate-400 text-sm mb-2">
-                    <strong>Sun Sign:</strong> {astroData.planets?.sun?.sign || 'Unknown'}
-                  </p>
-                  <p className="text-slate-400 text-sm">
-                    <strong>Confidence:</strong> {gamePrediction ? `${Math.round(gamePrediction.confidence * 100)}%` : 'N/A'}
-                  </p>
+                  <CardTitle className="text-2xl font-bold">
+                    {game.home_team ? (
+                      <Link to={`/teams/${game.home_team.id}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm">
+                        {game.home_team.name}
+                      </Link>
+                    ) : (
+                      <Skeleton className="h-8 w-32" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>Home Team</CardDescription>
                 </div>
-              ) : (
-                <p className="text-slate-400 text-sm">No astrological data available for this game.</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <h4 className="text-lg font-semibold mb-2">Top Players (Impact Score):</h4>
+                {topHomePlayers.length > 0 ? (
+                  <ul className="space-y-1">
+                    {topHomePlayers.map(player => (
+                      <li key={player.id} className="flex justify-between">
+                        <span>{player.name}</span>
+                        <span className="font-semibold">{player.impactScore?.toFixed(0)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Away Team Column */}
+            <Card className="flex flex-col">
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <Avatar className="h-16 w-16">
+                  {game.away_team.logo_url ? <AvatarImage src={game.away_team.logo_url} alt={`${game.away_team.name} logo`} /> : null}
+                  <AvatarFallback>{game.away_team?.name?.substring(0,2).toUpperCase() || 'AT'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-2xl font-bold">
+                    {game.away_team ? (
+                      <Link to={`/teams/${game.away_team.id}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm">
+                        {game.away_team.name}
+                      </Link>
+                    ) : (
+                      <Skeleton className="h-8 w-32" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>Away Team</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <h4 className="text-lg font-semibold mb-2">Top Players (Impact Score):</h4>
+                {topAwayPlayers.length > 0 ? (
+                  <ul className="space-y-1">
+                    {topAwayPlayers.map(player => (
+                      <li key={player.id} className="flex justify-between">
+                        <span>{player.name}</span>
+                        <span className="font-semibold">{player.impactScore?.toFixed(0)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Game Info and Astro Prediction Section */} 
+        {game && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+            {/* Game Information Card */} 
+            <Card>
+              <CardHeader>
+                <CardTitle>Game Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between mb-4 items-center">
+                  <div className="text-center flex-1">
+                    <h3 className="font-semibold">
+                      {game.home_team ? (
+                        <Link to={`/teams/${game.home_team.id}`} className="hover:underline">
+                          {game.home_team.name}
+                        </Link>
+                      ) : 'Home Team'}
+                    </h3>
+                  </div>
+                  <div className="text-center px-2 text-muted-foreground">vs</div>
+                  <div className="text-center flex-1">
+                    <h3 className="font-semibold">
+                      {game.away_team ? (
+                        <Link to={`/teams/${game.away_team.id}`} className="hover:underline">
+                          {game.away_team.name}
+                        </Link>
+                      ) : 'Away Team'}
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-2">
+                  <strong>Status:</strong> {game.status || 'N/A'}
+                </p>
+                <p className="text-muted-foreground text-sm mb-2">
+                  <strong>Start Time:</strong>{' '}
+                  {game.start_time
+                    ? new Date(game.start_time).toLocaleString(undefined, {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })
+                    : 'N/A'}
+                </p>
+                <p className="text-muted-foreground text-sm mb-2">
+                  <strong>League:</strong> {game.league?.name || 'N/A'}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  <strong>Venue:</strong> {game.venue?.name || 'N/A'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Astrological Prediction Card */} 
+            <Card>
+              <CardHeader>
+                <CardTitle>Astrological Prediction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {astroLoading ? (
+                  <div className="flex flex-col items-center justify-center h-40">
+                    <Skeleton className="h-12 w-12 rounded-full mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-1" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ) : astroData && gamePrediction ? (
+                  <div>
+                    <p className="mb-3">
+                      <strong>Prediction:</strong> {gamePrediction.prediction}
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      <strong>Moon Phase:</strong> {astroData.moonPhase?.name || 'Unknown'}
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      <strong>Sun Sign:</strong> {astroData.planets?.sun?.sign || 'Unknown'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Confidence:</strong> {`${Math.round(gamePrediction.confidence * 100)}%`}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No astrological data or prediction available.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className="flex justify-start items-center my-8">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back to Games
+          </Button>
         </div>
       </div>
     </DashboardLayout>
   );
+};
+
+// Type for aspects as returned by useAstroData hook
+interface HookTransformedAspect {
+  planets: (GlobalCelestialBody & { interpretation?: string })[]; 
+  type: string; 
+  angle: number;
+  orb: number;
+  influence: string; 
+  applying: boolean;
+  interpretation?: string;
+  [key: string]: any; // Allow other properties that might come from the hook
+}
+
+// Helper function to convert aspects from useAstroData format to GamePredictionData format
+const convertHookAspectsToPredictionAspects = (hookAspects: HookTransformedAspect[]): Aspect[] => {
+  return hookAspects.map(hookAspect => {
+    let fromPlanet = 'Unknown';
+    let toPlanet = 'Unknown';
+
+    if (hookAspect.planets && hookAspect.planets.length >= 1) {
+      fromPlanet = hookAspect.planets[0].name;
+      if (hookAspect.planets.length >= 2) {
+        toPlanet = hookAspect.planets[1].name;
+      } else {
+        // Handle aspects to points like Ascendant if planets array has only one item
+        // For now, if only one planet, maybe it's an aspect to a house cusp or similar?
+        // Or it's an error in data. For safety, mark 'to' as unknown or specific point if identifiable.
+        toPlanet = 'Point'; // Placeholder, adjust if more context is available
+      }
+    }
+    
+    // Ensure the aspect type from the hook is a valid AspectType
+    const aspectType = hookAspect.type.toLowerCase() as AspectType;
+    const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
+    if (!validAspectTypes.includes(aspectType)) {
+        // console.warn(`Invalid aspect type received: ${hookAspect.type}`);
+        // Skip this aspect or handle as a generic aspect if necessary
+        // For now, we'll create it but type safety might be an issue if not a valid AspectType
+    }
+
+    return {
+      from: fromPlanet,
+      to: toPlanet,
+      type: aspectType,
+      orb: hookAspect.orb,
+      influence: {
+        description: hookAspect.influence, // This is a string from the hook
+        strength: 0.5, // Default strength, can be refined based on orb or type
+        area: [],      // Default area
+      },
+      exact: Math.abs(hookAspect.orb) < 1, // A common definition for 'exact'
+      // 'applying' property from hookAspect can also be used for 'exact' or a new field if needed
+    };
+  }).filter(aspect => aspect.from !== 'Unknown' && aspect.to !== 'Unknown'); // Filter out aspects where planets couldn't be determined
 };
 
 export default GameDetails;

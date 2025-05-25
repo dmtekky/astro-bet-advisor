@@ -211,6 +211,8 @@ export function useTeams(leagueKey?: string) {
     teamMap, 
     teamByExternalId,
     loading, 
-    error 
+    error,
+    resolvedLeagueId,
+    isLeagueResolutionComplete 
   };
 }

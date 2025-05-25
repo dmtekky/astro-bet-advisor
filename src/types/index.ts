@@ -125,6 +125,61 @@ export interface Game {
   homeEdge?: number;
 }
 
+export interface PlayerSeasonStats {
+  id: string; // Assuming the primary key in player_season_stats table is 'id'
+  player_id: string;
+  team_id?: string; // The team for which these stats were recorded
+  season: number;
+  games_played?: number | null;
+  at_bats?: number | null;
+  runs?: number | null;
+  hits?: number | null;
+  doubles?: number | null;
+  triples?: number | null;
+  home_runs?: number | null;
+  runs_batted_in?: number | null;
+  batting_average?: number | null;
+  slugging_percentage?: number | null;
+  on_base_percentage?: number | null;
+  on_base_plus_slugging?: number | null;
+  stolen_bases?: number | null;
+  walks?: number | null;
+  strikeouts?: number | null;
+  // Pitching Stats
+  wins?: number | null;
+  losses?: number | null;
+  earned_run_average?: number | null;
+  saves?: number | null;
+  innings_pitched?: number | null; // Consider if this is decimal or IP with .1, .2 for outs
+  pitching_strikeouts?: number | null;
+  walks_hits_per_inning_pitched?: number | null;
+  // Metadata from SportsData.io, if stored
+  external_player_id?: number | null;
+  external_team_id?: number | null;
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Explicitly re-export types from astrology.ts
+export type {
+  ZodiacSign,
+  Element,
+  Modality,
+  AspectType,
+  PlanetName,
+  CelestialBody,
+  Dignity,
+  HouseSystem,
+  Aspect,
+  AspectPattern,
+  ElementalBalance,
+  ModalBalance,
+  AstroData,
+  AstroDataResponse,
+  MoonPhaseInfo
+} from './astrology';
+
 export interface GameOutcomePrediction {
   homeWinProbability: number;
   awayWinProbability: number;
