@@ -100,6 +100,12 @@ export interface ModalBalance {
   mutable: { score: number; planets: string[] };
 }
 
+export interface MoonPhaseInfo {
+  name: string;
+  value: number; // 0-1
+  illumination: number; // 0-1
+}
+
 export interface AstroData {
   // Calculation metadata
   date: string;
@@ -125,11 +131,7 @@ export interface AstroData {
   modalities?: ModalBalance;
   
   // Extra insights
-  moonPhase: {
-    name: string;
-    value: number; // 0-1
-    illumination: number; // 0-1
-  };
+  moonPhase: MoonPhaseInfo;
 }
 
 // For the API

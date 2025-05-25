@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Sport } from '@/types';
 
 // Define interfaces to match GameCard
 interface Team {
@@ -29,7 +30,7 @@ interface Game {
   away_score?: number;
 }
 
-type Sport = 'basketball_nba' | 'baseball_mlb' | 'football_nfl' | 'hockey_nhl' | 'all';
+
 
 // Initialize Supabase client
 
@@ -89,13 +90,14 @@ const getLeagueName = (sportKey: string): string => {
  * @param limit Maximum number of games to return
  * @returns Object containing games, loading state, and error
  */
-interface UseUpcomingGamesOptions {
+export interface UseUpcomingGamesOptions {
   sport?: Sport;
   limit?: number;
   offset?: number;
   date?: string; // ISO date string (YYYY-MM-DD)
   teamId?: string;
-  leagueId?: string;
+  leagueId?: string | null; // Allow null for leagueId
+  disabled?: boolean; // Option to disable the hook
 }
 
 export function useUpcomingGames(options: UseUpcomingGamesOptions = {}) {
@@ -106,6 +108,13 @@ export function useUpcomingGames(options: UseUpcomingGamesOptions = {}) {
 
   useEffect(() => {
     const fetchGames = async () => {
+      if (options.disabled) {
+        setGames([]);
+        setLoading(false);
+        setHasMore(false);
+        setError(null); // Clear any previous error
+        return;
+      }
       setLoading(true);
       setError(null);
 
@@ -167,8 +176,9 @@ export function useUpcomingGames(options: UseUpcomingGamesOptions = {}) {
 
         if (!gamesData || gamesData.length === 0) {
           setGames([]);
-          setError(new Error('No upcoming games found.'));
+          // setError(null); // Error should already be null here if gamesError wasn't set
           setLoading(false);
+          // setHasMore(false); // Already handled by gamesData.length === limit check or implicitly if length is 0
           return;
         }
 

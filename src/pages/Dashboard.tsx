@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { useUpcomingGames } from '@/hooks/useUpcomingGames';
 import GameCard from '@/components/GameCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
 import { useTeams } from '@/hooks/useTeams';
+import { useUpcomingGames } from '@/hooks/useUpcomingGames';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -35,7 +35,7 @@ import { useAstroData } from '@/hooks/useAstroData';
 import type { Team } from '@/types';
 import type { Game } from '@/types';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
-import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhase, CelestialBody, Aspect } from '@/types/astrology';
+import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhaseInfo, CelestialBody, Aspect } from '@/types/astrology';
 import type { GamePredictionData } from '@/types/gamePredictions';
 import { createDefaultCelestialBody } from '@/types/gamePredictions';
 
@@ -74,7 +74,9 @@ interface ElementsDistribution {
 }
 
 // Constants
-const MLB_LEAGUE_KEY = 'mlb';
+import { Sport } from '@/types';
+
+const MLB_LEAGUE_KEY: Sport = 'mlb';
 const DEFAULT_LOGO = '/images/default-team-logo.png';
 
 import AstroDisclosure from '@/components/AstroDisclosure';
@@ -89,14 +91,24 @@ const Dashboard: React.FC = () => {
     teamMap, 
     teamByExternalId, 
     loading: teamsLoading, 
-    error: teamsError 
+    error: teamsError,
+    resolvedLeagueId: mlbLeagueId, // Rename for clarity
+    isLeagueResolutionComplete: isMlbLeagueResolutionComplete
   } = useTeams(MLB_LEAGUE_KEY);
   
+  // Fetch upcoming games only when MLB league ID resolution is complete
   const { 
     games, 
     loading: gamesLoading, 
     error: gamesError 
-  } = useUpcomingGames({ sport: MLB_LEAGUE_KEY, limit: 12 });
+  } = useUpcomingGames({
+    sport: MLB_LEAGUE_KEY, 
+    limit: 12,
+    // Only pass leagueId if resolution is complete and ID is available
+    leagueId: isMlbLeagueResolutionComplete ? mlbLeagueId : null,
+    // Disable hook if resolution is not complete and we are targeting MLB
+    disabled: MLB_LEAGUE_KEY && !isMlbLeagueResolutionComplete 
+  });
 
   // Fetch astrological data
   const { 
@@ -377,24 +389,39 @@ const Dashboard: React.FC = () => {
     const finalSunData = sunBody || createDefaultCelestialBody('Sun', (hookData.planets?.sun?.sign as ZodiacSign) || 'Aries');
     const finalMoonData = moonBody || createDefaultCelestialBody('Moon', (hookData.planets?.moon?.sign as ZodiacSign) || 'Aries');
     
-    const moonPhaseData: MoonPhase = {
-      name: hookData.moonPhase?.phase || 'New Moon',
-      value: (hookData.moonPhase as any)?.angle ?? (hookData.moonPhase as any)?.value ?? 0,
+    const moonPhaseData: MoonPhaseInfo = {
+      name: hookData.moonPhase?.name || 'New Moon',
+      value: hookData.moonPhase?.value ?? 0,
       illumination: hookData.moonPhase?.illumination ?? 0,
-      angle: (hookData.moonPhase as any)?.angle ?? 0, 
-      emoji: (hookData.moonPhase as any)?.emoji || '',
     };
 
     const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
     const aspectsData: Aspect[] = (hookData.aspects || []).map(hookAspect => {
       const aspectType = hookAspect.type.toLowerCase() as AspectType;
+      // Attempt to find a more specific interpretation if available
+      let interpretation = (hookAspect as any).interpretation || (hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`] as string);
+      // Fallback for general aspect type interpretation if specific one is missing
+      if (!interpretation) {
+        interpretation = (hookData.interpretations?.[hookAspect.type] as string) || 'General influence';
+      }
+      // Check for lacking interpretation for specific planets
+      let lackingInterpretation = '';
+      if (!(hookAspect as any).interpretation && !hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`]) {
+        lackingInterpretation = `Interpretation for ${hookAspect.planets[0]?.name} ${hookAspect.type} ${hookAspect.planets[1]?.name} is pending.`;
+      }
+      if (interpretation && lackingInterpretation) {
+        interpretation += ` Additionally, ${lackingInterpretation.charAt(0).toLowerCase() + lackingInterpretation.slice(1)}`;
+      } else if (lackingInterpretation) {
+        interpretation = lackingInterpretation;
+      }
+
       return {
         from: hookAspect.planets[0]?.name || 'Unknown Planet',
         to: hookAspect.planets[1]?.name || 'Unknown Planet',
         type: aspectType,
         orb: hookAspect.orb,
         influence: { 
-          description: (hookAspect as any).interpretation || (hookAspect as any).influence?.description || 'General influence',
+          description: interpretation,
           strength: (hookAspect as any).influence?.strength ?? 0.5,
           area: (hookAspect as any).influence?.area ?? [],
         },
@@ -433,7 +460,7 @@ const Dashboard: React.FC = () => {
   // Get sports predictions from astrological data
   const sportsPredictions = useMemo(() => {
     if (!astroData) return null;
-    const transformedData = transformHookDataToGamePredictionData(astroData);
+    const transformedData: GamePredictionData | null = transformHookDataToGamePredictionData(astroData);
     return calculateSportsPredictions(transformedData);
   }, [astroData, transformHookDataToGamePredictionData]);
 
@@ -452,7 +479,7 @@ const Dashboard: React.FC = () => {
         console.warn(`Failed to transform astro data for game ${game.id}`);
         return null;
       }
-      return predictGameOutcome(transformedAstro, game, homeTeam, awayTeam);
+      return predictGameOutcome(game, homeTeam, awayTeam, transformedAstro);
     },
     [astroData, transformHookDataToGamePredictionData]
   );
@@ -476,6 +503,8 @@ const Dashboard: React.FC = () => {
     
     // Add optional properties if they exist
     if (team.city) teamData.city = team.city;
+    if (team.primary_color) teamData.primary_color = team.primary_color;
+    if (team.secondary_color) teamData.secondary_color = team.secondary_color;
     
     return teamData;
   };
@@ -696,104 +725,53 @@ const Dashboard: React.FC = () => {
   }
 
   // Helper function to get moon aspect message based on phase and sign with sports focus
-  const getMoonAspectMessage = (phase: string | undefined, sign: string | undefined): string => {
-    if (!phase) return 'Analyzing lunar influences on sports performance';
-    
-    const phaseMessages: Record<string, string> = {
-      'New Moon': 'Fresh energy for new strategies and underdogs',
-      'Waxing Crescent': 'Building momentum for teams on the rise',
-      'First Quarter': 'Peak performance conditions emerging',
-      'Waxing Gibbous': 'Fine-tuning and strategic adjustments',
-      'Full Moon': 'Peak intensity and high-stakes performance',
-      'Waning Gibbous': 'Experienced teams have the advantage',
-      'Last Quarter': 'Upsets and unexpected outcomes likely',
-      'Waning Crescent': 'Veteran teams may outperform'
-    };
+  const getMoonAspectMessage = (moonPhaseData: MoonPhaseInfo | undefined, moonSign: ZodiacSign | undefined): string => {
+    if (!moonPhaseData) return 'Analyzing lunar influences on sports performance';
 
-    const signInfluence = sign ? ` • Favoring ${sign} athletes` : '';
-    return `${phaseMessages[phase] || 'Favorable conditions'}${signInfluence}`;
-  };
+    const { name: phaseName, value: phaseValue, illumination } = moonPhaseData;
 
-  // Helper function to get sports-focused moon aspect description
-  const getMoonAspectDescription = (moonPhase: any, moonSign: string | undefined): string => {
-    if (!moonPhase) return 'Analyzing lunar influences on competitive performance.';
-    
-    const illumination = moonPhase.illumination || 0;
-    const isWaxing = moonPhase.phase === 'Waxing' || moonPhase.phase === 'First Quarter' || moonPhase.phase === 'Waxing Gibbous';
-    const isWaning = moonPhase.phase === 'Waning' || moonPhase.phase === 'Last Quarter' || moonPhase.phase === 'Waning Gibbous';
-    
-    let description = 'Current lunar phase ';
-    
+    // Determine if waxing or waning based on value; names can sometimes be ambiguous or vary by source
+    // Standard phase values: New=0, FQ=0.25, Full=0.5, LQ=0.75, New=1 (or 0 again)
+    // Waxing: (0, 0.5), Waning: (0.5, 1)
+    const isWaxing = phaseValue > 0 && phaseValue < 0.5;
+    const isWaning = phaseValue > 0.5 && phaseValue < 1;
+
+    let description = `Current lunar phase (${phaseName}, ${Math.round(illumination * 100)}% illuminated) `;
+
     if (isWaxing) {
       description += 'favors teams building momentum. ';
       description += 'Look for squads that improve as the game progresses. ';
-      if (illumination > 0.7) {
+      if (illumination > 0.7) { // Closer to Full Moon within waxing period
         description += 'Peak performance conditions expected. ';
       }
     } else if (isWaning) {
       description += 'may benefit experienced teams. ';
       description += 'Watch for veteran players making key plays. ';
-      if (illumination < 0.3) {
+      if (illumination < 0.3) { // Closer to New Moon within waning period
         description += 'Potential for unexpected outcomes increases. ';
       }
-    } else if (moonPhase.phase === 'Full Moon') {
-      description = 'Peak intensity conditions. Expect high-energy performances ';
+    } else if (phaseName === 'Full Moon' || Math.abs(phaseValue - 0.5) < 0.05) { // Check name or close value
+      description = 'Peak intensity conditions (Full Moon). Expect high-energy performances ';
       description += 'and potential for standout individual efforts. ';
-    } else if (moonPhase.phase === 'New Moon') {
-      description = 'Fresh start energy. Underdogs may surprise, ';
+    } else if (phaseName === 'New Moon' || phaseValue < 0.05 || phaseValue > 0.95) { // Check name or close value
+      description = 'Fresh start energy (New Moon). Underdogs may surprise, ';
       description += 'and new strategies could prove effective. ';
     }
 
     if (moonSign) {
       const signStrengths: Record<string, {traits: string, sports: string}> = {
-        'Aries': {
-          traits: 'aggressive play, strong starts, physicality',
-          sports: 'football, hockey, sprinting'
-        },
-        'Taurus': {
-          traits: 'endurance, consistency, strong defense',
-          sports: 'baseball, golf, wrestling'
-        },
-        'Gemini': {
-          traits: 'quick thinking, adaptability, fast breaks',
-          sports: 'basketball, tennis, soccer midfielders'
-        },
-        'Cancer': {
-          traits: 'team chemistry, home advantage, emotional plays',
-          sports: 'team sports, swimming, water polo'
-        },
-        'Leo': {
-          traits: 'leadership, clutch performances, showmanship',
-          sports: 'basketball, gymnastics, figure skating'
-        },
-        'Virgo': {
-          traits: 'precision, technical skills, strategy',
-          sports: 'baseball, golf, figure skating'
-        },
-        'Libra': {
-          traits: 'teamwork, fair play, balanced attack',
-          sports: 'basketball, tennis doubles, volleyball'
-        },
-        'Scorpio': {
-          traits: 'intensity, comebacks, mental toughness',
-          sports: 'boxing, martial arts, football defense'
-        },
-        'Sagittarius': {
-          traits: 'risk-taking, long shots, adventurous play',
-          sports: 'basketball, horse racing, archery'
-        },
-        'Capricorn': {
-          traits: 'discipline, strong defense, late-game strength',
-          sports: 'football, weightlifting, cycling'
-        },
-        'Aquarius': {
-          traits: 'unconventional strategies, surprise plays',
-          sports: 'basketball, soccer, extreme sports'
-        },
-        'Pisces': {
-          traits: 'creativity, intuition, fluid movement',
-          sports: 'soccer, swimming, figure skating'
-        }
+        'Aries': { traits: 'aggressive play, strong starts, physicality', sports: 'football, hockey, sprinting' },
+        'Taurus': { traits: 'endurance, consistency, strong defense', sports: 'baseball, golf, wrestling' },
+        'Gemini': { traits: 'quick thinking, adaptability, fast breaks', sports: 'basketball, tennis, soccer midfielders' },
+        'Cancer': { traits: 'team chemistry, home advantage, emotional plays', sports: 'team sports, swimming, water polo' },
+        'Leo': { traits: 'leadership, clutch performances, showmanship', sports: 'basketball, gymnastics, figure skating' },
+        'Virgo': { traits: 'precision, technical skills, strategy', sports: 'baseball, golf, figure skating' },
+        'Libra': { traits: 'teamwork, fair play, balanced attack', sports: 'basketball, tennis doubles, volleyball' },
+        'Scorpio': { traits: 'intensity, comebacks, mental toughness', sports: 'boxing, martial arts, football defense' },
+        'Sagittarius': { traits: 'risk-taking, long shots, adventurous play', sports: 'basketball, horse racing, archery' },
+        'Capricorn': { traits: 'discipline, strong defense, late-game strength', sports: 'football, weightlifting, cycling' },
+        'Aquarius': { traits: 'unconventional strategies, surprise plays', sports: 'basketball, soccer, extreme sports' },
+        'Pisces': { traits: 'creativity, intuition, fluid movement', sports: 'soccer, swimming, figure skating' }
       };
       
       const signData = signStrengths[moonSign] || { traits: 'competitive edge', sports: 'various sports' };
@@ -928,15 +906,27 @@ const Dashboard: React.FC = () => {
                               const homeTeam = findTeam(String(game.home_team_id));
                               const awayTeam = findTeam(String(game.away_team_id));
                               const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
+                              
+                              // Transform astroData from the hook for the GameCard prop
+                              const gameCardAstroData: GamePredictionData | null = astroData
+                                ? transformHookDataToGamePredictionData(astroData as HookAstroData)
+                                : null;
+
+                              // Merge game data with its prediction for the GameCard
+                              const gameWithPrediction = {
+                                ...game,
+                                prediction: gamePrediction ?? undefined, // Ensure undefined if null for type compatibility
+                              };
+
                               return (
                                 <GameCard 
                                   key={game.id} 
-                                  game={game} 
+                                  game={gameWithPrediction} 
                                   homeTeam={homeTeam}
                                   awayTeam={awayTeam}
-                                  prediction={gamePrediction}
-                                  astroData={astroData} // Pass full astroData for context
-                                  teamColorPalette={teamColorPalette}
+                                  // prediction prop removed as it's now part of the game object
+                                  astroData={gameCardAstroData} // Pass transformed astroData
+                                  defaultLogo={DEFAULT_LOGO} // Add defaultLogo prop
                                 />
                               );
                             })}
@@ -1125,7 +1115,7 @@ const Dashboard: React.FC = () => {
                                 Moon Phase
                               </h4>
                               <p className="text-sm text-indigo-600 mb-2">
-                                {astroData.moonPhase?.phase || 'Current phase unknown'}
+                                {astroData.moonPhase?.name || 'Current phase unknown'}
                               </p>
                               <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
                                 {astroData.moonPhase?.illumination !== null && astroData.moonPhase?.illumination !== undefined
@@ -1134,7 +1124,7 @@ const Dashboard: React.FC = () => {
                               </div>
                               <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
                                 <p className="text-base text-slate-700 leading-relaxed">
-                                  {astroData.moonPhase?.phase && getMoonPhaseImpact(astroData.moonPhase.phase)}
+                                  {astroData.moonPhase?.name && getMoonPhaseImpact(astroData.moonPhase.name)}
                                 </p>
                               </div>
                               
@@ -1171,7 +1161,7 @@ const Dashboard: React.FC = () => {
                                   <p className="text-sm text-slate-700 mb-2">
                                     {astroData.voidMoon?.isVoid 
                                       ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
-                                      : getMoonAspectMessage(astroData.moonPhase?.phase, astroData.planets?.moon?.sign)}
+                                      : getMoonAspectMessage(astroData.moonPhase, astroData.planets?.moon?.sign as ZodiacSign | undefined)}
                                   </p>
                                   
                                   {astroData.voidMoon?.isVoid && (
@@ -1200,7 +1190,7 @@ const Dashboard: React.FC = () => {
                                         <p className={astroData.voidMoon.isVoid ? 'text-red-700' : 'text-slate-600'}>
                                           {astroData.voidMoon.isVoid
                                             ? 'The moon is not making any major aspects. Game outcomes may be more unpredictable during this period.'
-                                            : getMoonAspectDescription(astroData.moonPhase, astroData.planets?.moon?.sign)}
+                                            : getMoonAspectMessage(astroData.moonPhase, astroData.planets?.moon?.sign as ZodiacSign | undefined)}
                                         </p>
                                       </div>
                                     </div>

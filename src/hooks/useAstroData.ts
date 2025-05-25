@@ -6,7 +6,45 @@
  */
 import { useMemo, useCallback } from 'react';
 import useSWR from 'swr';
-import type { AspectType, CelestialBody, ZodiacSign } from '../types/astrology';
+import type { AspectType, CelestialBody, ZodiacSign, MoonPhaseInfo } from '../types/astrology';
+
+// Helper function to determine moon phase value (0 to 1) and name
+const getProcessedMoonPhase = (
+  apiMoonPhase?: { angle?: number; phase?: string; illumination?: number | null },
+  apiMoon_Phase?: { phase_name?: string; illumination?: number | null }
+): MoonPhaseInfo => {
+  let name = 'Unknown';
+  let value = 0;
+  let illumination = 0;
+
+  if (apiMoonPhase?.phase) {
+    name = apiMoonPhase.phase;
+  } else if (apiMoon_Phase?.phase_name) {
+    name = apiMoon_Phase.phase_name;
+  }
+
+  if (apiMoonPhase?.illumination !== undefined && apiMoonPhase.illumination !== null) {
+    illumination = apiMoonPhase.illumination;
+  } else if (apiMoon_Phase?.illumination !== undefined && apiMoon_Phase.illumination !== null) {
+    illumination = apiMoon_Phase.illumination;
+  }
+
+  if (apiMoonPhase?.angle !== undefined && typeof apiMoonPhase.angle === 'number') {
+    value = (apiMoonPhase.angle % 360) / 360; // Normalize to 0-1
+  } else if (name !== 'Unknown') {
+    const lowerPhaseName = name.toLowerCase();
+    if (lowerPhaseName.includes('new moon')) value = 0;
+    else if (lowerPhaseName.includes('waxing crescent')) value = 0.125;
+    else if (lowerPhaseName.includes('first quarter')) value = 0.25;
+    else if (lowerPhaseName.includes('waxing gibbous')) value = 0.375;
+    else if (lowerPhaseName.includes('full moon')) value = 0.5;
+    else if (lowerPhaseName.includes('waning gibbous')) value = 0.625;
+    else if (lowerPhaseName.includes('last quarter')) value = 0.75;
+    else if (lowerPhaseName.includes('waning crescent')) value = 0.875;
+  }
+
+  return { name, value, illumination };
+};
 
 // Base URL for API requests
 const getApiBaseUrl = () => {
@@ -141,10 +179,7 @@ interface AstroData {
   planets: Record<string, CelestialBody & {
     interpretation?: string;
   }>;
-  moonPhase: {
-    illumination: number | null;
-    phase: string;
-  };
+  moonPhase: MoonPhaseInfo;
   voidMoon?: {
     isVoid: boolean;
     start: string | null;
@@ -294,6 +329,7 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
         observer,
         planets,
         moon_phase,
+        moonPhase, // Destructure raw moonPhase to prevent overwrite by ...rest
         void_of_course_moon,
         aspects,
         elements,
@@ -424,11 +460,7 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
         ayanamsa,
         observer,
         planets: planetData,
-        moonPhase: {
-          // Handle both API response formats
-          illumination: moon_phase?.illumination || apiData.moonPhase?.illumination || 0,
-          phase: moon_phase?.phase_name || apiData.moonPhase?.phase || 'Unknown'
-        },
+        moonPhase: getProcessedMoonPhase(apiData.moonPhase, moon_phase),
         voidMoon: void_of_course_moon ? {
           isVoid: void_of_course_moon.is_void,
           start: void_of_course_moon.start,
