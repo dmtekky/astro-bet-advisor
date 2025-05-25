@@ -9,7 +9,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Player, Team, Sport } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import formula from '@/lib/formula';
+import * as formula from '@/lib/formula';
 
 /**
  * Hook to get current ephemeris data

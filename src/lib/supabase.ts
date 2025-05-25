@@ -3,8 +3,8 @@ import { Database } from '@/types/database.types';
 import { toast } from '@/components/ui/use-toast';
 
 // Import environment variables with Vite's import.meta.env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://awoxkynorbspcrrggbca.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3b3hreW5vcmJzcGNycmdnYmNhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzI2NDMzNCwiZXhwIjoyMDYyODQwMzM0fQ.cdBzpp7ASlwN8PSxvGSUn9Wbx9lqDBsTIC5U-psel8w';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables. Please check your .env file.');
@@ -12,6 +12,8 @@ if (!supabaseUrl || !supabaseKey) {
   console.log('VITE_SUPABASE_KEY:', import.meta.env.VITE_SUPABASE_KEY ? 'exists' : 'missing');
   throw new Error('Missing required Supabase environment variables');
 }
+
+console.log('Supabase initialized with URL:', supabaseUrl.substring(0, 15) + '...');
 
 // Global variable to store the Supabase client instance
 let supabaseClient: SupabaseClient<Database> | null = null;

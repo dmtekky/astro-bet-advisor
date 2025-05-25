@@ -485,84 +485,329 @@ const GameDetails: React.FC = () => {
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Team Info and Top Players Section */}
+        {/* Game Header with Teams */}
         {game && game.home_team && game.away_team && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-            {/* Home Team Column */}
-            <Card className="flex flex-col">
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <Avatar className="h-16 w-16">
-                  {game.home_team.logo_url ? <AvatarImage src={game.home_team.logo_url} alt={`${game.home_team.name} logo`} /> : null}
-                  <AvatarFallback>{game.home_team?.name?.substring(0,2).toUpperCase() || 'HT'}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-2xl font-bold">
-                    {game.home_team ? (
-                      <Link to={`/teams/${game.home_team.id}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm">
-                        {game.home_team.name}
-                      </Link>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 mb-8 shadow-sm">
+            <div className="flex flex-col items-center">
+              {/* Teams Row */}
+              <div className="flex items-center justify-between w-full max-w-4xl">
+                {/* Home Team */}
+                <div className="flex flex-col items-center text-center w-1/3">
+                  <div className="relative w-24 h-24 md:w-32 md:h-32 mb-3">
+                    {game.home_team.logo_url || game.home_team.logo ? (
+                      <img 
+                        src={game.home_team.logo_url || game.home_team.logo} 
+                        alt={`${game.home_team.name} logo`}
+                        className="w-full h-full object-contain"
+                      />
                     ) : (
-                      <Skeleton className="h-8 w-32" />
+                      <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-slate-400">
+                          {game.home_team.abbreviation || game.home_team.name?.substring(0,2).toUpperCase() || 'HT'}
+                        </span>
+                      </div>
                     )}
-                  </CardTitle>
-                  <CardDescription>Home Team</CardDescription>
+                  </div>
+                  <h2 className="text-lg md:text-xl font-bold" style={{ color: game.home_team.primary_color }}>
+                    {game.home_team.name}
+                  </h2>
+                  {game.home_team.record && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {game.home_team.record}
+                    </p>
+                  )}
                 </div>
+
+                {/* VS Badge */}
+                <div className="flex flex-col items-center justify-center px-4">
+                  <div className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-xs font-medium px-3 py-1 rounded-full mb-2">
+                    {game.status || 'SCHEDULED'}
+                  </div>
+                  <div className="text-4xl font-extrabold text-slate-700 dark:text-slate-200">
+                    VS
+                  </div>
+                  {game.start_time && (
+                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                      {new Date(game.start_time).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Away Team */}
+                <div className="flex flex-col items-center text-center w-1/3">
+                  <div className="relative w-24 h-24 md:w-32 md:h-32 mb-3">
+                    {game.away_team.logo_url || game.away_team.logo ? (
+                      <img 
+                        src={game.away_team.logo_url || game.away_team.logo} 
+                        alt={`${game.away_team.name} logo`}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-slate-400">
+                          {game.away_team.abbreviation || game.away_team.name?.substring(0,2).toUpperCase() || 'AT'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <h2 className="text-lg md:text-xl font-bold" style={{ color: game.away_team.primary_color }}>
+                    {game.away_team.name}
+                  </h2>
+                  {game.away_team.record && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {game.away_team.record}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Venue and Time */}
+              {game.venue?.name && (
+                <div className="mt-6 text-center">
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {game.venue.name}
+                    {game.venue.city && ` • ${game.venue.city}${game.venue.state ? `, ${game.venue.state}` : ''}`}
+                  </p>
+                  {game.venue.capacity && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Capacity: {game.venue.capacity.toLocaleString()}
+                      {game.venue.surface && ` • ${game.venue.surface}`}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Player Impact Card */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Player Impact</CardTitle>
+                <CardDescription>Top performers from both teams</CardDescription>
               </CardHeader>
               <CardContent>
-                <h4 className="text-lg font-semibold mb-2">Top Players (Impact Score):</h4>
-                {topHomePlayers.length > 0 ? (
-                  <ul className="space-y-1">
-                    {topHomePlayers.map(player => (
-                      <li key={player.id} className="flex justify-between">
-                        <span>{player.name}</span>
-                        <span className="font-semibold">{player.impactScore?.toFixed(0)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
-                )}
+                <div className="space-y-4">
+                  {[...(topHomePlayers.slice(0,3)), ...(topAwayPlayers.slice(0,3))].length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[...(topHomePlayers.slice(0,3)), ...(topAwayPlayers.slice(0,3))].map((player) => (
+                        <div key={player.id} className="flex items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <div className="relative w-12 h-12 flex-shrink-0 mr-3">
+                            {player.image ? (
+                              <img 
+                                src={player.image} 
+                                alt={player.name}
+                                className="w-full h-full rounded-full object-cover border-2 border-slate-200 dark:border-slate-700"
+                              />
+                            ) : (
+                              <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                <span className="text-sm font-medium text-slate-400">
+                                  {player.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                              {player.impactScore?.toFixed(0) || '--'}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold truncate">{player.name}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {player.position || 'Player'}
+                              {player.team_id && teamMap[player.team_id]?.abbreviation && (
+                                <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                  {teamMap[player.team_id].abbreviation}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                      No player impact data available
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Away Team Column */}
-            <Card className="flex flex-col">
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <Avatar className="h-16 w-16">
-                  {game.away_team.logo_url ? <AvatarImage src={game.away_team.logo_url} alt={`${game.away_team.name} logo`} /> : null}
-                  <AvatarFallback>{game.away_team?.name?.substring(0,2).toUpperCase() || 'AT'}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-2xl font-bold">
-                    {game.away_team ? (
-                      <Link to={`/teams/${game.away_team.id}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm">
-                        {game.away_team.name}
-                      </Link>
-                    ) : (
-                      <Skeleton className="h-8 w-32" />
-                    )}
-                  </CardTitle>
-                  <CardDescription>Away Team</CardDescription>
-                </div>
+            {/* Game Details Card */}
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Game Details</CardTitle>
               </CardHeader>
               <CardContent>
-                <h4 className="text-lg font-semibold mb-2">Top Players (Impact Score):</h4>
-                {topAwayPlayers.length > 0 ? (
-                  <ul className="space-y-1">
-                    {topAwayPlayers.map(player => (
-                      <li key={player.id} className="flex justify-between">
-                        <span>{player.name}</span>
-                        <span className="font-semibold">{player.impactScore?.toFixed(0)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
-                )}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Venue</h4>
+                      <p className="text-sm">
+                        {game?.venue?.name || 'TBD'}
+                      </p>
+                      {game?.venue?.city && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {game.venue.city}{game.venue.state ? `, ${game.venue.state}` : ''}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Date & Time</h4>
+                      <p className="text-sm">
+                        {game?.start_time ? (
+                          new Date(game.start_time).toLocaleString(undefined, {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        ) : 'TBD'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {game?.status || 'Scheduled'}
+                      </p>
+                    </div>
+                    {game?.venue?.surface && (
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Surface</h4>
+                        <p className="text-sm">{game.venue.surface}</p>
+                      </div>
+                    )}
+                    {game?.venue?.capacity && (
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Capacity</h4>
+                        <p className="text-sm">{game.venue.capacity.toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
-        )}
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Weather Card */}
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Weather Forecast</CardTitle>
+                <CardDescription>Game day conditions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <div className="text-4xl font-light text-blue-500 mr-4">72°</div>
+                  <div>
+                    <div className="font-medium">Sunny</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">Feels like 75°</div>
+                    <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Wind: 5 mph • Humidity: 45%
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 italic">
+                  Weather data will be available closer to game time.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Astrological Insights */}
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Astrological Insights</CardTitle>
+                <CardDescription>Cosmic influences</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {astroLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    ))}
+                  </div>
+                ) : astroData && gamePrediction ? (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                      <div className="text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-1">Game Prediction</div>
+                      <div className="text-lg font-semibold">{gamePrediction.prediction}</div>
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-slate-600 dark:text-slate-300">Confidence</span>
+                          <span className="font-medium">{Math.round(gamePrediction.confidence * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                          <div 
+                            className="bg-indigo-500 h-2 rounded-full" 
+                            style={{ width: `${Math.round(gamePrediction.confidence * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Moon Phase</h4>
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center mr-2">
+                            <div 
+                              className="w-5 h-5 rounded-full bg-slate-300 dark:bg-slate-600"
+                              style={{
+                                boxShadow: 'inset 0 0 4px rgba(0,0,0,0.2)',
+                                background: `radial-gradient(circle at 50% 50%, transparent 50%, transparent ${50 - (astroData.moonPhase?.illumination || 0) * 50}%, var(--tw-bg-opacity) ${50 - (astroData.moonPhase?.illumination || 0) * 50}%)`,
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{astroData.moonPhase?.name || 'Unknown'}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              {Math.round((astroData.moonPhase?.illumination || 0) * 100)}% illuminated
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Sun Sign</h4>
+                        <div className="text-sm">
+                          {astroData.planets?.sun?.sign || 'Unknown'}
+                        </div>
+                      </div>
+
+                      {astroData.dominantElement && (
+                        <div>
+                          <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dominant Element</h4>
+                          <div className="text-sm capitalize">
+                            {astroData.dominantElement.toLowerCase()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    No astrological data available
+                  </div>
+                )}
+                <div className="mt-4 text-xs text-slate-400 dark:text-slate-500 italic">
+                  Astrological insights are for entertainment purposes only.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
 
         {/* Game Info and Astro Prediction Section */} 
         {game && (

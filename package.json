@@ -7,6 +7,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@astrojs/node": "^9.2.1",
+    "@astrojs/react": "^4.3.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -70,7 +71,6 @@
     "slick-carousel": "^1.8.1",
     "sonner": "^1.5.0",
     "string-similarity": "^4.0.4",
-
     "swr": "^2.3.3",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
@@ -78,11 +78,11 @@
     "vite": "^4.4.9"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "astro dev",
     "api": "node --experimental-json-modules api.js",
-    "start": "concurrently \"npm run dev\" \"npm run api\"",
-    "build": "vite build",
-    "preview": "vite preview",
+    "start": "npm run dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "sync:games": "node scripts/syncGames.cjs"

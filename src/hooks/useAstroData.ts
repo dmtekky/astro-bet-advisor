@@ -343,24 +343,28 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
       // Map planets object directly (add interpretation if available)
       const planetData: Record<string, CelestialBody & { interpretation?: string }> = {};
       if (planets && typeof planets === 'object') {
+        console.log('[useAstroData/planetsLoop] Starting to process planets. Raw planets object:', JSON.stringify(planets));
         Object.entries(planets).forEach(([key, value]) => {
+          console.log(`[useAstroData/planetsLoop] Processing entry - Key: ${key}, Value: ${JSON.stringify(value)}`);
           if (value && typeof value === 'object') {
+            console.log(`[useAstroData/planetsLoop] Condition 'value && typeof value === \"object\"' is TRUE for key: ${key}`);
             const planetKey = key.toLowerCase();
             // Use any type to handle different interpretations structures
             const anyInterpretations = interpretations as any;
             const interpretation = anyInterpretations?.planets?.[planetKey]?.interpretation || 
                                  anyInterpretations?.[planetKey] || undefined;
             
-            planetData[planetKey] = {
+            const newPlanetEntry = {
               name: value.name || key,
               longitude: value.longitude || 0,
               sign: value.sign as ZodiacSign,
-              // Handle both degree and degrees properties
               degree: value.degree || value.degrees || 0,
               retrograde: Boolean(value.retrograde),
               speed: 1, // Default speed (required by CelestialBody type)
               interpretation: interpretation
             };
+            console.log(`[useAstroData/planetsLoop] Assigning to planetData[${planetKey}]:`, JSON.stringify(newPlanetEntry));
+            planetData[planetKey] = newPlanetEntry;
           }
         });
       }

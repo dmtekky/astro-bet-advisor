@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowRight, BarChart2, Shield, TrendingUp, Zap } from 'lucide-react';
@@ -76,7 +76,7 @@ export default function Home() {
             <a href="#insights" className="text-slate-600 hover:text-slate-900 transition-colors">Insights</a>
           </div>
           <Button asChild variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
-            <Link to="/dashboard">Dashboard</Link>
+            <a href="/dashboard">Dashboard</a>
           </Button>
         </div>
       </nav>
@@ -123,15 +123,15 @@ export default function Home() {
             className="flex flex-col sm:flex-row justify-center gap-4"
           >
             <Button asChild size="lg" className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-6">
-              <Link to="/league/nba">
+              <a href="/league/nba">
                 Explore Leagues
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+              </a>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100 font-medium px-8 py-6">
-              <Link to="/dashboard">
+              <a href="/dashboard">
                 View Dashboard
-              </Link>
+              </a>
             </Button>
           </motion.div>
         </div>
@@ -206,9 +206,9 @@ export default function Home() {
                     }`}
                     disabled={league.comingSoon}
                   >
-                    <Link to={league.comingSoon ? '#' : `/league/${league.id}`}>
+                    <a href={league.comingSoon ? '#' : `/league/${league.id}`}>
                       {league.comingSoon ? 'Coming Soon' : 'View League'}
-                    </Link>
+                    </a>
                   </Button>
                 </div>
               </motion.div>
@@ -285,15 +285,15 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100 font-medium px-8 py-6">
-                <Link to="/dashboard">
+                <a href="/dashboard">
                   Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                </a>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-medium px-8 py-6">
-                <Link to="/league/nba">
+                <a href="/league/nba">
                   Explore Leagues
-                </Link>
+                </a>
               </Button>
             </div>
           </motion.div>

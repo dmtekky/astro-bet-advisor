@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Search, CalendarDays } from 'lucide-react';
 import { useSearch } from '@/context/SearchContext';
 import SportNavigation from '@/components/navigation/SportNavigation';
-import { Link } from 'react-router-dom';
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,12 +57,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Button type="submit" size="sm" className="mr-2">
                 Search
               </Button>
-              <Link to="/upcoming-games">
+              <a href="/upcoming-games">
                 <Button variant="outline" size="sm" className="gap-2">
                   <CalendarDays className="h-4 w-4" />
                   View All Games
                 </Button>
-              </Link>
+              </a>
             </form>
           </div>
           

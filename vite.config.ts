@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
-import react from "@vitejs/plugin-react-swc";
+// import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
+// import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -17,21 +17,21 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
       proxy: {
-        '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.log('Vite Proxy Error:', err);
-            });
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('Vite Proxying request:', req.method, req.url, 'to', options.target + proxyReq.path);
-            });
-            proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('Vite Received response from target:', proxyRes.statusCode, req.url);
-            });
-          }
-        }
+        // '/api': {
+        //   target: 'http://localhost:3001',
+        //   changeOrigin: true,
+        //   configure: (proxy, options) => {
+        //     proxy.on('error', (err, req, res) => {
+        //       console.log('Vite Proxy Error:', err);
+        //     });
+        //     proxy.on('proxyReq', (proxyReq, req, res) => {
+        //       console.log('Vite Proxying request:', req.method, req.url, 'to', options.target + proxyReq.path);
+        //     });
+        //     proxy.on('proxyRes', (proxyRes, req, res) => {
+        //       console.log('Vite Received response from target:', proxyRes.statusCode, req.url);
+        //     });
+        //   }
+        // }
       }
     },
     
@@ -53,10 +53,10 @@ export default defineConfig(({ mode }) => {
     },
     
     plugins: [
-      react({
-        jsxImportSource: '@emotion/react',
-      }),
-      mode === 'development' && componentTagger(),
+      // react({
+        // jsxImportSource: '@emotion/react',
+      // }),
+      // mode === 'development' && componentTagger(),
     ].filter(Boolean),
     
     resolve: {

@@ -1,50 +1,28 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { createContext, useContext, ReactNode } from 'react';
+// Comment out router hooks for now
+// import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-type SearchContextType = {
+interface SearchContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleSearch: (query: string) => void;
-};
+}
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
-export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+const SearchProvider = ({ children }: { children: ReactNode }) => {
+  // Minimal hardcoded values
+  const searchQuery = "test";
+  const setSearchQuery = (query: string) => { console.log("setSearchQuery called with:", query); };
+  const handleSearch = (query: string) => { console.log("handleSearch called with:", query); };
 
-  // Initialize search query from URL on component mount and when search params change
-  useEffect(() => {
-    const query = searchParams.get('q') || '';
-    if (query !== searchQuery) {
-      setSearchQuery(query);
-    }
-  }, [searchParams]);
-
-  const updateUrl = (query: string) => {
-    const params = new URLSearchParams();
-    if (query.trim()) {
-      params.set('q', query.trim());
-      // Always navigate to search results page with the query
-      navigate(`/search?${params.toString()}`);
-    } else {
-      // If query is empty, navigate to dashboard
-      navigate('/dashboard');
-    }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    updateUrl(query);
-  };
-
-  const contextValue = React.useMemo(() => ({
+  const contextValue: SearchContextType = {
     searchQuery,
     setSearchQuery,
-    handleSearch
-  }), [searchQuery, setSearchQuery, handleSearch]);
+    handleSearch,
+  };
+
+  console.log("SearchProvider rendering, contextValue:", contextValue); // For debugging
 
   return (
     <SearchContext.Provider value={contextValue}>
@@ -60,3 +38,7 @@ export const useSearch = (): SearchContextType => {
   }
   return context;
 };
+
+// Making SearchProvider the default export, as it's common for providers.
+// If it was named export before, this might require adjustments where it's imported.
+export default SearchProvider;

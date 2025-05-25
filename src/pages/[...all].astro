@@ -1,0 +1,37 @@
+---
+export const prerender = false;
+// This is a catch-all route to serve the React SPA.
+// It ensures that any non-API route will render the basic HTML shell
+// which then loads the React application via /src/main.tsx.
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>astro-bet-advisor</title>
+    <base href="/" />
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
+
+    <meta property="og:title" content="astro-bet-advisor" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- <script src="https://unpkg.com/frosted-glass/dist/frostedglass.js"></script> -->
+    
+    {/* If you have global stylesheets, link them here, e.g., <link rel="stylesheet" href="/global.css" /> */}
+    {/* Ensure any assets linked here (like favicons or global.css) are in the public/ directory */}
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

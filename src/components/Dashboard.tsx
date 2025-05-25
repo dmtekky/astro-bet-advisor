@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { getNextNLeagueEvents, Event } from '../api/thesportsdb';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import GameCard from '@/components/GameCard';
@@ -31,7 +32,9 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useAstroData } from '@/hooks/useAstroData';
+import { useAstroData } from '../hooks/useAstroData';
+import LoadingSpinner from './LoadingSpinner';
+import ErrorMessage from './ErrorMessage';
 import type { Team } from '@/types';
 import type { Game } from '@/types';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
@@ -84,6 +87,28 @@ import AstroDisclosure from '@/components/AstroDisclosure';
 const Dashboard: React.FC = () => {
   // State for today's date
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // ADD THIS useEffect to log MLB League ID
+  useEffect(() => {
+    const MLB_LEAGUE_ID = '4424';
+    const fetchMlbSchedule = async () => {
+      try {
+        console.log(`Fetching next events for MLB (League ID: ${MLB_LEAGUE_ID})...`);
+        const schedule = await getNextNLeagueEvents();
+        if (schedule) {
+          console.log('MLB Schedule Found:', schedule);
+          // You can now set this schedule to a state variable to display it
+        } else {
+          console.log('No MLB schedule data returned or an error occurred.');
+        }
+      } catch (error) {
+        console.error('Error fetching MLB schedule:', error);
+      }
+    };
+
+    fetchMlbSchedule();
+  }, []); // Empty dependency array ensures this runs once on mount
+
   
   // Fetch teams and games data
   const { 
@@ -111,11 +136,24 @@ const Dashboard: React.FC = () => {
   });
 
   // Fetch astrological data
-  const { 
-    astroData, 
-    loading: astroLoading, 
-    error: astroError 
-  } = useAstroData(selectedDate);
+  const { astroData, loading: astroLoading, error: astroError } = useAstroData(selectedDate);
+  console.log('[Dashboard] Hook return values - astroData:', astroData, 'astroLoading:', astroLoading, 'astroError:', astroError);
+
+  // Diagnostic logging for astroData states
+  if (astroLoading) {
+    console.log('[Dashboard] Astro data is loading...');
+  } else if (astroError) {
+    console.error('[Dashboard] Astro data error:', astroError);
+  } else if (!astroData) {
+    console.log('[Dashboard] Astro data is null/undefined after loading/error checks.');
+  } else {
+    console.log('[Dashboard] astroData is available. Planets:', astroData.planets);
+    if (astroData.planets) {
+      console.log('[Dashboard] astroData.planets.sun:', astroData.planets.sun);
+    } else {
+      console.log('[Dashboard] astroData.planets is undefined/null.');
+    }
+  }
 
   // Add this useEffect to log the astroData when it changes
   useEffect(() => {
@@ -123,21 +161,21 @@ const Dashboard: React.FC = () => {
       console.log('AstroData from API:', {
         date: astroData.date,
         sidereal: astroData.sidereal,
-        sunSign: astroData.sunSign,
+        sunSign: astroData.sunSign, 
         elements: astroData.elements,
         moonPhase: astroData.moonPhase,
-        planets: Object.keys(astroData.planets || {}),
-        aspects: astroData.aspects?.length,
-        interpretations: Object.keys(astroData.interpretations?.planets || {})
+        planetsKeys: astroData.planets ? Object.keys(astroData.planets) : 'planets undefined',
+        aspectsCount: astroData.aspects?.length,
+        interpretationsKeys: astroData.interpretations?.planets ? Object.keys(astroData.interpretations.planets) : (astroData.interpretations ? Object.keys(astroData.interpretations) : 'interpretations undefined'),
+        selectedDate: selectedDate.toISOString().split('T')[0],
       });
     }
-  }, [astroData]);
+  }, [astroData, selectedDate]);
 
   // Add this useEffect to log the astroData when it changes
   useEffect(() => {
     if (astroData) {
       console.log('astroData:', JSON.stringify({
-        // Only include the most relevant parts to avoid console clutter
         date: astroData.date,
         sidereal: astroData.sidereal,
         sunSign: astroData.sunSign,
@@ -318,11 +356,29 @@ const Dashboard: React.FC = () => {
   }
 
   // Calculate loading and error states
-  const isLoading = astroLoading || gamesLoading || teamsLoading;
+  if (astroLoading) {
+    // console.log('[Dashboard] Rendering LoadingSpinner: astroLoading is true.');
+    return <LoadingSpinner />;
+  }
+  if (astroError) {
+    // console.error('[Dashboard] Rendering ErrorMessage: astroError present.', astroError);
+    return <ErrorMessage message={astroError.message} />;
+  }
+  if (!astroData || !astroData.planets || !astroData.planets.sun) {
+    console.error('[Dashboard] Rendering ErrorMessage: Critical data missing.', {
+      hasAstroData: !!astroData,
+      hasPlanets: !!(astroData && astroData.planets),
+      hasSun: !!(astroData && astroData.planets && astroData.planets.sun),
+      astroDataPlanets: astroData ? astroData.planets : 'astroData is null/undefined',
+    });
+    return <ErrorMessage message="Essential astrological data (Sun) is missing or incomplete." />;
+  }
+  // console.log('[Dashboard] All data checks passed. astroData, astroData.planets, and astroData.planets.sun are available.');
+
+  // Combined error state for general dashboard error display
   const error = astroError || gamesError || teamsError;
 
-  // Extract sun sign data for easy access
-  const sunSign = astroData?.sunSign || 'Unknown';
+  const sunSign = astroData?.planets?.sun?.sign || 'Unknown';
   const sunDegree = astroData?.planets?.sun?.degree || 0;
   const sunMinute = astroData?.planets?.sun?.minute || 0;
 

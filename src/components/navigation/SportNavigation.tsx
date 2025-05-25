@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { Sport } from '@/types';
 
 interface SportNavigationProps {
@@ -17,19 +16,21 @@ const sports: { id: Sport; name: string; icon: string }[] = [
 ];
 
 const SportNavigation: React.FC<SportNavigationProps> = ({ className = '', isHeader = false }) => {
-  const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
+  // Simple check for current path - will work for client-side rendering
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  const isDashboard = pathname === '/dashboard';
 
   return (
     <nav className={`${className} ${isHeader ? 'hidden md:flex' : ''}`}>
       <ul className={`flex ${isHeader ? 'space-x-6' : 'flex-wrap justify-center gap-4'}`}>
         {sports.map((sport) => {
-          const isActive = isDashboard && new URLSearchParams(location.search).get('sport') === sport.id;
+          const isActive = isDashboard && new URLSearchParams(search).get('sport') === sport.id;
           
           return (
             <li key={sport.id}>
-              <Link
-                to={`/dashboard?sport=${sport.id}`}
+              <a
+                href={`/dashboard?sport=${sport.id}`}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
                   isActive
                     ? 'bg-primary text-primary-foreground font-medium'
@@ -38,7 +39,7 @@ const SportNavigation: React.FC<SportNavigationProps> = ({ className = '', isHea
               >
                 <span className="text-lg">{sport.icon}</span>
                 {isHeader && <span>{sport.name}</span>}
-              </Link>
+              </a>
             </li>
           );
         })}

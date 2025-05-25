@@ -1,13 +1,13 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SearchProvider } from './context/SearchContext';
+import SearchProvider from './context/SearchContext';
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
 import PlayerPage from "./pages/PlayerPage";
 import LeaguePage from "./pages/LeaguePage";
 import GameDetails from "./pages/GameDetails";
-import Home from "./pages/Home";
+import Home from "./components/Home";
 import SearchResults from "./pages/SearchResults";
 import UpcomingGames from "./pages/UpcomingGames";
 import NotFound from "./pages/NotFound";
