@@ -1,16 +1,29 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlayerStats } from '../../lib/astroFormula';
+
+interface Player {
+  id: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  primary_position?: string;
+  primary_number?: number;
+  birth_date?: string;
+  headshot_url?: string;
+  is_active?: boolean;
+  idteam?: string;
+  strteam?: string;
+}
 
 interface TeamRosterProps {
-  players: PlayerStats[];
+  players: Player[];
   teamId: string;
   playerImpacts?: Record<string, number>;
 }
 
-export default function TeamRoster({ players, teamId, playerImpacts }: TeamRosterProps) {
-  if (!players.length) {
-    return <div className="text-gray-400">No players found for this team.</div>;
+export default function TeamRoster({ players, teamId, playerImpacts = {} }: TeamRosterProps) {
+  if (!players || players.length === 0) {
+    return <div className="text-gray-400 p-4">No players found for this team.</div>;
   }
 
   return (
@@ -27,7 +40,7 @@ export default function TeamRoster({ players, teamId, playerImpacts }: TeamRoste
                 Position
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Age
+                Number
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Status
@@ -42,25 +55,25 @@ export default function TeamRoster({ players, teamId, playerImpacts }: TeamRoste
               <tr key={player.id} className="hover:bg-gray-800 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Link 
-                    to={`/team/${teamId}/player/${player.id}`}
+                    to={`/teams/${teamId}/players/${player.id}`}
                     className="text-yellow-400 hover:text-yellow-300 font-medium"
                   >
-                    {player.name}
+                    {player.full_name}
                   </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-300">
-                  {player.position || 'N/A'}
+                  {player.primary_position || 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-300">
-                  {player.birth_date ? new Date().getFullYear() - new Date(player.birth_date).getFullYear() : 'N/A'}
+                  {player.primary_number || 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Active
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${player.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {player.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-300">
-                  {playerImpacts && playerImpacts[player.id] !== undefined ? playerImpacts[player.id] : '...'}
+                  {playerImpacts[player.id] !== undefined ? playerImpacts[player.id] : '—'}
                 </td>
               </tr>
             ))}

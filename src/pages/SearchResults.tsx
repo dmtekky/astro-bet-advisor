@@ -77,7 +77,7 @@ const SearchResults = () => {
       type: 'player' as const,
       displayName: player.name,
       subtitle: player.team || '',
-      url: `/team/${player.team_id}/player/${player.id}`,
+      url: `/teams/${player.team_id}/players/${player.id}`,
       sport: player.sport,
       position: player.position,
       logo: player.image // Use player's image as logo if available
@@ -88,7 +88,7 @@ const SearchResults = () => {
       type: 'team' as const,
       displayName: team.name,
       subtitle: team.sport.toUpperCase(),
-      url: `/team/${team.id}`,
+      url: `/teams/${team.id}`,
       sport: team.sport,
       logo: team.logo
     }));

@@ -8,6 +8,8 @@ export interface Team {
   city: string;
   abbreviation: string;
   logo_url: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
   // Add other fields as needed
 }
 
@@ -137,7 +139,7 @@ export function useTeams(leagueKey?: string) {
         // This log is now part of the general proceeding log above
         let query = supabase
           .from('teams')
-          .select('id, external_id, name, city, abbreviation, logo_url, league_id, created_at, updated_at')
+          .select('id, external_id, name, city, abbreviation, logo_url, league_id, primary_color, secondary_color, created_at, updated_at')
           .order('name', { ascending: true });
           
         if (resolvedLeagueId) {
@@ -168,6 +170,8 @@ export function useTeams(leagueKey?: string) {
             city: team.city,
             abbreviation: team.abbreviation,
             logo_url: team.logo_url,
+            primary_color: team.primary_color,
+            secondary_color: team.secondary_color,
             league_id: team.league_id,
             created_at: team.created_at,
             updated_at: team.updated_at

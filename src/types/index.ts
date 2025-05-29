@@ -1,3 +1,5 @@
+import { Database, Json } from './database.types';
+
 export type Sport = 
   // Frontend display names
   'nba' | 'mlb' | 'nfl' | 'nhl' | 'soccer' | 'tennis' | 'mma' | 'ncaa' | 'ncaab' | 'ncaaf' | 'golf' | 'esports' | 'cfl' | 'boxing' |
@@ -99,30 +101,54 @@ export interface Bookmaker {
   title?: string;
 }
 
+export type DbGame = Database['public']['Tables']['games']['Row'];
+
 export interface Game {
-  id: string;
-  sport: Sport;
-  home_team_id: string;
-  away_team_id: string;
-  start_time: string;
-  commence_time?: string;
-  status: string;
-  score_home?: number;
-  score_away?: number;
-  external_id?: string;
-  league?: string;
-  league_id?: string;
-  venue_id?: string;
-  odds?: number | string | null;
-  oas?: number | string | null;
-  completed?: boolean;
-  astroPrediction?: string;
+  // Core fields from database (DbGame)
+  id: string; // PK, uuid
+  external_id: DbGame['external_id'];
+  league_id: DbGame['league_id'];
+  home_team_id: DbGame['home_team_id'];
+  away_team_id: DbGame['away_team_id'];
+  venue_id: DbGame['venue_id'];
+  game_date: DbGame['game_date'];
+  game_time_utc: DbGame['game_time_utc'];
+  status: DbGame['status'];
+  home_score: DbGame['home_score'];
+  away_score: DbGame['away_score'];
+  home_odds: DbGame['home_odds']; // number | null
+  away_odds: DbGame['away_odds']; // number | null
+  spread: DbGame['spread']; // number | null
+  over_under: DbGame['over_under']; // number | null
+  // the_sports_db_id field removed as it doesn't exist in the database schema
+  // sport_type field removed as it doesn't exist in the database schema
+  // We'll derive the sport from the league_id instead
+  created_at: DbGame['created_at'];
+  updated_at: DbGame['updated_at'];
+
+  // Application-specific/derived fields
+  sport: Sport; // Mapped from sport_type, e.g., "mlb"
+  start_time: string; // Derived from game_date & game_time_utc for display
+  league_name?: string; // Fetched from leagues table
+  home_team_name?: string; // Fetched from teams table
+  away_team_name?: string; // Fetched from teams table
+  
+  // Backward compatibility for components expecting odds as an array
+  odds?: Array<{
+    market?: string;
+    outcome?: string;
+    price?: number;
+  }>;
+  
+  // Fields for astro predictions and UI, matching GameCard.tsx's expectations for the `game` prop
+  prediction?: GameOutcomePrediction; // Used in GameCard
+  astroPrediction?: string | GameOutcomePrediction; // Can be string or object
   confidence?: number;
-  moonPhase?: string;
+  moonPhase?: string | { name: string; illumination: number };
   sunSign?: string;
   dominantElement?: string;
   astroInfluence?: string;
-  homeEdge?: number;
+  homeEdge?: number; // Also known as astroEdge in some contexts
 }
 
 export interface PlayerSeasonStats {

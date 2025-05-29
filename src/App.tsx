@@ -1,10 +1,10 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchProvider } from './context/SearchContext';
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
-import PlayerPage from "./pages/PlayerPage";
+import PlayerDetailPage from "./pages/PlayerDetailPage";
 import LeaguePage from "./pages/LeaguePage";
 import GameDetails from "./pages/GameDetails";
 import Home from "./pages/Home";
@@ -30,8 +30,14 @@ function AppContent() {
           <Route path="/league/:leagueId" element={<LeaguePage />} />
           <Route path="/game/:gameId" element={<GameDetails />} />
           <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/team/:teamId" element={<TeamPage />} />
-          <Route path="/team/:teamId/player/:playerId" element={<PlayerPage />} />
+          {/* New routes with plural form */}
+          <Route path="/teams/:teamId" element={<TeamPage />} />
+          <Route path="/teams/:teamId/player-details/:playerId" element={<PlayerDetailPage />} />
+          
+          {/* Redirects for old URLs */}
+          <Route path="/team/:teamId" element={<TeamPageWrapper />} />
+          <Route path="/team/:teamId/player/:playerId" element={<PlayerDetailPageWrapper />} />
+          <Route path="/teams/:teamId/players/:playerId" element={<PlayerDetailPageWrapper />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
           <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
@@ -52,5 +58,16 @@ function App() {
     </QueryClientProvider>
   );
 }
+
+// Wrapper components for handling redirects with parameters
+const TeamPageWrapper = () => {
+  const { teamId } = useParams<{ teamId: string }>();
+  return <Navigate to={`/teams/${teamId}`} replace />;
+};
+
+const PlayerDetailPageWrapper = () => {
+  const { teamId, playerId } = useParams<{ teamId: string; playerId: string }>();
+  return <Navigate to={`/teams/${teamId}/player-details/${playerId}`} replace />;
+};
 
 export default App;

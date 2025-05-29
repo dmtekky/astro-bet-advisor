@@ -88,10 +88,10 @@ export interface AspectPattern {
 }
 
 export interface ElementalBalance {
-  fire: { score: number; planets: string[] };
-  earth: { score: number; planets: string[] };
-  air: { score: number; planets: string[] };
-  water: { score: number; planets: string[] };
+  fire: { score: number; planets: string[]; percentage: number };
+  earth: { score: number; planets: string[]; percentage: number };
+  air: { score: number; planets: string[]; percentage: number };
+  water: { score: number; planets: string[]; percentage: number };
 }
 
 export interface ModalBalance {

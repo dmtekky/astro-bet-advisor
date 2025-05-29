@@ -1,4 +1,6 @@
-import { Team as TeamType } from './database.types';
+import { Database } from './database.types';
+
+export type DbTeam = Database['public']['Tables']['teams']['Row'];
 
 export type SportKey = 
   | 'basketball_nba' 
@@ -10,7 +12,7 @@ export type SportKey =
   | 'football_ncaaf' 
   | 'hockey_nhl';
 
-export interface Team extends TeamType {
+export interface Team extends DbTeam {
   id: string;
   name: string;
   logo_url?: string;
@@ -25,21 +27,37 @@ export interface Team extends TeamType {
   sport?: string;
 }
 
+export type DbGame = Database['public']['Tables']['games']['Row'];
+
 export interface Game {
-  id: string | number;
-  home_team_id: string;
-  away_team_id: string;
-  home_team: string;
-  away_team: string;
-  commence_time?: string;
-  start_time?: string;
-  game_time: string;
-  status?: string;
-  odds?: any[];
-  sport?: string;
-  league?: string;
-  home_score?: number;
-  away_score?: number;
+  // Core fields from DbGame, essential for fetching/displaying game card data
+  id: DbGame['id'];
+  home_team_id: DbGame['home_team_id']; // Needed to fetch the homeTeam object
+  away_team_id: DbGame['away_team_id']; // Needed to fetch the awayTeam object
+  league_id: DbGame['league_id']; // For context like league name
+  venue_id: DbGame['venue_id']; // For venue name
+
+  game_date: DbGame['game_date']; // Will be combined with game_time_utc for display
+  game_time_utc: DbGame['game_time_utc']; // Will be combined with game_date for display
+  status: DbGame['status'];
+  home_score: DbGame['home_score'];
+  away_score: DbGame['away_score'];
+  home_odds: DbGame['home_odds']; // number | null
+  away_odds: DbGame['away_odds']; // number | null
+  spread: DbGame['spread']; // number | null
+  over_under: DbGame['over_under']; // number | null
+  // Note: Some components expect an 'odds' array with market, outcome, price properties
+  // sport_type field removed as it doesn't exist in the database schema
+  // We'll derive the sport from the league_id instead
+  external_id: DbGame['external_id'];
+  // the_sports_db_id field removed as it doesn't exist in the database schema
+  created_at: DbGame['created_at'];
+  updated_at: DbGame['updated_at'];
+
+  // Fields expected by games/GameCard.tsx for its 'game' prop, if not directly on DbGame
+  // These were on the GameCardProps in games/GameCard.tsx
+  astroInfluence?: string;
+  astroEdge?: number;
 }
 
 export interface GameWithTeams extends Game {

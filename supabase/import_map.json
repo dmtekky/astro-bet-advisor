@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "services/": "../src/services/",
+    "lib/": "../src/lib/",
+    "@/": "../src/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}

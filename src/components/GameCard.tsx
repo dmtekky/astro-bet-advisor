@@ -21,8 +21,8 @@ interface GameCardProps {
   astroData?: GamePredictionData | null;
   loading?: boolean;
   error?: Error | null;
-  homeTeam: Team & { primary_color?: string; secondary_color?: string };
-  awayTeam: Team & { primary_color?: string; secondary_color?: string };
+  homeTeam?: Team & { primary_color?: string; secondary_color?: string };
+  awayTeam?: Team & { primary_color?: string; secondary_color?: string };
   defaultLogo: string;
 }
 
@@ -35,14 +35,98 @@ const GameCard: React.FC<GameCardProps> = ({
   awayTeam, 
   defaultLogo 
 }) => {
-  // Create display names (City Name if available, otherwise just name)
+  const getBoxShadow = (color: any) => {
+    // Default shadow (blue)
+    const defaultShadow = '0 4px 12px -2px rgba(30, 64, 175, 0.2)';
+    
+    // If color is null/undefined, return default
+    if (!color) {
+      return defaultShadow;
+    }
+    
+    // If color is an object, try to get the hex value
+    let hexColor;
+    if (typeof color === 'object') {
+      // If it has a hex property
+      if (color.hex) {
+        hexColor = color.hex;
+      } 
+      // If it has rgb properties
+      else if (color.r !== undefined && color.g !== undefined && color.b !== undefined) {
+        return `0 4px 12px -2px rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`;
+      }
+      // If it's an object but we don't know how to handle it
+      else {
+        return defaultShadow;
+      }
+    } 
+    // If it's already a string
+    else if (typeof color === 'string') {
+      // If it's a hex color
+      if (color.startsWith('#')) {
+        hexColor = color;
+      } 
+      // If it's an rgb/rgba string
+      else if (color.startsWith('rgb')) {
+        const rgbValues = color.match(/\d+/g);
+        if (rgbValues && rgbValues.length >= 3) {
+          return `0 4px 12px -2px rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, 0.2)`;
+        }
+      }
+      // If it's some other string we don't recognize
+      return defaultShadow;
+    }
+    
+    // If we have a hex color, parse it
+    if (hexColor) {
+      try {
+        // Remove # if present
+        const hex = hexColor.replace('#', '');
+        // Parse the hex color (supports both 3 and 6 digit hex)
+        const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
+        const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
+        const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
+        
+        if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+          return `0 4px 12px -2px rgba(${r}, ${g}, ${b}, 0.2)`;
+        }
+      } catch (e) {
+        console.error('Error parsing color:', color, e);
+      }
+    }
+    
+    // Fallback to default if anything goes wrong
+    return defaultShadow;
+  };
+  // Create display names with fallbacks
   const homeTeamName = homeTeam?.city 
-    ? `${homeTeam.city} ${homeTeam.name}`
-    : homeTeam?.name || 'TBD';
+    ? `${homeTeam.city} ${homeTeam.name || ''}`.trim()
+    : homeTeam?.name || 'Home Team';
     
   const awayTeamName = awayTeam?.city 
-    ? `${awayTeam.city} ${awayTeam.name}`
-    : awayTeam?.name || 'TBD';
+    ? `${awayTeam.city} ${awayTeam.name || ''}`.trim()
+    : awayTeam?.name || 'Away Team';
+    
+  // Create safe team objects with defaults
+  const safeHomeTeam = homeTeam || {
+    name: 'Home Team',
+    logo_url: defaultLogo,
+    record: '0-0',
+    primary_color: undefined,
+    secondary_color: undefined
+  };
+  
+  const safeAwayTeam = awayTeam || {
+    name: 'Away Team',
+    logo_url: defaultLogo,
+    record: '0-0',
+    primary_color: undefined,
+    secondary_color: undefined
+  };
+  
+  // Get box shadow colors with fallbacks
+  const homeBoxShadow = getBoxShadow(safeHomeTeam.primary_color);
+  const awayBoxShadow = getBoxShadow(safeAwayTeam.primary_color);
 
   // Calculate a contrasting text color based on background
   const getContrastColor = (hexColor: string | undefined) => {
@@ -170,9 +254,9 @@ const GameCard: React.FC<GameCardProps> = ({
         style={{
           borderWidth: '2px',
           borderStyle: 'solid',
-          borderColor: homeTeam.primary_color || '#1E40AF',
+          borderColor: homeTeam?.primary_color || '#1E40AF',
           borderRadius: '0.75rem',
-          boxShadow: `0 4px 12px -2px rgba(${parseInt(homeTeam.primary_color?.slice(1, 3) || '30', 16)}, ${parseInt(homeTeam.primary_color?.slice(3, 5) || '64', 16)}, ${parseInt(homeTeam.primary_color?.slice(5, 7) || '175', 16)}, 0.15)`,
+          boxShadow: `0 4px 12px -2px rgba(${parseInt(homeTeam?.primary_color?.slice(1, 3) || '30', 16)}, ${parseInt(homeTeam?.primary_color?.slice(3, 5) || '64', 16)}, ${parseInt(homeTeam?.primary_color?.slice(5, 7) || '175', 16)}, 0.15)`,
           background: 'rgba(255, 255, 255, 0.95)',
         }}
       >
@@ -180,7 +264,7 @@ const GameCard: React.FC<GameCardProps> = ({
         <div 
           className="relative px-4 py-2 border-b overflow-hidden"
           style={{
-            background: `linear-gradient(to right, ${homeTeam.primary_color || '#1E40AF'}, ${homeTeam.secondary_color || '#3B82F6'})`
+            background: `linear-gradient(to right, ${homeTeam?.primary_color || '#1E40AF'}, ${homeTeam?.secondary_color || '#3B82F6'})`
           }}
         >
           {/* Texture overlay */}
@@ -195,7 +279,7 @@ const GameCard: React.FC<GameCardProps> = ({
           {/* Header content */}
           <div className="relative flex justify-between items-center">
             <span className="text-xs font-medium uppercase tracking-wider" style={{ color: textColor }}>
-              {game.league || 'Game'}
+              {game.league_name || game.sport || 'Game'}
             </span>
             <span className="text-xs font-medium" style={{ color: textColor }}>
               {formatGameTime(game.start_time)}
@@ -206,51 +290,69 @@ const GameCard: React.FC<GameCardProps> = ({
         <CardContent className="p-0">
           <div className="p-4 space-y-4">
             {/* Home Team */}
-            <div 
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
-              style={{
-                boxShadow: `0 4px 12px -2px rgba(${parseInt(homeTeam.primary_color?.slice(1, 3) || '30', 16)}, ${parseInt(homeTeam.primary_color?.slice(3, 5) || '64', 16)}, ${parseInt(homeTeam.primary_color?.slice(5, 7) || '175', 16)}, 0.2)`
-              }}
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div 
-                  className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
-                  style={{
-                    background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
-                  }}
-                >
-                  <img 
-                    src={homeTeam.logo_url || defaultLogo} 
-                    alt={`${homeTeam.name} logo`}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = defaultLogo;
+            {homeTeam ? (
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
+                style={{ boxShadow: homeBoxShadow }}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div 
+                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
                     }}
-                  />
+                  >
+                    {homeTeam.logo_url || homeTeam.logo ? (
+                      <img 
+                        src={homeTeam.logo_url || homeTeam.logo} 
+                        alt={`${homeTeam.name || 'Home Team'} logo`}
+                        className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          console.error('Failed to load home team logo:', {
+                            teamId: homeTeam.id,
+                            teamName: homeTeam.name,
+                            logoUrl: homeTeam.logo_url,
+                            logo: homeTeam.logo,
+                            defaultLogo: defaultLogo,
+                            currentSrc: target.currentSrc
+                          });
+                          // Use the default SVG logo as fallback
+                          target.src = defaultLogo;
+                        }}
+                      />
+                    ) : (
+                      // Use the default SVG directly if no logo is set
+                      <img 
+                        src={defaultLogo} 
+                        alt="Default team logo"
+                        className="w-8 h-8 object-contain"
+                      />
+                    )}
+                  </div>
+                  <div className="ml-3 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">{homeTeam.name || 'Home Team'}</h4>
+                    <p className="text-xs text-gray-500">{homeTeam.record || '0-0'}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {homeTeamName}
-                  </p>
-                  {homeTeam.wins !== undefined && homeTeam.losses !== undefined && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {homeTeam.wins}-{homeTeam.losses}
-                    </p>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    Home
+                  </span>
+                  {game.home_score !== undefined && (
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                      {game.home_score}
+                    </span>
                   )}
                 </div>
               </div>
-              
-              <div className="ml-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Odds</div>
-                  <div className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                    {typeof game.odds === 'number' ? `+${game.odds}` : '—'}
-                  </div>
-                </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 text-center text-gray-500">
+                Home team information not available
               </div>
-            </div>
+            )}
 
             {/* VS Divider */}
             <div className="relative flex justify-center">
@@ -263,52 +365,69 @@ const GameCard: React.FC<GameCardProps> = ({
             </div>
 
             {/* Away Team */}
-            <div 
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
-              style={{
-                boxShadow: `0 4px 12px -2px rgba(${parseInt(awayTeam.primary_color?.slice(1, 3) || '30', 16)}, ${parseInt(awayTeam.primary_color?.slice(3, 5) || '64', 16)}, ${parseInt(awayTeam.primary_color?.slice(5, 7) || '175', 16)}, 0.2)`
-              }}
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div 
-                  className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
-                  style={{
-                    background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
-                  }}
-                >
-                  <img 
-                    src={awayTeam.logo_url || defaultLogo} 
-                    alt={`${awayTeam.name} logo`}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = defaultLogo;
+            {awayTeam ? (
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
+                style={{ boxShadow: awayBoxShadow }}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div 
+                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
                     }}
-                  />
+                  >
+                    {awayTeam.logo_url || awayTeam.logo ? (
+                      <img 
+                        src={awayTeam.logo_url || awayTeam.logo} 
+                        alt={`${awayTeam.name || 'Away Team'} logo`}
+                        className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          console.error('Failed to load away team logo:', {
+                            teamId: awayTeam.id,
+                            teamName: awayTeam.name,
+                            logoUrl: awayTeam.logo_url,
+                            logo: awayTeam.logo,
+                            defaultLogo: defaultLogo,
+                            currentSrc: target.currentSrc
+                          });
+                          // Use the default SVG logo as fallback
+                          target.src = defaultLogo;
+                        }}
+                      />
+                    ) : (
+                      // Use the default SVG directly if no logo is set
+                      <img 
+                        src={defaultLogo} 
+                        alt="Default team logo"
+                        className="w-8 h-8 object-contain"
+                      />
+                    )}
+                  </div>
+                  <div className="ml-3 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">{awayTeam.name || 'Away Team'}</h4>
+                    <p className="text-xs text-gray-500">{awayTeam.record || '0-0'}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {awayTeamName}
-                  </p>
-                  {awayTeam.wins !== undefined && awayTeam.losses !== undefined && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {awayTeam.wins}-{awayTeam.losses}
-                    </p>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                    Away
+                  </span>
+                  {game.away_score !== undefined && (
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                      {game.away_score}
+                    </span>
                   )}
                 </div>
               </div>
-              
-              <div className="ml-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Odds</div>
-                  <div className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                    {typeof game.oas === 'number' ? `+${game.oas}` : '—'}
-                  </div>
-                </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 text-center text-gray-500">
+                Away team information not available
               </div>
-            </div>
-            
+            )}
             {/* Game Info */}
             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
               <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
