@@ -11,6 +11,8 @@ import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Separator } from '@/components/ui/separator';
 import GameCard from '@/components/GameCard'; // Import the GameCard component
+import { Game, Team, Sport } from '@/types'; // Import our main types
+import { Database } from '@/types/database.types'; // For raw DB types if needed
 
 // League ID mapping for database queries
 const LEAGUE_ID_MAP: Record<string, string> = {
@@ -67,8 +69,8 @@ const LeaguePage: React.FC = () => {
   // Get the database league ID from the mapping
   const dbLeagueId = LEAGUE_ID_MAP[leagueId];
   
-  const [teams, setTeams] = useState<any[]>([]);
-  const [upcomingGames, setUpcomingGames] = useState<any[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -92,7 +94,7 @@ const LeaguePage: React.FC = () => {
         // Fetch teams from database
         const teamsResult = await supabase
           .from('teams')
-          .select('*')
+          .select('*, primary_color, secondary_color')
           .eq('league_id', dbLeagueId);
         console.log('[LeaguePage] teams query result:', teamsResult);
         
@@ -100,7 +102,8 @@ const LeaguePage: React.FC = () => {
         const upcomingGamesResult = await supabase
           .from('games')
           .select(`
-            *,
+            id, external_id, league_id, home_team_id, away_team_id, venue_id, game_date, game_time_utc, status, home_score, away_score, home_odds, away_odds, spread, over_under, created_at, updated_at,
+            leagues:league_id(name, key),
             home_team:home_team_id(*),
             away_team:away_team_id(*)
           `)
@@ -122,7 +125,74 @@ const LeaguePage: React.FC = () => {
             setError(upcomingGamesResult.error.message);
           }
         } else if (upcomingGamesResult.data) {
-          setUpcomingGames(upcomingGamesResult.data);
+          const mappedGames = upcomingGamesResult.data.map((dbGame: any): Game => {
+            // Assuming dbGame.home_team and dbGame.away_team are populated by the query
+            // And dbGame.leagues is also populated
+            // Derive sport from league key
+            const sportKeyValue = dbGame.leagues?.key || 'other';
+            let sport: Sport = sportKeyValue as Sport;
+            
+            // Map league key to sport if needed
+            if (sportKeyValue === 'mlb' || sportKeyValue === '4424') sport = 'mlb';
+            else if (sportKeyValue === 'nba' || sportKeyValue === '4387') sport = 'nba';
+            else if (sportKeyValue === 'nfl' || sportKeyValue === '4391') sport = 'nfl';
+            else if (sportKeyValue === 'nhl' || sportKeyValue === '4380') sport = 'nhl';
+            else if (sportKeyValue?.toLowerCase().includes('soccer')) sport = 'soccer';
+
+            return {
+              id: dbGame.id,
+              external_id: dbGame.external_id,
+              league_id: dbGame.league_id,
+              home_team_id: dbGame.home_team_id,
+              away_team_id: dbGame.away_team_id,
+              venue_id: dbGame.venue_id,
+              game_date: dbGame.game_date,
+              game_time_utc: dbGame.game_time_utc,
+              status: dbGame.status,
+              home_score: dbGame.home_score,
+              away_score: dbGame.away_score,
+              home_odds: dbGame.home_odds,
+              away_odds: dbGame.away_odds,
+              spread: dbGame.spread,
+              over_under: dbGame.over_under,
+              // Create odds array for backward compatibility
+              odds: [
+                dbGame.home_odds ? {
+                  market: 'Moneyline',
+                  outcome: 'Home',
+                  price: dbGame.home_odds
+                } : null,
+                dbGame.away_odds ? {
+                  market: 'Moneyline',
+                  outcome: 'Away',
+                  price: dbGame.away_odds
+                } : null,
+                dbGame.spread ? {
+                  market: 'Spread',
+                  outcome: 'Home',
+                  price: dbGame.spread
+                } : null,
+                dbGame.over_under ? {
+                  market: 'Total',
+                  outcome: 'Over',
+                  price: dbGame.over_under
+                } : null
+              ].filter(Boolean),
+              // the_sports_db_id removed as it doesn't exist in the database schema
+              // sport_type removed as it doesn't exist in the database schema
+              created_at: dbGame.created_at,
+              updated_at: dbGame.updated_at,
+              sport: sport,
+              start_time: (dbGame.game_date && dbGame.game_time_utc) 
+                            ? `${dbGame.game_date}T${dbGame.game_time_utc}` 
+                            : dbGame.updated_at || new Date().toISOString(),
+              league_name: dbGame.leagues?.name || undefined,
+              home_team_name: dbGame.home_team?.name || undefined,
+              away_team_name: dbGame.away_team?.name || undefined,
+              // Astro fields are not fetched here, GameCard handles undefined
+            };
+          });
+          setUpcomingGames(mappedGames);
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -318,7 +388,7 @@ const LeaguePage: React.FC = () => {
                 transition={{ duration: 0.2 }}
                 className="h-full"
               >
-                <Link to={`/team/${team.id}`}>
+                <Link to={`/teams/${team.id}`}>
                   <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 hover:shadow-xl transition-all duration-300 group overflow-hidden">
                     <CardContent className="p-5 flex flex-col items-center">
                       <div className="relative mb-3">

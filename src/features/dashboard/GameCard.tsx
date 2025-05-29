@@ -140,7 +140,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
   };
 
   return (
-    <Link to={`/event/${gameId}`} className="block">
+    <Link to={`/game/${gameId}`} className="block">
       <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full", className)}>
         <div className="flex-1 flex flex-col">
           <CardHeader className="pb-2">

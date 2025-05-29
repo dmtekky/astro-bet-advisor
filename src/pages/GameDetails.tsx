@@ -33,8 +33,11 @@ const GameDetails: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [game, setGame] = useState<DetailedGame | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Get game from location state if available (when navigating from GameCard)
+  const locationGame = location.state?.game as DetailedGame | undefined;
+  
+  const [game, setGame] = useState<DetailedGame | null>(locationGame || null);
+  const [loading, setLoading] = useState(!locationGame); // If we have the game from location, we don't need to load
   const [error, setError] = useState<string | null>(null);
   const [homeTeamRoster, setHomeTeamRoster] = useState<PlayerDisplayData[]>([]);
   const [awayTeamRoster, setAwayTeamRoster] = useState<PlayerDisplayData[]>([]);
@@ -46,8 +49,13 @@ const GameDetails: React.FC = () => {
 
   const TARGET_SEASON = 2025;
   
-  // Fetch game data
+  // Fetch game data if not available from location state
   useEffect(() => {
+    // Skip fetch if we already have the game from location state
+    if (locationGame) {
+      return;
+    }
+
     const fetchGameDetails = async () => {
       if (!gameId) {
         setError('No game ID provided');
@@ -59,12 +67,19 @@ const GameDetails: React.FC = () => {
         const { data, error } = await supabase
           .from('games')
           .select('*, home_team:home_team_id(*), away_team:away_team_id(*)')
-          .eq('id', gameId)
-          .single();
+          .eq('id', gameId);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching game details:', error);
+          throw error;
+        }
         
-        setGame(data as unknown as DetailedGame);
+        if (!data || data.length === 0) {
+          console.error('No game found with ID:', gameId);
+          throw new Error('Game not found');
+        }
+        
+        setGame(data[0] as unknown as DetailedGame);
       } catch (err: any) {
         console.error('Error fetching game details:', err);
         setError(err.message || 'Failed to load game details');
@@ -74,7 +89,7 @@ const GameDetails: React.FC = () => {
     };
     
     fetchGameDetails();
-  }, [gameId]);
+  }, [gameId, locationGame]);
 
   // Effect to fetch team rosters
   useEffect(() => {
@@ -94,8 +109,8 @@ const GameDetails: React.FC = () => {
       try {
         // console.log(`Fetching rosters for home: ${game.home_team_id}, away: ${game.away_team_id}`);
         const [homeRosterResult, awayRosterResult] = await Promise.all([
-          supabase.from('players').select('*').eq('team_id', game.home_team_id),
-          supabase.from('players').select('*').eq('team_id', game.away_team_id),
+          supabase.from('players').select('*').eq('current_team_id', game.home_team_id),
+          supabase.from('players').select('*').eq('current_team_id', game.away_team_id),
         ]);
 
         if (homeRosterResult.error) throw new Error(`Home roster: ${homeRosterResult.error.message}`);

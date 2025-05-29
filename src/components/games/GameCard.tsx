@@ -23,8 +23,31 @@ export const GameCard: React.FC<GameCardProps> = ({
   defaultLogo,
   className = '',
 }) => {
-  const gameTime = game.commence_time || game.start_time || game.game_time_utc || game.game_time;
-  const gameDate = gameTime ? new Date(gameTime) : new Date();
+  // Debug: Log the actual date/time values passed to this card
+  console.log('GameCard game_date:', game.game_date, 'game_time_utc:', game.game_time_utc, 'full game:', game);
+
+  // Safely parse the date with validation
+  let gameDate: Date;
+  try {
+    // Use game_date as a full ISO string if present
+    if (game.game_date) {
+      gameDate = new Date(game.game_date);
+    } else if (game.game_time_utc) {
+      gameDate = new Date(game.game_time_utc);
+    } else if (game.updated_at) {
+      gameDate = new Date(game.updated_at);
+    } else {
+      gameDate = new Date();
+    }
+    // Final check if the date is valid
+    if (isNaN(gameDate.getTime())) {
+      console.warn('Invalid game date, using current date as fallback');
+      gameDate = new Date();
+    }
+  } catch (error) {
+    console.error('Error parsing game date:', error);
+    gameDate = new Date();
+  }
   const isLive = game.status === 'in_progress' || game.status === 'in-progress';
   const homePrimaryColor = homeTeam.primary_color || '#6366f1';
   const awayPrimaryColor = awayTeam.primary_color || '#8b5cf6';
@@ -45,14 +68,52 @@ export const GameCard: React.FC<GameCardProps> = ({
     return '';
   };
 
-  // Format the game time
+  // Format the game time with validation and timezone handling
   const formatGameTime = (date: Date) => {
-    return (
-      <div className="flex flex-col items-center">
-        <div className="text-sm font-medium">{format(date, 'h:mm a')}</div>
-        <div className="text-xs text-muted-foreground">{format(date, 'MMM d')}</div>
-      </div>
-    );
+    try {
+      // Validate date before formatting
+      if (isNaN(date.getTime())) {
+        return (
+          <div className="flex flex-col items-center">
+            <div className="text-sm font-medium">TBD</div>
+            <div className="text-xs text-muted-foreground">--</div>
+          </div>
+        );
+      }
+      
+      // Create a date string in the user's local timezone
+      const localDate = new Date(date);
+      
+      // Format the time in 12-hour format with AM/PM
+      const timeString = localDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+      
+      // Format the date as "MMM d" (e.g., "May 28")
+      const dateString = localDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+      
+      return (
+        <div className="flex flex-col items-center">
+          <div className="text-sm font-medium">{timeString}</div>
+          <div className="text-xs text-muted-foreground">{dateString}</div>
+        </div>
+      );
+    } catch (error) {
+      console.error('Error formatting game time:', error);
+      return (
+        <div className="flex flex-col items-center">
+          <div className="text-sm font-medium">TBD</div>
+          <div className="text-xs text-muted-foreground">--</div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -68,7 +129,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           <div className="flex items-center space-x-1">
             <CalendarIcon className="h-3.5 w-3.5 text-gray-500" />
             <span className="text-xs text-gray-600">
-              {format(gameDate, 'EEE, MMM d')}
+              {isNaN(gameDate.getTime()) ? 'Date TBD' : format(gameDate, 'EEE, MMM d')}
             </span>
           </div>
           {isLive ? (

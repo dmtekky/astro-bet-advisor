@@ -1,15 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database.types';
-import { toast } from '@/components/ui/use-toast';
+import { Database, type Json } from '@/types/database.types.ts'; // Added Json import
 
-// Import environment variables with Vite's import.meta.env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+// Try Vite's import.meta.env first, then fall back to process.env for Node scripts
+const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL) || (typeof Deno !== 'undefined' && Deno?.env?.get?.('VITE_SUPABASE_URL')) || process.env?.VITE_SUPABASE_URL || '';
+const supabaseKey = (import.meta.env?.VITE_SUPABASE_KEY) || (typeof Deno !== 'undefined' && Deno?.env?.get?.('VITE_SUPABASE_KEY')) || process.env?.VITE_SUPABASE_KEY || '';
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase environment variables. Please check your .env file.');
-  console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? 'exists' : 'missing');
-  console.log('VITE_SUPABASE_KEY:', import.meta.env.VITE_SUPABASE_KEY ? 'exists' : 'missing');
+  console.error('Missing Supabase environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_KEY are set.');
+  console.log('Attempted VITE_SUPABASE_URL (from import.meta.env):', import.meta.env?.VITE_SUPABASE_URL ? 'exists' : 'missing');
+  console.log('Attempted VITE_SUPABASE_URL (from process.env):', process.env.VITE_SUPABASE_URL ? 'exists' : 'missing');
+  console.log('Attempted VITE_SUPABASE_KEY (from import.meta.env):', import.meta.env?.VITE_SUPABASE_KEY ? 'exists' : 'missing');
+  console.log('Attempted VITE_SUPABASE_KEY (from process.env):', process.env.VITE_SUPABASE_KEY ? 'exists' : 'missing');
   throw new Error('Missing required Supabase environment variables');
 }
 
@@ -69,23 +70,15 @@ export const fetchFromSupabase = async <T>(
     const { data, error } = await query;
     
     if (error) {
-      console.error(`Error fetching ${resource}:`, error);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error(`Error fetching ${resource}: Supabase error: ${error.message}`);
+      console.error(`Custom error context for ${resource}: ${errorMessage}`);
       return [];
     }
     
     return data || [];
-  } catch (err) {
-    console.error(`Exception fetching ${resource}:`, err);
-    toast({
-      title: "Error",
-      description: errorMessage,
-      variant: "destructive",
-    });
+  } catch (err: any) {
+    console.error(`Exception during fetch for ${resource}: ${err.message || err}`);
+    console.error(`Custom error context for ${resource} (exception): ${errorMessage}`);
     return [];
   }
 };
@@ -93,53 +86,39 @@ export const fetchFromSupabase = async <T>(
 // Export types for use in other files
 export type { Database };
 
-// Interface for a scheduled game
-export interface ScheduledGame {
-  id: number;
-  sport: string;
-  league: string;
-  home_team: string;
-  away_team: string;
-  start_time: string;
-  venue?: string;
-  [key: string]: any;
-}
-
 /**
- * Fetch upcoming games from the schedules table, filtered by sport and start_time in the future
- * @param sport - the sport to filter by (e.g., 'mlb', 'nba')
- * @returns array of ScheduledGame
+ * Fetch upcoming games from the 'games' table, filtered by sport_key and commence_time in the future
+ * @param sport_key_param - the sport_key to filter by (e.g., 'baseball_mlb', 'americanfootball_nfl')
+ * @returns array of game rows matching the 'games' table schema
  */
-export async function fetchUpcomingGamesBySport(sport: string): Promise<ScheduledGame[]> {
+export async function fetchUpcomingGamesBySport(sport_key_param: string): Promise<Database['public']['Tables']['games']['Row'][]> {
   const now = new Date().toISOString();
-  return fetchFromSupabase<ScheduledGame>(
-    'schedules',
+  // Use the exact Row type from the 'games' table for strong typing
+  return fetchFromSupabase<Database['public']['Tables']['games']['Row']>(
+    'games',
     supabase
-      .from('schedules')
-      .select('*')
-      .eq('sport', sport)
-      .gte('start_time', now)
-      .order('start_time', { ascending: true }),
+      .from('games')
+      .select('*') // Fetches all columns as defined in games.Row
+      .eq('sport_key', sport_key_param)
+      .gte('commence_time', now)
+      .order('commence_time', { ascending: true }),
     'Failed to fetch upcoming games'
   );
 }
 
 
-// Astrological data interface
+// Astrological data interface (aligned with database.types.ts public.Tables.astrological_data.Row)
 export interface AstrologicalData {
-  id: number;
+  created_at: string | null;
   date: string;
-  moon_phase: string;
-  moon_sign: string;
-  mercury_sign: string;
-  venus_sign: string;
-  mars_sign: string;
-  jupiter_sign: string;
-  mercury_retrograde: boolean;
-  sun_mars_transit: string;
-  sun_saturn_transit: string;
-  sun_jupiter_transit: string;
-  next_event_time: string;
+  id: string; // Corrected type from number to string
+  moon_phase: string | null;
+  moon_sign: string | null;
+  planetary_signs: Json | null; // Contains individual signs like mercury_sign, venus_sign
+  transits: Json | null;        // Contains transit info like sun_mars_transit
+  updated_at: string | null;
+  // Note: Consuming code will need to parse planetary_signs and transits Json objects
+  // if it needs individual values previously defined directly on this interface.
 }
 
 // Fetch latest astrological data

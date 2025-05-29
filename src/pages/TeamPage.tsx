@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, ChevronLeft, Info, Star, TrendingUp, Users } from 'lucide-react';
-import { format } from 'date-fns';
-import { supabase } from '@/lib/supabase';
-import { GameCard } from '@/components/games/GameCard';
-import { GameCarousel } from '@/components/games/GameCarousel';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, MapPin as MapPinIcon, Info, Users, Star, TrendingUp } from 'lucide-react';
+import { toast } from '../components/ui/use-toast';
+import TeamRoster from '../components/TeamRoster';
+import { GameCarousel } from '../components/games/GameCarousel';
+import { getTeamColorStyles } from '@/utils/teamColors';
+import { Card, CardContent } from '../components/ui/card';
+import { Skeleton } from '../components/ui/skeleton';
 
 // Type definitions for the component
 interface Team {
@@ -18,79 +19,166 @@ interface Team {
   name: string;
   logo_url: string;
   city: string;
-  venue: string;
-  conference: string;
-  division: string;
+  venue?: string;
+  conference?: string;
+  division?: string;
   abbreviation: string;
   primary_color: string;
   secondary_color: string;
   league_id: string;
+  external_id?: string | number;
+  // Additional team fields
+  intFormedYear?: string | number;
+  strStadium?: string;
+  strDescriptionEN?: string;
+  // League relationship
   league?: {
     id: string;
     name: string;
-    sport: string;
+    sport?: string;
   };
+  [key: string]: any; // For any additional properties
 }
 
 interface Player {
   id: string;
+  player_id: string; // Store the original player_id
   full_name: string;
+  first_name?: string;
+  last_name?: string;
   headshot_url?: string;
-  primary_position?: string;
-  primary_number?: number;
-  current_team_id?: string;
-  birth_date?: string;
+  position?: string;
+  number?: number | string | null;
+  team_id?: string | null;
+  team_name?: string | null;
+  birth_date?: string | null;
+  is_active?: boolean;
+  player_current_team_abbreviation?: string;
+  stats_batting_hits?: number | null;
+  stats_batting_runs?: number | null;
+  stats_fielding_assists?: number | null;
+  [key: string]: any; // For any additional properties
 } 
 
-interface Game {
+// Helper type for team data in games
+interface GameTeam {
   id: string;
-  home_team_id: string;
-  away_team_id: string;
-  home_team?: Team;
-  away_team?: Team;
-  game_time_utc: string;
-  venue?: {
-    name: string;
-    city: string;
-  };
-  home_score?: number;
-  away_score?: number;
-  status?: string;
-  odds?: Array<{
-    market: string;
-    outcome: string;
-    price: number;
-  }>;
+  name: string;
+  abbreviation: string;
+  logo_url?: string;
+  city: string;
+  [key: string]: any; // For any additional properties
 }
 
-const TeamPage: React.FC = () => {
+// Type for the game data from the API
+interface GameData {
+  id: string | number;
+  game_date?: string | null;
+  game_time_utc?: string | null;
+  status?: string | null;
+  home_team_id?: string | number | null;
+  away_team_id?: string | number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  external_id?: string | number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  home_team?: any | null;
+  away_team?: any | null;
+  league_id?: string | number | null;
+  venue_id?: string | number | null;
+  venue?: {
+    name?: string | null;
+    city?: string | null;
+  } | null;
+  astroInfluence?: string | null;
+  astroEdge?: number | null;
+  home_odds?: number | null;
+  away_odds?: number | null;
+  spread?: number | null;
+  over_under?: number | null;
+  season?: number | null;
+  week?: number | null;
+  [key: string]: any;
+}
+
+// Base Game interface with all possible fields
+interface GameBase {
+  id: string;
+  game_date: string;
+  game_time_utc: string;
+  status: string;
+  home_team_id: string;
+  away_team_id: string;
+  home_score: number | null;
+  away_score: number | null;
+  home_team: Team | null;
+  away_team: Team | null;
+  league_id: string;
+  venue_id: string;
+  external_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  home_odds?: number | null;
+  away_odds?: number | null;
+  spread?: number | null;
+  over_under?: number | null;
+  season?: number | null;
+  week?: number | null;
+  astroInfluence?: string;
+  astroEdge?: number;
+  venue?: {
+    name?: string | null;
+    city?: string | null;
+  } | null;
+  [key: string]: any;
+}
+
+// Type for the processed game with required fields
+type Game = GameBase;
+
+// Type for games with non-null teams for the GameCarousel
+type GameWithTeams = GameBase & { 
+  home_team: Team; 
+  away_team: Team;
+  astroInfluence: string;
+  astroEdge: number;
+};
+
+
+
+const TeamPage = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
-  
+
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [topPlayers, setTopPlayers] = useState<Player[]>([]);
+  // Type for games with non-null teams for the GameCarousel
+  type GameWithTeams = Game & { home_team: Team; away_team: Team };
+  
   const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-
+  
   useEffect(() => {
     if (!teamId) {
-      setError('Team ID is missing');
+      setError('No team ID provided');
       setLoading(false);
       return;
     }
 
-    const fetchTeamData = async () => {
-      setLoading(true);
-      setError(null);
-
+    const fetchTeamData = async (): Promise<void> => {
       try {
-        // Fetch team details
+        setLoading(true);
+
+        // Fetch team data
         const { data: teamData, error: teamError } = await supabase
           .from('teams')
-          .select(`*, league:league_id(*)`)
+          .select(`
+            *,
+            league:league_id(*)
+          `)
           .eq('id', teamId)
           .single();
 
@@ -101,100 +189,259 @@ const TeamPage: React.FC = () => {
           return;
         }
 
+        console.log('Team data:', teamData);
         setTeam(teamData);
-
-        // Fetch players on this team
-        const { data: playersData, error: playersError } = await supabase
-          .from('players')
-          .select('*')
-          .eq('current_team_id', teamId)
-          .order('primary_number', { ascending: true });
+        
+        // Fetch players from Supabase by matching team's external_id with baseball_players.team_id
+        console.log('Fetching players for team:', teamData.name, 'abbreviation:', teamData.abbreviation);
+        
+        // Initialize player variables
+        let playersData: any[] = [];
+        let playersError: any = null;
+        
+        try {
+          // Query all baseball players and filter by team abbreviation client-side
+          // This avoids potential issues with Supabase filter formatting
+          const { data: allPlayers, error } = await supabase
+            .from('baseball_players')
+            .select('*');
           
-        console.log('Players query results:', playersData);
-
-        if (playersError) {
-          console.error('Error fetching players:', playersError);
-          // Don't set error here, we still want to show the team
-        } else {
-          setPlayers(playersData || []);
-          
-          // Determine top players based on position and stats
-          // This is a simple algorithm that can be enhanced with actual stats data
-          const sortedPlayers = [...(playersData || [])];
-          
-          // Sort players by importance (can be customized based on sport)
-          if (teamData?.league?.sport?.toLowerCase() === 'baseball' || teamData?.league?.name?.toLowerCase().includes('mlb')) {
-            // For baseball, prioritize pitchers and power hitters
-            sortedPlayers.sort((a, b) => {
-              // Prioritize by position and then stats
-              const posValue = (pos: string) => {
-                const posLower = pos?.toLowerCase();
-                if (posLower?.includes('pitcher')) return 1;
-                if (posLower?.includes('catcher')) return 2;
-                if (posLower?.includes('short')) return 3;
-                if (posLower?.includes('first')) return 4;
-                if (posLower?.includes('third')) return 5;
-                if (posLower?.includes('second')) return 6;
-                if (posLower?.includes('outfield')) return 7;
-                return 10;
-              };
+          if (error) {
+            console.error('Error fetching players:', error.message);
+            playersError = error;
+          } else if (!allPlayers || allPlayers.length === 0) {
+            console.log('No players found in database');
+          } else {
+            // Filter players client-side where either abbreviation field matches
+            const playersForTeam = allPlayers.filter(player => {
+              // Safely access fields that might not exist
+              const currentTeamAbbr = player.player_current_team_abbreviation as string | null;
+              const teamAbbr = (player as any).team_abbreviation as string | null;
+              const abbreviation = teamData.abbreviation.toUpperCase();
               
-              return posValue(a.position) - posValue(b.position);
+              // Match either abbreviation field with case-insensitive comparison
+              return (currentTeamAbbr && currentTeamAbbr.toUpperCase() === abbreviation) || 
+                     (teamAbbr && teamAbbr.toUpperCase() === abbreviation);
             });
-          } else if (teamData?.league?.sport?.toLowerCase() === 'basketball' || teamData?.league?.name?.toLowerCase().includes('nba')) {
-            // For basketball, prioritize key positions
-            sortedPlayers.sort((a, b) => {
-              const posValue = (pos: string) => {
-                const posLower = pos?.toLowerCase();
-                if (posLower?.includes('point guard') || posLower?.includes('pg')) return 1;
-                if (posLower?.includes('center') || posLower?.includes('c')) return 2;
-                if (posLower?.includes('shooting guard') || posLower?.includes('sg')) return 3;
-                if (posLower?.includes('power forward') || posLower?.includes('pf')) return 4;
-                if (posLower?.includes('small forward') || posLower?.includes('sf')) return 5;
-                return 10;
-              };
+            
+            // Sort players by hits (descending) and then by last name (ascending)
+            playersData = playersForTeam.sort((a, b) => {
+              // Convert hits to numbers, defaulting to 0 if not available
+              const hitsA = Number(a.stats_batting_hits) || 0;
+              const hitsB = Number(b.stats_batting_hits) || 0;
               
-              return posValue(a.position) - posValue(b.position);
-            });
-          } else if (teamData?.league?.sport?.toLowerCase() === 'football' || teamData?.league?.name?.toLowerCase().includes('nfl')) {
-            // For football, prioritize quarterback and key positions
-            sortedPlayers.sort((a, b) => {
-              const posValue = (pos: string) => {
-                const posLower = pos?.toLowerCase();
-                if (posLower?.includes('quarterback') || posLower?.includes('qb')) return 1;
-                if (posLower?.includes('running back') || posLower?.includes('rb')) return 2;
-                if (posLower?.includes('wide receiver') || posLower?.includes('wr')) return 3;
-                if (posLower?.includes('tight end') || posLower?.includes('te')) return 4;
-                if (posLower?.includes('offensive tackle') || posLower?.includes('ot')) return 5;
-                return 10;
-              };
+              // Sort by hits in descending order
+              if (hitsA > hitsB) return -1;
+              if (hitsA < hitsB) return 1;
               
-              return posValue(a.position) - posValue(b.position);
+              // If hits are equal, sort by last name
+              return ((a.last_name || '') as string).localeCompare((b.last_name || '') as string);
             });
+            
+            console.log('Players found for team:', teamData.abbreviation, ':', playersData.length);
+            
+            if (playersData.length > 0) {
+              // Log first few player names for debugging
+              playersData.slice(0, 3).forEach(player => {
+                console.log('Player:', player.full_name, 
+                          'Current Team Abbr:', player.player_current_team_abbreviation,
+                          'Team Abbr:', (player as any).team_abbreviation);
+              });
+            }
           }
-          
-          // Get top 6 players (or fewer if not enough)
-          setTopPlayers(sortedPlayers.slice(0, 6));
+        } catch (error) {
+          console.error('Exception while fetching players:', error);
+          playersError = { message: String(error) };
         }
 
-        // Fetch upcoming games
+        console.log('Players found for team:', teamData.name, '(abbreviation:', teamData.abbreviation, '):', playersData?.length || 0);
+        
+        // If still no results, log a warning
+        if (!playersData || playersData.length === 0) {
+          console.warn('No players found for team after all search methods');
+          playersData = [];
+          playersError = null;
+        }
+        
+        console.log('Final players data count:', playersData?.length || 0);
+
+        if (playersError) {
+          console.error('Error fetching players from Supabase:', playersError);
+          toast({
+            title: "Error fetching players",
+            description: playersError.message,
+            variant: "destructive",
+          });
+          setPlayers([]); // Clear players on error
+          setTopPlayers([]); // Clear top players on error
+        } else if (playersData && playersData.length > 0) {
+          console.log('Processing player data:', playersData[0]);
+          const typedPlayers = playersData.map((p: any) => {
+            // Map player data from Supabase fields
+            const player: Player = {
+              id: String(p.player_id || p.id || ''),
+              player_id: String(p.player_id || ''), // Store the original player_id
+              full_name: p.player_full_name || `${p.player_first_name || ''} ${p.player_last_name || ''}`.trim() || `Player ID: ${p.player_id || p.id || 'Unknown'}`,
+              first_name: p.player_first_name || '',
+              last_name: p.player_last_name || '',
+              headshot_url: p.player_official_image_src || p.headshot_url || '/placeholder-player.png',
+              position: p.player_primary_position || p.position || 'Unknown',
+              number: p.player_jersey_number || p.number || 0,
+              team_id: p.team_id ? String(p.team_id) : null,
+              birth_date: p.player_birth_date || p.birth_date || null,
+              is_active: p.player_current_roster_status !== 'Inactive',
+              player_current_team_abbreviation: p.player_current_team_abbreviation || p.team_abbreviation || null,
+              // Add optional properties if they exist
+              ...(p.team_name && { team_name: p.team_name }),
+              ...(p.team_abbreviation && { team_abbreviation: p.team_abbreviation }),
+              ...(p.stats_batting_hits !== undefined && { stats_batting_hits: p.stats_batting_hits }),
+              ...(p.stats_batting_runs !== undefined && { stats_batting_runs: p.stats_batting_runs }),
+              ...(p.stats_fielding_assists !== undefined && { stats_fielding_assists: p.stats_fielding_assists })
+            };
+            
+            // Handle number conversion safely
+            if (p.number !== undefined && p.number !== null) {
+              const parsedNum = typeof p.number === 'string' 
+                ? parseInt(p.number, 10) 
+                : Number(p.number);
+              if (!isNaN(parsedNum)) {
+                player.number = parsedNum;
+              }
+            } else if (p.player_jersey_number !== undefined && p.player_jersey_number !== null) {
+              const parsedNum = typeof p.player_jersey_number === 'string'
+                ? parseInt(p.player_jersey_number, 10)
+                : Number(p.player_jersey_number);
+              if (!isNaN(parsedNum)) {
+                player.number = parsedNum;
+              }
+            }
+            
+            return player;
+          });
+          
+          console.log('Mapped players:', typedPlayers.length);
+          setPlayers(typedPlayers);
+          
+          // Determine top players by position
+          const sortedPlayers = [...typedPlayers].sort((a, b) => {
+            const getPosValue = (pos?: string) => {
+              if (!pos) return 0;
+              const posLower = pos.toLowerCase();
+              // Baseball positions prioritization (using primary_position)
+              if (posLower.includes('pitcher') || posLower === 'p') return 10;
+              if (posLower.includes('catcher') || posLower === 'c') return 9;
+              if (posLower.includes('shortstop') || posLower === 'ss') return 8;
+              if (posLower.includes('first') || posLower === '1b') return 7;
+              if (posLower.includes('second') || posLower === '2b') return 6;
+              if (posLower.includes('third') || posLower === '3b') return 5;
+              if (posLower.includes('outfield') || posLower.includes('of')) return 4;
+              return 3; // Default for other positions
+            };
+            return getPosValue(b.primary_position) - getPosValue(a.primary_position);
+          });
+          setTopPlayers(sortedPlayers.slice(0, 3));
+        } else {
+          // No players found or playersData is null
+          setPlayers([]);
+          setTopPlayers([]);
+        }
+
+        // Fetch upcoming games with proper type handling
         const { data: gamesData, error: gamesError } = await supabase
           .from('games')
           .select(`
-            *,
-            home_team:home_team_id(*),
-            away_team:away_team_id(*)
+            id,
+            game_date,
+            game_time_utc,
+            status,
+            home_team_id,
+            away_team_id,
+            home_score,
+            away_score,
+            home_team:home_team_id(id, name, abbreviation, logo_url, city),
+            away_team:away_team_id(id, name, abbreviation, logo_url, city)
           `)
           .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
-          .gt('game_time_utc', new Date().toISOString())
+          .gte('game_time_utc', new Date().toISOString())
           .order('game_time_utc', { ascending: true })
           .limit(6);
 
         if (gamesError) {
           console.error('Error fetching games:', gamesError);
-          // Don't set error here, we still want to show the team and players
-        } else {
-          setUpcomingGames(gamesData || []);
+          toast({
+            title: 'Error loading games',
+            description: gamesError.message,
+            variant: 'destructive',
+          });
+        } else if (gamesData) {
+          console.log('Fetched upcoming games:', gamesData);
+          
+          // Process games data to ensure it matches the Game type
+          const processedGames = gamesData.map((gameData: GameData): Game => {
+            // Safely extract home team data
+            const homeTeam: Team | null = gameData.home_team && 
+              typeof gameData.home_team === 'object' && 
+              !('error' in gameData.home_team)
+                ? {
+                    id: String(gameData.home_team.id || ''),
+                    name: String(gameData.home_team.name || 'Unknown Team'),
+                    abbreviation: String(gameData.home_team.abbreviation || 'TBD'),
+                    city: String(gameData.home_team.city || 'Unknown'),
+                    logo_url: gameData.home_team.logo_url,
+                    primary_color: gameData.home_team.primary_color || '#000000',
+                    secondary_color: gameData.home_team.secondary_color || '#FFFFFF',
+                    league_id: String(gameData.home_team.league_id || gameData.league_id || 'unknown'),
+                    external_id: String(gameData.home_team.external_id || gameData.home_team.id || '')
+                  }
+                : null;
+            
+            // Safely extract away team data
+            const awayTeam: Team | null = gameData.away_team && 
+              typeof gameData.away_team === 'object' && 
+              !('error' in gameData.away_team)
+                ? {
+                    id: String(gameData.away_team.id || ''),
+                    name: String(gameData.away_team.name || 'Unknown Team'),
+                    abbreviation: String(gameData.away_team.abbreviation || 'TBD'),
+                    city: String(gameData.away_team.city || 'Unknown'),
+                    logo_url: gameData.away_team.logo_url,
+                    primary_color: gameData.away_team.primary_color || '#000000',
+                    secondary_color: gameData.away_team.secondary_color || '#FFFFFF',
+                    league_id: String(gameData.away_team.league_id || gameData.league_id || 'unknown'),
+                    external_id: String(gameData.away_team.external_id || gameData.away_team.id || '')
+                  }
+                : null;
+            
+            // Create the processed game object with all required fields
+            const game: Game = {
+              id: String(gameData.id || ''),
+              game_date: String(gameData.game_date || ''),
+              game_time_utc: String(gameData.game_time_utc || ''),
+              status: String(gameData.status || 'Scheduled'),
+              home_team_id: String(gameData.home_team_id || ''),
+              away_team_id: String(gameData.away_team_id || ''),
+              home_score: typeof gameData.home_score === 'number' ? gameData.home_score : null,
+              away_score: typeof gameData.away_score === 'number' ? gameData.away_score : null,
+              home_team: homeTeam,
+              away_team: awayTeam,
+              league_id: gameData.league_id ? String(gameData.league_id) : 'unknown',
+              venue_id: gameData.venue_id ? String(gameData.venue_id) : 'unknown',
+              // Include any additional properties with proper type handling
+              ...Object.fromEntries(
+                Object.entries(gameData)
+                  .filter(([key]) => ![
+                    'id', 'game_date', 'game_time_utc', 'status', 'home_team_id', 
+                    'away_team_id', 'home_score', 'away_score', 'home_team', 'away_team',
+                    'league_id', 'venue_id'
+                  ].includes(key))
+                  .map(([key, value]) => [key, value])
+              )
+            };
+            
+            return game;
+          });
+          
+          setUpcomingGames(processedGames);
         }
       } catch (err: any) {
         console.error('Error in team page:', err);
@@ -205,24 +452,7 @@ const TeamPage: React.FC = () => {
     };
 
     fetchTeamData();
-  }, [teamId, retryCount]);
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-  };
-
-  // Helper function to get color styles with fallback
-  const getTeamColorStyles = (team: Team | null) => {
-    const primaryColor = team?.primary_color || '#0f172a';
-    const secondaryColor = team?.secondary_color || '#64748b';
-    
-    return {
-      primary: primaryColor,
-      secondary: secondaryColor,
-      gradientBg: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}10)`,
-      borderColor: `${primaryColor}40`,
-    };
-  };
+  }, [teamId]);
 
   // Zodiac sign calculation utility
   function getZodiacSign(dateString?: string): string {
@@ -292,13 +522,6 @@ const TeamPage: React.FC = () => {
           <div className="max-w-2xl mx-auto">
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
-              <Button 
-                onClick={handleRetry}
-                variant="outline"
-                className="mt-4 w-fit"
-              >
-                Retry
-              </Button>
             </Alert>
           </div>
         </div>
@@ -342,23 +565,24 @@ const TeamPage: React.FC = () => {
             }}
           />
           
-          <div className="text-center md:text-left">
+          <div className="text-center md:text-left flex-1">
             <h1 className="text-3xl font-bold">{team?.name}</h1>
             <p className="text-slate-500 mb-2">{team?.city}</p>
             
-            <div className="flex flex-wrap gap-2 justify-center md:justify-start my-3">
-              {team?.conference && (
-                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
-                  {team.conference}
-                </Badge>
-              )}
-              {team?.division && (
-                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
-                  {team.division}
-                </Badge>
-              )}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4 mt-2">
+              <Badge 
+                variant="secondary"
+                className="text-xs px-2 py-1 bg-slate-100"
+              >
+                {team?.abbreviation || 'N/A'}
+              </Badge>
+              
               {team?.league?.name && (
-                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200">
+                <Badge 
+                  variant="outline"
+                  className="text-xs px-2 py-1"
+                  style={{ borderColor: teamColors.secondary, color: teamColors.primary }}
+                >
                   {team.league.name}
                 </Badge>
               )}
@@ -384,7 +608,7 @@ const TeamPage: React.FC = () => {
           
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
             {topPlayers.length > 0 ? topPlayers.map(player => (
-              <Link to={`/team/${teamId}/player/${player.id}`} key={player.id}>
+              <Link to={`/teams/${teamId}/players/${player.id}`} key={player.id}>
                 <div
                   className="w-full bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col items-center relative"
                   style={{ borderTop: `4px solid ${teamColors.primary}` }}
@@ -479,17 +703,25 @@ const TeamPage: React.FC = () => {
           className="mb-12"
         >
           <h2 className="text-2xl font-bold mb-6 flex items-center">
-            <Calendar className="mr-2 h-6 w-6" style={{ color: teamColors.primary }} />
+            <CalendarIcon className="mr-2 h-6 w-6" style={{ color: teamColors.primary }} />
             Upcoming Games
           </h2>
           
           {upcomingGames.length > 0 ? (
             <GameCarousel 
-              games={upcomingGames.map(game => ({
-                ...game,
-                astroInfluence: ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
-                astroEdge: Math.random() * 15 + 5
-              }))}
+              games={upcomingGames
+                .filter((game): game is GameWithTeams => (
+                  !!game.home_team && 
+                  !!game.away_team
+                ))
+                .map(game => ({
+                  ...game,
+                  home_team: game.home_team,
+                  away_team: game.away_team,
+                  astroInfluence: game.astroInfluence || ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
+                  astroEdge: game.astroEdge || Math.random() * 15 + 5
+                }))
+              }
               defaultLogo="/placeholder-team.png"
               className="mt-6"
             />
@@ -517,6 +749,9 @@ const TeamPage: React.FC = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Player</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">#</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Position</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Hits</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Runs</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">F/Assist</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"></th>
                   </tr>
                 </thead>
@@ -541,20 +776,31 @@ const TeamPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        #
+                        {player.number || 'N/A'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        {player.primary_position || 'N/A'}
+                        {player.position || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
+                        {player.stats_batting_hits !== undefined ? player.stats_batting_hits : 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
+                        {player.stats_batting_runs !== undefined ? player.stats_batting_runs : 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
+                        {player.stats_fielding_assists !== undefined ? player.stats_fielding_assists : 'N/A'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                        <Link to={`/team/${teamId}/player/${player.id}`} className="text-blue-600 hover:text-blue-900">
+                        <Link to={`/teams/${teamId}/player-details/${player.player_id}`} className="text-blue-600 hover:text-blue-900">
+                          {console.log('Player ID in TeamPage:', player.player_id)}
+                          {console.log('Team ID in TeamPage:', teamId)}
                           View
                         </Link>
                       </td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                      <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                         No players available for this team
                       </td>
                     </tr>

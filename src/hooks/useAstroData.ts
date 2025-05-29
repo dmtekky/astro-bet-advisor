@@ -211,34 +211,12 @@ interface AstroData {
 }
 
 // Return type for the hook
-interface UseAstroDataReturn {
+export interface UseAstroDataReturn {
   astroData: AstroData | null;
   loading: boolean;
   error: Error | null;
   refreshData: () => void;
 }
-
-// Fetch function for SWR
-const fetcher = async (baseApiUrl: string) => { // Renamed 'url' to 'baseApiUrl' for clarity
-  const urlToFetch = `${baseApiUrl}&t=${Date.now()}`; // Append timestamp for cache-busting
-  console.log('[Fetcher] Attempting to fetch URL:', urlToFetch);
-  const response = await fetch(urlToFetch);
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Fetcher] API request failed:', response.status, errorText);
-    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
-  }
-  const rawText = await response.text();
-  console.log('[Fetcher] Raw API Response Text:', rawText);
-  try {
-    const jsonData = JSON.parse(rawText);
-    console.log('[Fetcher] Parsed API JSON data:', jsonData);
-    return jsonData;
-  } catch (e) {
-    console.error('[Fetcher] Failed to parse API response JSON:', e, "Raw text was:", rawText);
-    throw new Error('Failed to parse API response JSON');
-  }
-};
 
 // Get icon for zodiac sign (helper function)
 const getZodiacIcon = (sign: string): string => {
@@ -264,15 +242,47 @@ const getZodiacIcon = (sign: string): string => {
  * @param dateParam - Date to get data for, defaults to current date
  * @returns Astrological data, loading state, and error
  */
-export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDataReturn => {
-  // Format date as YYYY-MM-DD
-  const dateStr = typeof dateParam === 'string' 
-    ? dateParam 
-    : dateParam.toISOString().split('T')[0];
+export const useAstroData = (dateParam: Date | string | null = new Date()): UseAstroDataReturn => {
+  // Format date as YYYY-MM-DD, handling null/undefined cases
+  let dateStr = '';
+  
+  if (dateParam === null || dateParam === undefined) {
+    console.log('[useAstroData] dateParam is null or undefined, using current date');
+    dateParam = new Date();
+  }
+  
+  try {
+    dateStr = typeof dateParam === 'string' 
+      ? dateParam 
+      : dateParam.toISOString().split('T')[0];
+  } catch (err) {
+    console.error('[useAstroData] Error formatting date:', err);
+    dateStr = new Date().toISOString().split('T')[0]; // Fallback to current date
+  }
 
   // Stable key for SWR, based on actual data dependencies
   const swrKey = `${API_BASE_URL}?date=${dateStr}&sidereal=true`;
-  const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
+  // Fetch function for SWR
+const fetcher = async (baseApiUrl: string) => {
+  const urlToFetch = `${baseApiUrl}&t=${Date.now()}`; // Append timestamp for cache-busting
+  console.log('[Fetcher] Attempting to fetch URL:', urlToFetch);
+  const response = await fetch(urlToFetch);
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Fetcher] API request failed:', response.status, errorText);
+    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+  }
+  const rawText = await response.text();
+  try {
+    const jsonData = JSON.parse(rawText);
+    return jsonData;
+  } catch (e) {
+    console.error('[Fetcher] Failed to parse API response JSON:', e, "Raw text was:", rawText);
+    throw new Error('Failed to parse API response JSON');
+  }
+};
+
+const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
     swrKey, // Use the stable key
     fetcher,
     {
@@ -406,7 +416,36 @@ export const useAstroData = (dateParam: Date | string = new Date()): UseAstroDat
                 interpretationText = foundInterpretation.interpretation;
                 console.log(`[useAstroData/transformedData/aspects] Found interpretation for ${p1Name}-${aspectType}-${p2Name}: "${interpretationText}"`);
               } else {
-                console.log(`[useAstroData/transformedData/aspects] No interpretation found for ${p1Name}-${aspectType}-${p2Name}. Searched in:`, interpretations.aspects);
+                console.log(`[useAstroData/transformedData/aspects] No interpretation found for ${p1Name}-${aspectType}-${p2Name} from API. Searched in:`, interpretations.aspects);
+
+                // Client-side fallback for missing interpretations
+                const fallbackKey = `${p1Name}-${aspectType}-${p2Name}`;
+                const reversedFallbackKey = `${p2Name}-${aspectType}-${p1Name}`;
+                
+                // Organized fallbacks by planet combinations
+                const knownFallbacks: Record<string, string> = {
+                  // Uranus-Pluto aspects
+                  "uranus-sextile-pluto": "Uranus sextile Pluto: This aspect fosters transformative breakthroughs and innovative approaches to deep-seated issues. It encourages embracing change and using personal power constructively to evolve societal structures or personal paradigms.",
+                  "pluto-sextile-uranus": "Pluto sextile Uranus: This aspect fosters transformative breakthroughs and innovative approaches to deep-seated issues. It encourages embracing change and using personal power constructively to evolve societal structures or personal paradigms.",
+                  "uranus-trine-pluto": "Uranus trine Pluto: This harmonious aspect brings powerful transformative energy and the ability to revolutionize structures in a flowing, natural way. It supports positive change that respects deeper truths and facilitates evolution without unnecessary destruction.",
+                  "pluto-trine-uranus": "Pluto trine Uranus: This harmonious aspect brings powerful transformative energy and the ability to revolutionize structures in a flowing, natural way. It supports positive change that respects deeper truths and facilitates evolution without unnecessary destruction.",
+                  
+                  // Neptune-Pluto aspects
+                  "neptune-sextile-pluto": "Neptune sextile Pluto: This aspect blends spiritual awareness with transformative power. It offers opportunities to dissolve outdated structures and replace them with more spiritually aligned approaches. Intuition and deep psychological insights work together harmoniously.",
+                  "pluto-sextile-neptune": "Pluto sextile Neptune: This aspect blends transformative power with spiritual awareness. It offers opportunities to dissolve outdated structures and replace them with more spiritually aligned approaches. Deep psychological insights and intuition work together harmoniously.",
+                  
+                  // Uranus-Neptune aspects
+                  "uranus-sextile-neptune": "Uranus sextile Neptune: This aspect creates opportunities to blend innovation with spiritual insight. It supports bringing visionary ideas into practical reality and finding unconventional solutions to spiritual or compassionate endeavors.",
+                  "neptune-sextile-uranus": "Neptune sextile Uranus: This aspect creates opportunities to blend spiritual insight with innovation. It supports bringing visionary ideas into practical reality and finding compassionate approaches to technological or progressive endeavors."
+                };
+
+                if (knownFallbacks[fallbackKey]) {
+                  interpretationText = knownFallbacks[fallbackKey];
+                  console.log(`[useAstroData/transformedData/aspects] Used client-side fallback for ${fallbackKey}: "${interpretationText}"`);
+                } else if (knownFallbacks[reversedFallbackKey]) {
+                  interpretationText = knownFallbacks[reversedFallbackKey];
+                  console.log(`[useAstroData/transformedData/aspects] Used client-side fallback for ${reversedFallbackKey} (reversed): "${interpretationText}"`);
+                }
               }
             } else {
                 console.log(`[useAstroData/transformedData/aspects] interpretations.aspects is not an array or is missing.`);

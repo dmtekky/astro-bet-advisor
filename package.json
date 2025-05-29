@@ -37,7 +37,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.4",
+    "@supabase/supabase-js": "^2.49.8",
     "@tanstack/react-query": "^5.56.2",
     "@types/axios": "^0.9.36",
     "@types/react-slick": "^0.23.13",
@@ -57,6 +57,8 @@
     "inquirer": "^12.6.1",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.9.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -70,7 +72,6 @@
     "slick-carousel": "^1.8.1",
     "sonner": "^1.5.0",
     "string-similarity": "^4.0.4",
-
     "swr": "^2.3.3",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
@@ -85,11 +86,12 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "sync:games": "node scripts/syncGames.cjs"
+    "sync:games": "node scripts/syncGames.cjs",
+    "cleanup:placeholders": "ts-node --esm scripts/cleanupPlaceholderGames.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
-    "@types/node": "^22.15.21",
+    "@types/node": "^22.15.24",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vercel/node": "^5.1.16",

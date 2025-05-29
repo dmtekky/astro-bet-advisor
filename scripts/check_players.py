@@ -1,23 +1,56 @@
 import os
 from dotenv import load_dotenv
+import requests
+import json
+import base64
+from datetime import datetime
 from supabase import create_client
 from pathlib import Path
 
 # Load environment variables
-env_path = Path(__file__).parent.parent / '.env'
-load_dotenv(dotenv_path=env_path, override=True)
+load_dotenv()
+
+# Supabase credentials
+SUPABASE_URL = os.getenv('PUBLIC_SUPABASE_URL')
+SUPABASE_KEY = os.getenv('PUBLIC_SUPABASE_KEY')
 
 # Initialize Supabase client
-url = os.getenv('VITE_SUPABASE_URL')
-key = os.getenv('VITE_SUPABASE_KEY')
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-if not url or not key:
-    print("Error: Missing Supabase URL or Key in environment variables")
-    exit(1)
+# Test team abbreviation
+TEST_TEAM_ABBR = "NYY"  # New York Yankees
 
-supabase = create_client(url, key)
+print(f"Checking player data for team: {TEST_TEAM_ABBR}")
 
-# Query the players table
+# Prepare headers
+headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': f'Bearer {SUPABASE_KEY}',
+    'Content-Type': 'application/json'
+}
+
+# Query players
+url = f"{SUPABASE_URL}/rest/v1/baseball_players"
+params = {
+    'select': '*'
+}
+
+response = requests.get(url, headers=headers, params=params)
+
+if response.status_code == 200:
+    players = response.json()
+    print(f"\nFound {len(players)} total players")
+    print("\nSample player data:")
+    for player in players[:5]:  # Show first 5 players
+        print(f"\nPlayer: {player.get('full_name', 'Unknown')}")
+        print(f"Team Abbr: {player.get('player_current_team_abbreviation', 'Unknown')}")
+        print(f"Team Name: {player.get('team_name', 'Unknown')}")
+        print(f"Team ID: {player.get('team_id', 'Unknown')}")
+        print("-" * 40)
+else:
+    print(f"Error: {response.status_code}")
+    print(response.text)
+
 try:
     # First, check if we have any MLB players
     response = supabase.table('players') \

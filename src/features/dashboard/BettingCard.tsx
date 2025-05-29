@@ -90,7 +90,7 @@ const BettingCard: React.FC<BettingCardProps> = ({ type, data, odds, astrologyDa
           <CardTitle className="text-lg font-semibold truncate">
             {type === 'team' ? (
               <Link 
-                to={`/team/${data.id}`}
+                to={`/teams/${data.id}`}
                 className="hover:underline hover:text-primary transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >

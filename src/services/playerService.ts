@@ -2,20 +2,31 @@ import { supabase } from '@/lib/supabase';
 
 export interface Player {
   id: string;
-  espn_id: string;
-  name: string;
+  external_id?: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
   birth_date: string | null;
-  sport: string;
-  team_id: string | null;
-  team?: string | null;  // Team name as a string (fallback)
-  position: string | null;
-  jersey_number: number | null;
-  height: string | null;
+  birth_city: string | null;
+  birth_country: string | null;
+  nationality: string | null;
+  height: number | null;
   weight: number | null;
-  image_url: string | null;
-  image_path: string | null;
+  primary_position: string | null;
+  primary_number: number | null;
+  headshot_url: string | null;
+  current_team_id: string | null;
+  idteam: string | null;
+  strteam: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  team?: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    abbreviation: string | null;
+  };
   [key: string]: any;  // Allow additional properties
 }
 
@@ -23,10 +34,10 @@ export const fetchPlayersByTeam = async (team_id: string): Promise<Player[]> => 
   try {
     console.log(`[PLAYER FETCH] Fetching players for team ID: ${team_id}`);
     
-    // First try to get the team's espn_id
+    // First get the team's external_id
     const { data: teamData, error: teamError } = await supabase
       .from('teams')
-      .select('espn_id, name, abbreviation')
+      .select('external_id, name, abbreviation')
       .eq('id', team_id)
       .single();
 
@@ -35,22 +46,52 @@ export const fetchPlayersByTeam = async (team_id: string): Promise<Player[]> => 
       return [];
     }
 
-    const espnId = teamData.espn_id;
-    console.log(`[PLAYER FETCH] Found team: ${teamData.name} (${teamData.abbreviation}), espn_id: ${espnId}`);
+    const externalId = teamData.external_id;
+    console.log(`[PLAYER FETCH] Found team: ${teamData.name} (${teamData.abbreviation}), external_id: ${externalId}`);
 
-    // Fetch players where espn_id matches the team's espn_id
-    const { data: players, error: playersError } = await supabase
+    // Try multiple approaches to find players for this team
+    let players = [];
+    let playersError = null;
+    
+    // 1. Try idteam as string
+    const { data: playersByIdTeamString, error: idTeamStringError } = await supabase
       .from('players')
       .select('*')
-      .eq('espn_id', espnId);
-
-    if (playersError) {
-      console.error('[PLAYER FETCH] Error fetching players:', playersError.message);
-      return [];
+      .eq('idteam', String(externalId));
+      
+    console.log(`[PLAYER FETCH] Found ${playersByIdTeamString?.length || 0} players with idteam as string`);
+    
+    if (playersByIdTeamString && playersByIdTeamString.length > 0) {
+      return playersByIdTeamString;
     }
-
-    console.log(`[PLAYER FETCH] Found ${players?.length || 0} players for team espn_id: ${espnId}`);
-    return players || [];
+    
+    // 2. Try idteam as number
+    const { data: playersByIdTeamNumber, error: idTeamNumberError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('idteam', Number(externalId));
+      
+    console.log(`[PLAYER FETCH] Found ${playersByIdTeamNumber?.length || 0} players with idteam as number`);
+    
+    if (playersByIdTeamNumber && playersByIdTeamNumber.length > 0) {
+      return playersByIdTeamNumber;
+    }
+    
+    // 3. Try current_team_id
+    const { data: playersByTeamId, error: teamIdError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('current_team_id', team_id);
+      
+    console.log(`[PLAYER FETCH] Found ${playersByTeamId?.length || 0} players with current_team_id`);
+    
+    if (playersByTeamId && playersByTeamId.length > 0) {
+      return playersByTeamId;
+    }
+    
+    // If we get here, we couldn't find any players
+    console.error('[PLAYER FETCH] No players found for this team using any method');
+    return [];
   } catch (error) {
     console.error('[PLAYER FETCH] Error in fetchPlayersByTeam:', error);
     return [];

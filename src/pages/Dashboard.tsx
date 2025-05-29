@@ -807,15 +807,22 @@ const Dashboard: React.FC = () => {
 
   // Update the daily recommendation to use real data
   const dailyRecommendation = useMemo(() => {
-    if (!astroData) return '';
+    console.log('Calculating dailyRecommendation with astroData:', astroData);
+    if (!astroData) {
+      console.log('No astroData available, returning empty string');
+      return '';
+    }
     
     if (sportsPredictions?.prediction) {
+      console.log('Using sports prediction:', sportsPredictions.prediction);
       return sportsPredictions.prediction;
     }
     
     // Fallback to element-based recommendation if no specific prediction
     const dominantElement = Object.entries(elementsDistribution)
       .sort((a, b) => b[1] - a[1])[0]?.[0] as keyof ElementsDistribution;
+    
+    console.log('Dominant element:', dominantElement);
     
     let recommendation = "Today's celestial influences suggest " + 
       (dominantElement === 'fire' ? 'an aggressive playing style could be advantageous. ' :
@@ -824,9 +831,13 @@ const Dashboard: React.FC = () => {
        'teams that trust their intuition might have an edge. ');
     
     if (astroData.moon?.phase_name) {
+      console.log('Moon phase:', astroData.moon.phase_name);
       recommendation += getMoonPhaseImpact(astroData.moon.phase_name);
+    } else {
+      console.log('No moon phase data available');
     }
     
+    console.log('Final recommendation:', recommendation);
     return recommendation;
   }, [astroData, elementsDistribution, sportsPredictions]);
 
@@ -903,8 +914,30 @@ const Dashboard: React.FC = () => {
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {group.games.map((game) => {
-                              const homeTeam = findTeam(String(game.home_team_id));
-                              const awayTeam = findTeam(String(game.away_team_id));
+                              // const homeTeam = findTeam(String(game.home_team_id)); // Replaced by game.home_team
+                              // const awayTeam = findTeam(String(game.away_team_id)); // Replaced by game.away_team
+                              // Log the raw game data for debugging
+                              console.log('Raw game data:', {
+                                gameId: game.id,
+                                home_team: game.home_team,
+                                away_team: game.away_team,
+                                home_team_id: game.home_team_id,
+                                away_team_id: game.away_team_id,
+                                home_team_logo: game.home_team?.logo_url || game.home_team?.logo,
+                                away_team_logo: game.away_team?.logo_url || game.away_team?.logo
+                              });
+
+                              // Get team data with proper fallbacks
+                              const homeTeam = typeof game.home_team === 'string' 
+                                ? { id: game.home_team_id, name: 'Home Team' } 
+                                : game.home_team || { id: game.home_team_id, name: 'Home Team' };
+                              
+                              const awayTeam = typeof game.away_team === 'string'
+                                ? { id: game.away_team_id, name: 'Away Team' }
+                                : game.away_team || { id: game.away_team_id, name: 'Away Team' };
+                              
+                              console.log('Processed team data:', { homeTeam, awayTeam });
+
                               const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
                               
                               // Transform astroData from the hook for the GameCard prop
@@ -912,21 +945,59 @@ const Dashboard: React.FC = () => {
                                 ? transformHookDataToGamePredictionData(astroData as HookAstroData)
                                 : null;
 
-                              // Merge game data with its prediction for the GameCard
-                              const gameWithPrediction = {
+                              // Merge game data with its prediction and team data for the GameCard
+                              const gameWithTeams = {
                                 ...game,
                                 prediction: gamePrediction ?? undefined, // Ensure undefined if null for type compatibility
                               };
 
+                              // Log the raw team data for debugging
+                              console.log('Raw home team data:', homeTeam);
+                              console.log('Raw away team data:', awayTeam);
+
+                              // Ensure we have proper team objects with required properties
+                              const homeTeamData = {
+                                ...(typeof homeTeam === 'string' ? {} : homeTeam || {}),
+                                id: game.home_team_id,
+                                name: typeof homeTeam === 'string' ? homeTeam : homeTeam?.name || 'Home Team',
+                                // Try logo_url first, then logo, then empty string
+                                logo_url: typeof homeTeam === 'string' 
+                                  ? '' 
+                                  : (homeTeam?.logo_url || homeTeam?.logo || ''),
+                                // Also include the logo property for backward compatibility
+                                logo: typeof homeTeam === 'string'
+                                  ? ''
+                                  : (homeTeam?.logo || homeTeam?.logo_url || ''),
+                                record: typeof homeTeam === 'string' ? '0-0' : homeTeam?.record || '0-0',
+                              };
+
+                              const awayTeamData = {
+                                ...(typeof awayTeam === 'string' ? {} : awayTeam || {}),
+                                id: game.away_team_id,
+                                name: typeof awayTeam === 'string' ? awayTeam : awayTeam?.name || 'Away Team',
+                                // Try logo_url first, then logo, then empty string
+                                logo_url: typeof awayTeam === 'string'
+                                  ? ''
+                                  : (awayTeam?.logo_url || awayTeam?.logo || ''),
+                                // Also include the logo property for backward compatibility
+                                logo: typeof awayTeam === 'string'
+                                  ? ''
+                                  : (awayTeam?.logo || awayTeam?.logo_url || ''),
+                                record: typeof awayTeam === 'string' ? '0-0' : awayTeam?.record || '0-0',
+                              };
+
+                              console.log('Processed home team data:', homeTeamData);
+                              console.log('Processed away team data:', awayTeamData);
+
                               return (
                                 <GameCard 
                                   key={game.id} 
-                                  game={gameWithPrediction} 
-                                  homeTeam={homeTeam}
-                                  awayTeam={awayTeam}
-                                  // prediction prop removed as it's now part of the game object
-                                  astroData={gameCardAstroData} // Pass transformed astroData
-                                  defaultLogo={DEFAULT_LOGO} // Add defaultLogo prop
+                                  game={gameWithTeams} 
+                                  homeTeam={homeTeamData}
+                                  awayTeam={awayTeamData}
+                                  defaultLogo={DEFAULT_LOGO}
+                                  className="w-full"
+                                  astroEdge={game.astroEdge}
                                 />
                               );
                             })}
