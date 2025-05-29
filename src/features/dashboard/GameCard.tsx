@@ -47,12 +47,15 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
   const isLive = new Date() > startTime && new Date() < new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
   const isToday = startTime.toDateString() === new Date().toDateString();
   
-  // Use only the ID from the game prop - it should be the database ID
-  const gameId = game.id;
+  // Ensure we have a valid game ID
+  const gameId = game.id?.toString()?.trim();
   
-  if (!gameId) {
-    console.error('Game ID is missing in GameCard:', game);
-    return null; // Don't render the card if there's no ID
+  // Check if the game ID is valid (not empty and not just whitespace)
+  const isValidGameId = gameId && gameId.length > 0 && !/^\s*$/.test(gameId);
+  
+  if (!isValidGameId) {
+    console.error('Invalid or missing game ID in GameCard:', { gameId, game });
+    return null; // Don't render the card if there's no valid ID
   }
 
   // Helper to get team name with fallback
@@ -139,8 +142,17 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
     );
   };
 
+  // Create the game URL with proper error handling
+  const gameUrl = `/game/${encodeURIComponent(gameId)}`;
+  
   return (
-    <Link to={`/game/${gameId}`} className="block">
+    <Link to={gameUrl} className="block" onClick={(e) => {
+      // Add additional validation before navigation
+      if (!isValidGameId) {
+        e.preventDefault();
+        console.error('Prevented navigation due to invalid game ID');
+      }
+    }}>
       <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full", className)}>
         <div className="flex-1 flex flex-col">
           <CardHeader className="pb-2">

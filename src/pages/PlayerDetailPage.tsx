@@ -14,7 +14,9 @@ import { AspectType, CelestialBody, ElementalBalance, ModalBalance } from '@/typ
 import { BarChart, RadarChart, LineChart, PieChart } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generatePlayerAstroData } from '@/lib/playerAstroService';
+import { useToast } from '@/components/ui/use-toast';
 
+import { calculateImpactScore } from '../utils/calculateImpactScore';
 // Types
 interface BattingStats {
   atBats?: number;
@@ -68,7 +70,33 @@ interface BattingStats {
   pitchesFaced?: number;
   plateAppearances?: number;
   leftOnBase?: number;
-  gamesPlayed?: number; // Assuming this might be in the JSON, if not, it will be undefined
+  gamesPlayed?: number;
+}
+
+interface FieldingStats {
+  gamesPlayed?: number;
+  gamesStarted?: number;
+  inningsPlayed?: number;
+  assists?: number;
+  putOuts?: number;
+  errors?: number;
+  fieldingPct?: number;
+  rangeFactorPerGame?: number;
+  rangeFactorPerNineInnings?: number;
+  doublePlaysByPosition?: number;
+  triplePlaysByPosition?: number;
+  outfieldAssists?: number;
+  pickoffs?: number;
+  passedBalls?: number;
+  wildPitches?: number;
+  catcherInterferences?: number;
+  stolenBasesAllowed?: number;
+  caughtStealing?: number;
+  throwingErrors?: number;
+  tagsApplied?: number;
+  forceOuts?: number;
+  runnersPicked?: number;
+  blockedBalls?: number;
 }
 
 interface Player {
@@ -89,8 +117,10 @@ interface Player {
   player_current_team_id?: string;
   player_current_team_abbreviation?: string;
   stats_batting_details?: BattingStats;
-  stats_fielding_details?: any;
+  stats_fielding_details?: FieldingStats;
   stats_pitching_details?: any;
+  impact_score?: number;
+  astro_influence_score?: number;
   [key: string]: any;
 }
 
@@ -321,7 +351,8 @@ const getElementalSynergy = (elements: ElementalBalance, playerName: string): st
 };
 
 // Main component
-const PlayerDetailPage: React.FC = () => {
+const PlayerDetailPage = () => {
+  const { toast } = useToast();
   const { playerId, teamId } = useParams<{ playerId: string; teamId: string }>();
   
   const [player, setPlayer] = useState<Player | null>(null);
@@ -331,13 +362,299 @@ const PlayerDetailPage: React.FC = () => {
   const [astroData, setAstroData] = useState<AstroChartData | null>(null);
   const [loadingAstroData, setLoadingAstroData] = useState<boolean>(true);
   const [activeSection, setActiveSection] = useState('overview');
+  const [activeBattingTab, setActiveBattingTab] = useState<string>('overview');
+  const [activeFieldingTab, setActiveFieldingTab] = useState<string>('overview');
 
   const overviewRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const astroRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
 
-  // Fetch player data
+  // Define stat group type
+  interface StatItem {
+    label: string;
+    value: string;
+    tooltip?: string;
+  }
+  
+  type StatGroup = Record<string, StatItem[]>;
+  
+  // Batting stats formatting logic
+  const s = player?.stats_batting_details;
+  const formatPct = (val?: number) => val ? val.toFixed(3).slice(1) : '.000';
+  const formatCount = (val?: number) => val?.toString() || '0';
+  
+  // Initialize batting stat groups
+  const statGroups: StatGroup = Object.create(null);
+  
+  // Initialize fielding stat groups
+  const fieldingStatGroups: StatGroup = Object.create(null);
+  
+  // Initialize pitch types array
+  const pitchTypes = [
+    { label: '4S', value: s?.batter4SeamFastballs, tooltip: '4-Seam Fastballs' },
+    { label: '2S', value: s?.batter2SeamFastballs, tooltip: '2-Seam Fastballs' },
+    { label: 'SI', value: s?.batterSinkers, tooltip: 'Sinkers' },
+    { label: 'CT', value: s?.batterCutters, tooltip: 'Cutters' },
+    { label: 'SL', value: s?.batterSliders, tooltip: 'Sliders' },
+    { label: 'CB', value: s?.batterCurveballs, tooltip: 'Curveballs' },
+    { label: 'CH', value: s?.batterChangeups, tooltip: 'Changeups' },
+    { label: 'SP', value: s?.batterSplitters, tooltip: 'Splitters' },
+  ].filter(p => p.value !== undefined);
+  
+  // Process batting stats
+  if (s) {
+    statGroups.overview = [
+      { label: 'AVG', value: formatPct(s.battingAvg), tooltip: 'Batting Average' },
+      { label: 'OBP', value: formatPct(s.batterOnBasePct), tooltip: 'On-Base %' },
+      { label: 'SLG', value: formatPct(s.batterSluggingPct), tooltip: 'Slugging %' },
+      { label: 'OPS', value: formatPct(s.batterOnBasePlusSluggingPct), tooltip: 'OPS' },
+      { label: 'PA', value: formatCount(s.plateAppearances), tooltip: 'Plate Appearances' },
+      { label: 'AB', value: formatCount(s.atBats), tooltip: 'At Bats' },
+      { label: 'H', value: formatCount(s.hits), tooltip: 'Hits' },
+      { label: 'HR', value: formatCount(s.homeruns), tooltip: 'Home Runs' },
+      { label: 'RBI', value: formatCount(s.runsBattedIn), tooltip: 'Runs Batted In' },
+      { label: 'R', value: formatCount(s.runs), tooltip: 'Runs Scored' },
+      { label: 'BB', value: formatCount(s.batterWalks), tooltip: 'Walks' },
+      { label: 'K', value: formatCount(s.batterStrikeouts), tooltip: 'Strikeouts' },
+    ];
+
+    statGroups.advanced = [
+      { label: '2B', value: formatCount(s.secondBaseHits), tooltip: 'Doubles' },
+      { label: '3B', value: formatCount(s.thirdBaseHits), tooltip: 'Triples' },
+      { label: 'TB', value: formatCount(s.totalBases), tooltip: 'Total Bases' },
+      { label: 'XBH', value: formatCount(s.extraBaseHits), tooltip: 'Extra Base Hits' },
+      { label: 'HBP', value: formatCount(s.hitByPitch), tooltip: 'Hit By Pitch' },
+      { label: 'SAC', value: formatCount(s.batterSacrificeBunts), tooltip: 'Sac Bunts' },
+      { label: 'SF', value: formatCount(s.batterSacrificeFlies), tooltip: 'Sac Flies' },
+    ];
+    
+    // Add plate discipline stats if available
+    if (s.batterSwings !== undefined || s.batterStrikes !== undefined) {
+      statGroups.plateDiscipline = [
+        { label: 'Swings', value: formatCount(s.batterSwings), tooltip: 'Total Swings' },
+        { label: 'Strikes', value: formatCount(s.batterStrikes), tooltip: 'Strikes Seen' },
+        { label: 'Fouls', value: formatCount(s.batterStrikesFoul), tooltip: 'Foul Balls' },
+        { label: 'Whiffs', value: formatCount(s.batterStrikesMiss), tooltip: 'Swinging Strikes' },
+        { label: 'Looking', value: formatCount(s.batterStrikesLooking), tooltip: 'Called Strikes' },
+        { label: 'Pitches', value: formatCount(s.pitchesFaced), tooltip: 'Pitches Faced' },
+      ];
+    }
+    
+    // Add batted ball stats if available
+    if (s.batterGroundBalls !== undefined || s.batterLineDrives !== undefined) {
+      statGroups.battedBall = [
+        { label: 'GB', value: formatCount(s.batterGroundBalls), tooltip: 'Ground Balls' },
+        { label: 'FB', value: formatCount(s.batterFlyBalls), tooltip: 'Fly Balls' },
+        { label: 'LD', value: formatCount(s.batterLineDrives), tooltip: 'Line Drives' },
+        { label: 'GO/AO', value: formatCount(s.batterGroundOutToFlyOutRatio), tooltip: 'Ground Out to Fly Out Ratio' },
+      ];
+    }
+  }
+  
+  // Helper function to calculate caught stealing percentage
+  const calculateCaughtStealingPct = (stats: FieldingStats): string => {
+    if (stats.caughtStealing !== undefined && stats.stolenBasesAllowed !== undefined && 
+        stats.caughtStealing > 0 && stats.stolenBasesAllowed > 0) {
+      return formatPct(stats.caughtStealing / (stats.caughtStealing + stats.stolenBasesAllowed));
+    }
+    return '.000';
+  };
+  
+  // Process fielding stats
+  const f = player?.stats_fielding_details;
+  if (f) {
+    // Add overview fielding stats
+    fieldingStatGroups.overview = [
+      { label: 'Games', value: formatCount(f.gamesPlayed), tooltip: 'Games Played' },
+      { label: 'FLD%', value: formatPct(f.fieldingPct), tooltip: 'Fielding Percentage' },
+      { label: 'PO', value: formatCount(f.putOuts), tooltip: 'Put Outs' },
+      { label: 'A', value: formatCount(f.assists), tooltip: 'Assists' },
+      { label: 'E', value: formatCount(f.errors), tooltip: 'Errors' },
+      { label: 'DP', value: formatCount(f.doublePlaysByPosition), tooltip: 'Double Plays' },
+    ];
+
+    // Add detailed defensive stats if available
+    if (f.inningsPlayed !== undefined) {
+      fieldingStatGroups.defensive = [
+        { label: 'Games', value: formatCount(f.gamesPlayed), tooltip: 'Games Played' },
+        { label: 'GS', value: formatCount(f.gamesStarted), tooltip: 'Games Started' },
+        { label: 'Inn', value: formatCount(f.inningsPlayed), tooltip: 'Innings Played' },
+        { label: 'PO', value: formatCount(f.putOuts), tooltip: 'Put Outs' },
+        { label: 'A', value: formatCount(f.assists), tooltip: 'Assists' },
+        { label: 'E', value: formatCount(f.errors), tooltip: 'Errors' },
+        { label: 'DP', value: formatCount(f.doublePlaysByPosition), tooltip: 'Double Plays' },
+        { label: 'TP', value: formatCount(f.triplePlaysByPosition), tooltip: 'Triple Plays' },
+        { label: 'FLD%', value: formatPct(f.fieldingPct), tooltip: 'Fielding Percentage' },
+      ];
+    }
+    
+    // Add range stats if available
+    if (f.rangeFactorPerGame !== undefined || f.rangeFactorPerNineInnings !== undefined) {
+      fieldingStatGroups.range = [
+        { label: 'RF/G', value: formatPct(f.rangeFactorPerGame), tooltip: 'Range Factor per Game' },
+        { label: 'RF/9', value: formatPct(f.rangeFactorPerNineInnings), tooltip: 'Range Factor per 9 Innings' },
+        { label: 'OF Assists', value: formatCount(f.outfieldAssists), tooltip: 'Outfield Assists' },
+        { label: 'Tags', value: formatCount(f.tagsApplied), tooltip: 'Tags Applied' },
+        { label: 'Force', value: formatCount(f.forceOuts), tooltip: 'Force Outs' },
+        { label: 'TE', value: formatCount(f.throwingErrors), tooltip: 'Throwing Errors' },
+      ];
+    }
+    
+    // Add catcher stats if available
+    if (f.passedBalls !== undefined || f.stolenBasesAllowed !== undefined) {
+      fieldingStatGroups.catcher = [
+        { label: 'PB', value: formatCount(f.passedBalls), tooltip: 'Passed Balls' },
+        { label: 'SBA', value: formatCount(f.stolenBasesAllowed), tooltip: 'Stolen Bases Allowed' },
+        { label: 'CS', value: formatCount(f.caughtStealing), tooltip: 'Caught Stealing' },
+        { 
+          label: 'CS%', 
+          value: calculateCaughtStealingPct(f),
+          tooltip: 'Caught Stealing Percentage' 
+        },
+        { label: 'PK', value: formatCount(f.pickoffs), tooltip: 'Pickoffs' },
+        { label: 'CI', value: formatCount(f.catcherInterferences), tooltip: 'Catcher Interferences' },
+      ];
+    }
+  }
+
+  // Calculate Impact Score
+  const calculateImpactScore = (): number => {
+    if (!player) return 0;
+    let score = 0;
+    const s = player.stats_batting_details;
+    const f = player.stats_fielding_details;
+
+    if (s) {
+      if (s.battingAvg !== undefined) score += s.battingAvg * 100;
+      if (s.homeruns !== undefined) score += s.homeruns * 2;
+      if (s.runsBattedIn !== undefined) score += s.runsBattedIn * 0.5;
+      if (s.batterOnBasePlusSluggingPct !== undefined) score += s.batterOnBasePlusSluggingPct * 50;
+      if (s.stolenBases !== undefined) score += s.stolenBases * 0.5;
+    }
+
+    if (f) {
+      if (f.fieldingPct !== undefined) score += f.fieldingPct * 20;
+      if (f.assists !== undefined) score += f.assists * 0.3;
+      if (f.putOuts !== undefined) score += f.putOuts * 0.1;
+      if (f.doublePlaysByPosition !== undefined) score += f.doublePlaysByPosition * 0.5;
+      if (f.errors !== undefined) score -= f.errors * 1.5;
+    }
+
+    score = Math.max(0, Math.min(100, score));
+    return Math.round(score);
+  };
+
+  // Calculate astro influence based on astrological data
+  const calculateAstroInfluence = (): number => {
+    if (!astroData) return 0;
+    
+    let influence = 50; // Start with neutral
+    
+    // Adjust based on astro weather
+    if (astroData.astroWeather === 'Favorable') {
+      influence += 15;
+    } else if (astroData.astroWeather === 'Challenging') {
+      influence -= 15;
+    }
+
+    // Adjust based on dominant planets
+    if (astroData.dominantPlanets && astroData.dominantPlanets.length > 0) {
+      astroData.dominantPlanets.forEach(planetInfo => {
+        if (planetInfo.type === 'Benefic' && typeof planetInfo.score === 'number') {
+          influence += (planetInfo.score / 10);
+        } else if (planetInfo.type === 'Malefic' && typeof planetInfo.score === 'number') {
+          influence -= (planetInfo.score / 10);
+        }
+      });
+    }
+
+    // Adjust based on elemental balance
+    if (astroData.elements) {
+      if ((astroData.elements.fire?.percentage || 0) > 40) influence += 5;
+      if ((astroData.elements.water?.percentage || 0) < 10) influence -= 5;
+    }
+    
+    influence = Math.max(0, Math.min(100, influence));
+    return Math.round(influence);
+  };
+
+  // Memoized values for scores - calculate for DB update only
+  const calculatedImpactScore = useMemo(() => {
+    if (!player) return 0;
+    const stats_batting_hits = player.stats_batting_hits ?? player.stats_batting_details?.hits ?? 0;
+    const stats_batting_runs = player.stats_batting_runs ?? player.stats_batting_details?.runs ?? 0;
+    const stats_fielding_assists = player.stats_fielding_assists ?? player.stats_fielding_details?.assists ?? 0;
+    return calculateImpactScore({ stats_batting_hits, stats_batting_runs, stats_fielding_assists });
+  }, [player]);
+  
+  const calculatedAstroInfluenceScore = useMemo(() => calculateAstroInfluence(), [player, astroData]);
+
+  // Effect to update DB if calculated scores differ from DB values, then refetch player
+  useEffect(() => {
+    // Always run if player is loaded and has an id
+    if (!player || !player.id) return;
+    const updatePlayerScoresInDb = async () => {
+      // Always calculate scores on initial load
+      const impactScore = calculatedImpactScore;
+      const astroScore = calculatedAstroInfluenceScore;
+      
+      // Always update on first load or if values differ
+      let needsUpdate = false;
+      const updatePayload: any = {};
+      
+      if (typeof impactScore === 'number' && !isNaN(impactScore) && 
+          (player.impact_score === undefined || player.impact_score === null || impactScore !== player.impact_score)) {
+        updatePayload.impact_score = impactScore;
+        needsUpdate = true;
+      }
+      
+      if (typeof astroScore === 'number' && !isNaN(astroScore) && 
+          (player.astro_influence_score === undefined || player.astro_influence_score === null || astroScore !== player.astro_influence_score)) {
+        updatePayload.astro_influence_score = astroScore;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        console.log('Updating player scores:', updatePayload);
+        const { error: updateError } = await supabase
+          .from('baseball_players')
+          .update(updatePayload)
+          .eq('id', player.id);
+          
+        if (updateError) {
+          console.error('Error updating scores:', updateError);
+          toast({
+            title: 'Error updating player scores',
+            description: updateError.message,
+            variant: 'destructive',
+          });
+        } else {
+          console.log('Successfully updated scores');
+          // Refetch player from DB
+          const { data: updatedPlayer, error: fetchError } = await supabase
+            .from('baseball_players')
+            .select('*')
+            .eq('id', player.id)
+            .single();
+            
+          if (!fetchError && updatedPlayer) {
+            console.log('Refetched player with scores:', updatedPlayer.impact_score, updatedPlayer.astro_influence_score);
+            setPlayer(updatedPlayer);
+          } else if (fetchError) {
+            console.error('Error refetching player:', fetchError);
+          }
+        }
+      } else {
+        console.log('No score updates needed');
+      }
+    };
+    
+    updatePlayerScoresInDb();
+    // eslint-disable-next-line
+  }, [calculatedImpactScore, calculatedAstroInfluenceScore, player?.id, supabase, toast]);
+
+  // Effect to fetch player data
   useEffect(() => {
     const fetchPlayerData = async () => {
       if (!playerId) {
@@ -346,32 +663,28 @@ const PlayerDetailPage: React.FC = () => {
         setLoading(false);
         return;
       }
-
+      
       try {
         setLoading(true);
         setError(null);
         
-        console.log('Fetching player with ID:', playerId);
+        // console.log('Fetching player with ID:', playerId);
         
-        // Handle case where ID might have 'player_' prefix
         let queryId = playerId;
         if (playerId && playerId.toString().startsWith('player_')) {
           queryId = playerId.toString().replace('player_', '');
         }
         
-        // Define type for query result
         type PlayerQueryResult = {
           data: Player[] | null;
           error: any;
         };
         
-        // First try with player_id field
         let playerQuery: PlayerQueryResult = await supabase
           .from('baseball_players')
           .select('*')
           .eq('player_id', queryId) as unknown as PlayerQueryResult;
           
-        // If no results, try with id field
         if (!playerQuery.data || playerQuery.data.length === 0) {
           playerQuery = await supabase
             .from('baseball_players')
@@ -386,19 +699,29 @@ const PlayerDetailPage: React.FC = () => {
           return;
         }
         
-        const playerData = playerQuery.data && playerQuery.data.length > 0 ? playerQuery.data[0] : null;
+        let playerData = playerQuery.data && playerQuery.data.length > 0 ? playerQuery.data[0] : null;
         
+        if (playerData && typeof playerData.stats_fielding_details === 'string') {
+          try {
+            playerData.stats_fielding_details = JSON.parse(playerData.stats_fielding_details);
+          } catch (e) {
+            playerData.stats_fielding_details = null;
+          }
+        }
+
         if (!playerData) {
           setError(`Player with ID ${queryId} not found`);
           setLoading(false);
           return;
         }
-        
-        // Parse stats_batting_details if it's a string
+
+        // Debug: Log the fetched player object
+        console.log('Fetched player:', playerData);
+
         if (playerData.stats_batting_details && typeof playerData.stats_batting_details === 'string') {
           try {
             playerData.stats_batting_details = JSON.parse(playerData.stats_batting_details);
-            console.log('Parsed stats_batting_details:', playerData.stats_batting_details);
+            // console.log('Parsed stats_batting_details:', playerData.stats_batting_details);
           } catch (e) {
             console.error('Error parsing stats_batting_details:', e);
           }
@@ -406,7 +729,6 @@ const PlayerDetailPage: React.FC = () => {
         
         setPlayer(playerData);
         
-        // Fetch team data if we have a team ID
         if (teamId) {
           const teamQuery = await supabase
             .from('teams')
@@ -430,7 +752,7 @@ const PlayerDetailPage: React.FC = () => {
     if (playerId) {
       fetchPlayerData();
     }
-  }, [playerId, teamId]);
+  }, [playerId, teamId, supabase, toast]); // Added supabase and toast to dependencies as they are used indirectly via setError
 
   // Generate astrological data using the player's birth information
   useEffect(() => {
@@ -439,59 +761,47 @@ const PlayerDetailPage: React.FC = () => {
       setError(null);
       
       try {
-        console.log('Generating astro data for player:', player.player_full_name);
-        console.log('Birth date:', player.player_birth_date);
-        console.log('Birth location:', player.player_birth_city, player.player_birth_state, player.player_birth_country);
+        // Extract birth information
+        const birthDate = player.player_birth_date;
+        const birthCity = player.player_birth_city || 'Unknown';
+        const birthState = player.player_birth_state || '';
+        const birthCountry = player.player_birth_country || 'USA';
         
-        // Generate accurate astrological data using our service with birth location
-        const birthLocation = {
-          city: player.player_birth_city,
-          state: player.player_birth_state,
-          country: player.player_birth_country
-        };
-        
-        const playerAstroData = generatePlayerAstroData(
-          player.player_birth_date,
-          birthLocation
+        // Generate astrological data
+        const astroChartData = generatePlayerAstroData(
+          birthDate,
+          { city: birthCity, state: birthState, country: birthCountry }
         );
-        console.log('Generated astro data:', playerAstroData);
         
-        // Set the astrological data
-        setAstroData(playerAstroData);
+        setAstroData(astroChartData);
       } catch (err) {
-        console.error('Error generating astrological data:', err);
-        setError(`Failed to generate astrological data: ${err instanceof Error ? err.message : String(err)}`);
+        console.error('Error generating astro data:', err);
+        setError(`Failed to generate astrological data: ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setLoadingAstroData(false);
       }
     }
   }, [player]);
-
-  // Handle scroll to update active section
+  
+  // Handle scroll events to update active section
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100; // Add offset for fixed header
+      const scrollPosition = window.scrollY + 100;
       
-      // Get all section positions
       const sections = [
-        { id: 'overview', ref: overviewRef },
-        { id: 'stats', ref: statsRef },
-        { id: 'astro', ref: astroRef },
-        { id: 'analysis', ref: analysisRef },
+        { ref: overviewRef, id: 'overview' },
+        { ref: statsRef, id: 'stats' },
+        { ref: astroRef, id: 'astro' },
+        { ref: analysisRef, id: 'analysis' }
       ];
       
-      // Find current section based on scroll position
-      let currentSection = 'overview';
-      for (const { id, ref } of sections) {
-        const element = ref.current;
-        if (element && element.offsetTop <= scrollPosition) {
-          currentSection = id;
-        } else {
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = sections[i];
+        if (section.ref.current && section.ref.current.offsetTop <= scrollPosition) {
+          setActiveSection(section.id);
           break;
         }
       }
-      
-      setActiveSection(currentSection);
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -751,42 +1061,64 @@ const PlayerDetailPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Team Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Information</CardTitle>
-                <CardDescription>Current team details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {team ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      {team.logo_url && (
-                        <div className="w-16 h-16 overflow-hidden rounded-full border border-gray-200 flex items-center justify-center">
-                          <img src={team.logo_url} alt={team.name} className="max-w-full max-h-full" />
+          </div>
+          
+          {/* Player Impact Analysis */}
+          {player?.impact_score !== undefined && (
+            <div className="mt-8">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl">Player Impact Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Game Impact Score */}
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold mb-2">Game Impact Score</h3>
+                      <div className="flex items-center space-x-4">
+                        <div className="relative w-24 h-24 flex-shrink-0">
+                          <div className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/30"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">{(player?.impact_score ?? calculatedImpactScore) ?? 0}</span>
+                          </div>
                         </div>
-                      )}
-                      <div>
-                        <h3 className="font-bold text-lg">{team.name}</h3>
-                        <p className="text-gray-600">{team.city}</p>
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            This score represents {player?.player_first_name || 'the player'}'s overall impact on the game based on batting and fielding performance metrics.
+                          </p>
+                          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Key factors: Batting average, power, run production, and fielding efficiency
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="pt-4">
-                      <Link to={`/teams/${team.id}`} className="text-blue-600 hover:underline flex items-center gap-2">
-                        View Team Page
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
+                    
+                    {/* Astrological Influence */}
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold mb-2">Astrological Influence</h3>
+                      <div className="flex items-center space-x-4">
+                        <div className="relative w-24 h-24 flex-shrink-0">
+                          <div className="absolute inset-0 rounded-full bg-purple-100 dark:bg-purple-900/30"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {/* If astro_influence_score is missing from DB, show calculated value. Make sure this column exists in Supabase! */}
+<span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{(player?.astro_influence_score ?? calculatedAstroInfluenceScore) ?? 0}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            This score indicates how strongly astrological factors may influence {player?.player_first_name || 'the player'}'s performance in upcoming games.
+                          </p>
+                          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Key factors: Current planetary positions, elemental balance, and dominant planets
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-gray-600">No team information available</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           
           {/* Astrological Profile Overview */}
           {astroData && (
@@ -1165,142 +1497,174 @@ const PlayerDetailPage: React.FC = () => {
         </section>
         
         {/* Statistics Section */}
-        <section ref={statsRef} id="stats" className="mb-16 scroll-mt-24">
-          <Card>
-            <CardHeader>
-              <CardTitle>Batting Statistics</CardTitle>
-              <CardDescription>Comprehensive performance metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {player?.stats_batting_details ? (
-                (() => {
-                  const s = player.stats_batting_details;
-                  const formatPct = (val?: number) => val ? val.toFixed(3) : '.000';
-                  const formatCount = (val?: number) => val?.toString() || '0';
-
-                  return (
-                    <div className="space-y-6">
-                      {/* Key Metrics Summary */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Key Metrics</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          <StatCard label="AVG" value={formatPct(s.battingAvg)} tooltipLabel="Batting Average" highlight />
-                          <StatCard label="OBP" value={formatPct(s.batterOnBasePct)} tooltipLabel="On-Base Percentage" highlight />
-                          <StatCard label="SLG" value={formatPct(s.batterSluggingPct)} tooltipLabel="Slugging Percentage" highlight />
-                          <StatCard label="OPS" value={formatPct(s.batterOnBasePlusSluggingPct)} tooltipLabel="On-Base Plus Slugging" highlight />
-                          <StatCard label="HR" value={formatCount(s.homeruns)} tooltipLabel="Home Runs" highlight />
-                          <StatCard label="RBI" value={formatCount(s.runsBattedIn)} tooltipLabel="Runs Batted In" highlight />
-                          <StatCard label="PA" value={formatCount(s.plateAppearances)} tooltipLabel="Plate Appearances" />
-                          {s.gamesPlayed !== undefined && <StatCard label="GP" value={formatCount(s.gamesPlayed)} tooltipLabel="Games Played" />}
-                        </div>
-                      </div>
-
-                      {/* Standard Stats */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Standard</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                          <StatCard label="AB" value={formatCount(s.atBats)} tooltipLabel="At Bats" />
-                          <StatCard label="R" value={formatCount(s.runs)} tooltipLabel="Runs Scored" />
-                          <StatCard label="H" value={formatCount(s.hits)} tooltipLabel="Hits" />
-                          <StatCard label="2B" value={formatCount(s.secondBaseHits)} tooltipLabel="Doubles" />
-                          <StatCard label="3B" value={formatCount(s.thirdBaseHits)} tooltipLabel="Triples" />
-                          <StatCard label="TB" value={formatCount(s.totalBases)} tooltipLabel="Total Bases" />
-                          <StatCard label="XBH" value={formatCount(s.extraBaseHits)} tooltipLabel="Extra Base Hits" />
-                        </div>
-                      </div>
-
-                      {/* Plate Discipline */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Plate Discipline</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                          <StatCard label="BB" value={formatCount(s.batterWalks)} tooltipLabel="Walks" />
-                          <StatCard label="IBB" value={formatCount(s.batterIntentionalWalks)} tooltipLabel="Intentional Walks" />
-                          <StatCard label="K" value={formatCount(s.batterStrikeouts)} tooltipLabel="Strikeouts" />
-                          <StatCard label="HBP" value={formatCount(s.hitByPitch)} tooltipLabel="Hit By Pitch" />
-                          <StatCard label="SAC" value={formatCount(s.batterSacrificeBunts)} tooltipLabel="Sacrifice Bunts" />
-                          <StatCard label="SF" value={formatCount(s.batterSacrificeFlies)} tooltipLabel="Sacrifice Flies" />
-                          <StatCard label="LOB" value={formatCount(s.leftOnBase)} tooltipLabel="Left On Base" />
-                        </div>
-                      </div>
-
-                      {/* Baserunning */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Baserunning</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          <StatCard label="SB" value={formatCount(s.stolenBases)} tooltipLabel="Stolen Bases" />
-                          <StatCard label="CS" value={formatCount(s.caughtBaseSteals)} tooltipLabel="Caught Stealing" />
-                          <StatCard label="SB%" value={formatPct(s.batterStolenBasePct)} tooltipLabel="Stolen Base Percentage" />
-                        </div>
-                      </div>
-
-                      {/* Batted Ball */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Batted Ball</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                          <StatCard label="GB" value={formatCount(s.batterGroundBalls)} tooltipLabel="Ground Balls" />
-                          <StatCard label="FB" value={formatCount(s.batterFlyBalls)} tooltipLabel="Fly Balls" />
-                          <StatCard label="LD" value={formatCount(s.batterLineDrives)} tooltipLabel="Line Drives" />
-                          <StatCard label="GO" value={formatCount(s.batterGroundOuts)} tooltipLabel="Ground Outs" />
-                          <StatCard label="FO" value={formatCount(s.batterFlyOuts)} tooltipLabel="Fly Outs (Air Outs)" /> 
-                          <StatCard label="GO/AO" value={s.batterGroundOutToFlyOutRatio?.toFixed(2) || 'N/A'} tooltipLabel="Ground Out to Air Out Ratio" />
-                          <StatCard label="GIDP" value={formatCount(s.batterDoublePlays)} tooltipLabel="Grounded Into Double Plays" />
-                          {s.batterTriplePlays !== undefined && s.batterTriplePlays > 0 && <StatCard label="GITP" value={formatCount(s.batterTriplePlays)} tooltipLabel="Grounded Into Triple Plays" />} 
-                        </div>
-                      </div>
-
-                      {/* Pitch Tracking */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 border-b pb-2">Pitch Tracking</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                          <StatCard label="Pitches" value={formatCount(s.pitchesFaced)} tooltipLabel="Pitches Faced" />
-                          <StatCard label="Swings" value={formatCount(s.batterSwings)} tooltipLabel="Total Swings" />
-                          <StatCard label="Strikes" value={formatCount(s.batterStrikes)} tooltipLabel="Total Strikes Seen" />
-                          <StatCard label="Foul" value={formatCount(s.batterStrikesFoul)} tooltipLabel="Foul Strikes" />
-                          <StatCard label="Miss" value={formatCount(s.batterStrikesMiss)} tooltipLabel="Swinging Strikes (Whiffs)" />
-                          <StatCard label="Called" value={formatCount(s.batterStrikesLooking)} tooltipLabel="Called Strikes" />
-                        </div>
-                      </div>
-
-                      {/* Pitch Types Faced (Example) */}
-                      {(s.batter2SeamFastballs !== undefined || s.batter4SeamFastballs !== undefined) && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3 border-b pb-2">Pitch Types Faced (Count)</h3>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                            {s.batter4SeamFastballs !== undefined && <StatCard label="4SFB" value={formatCount(s.batter4SeamFastballs)} tooltipLabel="4-Seam Fastballs Faced" />}
-                            {s.batterSinkers !== undefined && <StatCard label="SI" value={formatCount(s.batterSinkers)} tooltipLabel="Sinkers Faced" />}
-                            {s.batterCutters !== undefined && <StatCard label="CT" value={formatCount(s.batterCutters)} tooltipLabel="Cutters Faced" />}
-                            {s.batterSliders !== undefined && <StatCard label="SL" value={formatCount(s.batterSliders)} tooltipLabel="Sliders Faced" />}
-                            {s.batterCurveballs !== undefined && <StatCard label="CB" value={formatCount(s.batterCurveballs)} tooltipLabel="Curveballs Faced" />}
-                            {s.batterChangeups !== undefined && <StatCard label="CH" value={formatCount(s.batterChangeups)} tooltipLabel="Changeups Faced" />}
-                            {s.batterSplitters !== undefined && <StatCard label="SP" value={formatCount(s.batterSplitters)} tooltipLabel="Splitters Faced" />}
-                            {s.batter2SeamFastballs !== undefined && <StatCard label="2SFB" value={formatCount(s.batter2SeamFastballs)} tooltipLabel="2-Seam Fastballs Faced" />}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Miscellaneous (if applicable) */}
-                      {(s.earnedRuns !== undefined || s.unearnedRuns !== undefined || s.batterTagOuts !== undefined || s.batterForceOuts !== undefined || s.batterPutOuts !== undefined) && (
-                         <div>
-                           <h3 className="text-lg font-semibold mb-3 border-b pb-2">Miscellaneous</h3>
-                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                             {s.earnedRuns !== undefined && <StatCard label="ER" value={formatCount(s.earnedRuns)} tooltipLabel="Earned Runs (Context?) " />}
-                             {s.unearnedRuns !== undefined && <StatCard label="UER" value={formatCount(s.unearnedRuns)} tooltipLabel="Unearned Runs (Context?)" />}
-                             {s.batterTagOuts !== undefined && <StatCard label="Tag Outs" value={formatCount(s.batterTagOuts)} tooltipLabel="Times Tagged Out" />}
-                             {s.batterForceOuts !== undefined && <StatCard label="Force Outs" value={formatCount(s.batterForceOuts)} tooltipLabel="Times Forced Out" />}
-                             {s.batterPutOuts !== undefined && <StatCard label="Putouts" value={formatCount(s.batterPutOuts)} tooltipLabel="Batter Credited Putouts (Rare)" />}
-                           </div>
-                         </div>
-                       )}
+        <section ref={statsRef} id="stats" className="mb-8 scroll-mt-24">
+          <div className="flex flex-col space-y-6">
+            {/* Batting Stats Card */}
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Batting Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {player?.stats_batting_details ? (
+                  <div className="batting-stats-tabs p-4">
+                    <div className="tab-buttons flex gap-2 mb-4 overflow-x-auto pb-2">
+                      {Object.keys(statGroups).map(tab => (
+                        <button
+                          key={tab}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                            activeBattingTab === tab 
+                              ? 'bg-blue-600 text-white shadow' 
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                          onClick={() => setActiveBattingTab(tab)}
+                        >
+                          {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()
-              ) : (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">No batting statistics available for this player.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {statGroups[activeBattingTab]?.map((stat, index) => (
+                        <div 
+                          key={stat.label} 
+                          className="flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+                        >
+                          <span 
+                            className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                            title={stat.tooltip}
+                          >
+                            {stat.label}
+                          </span>
+                          <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {stat.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    No batting statistics available
+                  </div>
+                )}
+                
+                {/* Pitch Types Section - Show if any pitch type data exists */}
+                {pitchTypes && pitchTypes.length > 0 && (
+                  <div className="mt-4 p-4 border-t">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Pitch Types Faced</h4>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                      {pitchTypes.map((pitch, i) => (
+                        <div key={i} className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{pitch.label}</span>
+                          <span className="text-sm font-bold">{pitch.value}</span>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400">{pitch.tooltip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Fielding Stats Card */}
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Fielding Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                {player?.stats_fielding_details ? (
+                  <div className="space-y-6">
+                    {/* Overview Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {fieldingStatGroups.overview?.map((stat, index) => (
+                        <div 
+                          key={stat.label} 
+                          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 py-2"
+                        >
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            {stat.label}
+                          </span>
+                          <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {stat.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Defensive Stats */}
+                    {fieldingStatGroups.defensive?.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Defensive Stats</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {fieldingStatGroups.defensive.map((stat) => (
+                            <div 
+                              key={stat.label} 
+                              className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 py-2"
+                            >
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                {stat.label}
+                              </span>
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {stat.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Range Stats */}
+                    {fieldingStatGroups.range?.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Range Stats</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {fieldingStatGroups.range.map((stat) => (
+                            <div 
+                              key={stat.label} 
+                              className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 py-2"
+                            >
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                {stat.label}
+                              </span>
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {stat.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Catcher Stats */}
+                    {fieldingStatGroups.catcher?.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Catcher Stats</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {fieldingStatGroups.catcher.map((stat) => (
+                            <div 
+                              key={stat.label} 
+                              className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 py-2"
+                            >
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                {stat.label}
+                              </span>
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {stat.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    No fielding statistics available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+          </div>
         </section>
         
         {/* Astrology Section */}

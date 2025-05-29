@@ -6,7 +6,7 @@ import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
 import PlayerDetailPage from "./pages/PlayerDetailPage";
 import LeaguePage from "./pages/LeaguePage";
-import GameDetails from "./pages/GameDetails";
+import GamePage from "./pages/GamePage";
 import Home from "./pages/Home";
 import SearchResults from "./pages/SearchResults";
 import UpcomingGames from "./pages/UpcomingGames";
@@ -28,7 +28,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/league/:leagueId" element={<LeaguePage />} />
-          <Route path="/game/:gameId" element={<GameDetails />} />
+          <Route path="/game/:gameId" element={<GamePage />} />
           <Route path="/event/:id" element={<EventDetails />} />
           {/* New routes with plural form */}
           <Route path="/teams/:teamId" element={<TeamPage />} />

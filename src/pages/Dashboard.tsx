@@ -990,14 +990,11 @@ const Dashboard: React.FC = () => {
                               console.log('Processed away team data:', awayTeamData);
 
                               return (
-                                <GameCard 
-                                  key={game.id} 
-                                  game={gameWithTeams} 
+                                <GameCard
+                                  key={game.id}
+                                  game={game}
                                   homeTeam={homeTeamData}
                                   awayTeam={awayTeamData}
-                                  defaultLogo={DEFAULT_LOGO}
-                                  className="w-full"
-                                  astroEdge={game.astroEdge}
                                 />
                               );
                             })}

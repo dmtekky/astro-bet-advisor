@@ -1,39 +1,32 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatGameTime } from '@/utils/dateUtils';
-import { Game } from '@/types';
-import { Team } from '@/types';
 import { Link } from 'react-router-dom';
-import { GameOutcomePrediction, GamePredictionData } from '@/types/gamePredictions';
+import type { Game } from '@/types';
+import type { Team } from '@/types';
 
 interface GameCardProps {
-  game: Game & {
-    astroEdge?: number;
-    astroInfluence?: string;
-    astroPrediction?: string | GameOutcomePrediction;
-    homeEdge?: number;
-    moonPhase?: string | { name: string; illumination: number };
-    sunSign?: string;
-    dominantElement?: string;
-    confidence?: number;
-    prediction?: GameOutcomePrediction;
-  };
-  astroData?: GamePredictionData | null;
-  loading?: boolean;
-  error?: Error | null;
-  homeTeam?: Team & { primary_color?: string; secondary_color?: string };
-  awayTeam?: Team & { primary_color?: string; secondary_color?: string };
-  defaultLogo: string;
+  game: Game;
+  homeTeam: Team & { primary_color?: string; secondary_color?: string };
+  awayTeam: Team & { primary_color?: string; secondary_color?: string };
+  defaultLogo?: string;
 }
+
+// Helper function to format game time
+const formatGameTime = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return 'TBD';
+  }
+};
 
 const GameCard: React.FC<GameCardProps> = ({ 
   game, 
-  astroData, 
-  loading, 
-  error, 
   homeTeam, 
   awayTeam, 
-  defaultLogo 
+  defaultLogo = '' 
 }) => {
   const getBoxShadow = (color: any) => {
     // Default shadow (blue)
@@ -123,125 +116,75 @@ const GameCard: React.FC<GameCardProps> = ({
     primary_color: undefined,
     secondary_color: undefined
   };
-  
+
   // Get box shadow colors with fallbacks
   const homeBoxShadow = getBoxShadow(safeHomeTeam.primary_color);
   const awayBoxShadow = getBoxShadow(safeAwayTeam.primary_color);
 
-  // Calculate a contrasting text color based on background
-  const getContrastColor = (hexColor: string | undefined) => {
-    if (!hexColor) return 'white';
+  // Get game time
+  const gameTime = React.useMemo(() => {
+    try {
+      if (!game.start_time) return 'TBD';
+      const date = new Date(game.start_time);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      console.error('Error formatting game time:', e);
+      return 'TBD';
+    }
+  }, [game.start_time]);
+
+  // Calculate text color based on background brightness
+  const getTextColor = (bgColor: string | undefined) => {
+    // Default to white text
+    if (!bgColor) return '#FFFFFF';
     
     try {
       // Convert hex to RGB
-      const r = parseInt(hexColor.slice(1, 3), 16);
-      const g = parseInt(hexColor.slice(3, 5), 16);
-      const b = parseInt(hexColor.slice(5, 7), 16);
+      const hex = bgColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
       
-      // Calculate luminance - standard formula
-      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      
-      // Return black or white based on luminance
-      return luminance > 0.5 ? 'black' : 'white';
+      // Calculate brightness (perceived luminance)
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128 ? '#000000' : '#FFFFFF';
     } catch (e) {
-      return 'white';
+      console.error('Error calculating text color:', e);
+      return '#FFFFFF';
     }
   };
-
-  // Get text color based on team's primary color
-  const textColor = getContrastColor(homeTeam?.primary_color);
-
-  // Extract prediction data
-  const prediction = game.prediction || 
-    (typeof game.astroPrediction === 'object' ? game.astroPrediction : null);
   
-  // Get moon phase data
-  const moonPhase = React.useMemo(() => {
-    if (typeof game.moonPhase === 'object') {
-      return {
-        name: game.moonPhase.name,
-        illumination: game.moonPhase.illumination
-      };
-    } else if (astroData?.moonPhase) {
-      return {
-        name: astroData.moonPhase.name,
-        illumination: astroData.moonPhase.illumination
-      };
-    } else if (astroData?.moon?.phase_name) {
-      return {
-        name: astroData.moon.phase_name,
-        illumination: astroData.moon.illumination || 0
-      };
-    }
-    return null;
-  }, [game.moonPhase, astroData]);
-
-  // Get sun sign
-  const sunSign = React.useMemo(() => {
-    if (game.sunSign) return game.sunSign;
-    if (astroData?.sun?.sign) return String(astroData.sun.sign);
-    if (astroData?.planets?.sun?.sign) return String(astroData.planets.sun.sign);
-    return '';
-  }, [game.sunSign, astroData]);
-
-  // Get dominant element
-  const dominantElement = React.useMemo(() => {
-    if (game.dominantElement) return game.dominantElement;
-    if (prediction?.dominantElement) return prediction.dominantElement;
-    if (astroData?.elements) {
-      const elements = astroData.elements;
-      const maxElement = Object.entries(elements).reduce((max, [key, value]) => 
-        value.score > max.score ? { key, score: value.score } : max, 
-        { key: '', score: -Infinity }
-      );
-      return maxElement.key || '';
-    }
-    return '';
-  }, [game.dominantElement, prediction, astroData?.elements]);
-
-  // Get confidence level
-  const confidence = React.useMemo(() => {
-    if (game.confidence !== undefined) return game.confidence;
-    if (prediction?.confidence !== undefined) return prediction.confidence;
-    return 0.5; // Default confidence
-  }, [game.confidence, prediction?.confidence]);
-
-  // Get prediction text
-  const predictionText = React.useMemo(() => {
-    if (typeof game.astroPrediction === 'string') return game.astroPrediction;
-    if (prediction?.prediction) return prediction.prediction;
-    if (game.astroInfluence) return game.astroInfluence;
-    if (game.homeEdge !== undefined) {
-      return `The cosmic alignment ${game.homeEdge > 0.5 ? 'favors the home team' : 
-        game.homeEdge < 0.5 ? 'favors the away team' : 'shows a balanced matchup'}.`;
-    }
-    return 'No cosmic insights available for this game.';
-  }, [game.astroPrediction, game.astroInfluence, game.homeEdge, prediction?.prediction]);
-
-  // Calculate win probability
-  const homeWinProbability = React.useMemo(() => {
-    if (prediction?.homeWinProbability !== undefined) return prediction.homeWinProbability;
-    if (game.homeEdge !== undefined) return game.homeEdge;
-    return 0.5;
-  }, [prediction?.homeWinProbability, game.homeEdge]);
-
-  if (loading) {
-    return (
-      <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800/90 overflow-hidden">
-        <div className="animate-pulse h-64 w-full"></div>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800/90 overflow-hidden">
-        <CardContent className="p-4 text-center text-red-500">
-          Error loading game data
-        </CardContent>
-      </Card>
-    );
-  }
+  // Get team colors with fallbacks
+  const homeTeamColor = homeTeam?.primary_color || '#1E40AF';
+  const awayTeamColor = awayTeam?.primary_color || '#1E40AF';
+  const homeTextColor = getTextColor(homeTeamColor);
+  const awayTextColor = getTextColor(awayTeamColor);
+  
+  // Debug log for team data
+  console.log('GameCard rendering:', {
+    gameId: game.id,
+    homeTeam: {
+      id: homeTeam?.id,
+      name: homeTeam?.name,
+      logo: homeTeam?.logo_url || homeTeam?.logo,
+      colors: {
+        primary: homeTeam?.primary_color,
+        secondary: homeTeam?.secondary_color,
+        text: homeTextColor
+      }
+    },
+    awayTeam: {
+      id: awayTeam?.id,
+      name: awayTeam?.name,
+      logo: awayTeam?.logo_url || awayTeam?.logo,
+      colors: {
+        primary: awayTeam?.primary_color,
+        secondary: awayTeam?.secondary_color,
+        text: awayTextColor
+      }
+    },
+    gameTime: game.start_time ? new Date(game.start_time).toLocaleString() : 'TBD'
+  });
 
   return (
     <Link 
@@ -278,11 +221,11 @@ const GameCard: React.FC<GameCardProps> = ({
           
           {/* Header content */}
           <div className="relative flex justify-between items-center">
-            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: textColor }}>
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: homeTextColor }}>
               {game.league_name || game.sport || 'Game'}
             </span>
-            <span className="text-xs font-medium" style={{ color: textColor }}>
-              {formatGameTime(game.start_time)}
+            <span className="text-xs font-medium" style={{ color: homeTextColor }}>
+              {gameTime}
             </span>
           </div>
         </div>
@@ -435,80 +378,24 @@ const GameCard: React.FC<GameCardProps> = ({
                 <span className="font-medium">{formatGameTime(game.start_time)}</span>
               </div>
               
-              {/* Astrological Prediction */}
-              {(prediction || game.astroPrediction || game.astroInfluence || game.homeEdge !== undefined) && (
-                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                  <div className="flex items-center gap-1 mb-2">
-                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">✨ Cosmic Insight</span>
-                    <div className="ml-auto flex items-center gap-1">
-                      <div 
-                        className="h-2.5 bg-gray-200 rounded-full overflow-hidden w-20"
-                        title={`Cosmic edge: ${Math.round((homeWinProbability * 100))}% favoring ${homeWinProbability > 0.5 ? 'home' : 'away'} team`}
-                      >
-                        <div 
-                          className={`h-full ${homeWinProbability > 0.5 ? 'bg-indigo-600' : 'bg-purple-600'} dark:bg-indigo-500`} 
-                          style={{ 
-                            width: `${Math.abs(homeWinProbability - 0.5) * 200}%`, 
-                            marginLeft: homeWinProbability > 0.5 ? '50%' : '0' 
-                          }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {predictionText}
-                  </p>
-                  
-                  {/* Additional astrological details */}
-                  <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-gray-500">
-                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
-                      <span className="text-indigo-500">☽</span>
-                      <span>{moonPhase?.name || 'Moon Phase'}</span>
-                      {moonPhase?.illumination !== undefined && (
-                        <span className="text-[8px] opacity-75">
-                          {Math.round(moonPhase.illumination * 100)}%
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
-                      <span className="text-orange-500">☉</span>
-                      <span>{sunSign || 'Sun Sign'}</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-1 rounded">
-                      <span className="text-purple-500">★</span>
-                      <span className="capitalize">
-                        {dominantElement || 'Elements'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Confidence indicator */}
-                  <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
-                    <span>Cosmic Confidence:</span>
-                    <div className="flex items-center">
-                      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden mr-1">
-                        <div 
-                          className={`h-full ${
-                            confidence > 0.75 
-                              ? 'bg-green-500' 
-                              : confidence > 0.6 
-                                ? 'bg-blue-500' 
-                                : 'bg-indigo-500'
-                          }`} 
-                          style={{ 
-                            width: `${Math.round(confidence * 100)}%` 
-                          }}
-                        />
-                      </div>
-                      <span>{Math.round(confidence * 100)}%</span>
-                    </div>
-                  </div>
+              {/* Game Status */}
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500 dark:text-gray-400">Status</span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    {game.status === 'scheduled' ? 'Upcoming' : 
+                     game.status === 'in_progress' ? 'Live' : 
+                     game.status === 'final' ? 'Final' : 
+                     game.status?.replace('_', ' ').toLowerCase() || 'Scheduled'}
+                  </span>
                 </div>
-              )}
+                {game.venue && (
+                  <div className="flex justify-between items-center text-xs mt-1">
+                    <span className="text-gray-500 dark:text-gray-400">Venue</span>
+                    <span className="font-medium">{game.venue}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>

@@ -58,6 +58,7 @@ export interface Game {
   // These were on the GameCardProps in games/GameCard.tsx
   astroInfluence?: string;
   astroEdge?: number;
+  venue?: string;
 }
 
 export interface GameWithTeams extends Game {

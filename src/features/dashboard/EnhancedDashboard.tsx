@@ -46,6 +46,9 @@ interface Game {
   away_team_abbreviation?: string;
   sport_key?: string;
   commencing_at?: string;
+  // Required by GameCard component
+  astroEdge: number;
+  astroInfluence: string;
 }
 
 
@@ -207,6 +210,16 @@ const EnhancedDashboard: React.FC = () => {
     );
   }
 
+  // DEBUG: Log all games and their IDs/teams before rendering
+  console.log('DASHBOARD GAMES DATA:', games.map((g, idx) => ({
+    idx,
+    id: g?.id,
+    home_team: typeof g.home_team === 'object' ? g.home_team.name : g.home_team,
+    away_team: typeof g.away_team === 'object' ? g.away_team.name : g.away_team,
+    start_time: g.start_time,
+    league: g.league,
+  })));
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -256,45 +269,71 @@ const EnhancedDashboard: React.FC = () => {
                 {games.length === 0 ? (
                   <p className="text-center text-gray-500">No upcoming games found</p>
                 ) : (
-                  games.filter(game => !!game.id).map((game) => {
-                    // Create a properly formatted game object that matches the Game interface
-                    const formattedGame: Game = {
-                      id: game.id,
-                      home_team_id: game.home_team_id,
-                      away_team_id: game.away_team_id,
-                      start_time: game.start_time || game.commencing_at || new Date().toISOString(),
-                      odds: game.odds || 'N/A',
-                      oas: game.oas || 0,
-                      status: game.status || 'scheduled',
-                      league: game.league || game.sport?.toUpperCase(),
-                      sport: game.sport,
-                      home_team: (game.home_team && typeof game.home_team === 'object') ? {
-                        id: game.home_team.id || game.home_team_id,
-                        name: game.home_team.name || 'Home Team',
-                        wins: typeof game.home_team.wins === 'number' ? game.home_team.wins : 0,
-                        losses: typeof game.home_team.losses === 'number' ? game.home_team.losses : 0,
-                        abbreviation: game.home_team.abbreviation || game.home_team_abbreviation || 'HOM'
-                      } : {
-                        id: game.home_team_id,
-                        name: 'Home Team',
-                        wins: 0,
-                        losses: 0,
-                        abbreviation: game.home_team_abbreviation || 'HOM'
-                      },
-                      away_team: (game.away_team && typeof game.away_team === 'object') ? {
-                        id: game.away_team.id || game.away_team_id,
-                        name: game.away_team.name || 'Away Team',
-                        wins: typeof game.away_team.wins === 'number' ? game.away_team.wins : 0,
-                        losses: typeof game.away_team.losses === 'number' ? game.away_team.losses : 0,
-                        abbreviation: game.away_team.abbreviation || game.away_team_abbreviation || 'AWY'
-                      } : {
-                        id: game.away_team_id,
-                        name: 'Away Team',
-                        wins: 0,
-                        losses: 0,
-                        abbreviation: game.away_team_abbreviation || 'AWY'
+                  games
+                    // Ensure we have a valid game ID before mapping
+                    .filter(game => {
+                      const isValid = game?.id?.toString()?.trim()?.length > 0;
+                      if (!isValid) {
+                        console.warn('Skipping game with invalid ID:', game);
                       }
-                    };
+                      return isValid;
+                    })
+                    .map((game, idx) => {
+                      // Generate a stable ID if not present
+                      const gameId = game.id?.toString()?.trim() || 
+                        `game_${game.home_team_id}_${game.away_team_id}_${game.start_time || Date.now()}`;
+                      // DEBUG: Log which GameCard is being rendered and with what data
+                      console.log(`RENDERING GAMECARD idx=${idx}`, {
+                        id: gameId,
+                        home_team: typeof game.home_team === 'object' ? game.home_team.name : game.home_team,
+                        away_team: typeof game.away_team === 'object' ? game.away_team.name : game.away_team,
+                        start_time: game.start_time,
+                        league: game.league,
+                      });
+                      
+                      // Create a properly formatted game object that matches the Game interface
+                      const formattedGame: Game = {
+                        id: gameId,
+                        home_team_id: game.home_team_id || `home_${gameId}`,
+                        away_team_id: game.away_team_id || `away_${gameId}`,
+                        start_time: game.start_time || game.commencing_at || new Date().toISOString(),
+                        odds: game.odds || 'N/A',
+                        oas: game.oas || 0,
+                        status: game.status || 'scheduled',
+                        league: game.league || game.sport?.toUpperCase(),
+                        sport: game.sport,
+                        home_team: (game.home_team && typeof game.home_team === 'object') ? {
+                          id: game.home_team.id || game.home_team_id || `home_${gameId}`,
+                          name: game.home_team.name || 'Home Team',
+                          wins: typeof game.home_team.wins === 'number' ? game.home_team.wins : 0,
+                          losses: typeof game.home_team.losses === 'number' ? game.home_team.losses : 0,
+                          abbreviation: game.home_team.abbreviation || game.home_team_abbreviation || 'HOM',
+                          logo: game.home_team.logo
+                        } : {
+                          id: game.home_team_id || `home_${gameId}`,
+                          name: 'Home Team',
+                          wins: 0,
+                          losses: 0,
+                          abbreviation: game.home_team_abbreviation || 'HOM'
+                        },
+                        away_team: (game.away_team && typeof game.away_team === 'object') ? {
+                          id: game.away_team.id || game.away_team_id || `away_${gameId}`,
+                          name: game.away_team.name || 'Away Team',
+                          wins: typeof game.away_team.wins === 'number' ? game.away_team.wins : 0,
+                          losses: typeof game.away_team.losses === 'number' ? game.away_team.losses : 0,
+                          abbreviation: game.away_team.abbreviation || game.away_team_abbreviation || 'AWY',
+                          logo: game.away_team.logo
+                        } : {
+                          id: game.away_team_id || `away_${gameId}`,
+                          name: 'Away Team',
+                          wins: 0,
+                          losses: 0,
+                          abbreviation: game.away_team_abbreviation || 'AWY'
+                        },
+                        // Add required astro properties with default values
+                        astroEdge: typeof game.astroEdge === 'number' ? game.astroEdge : 0,
+                        astroInfluence: game.astroInfluence || 'Neutral'
+                      };
                     
                     return (
                       <GameCard

@@ -13,6 +13,7 @@ import { getTeamColorStyles } from '@/utils/teamColors';
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 
+import { calculateImpactScore } from '../utils/calculateImpactScore';
 // Type definitions for the component
 interface Team {
   id: string;
@@ -57,6 +58,7 @@ interface Player {
   stats_batting_hits?: number | null;
   stats_batting_runs?: number | null;
   stats_fielding_assists?: number | null;
+  impact_score?: number | null; // Added impact_score
   [key: string]: any; // For any additional properties
 } 
 
@@ -202,9 +204,10 @@ const TeamPage = () => {
         try {
           // Query all baseball players and filter by team abbreviation client-side
           // This avoids potential issues with Supabase filter formatting
-          const { data: allPlayers, error } = await supabase
+          const { data, error } = await supabase
             .from('baseball_players')
-            .select('*');
+            .select<'*', Player>('*'); // Specify Player type for select
+          const allPlayers: Player[] = data || [];
           
           if (error) {
             console.error('Error fetching players:', error.message);
@@ -277,10 +280,18 @@ const TeamPage = () => {
         } else if (playersData && playersData.length > 0) {
           console.log('Processing player data:', playersData[0]);
           const typedPlayers = playersData.map((p: any) => {
-            // Map player data from Supabase fields
+            // Calculate impact score if not provided
+            const calculatedImpactScore = p.impact_score !== undefined && p.impact_score !== null 
+              ? p.impact_score 
+              : calculateImpactScore({
+                  stats_batting_hits: p.stats_batting_hits,
+                  stats_batting_runs: p.stats_batting_runs,
+                  stats_fielding_assists: p.stats_fielding_assists
+                });
+
             const player: Player = {
               id: String(p.player_id || p.id || ''),
-              player_id: String(p.player_id || ''), // Store the original player_id
+              player_id: String(p.player_id || ''),
               full_name: p.player_full_name || `${p.player_first_name || ''} ${p.player_last_name || ''}`.trim() || `Player ID: ${p.player_id || p.id || 'Unknown'}`,
               first_name: p.player_first_name || '',
               last_name: p.player_last_name || '',
@@ -296,7 +307,9 @@ const TeamPage = () => {
               ...(p.team_abbreviation && { team_abbreviation: p.team_abbreviation }),
               ...(p.stats_batting_hits !== undefined && { stats_batting_hits: p.stats_batting_hits }),
               ...(p.stats_batting_runs !== undefined && { stats_batting_runs: p.stats_batting_runs }),
-              ...(p.stats_fielding_assists !== undefined && { stats_fielding_assists: p.stats_fielding_assists })
+              ...(p.stats_fielding_assists !== undefined && { stats_fielding_assists: p.stats_fielding_assists }),
+              ...(p.impact_score !== undefined && { impact_score: p.impact_score }),
+              impact_score: calculatedImpactScore
             };
             
             // Handle number conversion safely
@@ -741,74 +754,26 @@ const TeamPage = () => {
             Team Roster
           </h2>
           
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-100">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Player</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Position</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Hits</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Runs</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">F/Assist</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {players.length > 0 ? players.map((player, index) => (
-                    <tr key={player.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0 mr-3">
-                            <img 
-                              className="h-10 w-10 rounded-full object-cover"
-                              src={player.headshot_url || '/placeholder-player.png'}
-                              alt=""
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder-player.png';
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-slate-900">{player.full_name}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        {player.number || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
-                        {player.position || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
-                        {player.stats_batting_hits !== undefined ? player.stats_batting_hits : 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
-                        {player.stats_batting_runs !== undefined ? player.stats_batting_runs : 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500">
-                        {player.stats_fielding_assists !== undefined ? player.stats_fielding_assists : 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                        <Link to={`/teams/${teamId}/player-details/${player.player_id}`} className="text-blue-600 hover:text-blue-900">
-                          {console.log('Player ID in TeamPage:', player.player_id)}
-                          {console.log('Team ID in TeamPage:', teamId)}
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                        No players available for this team
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TeamRoster 
+            players={players.map(player => ({
+              id: player.id,
+              player_id: player.player_id,
+              full_name: player.full_name,
+              first_name: player.first_name,
+              last_name: player.last_name,
+              position: player.position,
+              number: player.number,
+              headshot_url: player.headshot_url,
+              is_active: player.is_active,
+              team_id: player.team_id,
+              team_name: player.team_name,
+              stats_batting_hits: player.stats_batting_hits,
+              stats_batting_runs: player.stats_batting_runs,
+              stats_fielding_assists: player.stats_fielding_assists,
+              impact_score: player.impact_score
+            }))} 
+            teamId={teamId || ''} 
+          />
         </motion.div>
       </div>
     </div>

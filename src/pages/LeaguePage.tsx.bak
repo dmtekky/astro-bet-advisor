@@ -13,25 +13,25 @@ import { Separator } from '@/components/ui/separator';
 import GameCard from '@/components/GameCard'; // Import the GameCard component
 import { Game, Team as TeamType, Sport } from '@/types'; // Import our main types
 
-// Extend the base Team type with additional database fields
-interface Team extends Omit<TeamType, 'external_id'> {
-  // Override external_id to be number to match the database schema
+// Extend the Team type to include database fields
+interface Team extends TeamType {
+  conference?: string;
+  division?: string;
+  full_name: string;
   external_id: number;
-  // Add database-specific fields
-  is_active: boolean | null;
-  last_updated: string | null;
+  is_active: boolean;
+  last_updated: string;
   league_id: string;
-  full_name: string | null;
-  venue_name: string | null;
-  venue_city: string | null;
-  venue_state: string | null;
-  venue_capacity: number | null;
-  venue_surface: string | null;
-  venue_zip: string | null;
-  venue_latitude: number | null;
-  venue_longitude: number | null;
-  // Ensure sport is included from the league context
-  sport: Sport;
+  venue_id: string;
+  venue_name?: string;
+  venue_city?: string;
+  venue_state?: string;
+  venue_capacity?: number;
+  venue_surface?: string;
+  venue_roof_type?: string;
+  venue_lat?: number;
+  venue_lng?: number;
+  venue_zip?: string;
 }
 import { Database } from '@/types/database.types'; // For raw DB types if needed
 
@@ -112,16 +112,10 @@ const LeaguePage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch teams from database with all required fields
+        // Fetch teams from database
         const teamsResult = await supabase
           .from('teams')
-          .select(`
-            id, name, abbreviation, logo_url, city, 
-            primary_color, secondary_color, full_name, 
-            external_id, is_active, last_updated, league_id,
-            venue_name, venue_city, venue_state, venue_capacity,
-            venue_surface, venue_zip, venue_latitude, venue_longitude
-          `)
+          .select('*, primary_color, secondary_color')
           .eq('league_id', dbLeagueId);
         console.log('[LeaguePage] teams query result:', teamsResult);
         
@@ -143,32 +137,7 @@ const LeaguePage: React.FC = () => {
           console.error('Error fetching teams:', teamsResult.error);
           setError(teamsResult.error.message);
         } else if (teamsResult.data) {
-          // Transform team data to match the Team interface
-          const transformedTeams = teamsResult.data.map(team => ({
-            id: team.id,
-            name: team.name,
-            abbreviation: team.abbreviation,
-            logo_url: team.logo_url || null,
-            city: team.city,
-            primary_color: team.primary_color || null,
-            secondary_color: team.secondary_color || null,
-            sport: leagueId as Sport, // Use the current league as the sport
-            external_id: team.external_id,
-            is_active: team.is_active ?? true,
-            last_updated: team.last_updated || null,
-            league_id: team.league_id,
-            full_name: team.full_name || team.name,
-            venue_name: team.venue_name || null,
-            venue_city: team.venue_city || null,
-            venue_state: team.venue_state || null,
-            venue_capacity: team.venue_capacity || null,
-            venue_surface: team.venue_surface || null,
-            venue_zip: team.venue_zip || null,
-            venue_latitude: team.venue_latitude || null,
-            venue_longitude: team.venue_longitude || null
-          }));
-          
-          setTeams(transformedTeams);
+          setTeams(teamsResult.data);
         }
         
         if (upcomingGamesResult.error) {
@@ -338,136 +307,76 @@ const LeaguePage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="mt-4 space-y-2">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
-                    View team details, schedules, and performance metrics for the {LEAGUE_NAMES[leagueId] || 'league'}.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+        </div>
+        
+        <div className="mb-12">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-40 w-full rounded-lg" />
+            ))}
+          </div>
+                    awayTeam={awayTeam}
+                    defaultLogo="/placeholder-team.png"
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-400">No upcoming games scheduled</p>
+          )}
         </div>
 
-        {/* Upcoming Games - Only show if we have games */}
-        {upcomingGames.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <Calendar className="mr-2 h-6 w-6" />
-              Upcoming Games
-            </h2>
-            
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {upcomingGames
-                .map((game, idx) => {
-                  const homeTeam = teams.find(t => t.id === game.home_team_id);
-                  const awayTeam = teams.find(t => t.id === game.away_team_id);
-                  
-                  // Debug: Log the game and team info for the first few cards
-                  if (idx < 5) {
-                    console.log('GameCard', {
-                      idx,
-                      gameId: game.id,
-                      homeTeamId: game.home_team_id,
-                      awayTeamId: game.away_team_id,
-                      homeTeam,
-                      awayTeam
-                    });
-                  }
-                  // Skip rendering if we don't have both teams
-                  if (!homeTeam || !awayTeam) {
-                    console.warn(`Missing team data for game ${game.id}`);
-                    return null;
-                  }
-                  // Convert team types to be compatible with GameCard
-                  const toGameCardTeam = (team: Team) => ({
-                    ...team,
-                    external_id: String(team.external_id),
-                    primary_color: team.primary_color || undefined,
-                    secondary_color: team.secondary_color || undefined,
-                    // Ensure all required TeamType properties are included
-                    id: team.id,
-                    name: team.name,
-                    abbreviation: team.abbreviation,
-                    logo_url: team.logo_url || undefined,
-                    city: team.city,
-                    sport: team.sport
-                  } as TeamType & { primary_color?: string; secondary_color?: string });
-                  return (
-                    <GameCard 
-                      key={game.id} 
-                      game={game} 
-                      homeTeam={toGameCardTeam(homeTeam)}
-                      awayTeam={toGameCardTeam(awayTeam)}
-                      defaultLogo="/placeholder-team.png"
-                    />
-                  );
-                })
-                // Filter out any null entries from skipped games
-                .filter(Boolean)}
-            </div>
-          </div>
-        )}
-
-        {/* Teams - Only show if we have teams */}
-        {teams.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <Users className="mr-2 h-6 w-6" />
-              Teams
-            </h2>
-            
-            <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {teams.map((team) => (
-                <motion.div
-                  key={team.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <Link to={`/teams/${team.id}`}>
-                    <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 hover:shadow-xl transition-all duration-300 group overflow-hidden">
-                      <CardContent className="p-5 flex flex-col items-center">
-                        <div className="relative mb-3">
-                          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative bg-white/80 dark:bg-slate-600/50 p-2 rounded-full shadow-sm">
-                            <img 
-                              src={team.logo_url || '/placeholder-team.png'} 
-                              alt={team.name}
-                              className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-110"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder-team.png';
-                              }}
-                            />
-                          </div>
+        {/* Teams */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <Users className="mr-2 h-6 w-6" />
+            Teams
+          </h2>
+          
+          <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {teams.map((team) => (
+              <motion.div
+                key={team.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                <Link to={`/teams/${team.id}`}>
+                  <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                    <CardContent className="p-5 flex flex-col items-center">
+                      <div className="relative mb-3">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative bg-white/80 dark:bg-slate-600/50 p-2 rounded-full shadow-sm">
+                          <img 
+                            src={team.logo_url || '/placeholder-team.png'} 
+                            alt={team.name}
+                            className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-110"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder-team.png';
+                            }}
+                          />
                         </div>
-                        <p className="text-slate-800 dark:text-white text-center font-medium text-sm">{team.name}</p>
-                        {team.venue_city && (
-                          <Badge variant="outline" className="mt-2 text-xs bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200">
-                            {team.venue_city}
-                          </Badge>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                      </div>
+                      <p className="text-slate-800 dark:text-white text-center font-medium text-sm">{team.name}</p>
+                      {team.conference && (
+                        <Badge variant="outline" className="mt-2 text-xs bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200">
+                          {team.conference}
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
           </div>
-        )}
-        
-        {teams.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 mb-4">No teams found for this league</p>
-            <Button 
-              variant="outline" 
-              onClick={handleRetry}
-              className="mt-2"
-            >
-              Retry Loading Teams
-            </Button>
-          </div>
-        )}
+          
+          {teams.length === 0 && (
+            <p className="text-gray-400 text-center py-8">No teams found for this league</p>
+          )}
+        </div>
       </div>
     );
   };
