@@ -333,6 +333,32 @@ const TeamPage = () => {
           });
           
           console.log('Mapped players:', typedPlayers.length);
+          
+          // Update database with calculated impact scores for players that don't have them
+          const updatePromises = typedPlayers.map(async (player, index) => {
+            const originalPlayer = playersData[index];
+            if (player.impact_score !== undefined && player.impact_score !== null && 
+                (originalPlayer.impact_score === undefined || originalPlayer.impact_score === null || player.impact_score !== originalPlayer.impact_score)) {
+              try {
+                const { error } = await supabase
+                  .from('baseball_players')
+                  .update({ impact_score: player.impact_score })
+                  .eq('id', player.id);
+                
+                if (error) {
+                  console.error(`Error updating impact score for player ${player.full_name}:`, error);
+                } else {
+                  console.log(`Updated impact score for ${player.full_name}: ${player.impact_score}`);
+                }
+              } catch (err) {
+                console.error(`Exception updating impact score for player ${player.full_name}:`, err);
+              }
+            }
+          });
+          
+          // Wait for all updates to complete
+          await Promise.all(updatePromises);
+          
           setPlayers(typedPlayers);
           
           // Determine top players by position

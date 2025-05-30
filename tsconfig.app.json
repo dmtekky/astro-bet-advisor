@@ -14,6 +14,9 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "jsx": "react-jsx",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
 
     /* Linting */
     "strict": false,
@@ -28,5 +31,6 @@
     }
   },
   "include": ["src", "src/types"],
-  "typeRoots": ["./node_modules/@types", "./src/types"]
+  "typeRoots": ["./node_modules/@types", "./src/types"],
+  "exclude": ["node_modules"]
 }

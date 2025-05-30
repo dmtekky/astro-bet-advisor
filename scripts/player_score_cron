@@ -1,0 +1,2 @@
+# Run player score updates daily at 3 AM
+0 3 * * * cd /Users/dmtekk/CascadeProjects/astro-bet-advisor && /bin/bash ./scripts/run-daily-updates.sh

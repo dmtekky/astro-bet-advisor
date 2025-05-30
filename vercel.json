@@ -7,13 +7,20 @@
   "functions": {
     "api/*.js": {
       "memory": 1024,
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/update-scores",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/astro", "destination": "/api/astro.js" },
     { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
     { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
+    { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

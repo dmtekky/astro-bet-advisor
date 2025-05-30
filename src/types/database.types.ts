@@ -657,6 +657,8 @@ export type Database = {
           birth_date: string | null
           is_active: boolean
           player_current_team_abbreviation: string | null
+          impact_score: number | null
+          astro_influence_score: number | null
           created_at: string
           updated_at: string
         }
@@ -687,6 +689,9 @@ export type Database = {
           team_name?: string | null
           birth_date?: string | null
           is_active?: boolean
+          player_current_team_abbreviation?: string | null
+          impact_score?: number | null
+          astro_influence_score?: number | null
           created_at?: string
           updated_at?: string
         }

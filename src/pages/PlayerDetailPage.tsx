@@ -15,6 +15,7 @@ import { BarChart, RadarChart, LineChart, PieChart } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generatePlayerAstroData } from '@/lib/playerAstroService';
 import { useToast } from '@/components/ui/use-toast';
+import { TrendingUp } from 'lucide-react';
 
 import { calculateImpactScore } from '../utils/calculateImpactScore';
 // Types
@@ -1064,61 +1065,52 @@ const PlayerDetailPage = () => {
           </div>
           
           {/* Player Impact Analysis */}
-          {player?.impact_score !== undefined && (
-            <div className="mt-8">
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl">Player Impact Analysis</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Game Impact Score */}
-                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold mb-2">Game Impact Score</h3>
-                      <div className="flex items-center space-x-4">
-                        <div className="relative w-24 h-24 flex-shrink-0">
-                          <div className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/30"></div>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">{(player?.impact_score ?? calculatedImpactScore) ?? 0}</span>
-                          </div>
+          <div className="mt-8">
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Player Impact Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="max-w-2xl mx-auto">
+                  {/* Astrological Influence */}
+                  <div className="p-6 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-100 dark:border-purple-900/30">
+                    <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+                      <div className="relative w-32 h-32 flex-shrink-0">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 shadow-lg">
+                          <div className="absolute inset-0 rounded-full opacity-20" style={{
+                            background: 'radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.6) 0%, rgba(99, 102, 241, 0) 70%)'
+                          }}></div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            This score represents {player?.player_first_name || 'the player'}'s overall impact on the game based on batting and fielding performance metrics.
-                          </p>
-                          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            Key factors: Batting average, power, run production, and fielding efficiency
-                          </div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-400">
+                            {player?.impact_score ?? calculatedImpactScore}
+                          </span>
+                          <span className="text-xs font-medium text-purple-600 dark:text-purple-300 mt-1">Impact Score</span>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Astrological Influence */}
-                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold mb-2">Astrological Influence</h3>
-                      <div className="flex items-center space-x-4">
-                        <div className="relative w-24 h-24 flex-shrink-0">
-                          <div className="absolute inset-0 rounded-full bg-purple-100 dark:bg-purple-900/30"></div>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            {/* If astro_influence_score is missing from DB, show calculated value. Make sure this column exists in Supabase! */}
-<span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{(player?.astro_influence_score ?? calculatedAstroInfluenceScore) ?? 0}</span>
-                          </div>
+                      <div className="flex-1 text-center md:text-left">
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Performance Impact</h3>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">
+                          This score evaluates {player?.player_first_name || 'the player'}'s overall impact based on recent performance metrics, including batting and fielding statistics.
+                        </p>
+                        <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200">
+                          <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
+                          {(player?.impact_score ?? calculatedImpactScore) >= 75 ? 'High Impact' : 
+                           (player?.impact_score ?? calculatedImpactScore) >= 50 ? 'Moderate Impact' : 
+                           (player?.impact_score ?? calculatedImpactScore) >= 25 ? 'Developing Impact' : 'Limited Impact'}
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            This score indicates how strongly astrological factors may influence {player?.player_first_name || 'the player'}'s performance in upcoming games.
+                        <div className="mt-3 pt-3 border-t border-purple-100 dark:border-purple-800/50">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="font-medium">Key metrics:</span> Batting hits, runs scored, fielding assists
                           </p>
-                          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            Key factors: Current planetary positions, elemental balance, and dominant planets
-                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           
           {/* Astrological Profile Overview */}
           {astroData && (
