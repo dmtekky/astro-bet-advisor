@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPlayerByApiId } from '../lib/supabase';
 import { generatePlayerAstroData as getAstroData, BirthLocation } from '../lib/playerAstroService';
-import { AstroData, AstroSignInfo, ZodiacSign, BattingStats, FieldingStats, Player as BasePlayer } from '../types/app.types';
+import { AstroData, AstroSignInfo, ZodiacSign, FieldingStats, Player as BasePlayer, BattingStats } from '../types/app.types';
 import { getZodiacIllustration } from '../utils/zodiacIllustrations';
+import BattingStatsComponent from '../components/BattingStats';
 import CircularProgress from '../components/CircularProgress';
 import AstroPeakDay from './AstroPeakDay';
 import BigThreeAstroCards from './BigThreeAstroCards';
@@ -336,12 +337,31 @@ const PlayerDetailPage: React.FC = () => {
     );
   }
 
-  // Batting and Fielding stats extraction (similar to your Astro page)
-  // Batting and Fielding stats are now directly on the 'player' object after mapping
+  // Map player stats to BattingStats interface
   const battingStats: BattingStats = {
+    // Basic Stats
+    atBats: player.stats_batting_at_bats || 0,
+    runs: player.stats_batting_runs || 0,
+    hits: player.stats_batting_hits || 0,
+    runsBattedIn: player.stats_batting_rbi || 0,
+    homeruns: player.stats_batting_home_runs || 0,
+    
+    // Averages
+    battingAvg: typeof player.stats_batting_avg === 'string' 
+      ? parseFloat(player.stats_batting_avg) 
+      : player.stats_batting_avg || 0,
+    batterOnBasePct: typeof player.stats_batting_obp === 'string' 
+      ? parseFloat(player.stats_batting_obp) 
+      : player.stats_batting_obp || 0,
+    batterSluggingPct: typeof player.stats_batting_slg === 'string' 
+      ? parseFloat(player.stats_batting_slg) 
+      : player.stats_batting_slg || 0,
+    batterOnBasePlusSluggingPct: typeof player.stats_batting_ops === 'string' 
+      ? parseFloat(player.stats_batting_ops) 
+      : player.stats_batting_ops || 0,
+    
+    // Legacy fields for backward compatibility
     at_bats: player.stats_batting_at_bats,
-    runs: player.stats_batting_runs,
-    hits: player.stats_batting_hits,
     rbi: player.stats_batting_rbi,
     home_runs: player.stats_batting_home_runs,
     strikeouts: player.stats_batting_strikeouts,
@@ -707,7 +727,7 @@ const PlayerDetailPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Batting Stats */}
             <div>
               <div className="flex items-center mb-4">
@@ -718,28 +738,7 @@ const PlayerDetailPage: React.FC = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-800">Batting Statistics</h3>
               </div>
-              <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statistic</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {Object.entries(battingStats).map(([key, value]) => (
-                      <tr key={key} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-700">
-                          {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                          {value !== null && value !== undefined ? value : 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <BattingStatsComponent stats={battingStats} />
             </div>
 
             {/* Fielding Stats */}

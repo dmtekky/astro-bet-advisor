@@ -6,14 +6,56 @@ export type ZodiacSign =
   | 'Libra' | 'Scorpio' | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces';
 
 export interface BattingStats {
-  at_bats?: number | null;
+  // Basic Stats
+  atBats?: number | null;
   runs?: number | null;
   hits?: number | null;
+  secondBaseHits?: number | null;
+  thirdBaseHits?: number | null;
+  homeruns?: number | null;
+  runsBattedIn?: number | null;
+  stolenBases?: number | null;
+  caughtBaseSteals?: number | null;
+  
+  // Averages
+  battingAvg?: number | null;
+  batterOnBasePct?: number | null;
+  batterSluggingPct?: number | null;
+  batterOnBasePlusSluggingPct?: number | null;
+  
+  // Plate Discipline
+  batterWalks?: number | null;
+  batterStrikeouts?: number | null;
+  hitByPitch?: number | null;
+  batterIntentionalWalks?: number | null;
+  batterSacrificeBunts?: number | null;
+  batterSacrificeFlies?: number | null;
+  
+  // Advanced
+  totalBases?: number | null;
+  extraBaseHits?: number | null;
+  
+  // Batted Ball Profile
+  batterGroundBalls?: number | null;
+  batterFlyBalls?: number | null;
+  batterLineDrives?: number | null;
+  
+  // Situational
+  batterDoublePlays?: number | null;
+  leftOnBase?: number | null;
+  
+  // Plate Discipline Metrics
+  pitchesFaced?: number | null;
+  batterSwings?: number | null;
+  batterStrikesMiss?: number | null;
+  
+  // Legacy fields (keep for backward compatibility)
+  at_bats?: number | null;
   rbi?: number | null;
   home_runs?: number | null;
   strikeouts?: number | null;
   walks?: number | null;
-  avg?: number | string | null; // string for formatted, number for raw
+  avg?: number | string | null;
   obp?: number | string | null;
   slg?: number | string | null;
   ops?: number | string | null;
