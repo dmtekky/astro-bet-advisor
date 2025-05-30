@@ -7,6 +7,7 @@ import { AstroData, AstroSignInfo, ZodiacSign, BattingStats, FieldingStats, Play
 import { getZodiacIllustration } from '../utils/zodiacIllustrations';
 import CircularProgress from '../components/CircularProgress';
 import AstroPeakDay from './AstroPeakDay';
+import BigThreeAstroCards from './BigThreeAstroCards';
 
 // Extend the base Player type with additional fields
 interface Player extends Omit<BasePlayer, 'id'> {
@@ -648,45 +649,8 @@ const PlayerDetailPage: React.FC = () => {
         {astro && (
           <section className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">Astrological Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="font-semibold text-gray-800 text-lg mb-2">Sun Sign</h3>
-                <div className="space-y-2">
-                  <p className="text-xl font-medium">{astro.sunSign.sign || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.sunSign.element}</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.sunSign.modality}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 italic">{astro.sunSign.keywords.join(', ')}</p>
-                  <p className="text-sm text-gray-700 mt-2">Represents core essence and personality.</p>
-                </div>
-              </div>
-              
-              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="font-semibold text-gray-800 text-lg mb-2">Moon Sign</h3>
-                <div className="space-y-2">
-                  <p className="text-xl font-medium">{astro.moonSign.sign || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.moonSign.element}</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.moonSign.modality}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 italic">{astro.moonSign.keywords.join(', ')}</p>
-                  <p className="text-sm text-gray-700 mt-2">Reflects emotions and inner self.</p>
-                </div>
-              </div>
-              
-              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="font-semibold text-gray-800 text-lg mb-2">Ascendant</h3>
-                <div className="space-y-2">
-                  <p className="text-xl font-medium">{astro.ascendant.sign || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.ascendant.element}</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.ascendant.modality}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 italic">{astro.ascendant.keywords.join(', ')}</p>
-                  <p className="text-sm text-gray-700 mt-2">Represents how others perceive you.</p>
-                </div>
-              </div>
+            <div className="mt-4">
+              <BigThreeAstroCards astro={astro} playerName={player.full_name || ''} />
             </div>
             
             <div className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
