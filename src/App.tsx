@@ -7,7 +7,6 @@ import TeamPage from "./pages/TeamPage";
 import PlayerDetailPage from "./pages/PlayerDetailPage";
 import LeaguePage from "./pages/LeaguePage";
 import GamePage from "./pages/GamePage";
-import Home from "./pages/Home";
 import SearchResults from "./pages/SearchResults";
 import UpcomingGames from "./pages/UpcomingGames";
 import NotFound from "./pages/NotFound";
@@ -25,7 +24,7 @@ function AppContent() {
       <Header />
       <main className="flex-grow pt-16">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/league/:leagueId" element={<LeaguePage />} />
           <Route path="/game/:gameId" element={<GamePage />} />

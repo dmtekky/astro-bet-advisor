@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
@@ -11,11 +11,31 @@ const Header: React.FC<HeaderProps> = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaguesOpen, setIsLeaguesOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Keep leagues menu open if we're on a league page
   useEffect(() => {
-    setIsLeaguesOpen(location.pathname.startsWith('/league/'));
+    const isLeaguePage = location.pathname.startsWith('/league/');
+    setIsLeaguesOpen(isLeaguePage);
   }, [location]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsLeaguesOpen(false);
+      }
+    };
+
+    // Only add the event listener if the dropdown is open
+    if (isLeaguesOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLeaguesOpen]);
 
   const leagues = [
     { id: 'nba', name: 'NBA', icon: '🏀' },
@@ -68,25 +88,29 @@ const Header: React.FC<HeaderProps> = () => {
             ))}
 
             {/* Leagues Dropdown */}
-            <div className="relative group">
+            <div 
+              className="relative"
+              ref={dropdownRef}
+            >
               <button
                 className={`px-4 py-2.5 rounded-md text-base font-medium flex items-center ${
                   location.pathname.startsWith('/league/')
-                    ? 'bg-transparent text-gray-800 font-semibold'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                } transition-all duration-500 ease-[cubic-bezier(0.4, 0, 0.2, 1)] transform hover:scale-105`}
+                    ? 'bg-transparent text-gray-800 dark:text-white font-semibold'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                } transition-colors duration-200`}
                 onClick={() => setIsLeaguesOpen(!isLeaguesOpen)}
+                onMouseEnter={() => setIsLeaguesOpen(true)}
                 aria-expanded={isLeaguesOpen}
                 aria-haspopup="true"
               >
                 Leagues
-                <span className={`ml-1 transition-transform ${isLeaguesOpen ? 'transform rotate-180' : ''}`}>▼</span>
+                <span className={`ml-1 transition-transform duration-200 ${isLeaguesOpen ? 'transform rotate-180' : ''}`}>▼</span>
               </button>
               
               <div 
-                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-transparent ring-1 ring-black ring-opacity-5 ${
-                  isLeaguesOpen ? 'block' : 'hidden group-hover:block'
-                } z-50`}
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 ring-opacity-100 ${
+                  isLeaguesOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 pointer-events-none'
+                } transform transition-all duration-200 ease-out z-50`}
               >
                 <div className="py-1">
                   {leagues.map((league) => (
@@ -97,8 +121,8 @@ const Header: React.FC<HeaderProps> = () => {
                         league.comingSoon 
                           ? 'text-gray-500 cursor-not-allowed' 
                           : location.pathname === `/league/${league.id}`
-                            ? 'bg-transparent text-white'
-                            : 'text-gray-300 hover:bg-transparent'
+                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                       onClick={(e) => {
                         if (league.comingSoon) {
@@ -119,6 +143,7 @@ const Header: React.FC<HeaderProps> = () => {
           </nav>
 
           {/* Mobile menu button */}
+          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -138,7 +163,7 @@ const Header: React.FC<HeaderProps> = () => {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4">
+          <div className="md:hidden mt-4 pb-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {navLinks.map((link) => (
                 <Link
@@ -146,8 +171,8 @@ const Header: React.FC<HeaderProps> = () => {
                   to={link.to}
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
                     location.pathname === link.to
-                      ? 'bg-transparent text-white'
-                      : 'text-gray-300 hover:bg-transparent hover:text-white'
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-white'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
