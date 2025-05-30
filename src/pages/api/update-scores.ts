@@ -115,25 +115,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check for secret token for security
-  const authHeader = req.headers.authorization;
-  const expectedAuth = `Bearer ${cronSecret}`;
+  // Check for secret token in query parameter
+  const { token } = req.query;
   
-  console.log('Auth check:', { 
-    hasHeader: !!authHeader,
-    headerStartsWithBearer: authHeader?.startsWith('Bearer '),
-    headerLength: authHeader?.length,
-    expectedLength: expectedAuth.length
-  });
-
-  if (authHeader !== expectedAuth) {
-    console.error('Unauthorized request:', { 
-      received: authHeader,
-      expected: expectedAuth 
-    });
+  if (token !== cronSecret) {
+    console.error('Unauthorized request: Invalid or missing token');
     return res.status(401).json({ 
       error: 'Unauthorized',
-      message: 'Invalid or missing authorization token' 
+      message: 'Invalid or missing token' 
     });
   }
 
