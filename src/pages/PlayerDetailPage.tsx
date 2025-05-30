@@ -6,6 +6,7 @@ import { generatePlayerAstroData as getAstroData, BirthLocation } from '../lib/p
 import { AstroData, AstroSignInfo, ZodiacSign, BattingStats, FieldingStats, Player as BasePlayer } from '../types/app.types';
 import { getZodiacIllustration } from '../utils/zodiacIllustrations';
 import CircularProgress from '../components/CircularProgress';
+import AstroPeakDay from './AstroPeakDay';
 
 // Extend the base Player type with additional fields
 interface Player extends Omit<BasePlayer, 'id'> {
@@ -448,72 +449,271 @@ const PlayerDetailPage: React.FC = () => {
               <p className="mt-4 text-sm text-gray-600">
                 Impact score represents the player's overall contribution based on statistical performance and astrological alignment.
               </p>
+
+              {/* Elemental Composition Section */}
+              {astro && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Elemental Composition</h3>
+                  <div className="relative h-6 rounded-full bg-gray-100 shadow-inner overflow-hidden">
+                    <div className="absolute inset-0 flex">
+                      {calculateElementalComposition(astro).map((element, index, array) => (
+                        <div 
+                          key={element.name}
+                          className={`h-full relative ${getElementColorClass(element.name)}`}
+                          style={{
+                            width: `${element.percentage}%`,
+                            marginLeft: index === 0 ? '0' : '-1px',
+                            zIndex: array.length - index
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
+                          {element.percentage > 12 && (
+                            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white mix-blend-overlay">
+                              {element.percentage}% {element.name}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    {calculateElementalComposition(astro).map(element => (
+                      <div key={element.name} className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-sm mr-2 shadow-sm"
+                          style={{ backgroundColor: getElementColor(element.name) }}
+                        />
+                        <span className="text-xs font-medium text-gray-700">
+                          {element.name} <span className="text-gray-500">{element.percentage}%</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
+
+        {/* Performance Prediction Card */}
+        {astro && (() => {
+          // Get elemental composition for prediction basis
+          const elementalComposition = calculateElementalComposition(astro);
+          
+          // Sort elements by percentage to find dominant elements
+          const sortedElements = [...elementalComposition].sort((a, b) => b.percentage - a.percentage);
+          const dominantElement = sortedElements[0].name;
+          const secondaryElement = sortedElements[1].name;
+          
+          // Calculate overall favorability based on planetary alignments
+          // For a more deterministic result, use birthdate and current date
+          const playerBirthDate = new Date(player.birth_date || new Date());
+          const birthDay = playerBirthDate.getDate();
+          const currentDate = new Date();
+          const dayOfYear = Math.floor((currentDate.getTime() - new Date(currentDate.getFullYear(), 0, 0).getTime()) / 86400000);
+          
+          // Create a semi-deterministic value based on birthdate and current date
+          const favorabilityValue = ((birthDay + dayOfYear) % 100) / 100;
+          const isFavorable = favorabilityValue > 0.4; // Slightly bias toward favorable predictions
+          
+          // Get moon phase information
+          const moonPhase = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'][dayOfYear % 8];
+          
+          // Baseball skills affected by elements
+          const elementalSkills = {
+            'Fire': ['power hitting', 'aggressive base running', 'fastball velocity', 'competitive drive'],
+            'Earth': ['defensive consistency', 'plate discipline', 'ground ball pitching', 'endurance'],
+            'Air': ['pitch recognition', 'bat speed', 'breaking ball movement', 'strategic thinking'],
+            'Water': ['adaptability', 'clutch performance', 'changeup effectiveness', 'team chemistry']
+          };
+          
+          // Generate prediction statement based on planetary status
+          const getOutlookStatement = () => {
+            if (isFavorable) {
+              const statements = [
+                `Planetary alignments are currently enhancing ${player.full_name}'s ${elementalSkills[dominantElement][0]} and ${elementalSkills[secondaryElement][1]}.`,
+                `${astro.sunSign.sign}'s energy is currently boosting ${player.full_name}'s natural ${dominantElement.toLowerCase()} element attributes.`,
+                `The current ${moonPhase} phase aligns well with ${player.full_name}'s ${astro.moonSign.sign} moon sign, suggesting peak performance potential.`,
+                `${player.full_name}'s ${dominantElement} dominant nature is being positively activated by current planetary transits.`
+              ];
+              return statements[dayOfYear % statements.length];
+            } else {
+              const statements = [
+                `Current planetary alignments may challenge ${player.full_name}'s natural ${dominantElement.toLowerCase()} element strengths.`,
+                `${player.full_name}'s ${astro.sunSign.sign} energy is currently experiencing resistance from planetary transits.`,
+                `The current ${moonPhase} phase creates tension with ${player.full_name}'s ${astro.moonSign.sign} moon sign.`,
+                `Planetary positions suggest ${player.full_name} may need to work harder to access their natural ${dominantElement} element talents.`
+              ];
+              return statements[dayOfYear % statements.length];
+            }
+          };
+          
+          // Generate specific performance impacts based on dominant element
+          const getPerformanceImpacts = () => {
+            const impacts = [];
+            
+            // Add element-specific impacts
+            if (dominantElement === 'Fire') {
+              impacts.push(isFavorable 
+                ? `Strong power hitting potential, especially against ${['left-handed', 'right-handed'][dayOfYear % 2]} pitchers`
+                : `May struggle with timing on breaking balls, affecting power numbers`);
+              impacts.push(isFavorable
+                ? `Increased aggression on the basepaths could lead to extra bases`
+                : `Risk of overaggression could lead to baserunning errors`);
+            } 
+            else if (dominantElement === 'Earth') {
+              impacts.push(isFavorable
+                ? `Exceptional defensive positioning and fielding consistency expected`
+                : `May play too conservatively in high-pressure defensive situations`);
+              impacts.push(isFavorable
+                ? `Excellent pitch selection and plate discipline likely`
+                : `Could be overly patient at the plate, missing hittable pitches`);
+            }
+            else if (dominantElement === 'Air') {
+              impacts.push(isFavorable
+                ? `Enhanced ability to read and react to complex pitch sequences`
+                : `May overthink at-bats, leading to mental fatigue late in games`);
+              impacts.push(isFavorable
+                ? `Quick adjustments to opposing pitchers' strategies`
+                : `Could struggle against pitchers with unpredictable patterns`);
+            }
+            else if (dominantElement === 'Water') {
+              impacts.push(isFavorable
+                ? `Exceptional performance in high-pressure, clutch situations`
+                : `Emotional fluctuations might affect consistency`);
+              impacts.push(isFavorable
+                ? `Adaptive approach allows quick recovery from slumps`
+                : `Might be overly influenced by team momentum swings`);
+            }
+            
+            // Add moon sign specific impact
+            impacts.push(isFavorable
+              ? `${astro.moonSign.sign} moon sign suggests peak performance during ${['night games', 'day games', 'home stands', 'road trips'][dayOfYear % 4]}`
+              : `${astro.moonSign.sign} moon sign suggests caution during ${['night games', 'day games', 'home stands', 'road trips'][dayOfYear % 4]}`);
+            
+            return impacts;
+          };
+          
+          // Get next favorable date based on moon sign
+          const getNextFavorablePeriod = () => {
+            const moonSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+            const favorableSigns = [
+              astro.sunSign.sign,
+              astro.moonSign.sign,
+              moonSigns[(moonSigns.indexOf(astro.sunSign.sign) + 4) % 12], // Trine aspect
+              moonSigns[(moonSigns.indexOf(astro.sunSign.sign) + 8) % 12]  // Trine aspect
+            ];
+            
+            const randomFavorableSign = favorableSigns[dayOfYear % favorableSigns.length];
+            return `Moon in ${randomFavorableSign} (${['early', 'mid', 'late'][dayOfYear % 3]} ${['June', 'July', 'August', 'September', 'October'][dayOfYear % 5]} is optimal)`;
+          };
+          
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+              <div className="flex items-start">
+                <div 
+                  className={`flex-shrink-0 h-6 w-1 rounded-full ${
+                    isFavorable ? 'bg-green-500' : 'bg-yellow-500'
+                  }`}
+                ></div>
+                <div className="ml-4 w-full">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    {isFavorable ? 'Favorable Outlook' : 'Challenging Period'}
+                  </h3>
+                  <p className="text-gray-700 mb-3">{getOutlookStatement()}</p>
+                  
+                  <div className="mb-3">
+                    <h4 className="text-md font-medium text-gray-700 mb-2">Astrological Impacts on Performance:</h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {getPerformanceImpacts().map((impact, index) => (
+                        <li key={index} className="text-sm text-gray-600">{impact}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <p className="text-sm text-indigo-600 font-medium">
+                      Next favorable period: {getNextFavorablePeriod()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Astrological Insights */}
         {astro && (
           <section className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">Astrological Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-              <div className="bg-yellow-50 p-4 rounded-lg flex flex-col items-center border border-yellow-200">
-                <div className="bg-yellow-100 rounded-full p-3 mb-3">
-                  <img src={getZodiacIllustration(astro.sunSign.sign)} alt={`${astro.sunSign.sign} Zodiac`} className="w-20 h-20" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 className="font-semibold text-gray-800 text-lg mb-2">Sun Sign</h3>
+                <div className="space-y-2">
+                  <p className="text-xl font-medium">{astro.sunSign.sign || 'N/A'}</p>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.sunSign.element}</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.sunSign.modality}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 italic">{astro.sunSign.keywords.join(', ')}</p>
+                  <p className="text-sm text-gray-700 mt-2">Represents core essence and personality.</p>
                 </div>
-                <h3 className="font-bold text-yellow-800 text-lg">Sun Sign</h3>
-                <p className="font-semibold text-gray-800 text-xl">{astro.sunSign.sign || 'N/A'}</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full text-xs">{astro.sunSign.element}</span>
-                  <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full text-xs">{astro.sunSign.modality}</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2 text-center italic">{astro.sunSign.keywords.join(', ')}</p>
-                <p className="mt-3 text-sm text-gray-700">Represents your core essence and personality.</p>
               </div>
               
-              <div className="bg-blue-50 p-4 rounded-lg flex flex-col items-center border border-blue-200">
-                <div className="bg-blue-100 rounded-full p-3 mb-3">
-                  <img src={getZodiacIllustration(astro.moonSign.sign)} alt={`${astro.moonSign.sign} Zodiac`} className="w-20 h-20" />
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 className="font-semibold text-gray-800 text-lg mb-2">Moon Sign</h3>
+                <div className="space-y-2">
+                  <p className="text-xl font-medium">{astro.moonSign.sign || 'N/A'}</p>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.moonSign.element}</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.moonSign.modality}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 italic">{astro.moonSign.keywords.join(', ')}</p>
+                  <p className="text-sm text-gray-700 mt-2">Reflects emotions and inner self.</p>
                 </div>
-                <h3 className="font-bold text-blue-800 text-lg">Moon Sign</h3>
-                <p className="font-semibold text-gray-800 text-xl">{astro.moonSign.sign || 'N/A'}</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">{astro.moonSign.element}</span>
-                  <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">{astro.moonSign.modality}</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2 text-center italic">{astro.moonSign.keywords.join(', ')}</p>
-                <p className="mt-3 text-sm text-gray-700">Reflects your emotions and inner self.</p>
               </div>
               
-              <div className="bg-purple-50 p-4 rounded-lg flex flex-col items-center border border-purple-200">
-                <div className="bg-purple-100 rounded-full p-3 mb-3">
-                  <img src={getZodiacIllustration(astro.ascendant.sign)} alt={`${astro.ascendant.sign} Zodiac`} className="w-20 h-20" />
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 className="font-semibold text-gray-800 text-lg mb-2">Ascendant</h3>
+                <div className="space-y-2">
+                  <p className="text-xl font-medium">{astro.ascendant.sign || 'N/A'}</p>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.ascendant.element}</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{astro.ascendant.modality}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 italic">{astro.ascendant.keywords.join(', ')}</p>
+                  <p className="text-sm text-gray-700 mt-2">Represents how others perceive you.</p>
                 </div>
-                <h3 className="font-bold text-purple-800 text-lg">Ascendant</h3>
-                <p className="font-semibold text-gray-800 text-xl">{astro.ascendant.sign || 'N/A'}</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs">{astro.ascendant.element}</span>
-                  <span className="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs">{astro.ascendant.modality}</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2 text-center italic">{astro.ascendant.keywords.join(', ')}</p>
-                <p className="mt-3 text-sm text-gray-700">Represents how others perceive you.</p>
               </div>
             </div>
             
             <div className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
               <h3 className="font-semibold text-indigo-800 mb-2">Astrological Interpretation</h3>
-              <p className="text-gray-700">{astro.interpretation || astro.dailyHoroscope || 'Based on this player\'s astrological profile, they tend to perform best when their sun and moon signs are in favorable alignment with game day planetary positions. Their natural tendencies align with their playing style, suggesting good potential for consistent performance.'}</p>
+              <AstroPeakDay
+                player={player}
+                astro={astro}
+              />
             </div>
             
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 className="font-semibold text-green-800 mb-2">Performance Prediction</h3>
-                <p className="text-gray-700">Current planetary alignments suggest this player may experience {Math.random() > 0.5 ? 'favorable' : 'challenging'} conditions in upcoming games. Pay attention to games when the moon is in {astro.moonSign.sign}.</p>
-              </div>
-              
+            <div className="mt-6">
               <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                 <h3 className="font-semibold text-orange-800 mb-2">Compatibility</h3>
-                <p className="text-gray-700">This player's astrological profile suggests strong compatibility with teammates born under {['Aries', 'Leo', 'Sagittarius', 'Taurus', 'Virgo', 'Capricorn'][Math.floor(Math.random() * 6)]} signs.</p>
+                <p className="text-gray-700">
+                  {(() => {
+                    // Determine compatible signs based on sun sign element
+                    const elementToCompatibles: Record<string, string[]> = {
+                      Fire: ['Aries', 'Leo', 'Sagittarius'],
+                      Earth: ['Taurus', 'Virgo', 'Capricorn'],
+                      Air: ['Gemini', 'Libra', 'Aquarius'],
+                      Water: ['Cancer', 'Scorpio', 'Pisces'],
+                    };
+                    const sunElement = astro.sunSign.element;
+                    const compatibleSigns = elementToCompatibles[sunElement] || [];
+                    return `${player.full_name}'s astrological profile suggests strongest team chemistry with players born under ${compatibleSigns.join(', ')} signs.`;
+                  })()}
+                </p>
               </div>
             </div>
           </section>
@@ -622,71 +822,20 @@ const PlayerDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Elemental Balance Section */}
+        {/* Elemental Influence Section */}
         {astro && (
-          <section className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Elemental Balance</h2>
-            
-            <div className="space-y-6">
-              {/* Modern Elemental Composition Bar */}
-              <div className="max-w-2xl mx-auto">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Elemental Composition</h3>
-                
-                {/* Main Progress Bar */}
-                <div className="relative h-6 rounded-full bg-gray-100 shadow-inner overflow-hidden">
-                  <div className="absolute inset-0 flex">
-                    {calculateElementalComposition(astro).map((element, index, array) => (
-                      <div 
-                        key={element.name}
-                        className={`h-full relative ${getElementColorClass(element.name)}`}
-                        style={{
-                          width: `${element.percentage}%`,
-                          marginLeft: index === 0 ? '0' : '-1px', // Tiny overlap to prevent gaps
-                          zIndex: array.length - index
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
-                        {element.percentage > 12 && (
-                          <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white mix-blend-overlay">
-                            {element.percentage}% {element.name}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+          <section className="bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Elemental Influence</h2>
+            <div className="space-y-4">
+              {getElementalInfluences(astro, player?.full_name?.split(' ')[0] || 'Their').map((influence) => (
+                <div key={influence.element} className="p-4 rounded-lg border-l-4 bg-gray-50" style={{ borderColor: getElementColor(influence.element) }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-semibold text-gray-800">{influence.element}: {influence.percentage}%</h4>
+                    <span className="text-sm text-gray-500">{influence.strength}</span>
                   </div>
+                  <p className="text-gray-700 text-sm">{influence.description}</p>
                 </div>
-
-                {/* Legend */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                  {calculateElementalComposition(astro).map(element => (
-                    <div key={element.name} className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-sm mr-2 shadow-sm"
-                        style={{ backgroundColor: getElementColor(element.name) }}
-                      />
-                      <span className="text-xs font-medium text-gray-700">
-                        {element.name} <span className="text-gray-500">{element.percentage}%</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Elemental Influence */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">How Elements Influence {player?.full_name?.split(' ')[0] || 'Their'} Game</h3>
-                <div className="space-y-4">
-                  {getElementalInfluences(astro, player?.full_name?.split(' ')[0] || 'Their').map((influence) => (
-                    <div key={influence.element} className="p-4 rounded-lg border-l-4 bg-gray-50" style={{ borderColor: getElementColor(influence.element) }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-gray-800">{influence.element}: {influence.percentage}%</h4>
-                        <span className="text-sm text-gray-500">{influence.strength}</span>
-                      </div>
-                      <p className="text-gray-700 text-sm">{influence.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </section>
         )}
