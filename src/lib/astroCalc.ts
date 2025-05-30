@@ -1,4 +1,22 @@
 /**
+ * Helper function to check if running in Node.js
+ */
+function isNodeEnvironment(): boolean {
+  return typeof window === 'undefined' || typeof localStorage === 'undefined';
+}
+
+/**
+ * Interface for player data
+ */
+interface Player {
+  id: string;
+  player_birth_date?: string;
+  player_id?: string;
+  position?: string;
+  [key: string]: any; // For any other properties that might be needed
+}
+
+/**
  * Gets the zodiac sign based on a given date
  * @param date The date to get the zodiac sign for
  * @returns The zodiac sign as a string
@@ -68,7 +86,7 @@ export function getMoonPhaseName(percentage: number): string {
  * @returns Object containing astrological influence data
  */
 export async function calculateAstrologicalInfluence(
-  player: { birth_date?: string | null; id: string; position?: string },
+  player: Player,
   date: Date = new Date()
 ): Promise<{
   playerId: string;
@@ -88,7 +106,7 @@ export async function calculateAstrologicalInfluence(
   ));
   
   // Default values if birth date is not available
-  if (!player.birth_date) {
+  if (!player.player_birth_date) {
     throw new Error('Birth date is required for astrological calculations');
   }
 
@@ -99,47 +117,49 @@ export async function calculateAstrologicalInfluence(
   const cacheKey = `ais_${player.id}_${dateStr}`;
   
   try {
-    // Try to get cached AIS data from localStorage
-    const cachedAIS = localStorage.getItem(cacheKey);
-    if (cachedAIS) {
-      const parsed = JSON.parse(cachedAIS);
-      // Check if cache is still valid (less than 12 hours old)
-      if (parsed.timestamp && (Date.now() - new Date(parsed.timestamp).getTime() < 12 * 60 * 60 * 1000)) {
-        return parsed;
+    // Skip localStorage caching in Node.js environment
+    if (!isNodeEnvironment()) {
+      // Try to get cached AIS data from localStorage (browser only)
+      const cachedAIS = localStorage.getItem(cacheKey);
+      if (cachedAIS) {
+        const parsed = JSON.parse(cachedAIS);
+        // Check if cache is still valid (less than 12 hours old)
+        if (parsed.timestamp && (Date.now() - new Date(parsed.timestamp).getTime() < 12 * 60 * 60 * 1000)) {
+          return parsed;
+        }
       }
     }
     
     // If not in cache or cache is stale, calculate new AIS
-    console.log('Raw birth_date:', player.birth_date, 'Type:', typeof player.birth_date);
+    console.log('Raw birth_date:', player.player_birth_date, 'Type:', typeof player.player_birth_date);
     
     // Robust date parsing
     let birthDate: Date;
-    if (typeof player.birth_date === 'string') {
+    if (typeof player.player_birth_date === 'string') {
       // Try to parse as YYYY-MM-DD
-      const parts = player.birth_date.split('-');
+      const parts = player.player_birth_date.split('-');
       if (parts.length === 3) {
         birthDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
       } else {
         // Try other common formats
-        const slashParts = player.birth_date.split('/');
+        const slashParts = player.player_birth_date.split('/');
         if (slashParts.length === 3) {
           // Assuming MM/DD/YYYY format
           birthDate = new Date(Number(slashParts[2]), Number(slashParts[0]) - 1, Number(slashParts[1]));
         } else {
           // Fall back to standard parsing
-          birthDate = new Date(player.birth_date);
+          birthDate = new Date(player.player_birth_date);
         }
       }
     } else {
-      birthDate = new Date(player.birth_date as any);
+      birthDate = new Date(player.player_birth_date as any);
     }
     
     // Validate the date
     if (isNaN(birthDate.getTime())) {
-      console.error('Invalid birth date:', player.birth_date, 'Parsed as:', birthDate);
-      // Use a fallback date for demo purposes (January 1, 1990)
-      birthDate = new Date(1990, 0, 1);
-      console.log('Using fallback birth date:', birthDate);
+      console.error('Invalid birth date:', player.player_birth_date, 'Parsed as:', birthDate);
+      // Throw an error for invalid dates instead of using a fallback
+      throw new Error(`Invalid birth date format: ${player.player_birth_date}`);
     } else {
       console.log('Parsed birth date:', birthDate, 'getTime():', birthDate.getTime());
     }
@@ -168,14 +188,44 @@ export async function calculateAstrologicalInfluence(
     // Calculate house positions (simplified)
     const houses = calculateHouses(dateOnly, birthDate);
     
+    const traceThisPlayer = player.id === '10184'; // Define traceThisPlayer using player.id
+
+    // Trace inputs to calculateBaseScore
+    if (traceThisPlayer) {
+      console.log(`[ASTRO TRACE] Inputs to calculateBaseScore for player: ${player.id}`);
+      console.log('[ASTRO TRACE] planetaryPositions:', planetaryPositions);
+      console.log('[ASTRO TRACE] aspects:', aspects);
+      console.log('[ASTRO TRACE] elements:', elements);
+      console.log('[ASTRO TRACE] houses:', houses);
+    }
+
     // Calculate base score based on astrological factors
-    let score = calculateBaseScore({
+    let rawScore = calculateBaseScore({
       planetaryPositions,
       aspects,
       elements,
       houses,
       playerPosition: player.position
     });
+
+    // Normalize to 0–100, round, and bound
+    let score = Math.round(Math.max(0, Math.min(100, (rawScore / 60) * 100))); // Adjust denominator as needed for typical rawScore range
+
+    // No fallback logic for valid birth dates - scores can be 0
+
+    // Consolidated DEBUG LOGGING for final score
+    // Log if score is 0 OR if explicitly tracing this player (traceThisPlayer is defined earlier)
+    if (score === 0 || traceThisPlayer) {
+      console.log(`[ASTRO DEBUG] Trace for player: ${player.id}, Final Score: ${score}`, {
+        playerDetails: { id: player.id, birth_date: player.player_birth_date, position: player.position },
+        rawScore,
+        calculatedScore: score, // Final score after normalization
+        planetaryPositions,
+        aspects,
+        elements,
+        houses,
+      });
+    }
     
     // Calculate detailed influences
     const influences = {
@@ -225,10 +275,10 @@ export async function calculateAstrologicalInfluence(
           ...Object.fromEntries(
             Object.entries(aspects)
               .filter(([_, v]) => typeof v === 'number')
-              .map(([k, v]) => [k, parseFloat(v.toFixed(2))])
+              .map(([k, v]) => [k, parseFloat((v as number).toFixed(2))]) // Added type assertion for v
           ),
           ...Object.fromEntries(
-            Object.entries(elements).map(([k, v]) => [k, parseFloat(v.toFixed(2))])
+            Object.entries(elements).map(([k, v]) => [k, parseFloat((v as number).toFixed(2))]) // Added type assertion for v
           )
         },
         dominantElement: Object.entries(elements).reduce((a, b) => a[1] > b[1] ? a : b)[0],
@@ -237,20 +287,16 @@ export async function calculateAstrologicalInfluence(
       timestamp: new Date().toISOString()
     };
     
-    // Log the result for debugging
-    console.log('Astrological calculation result:', {
-      playerId: result.playerId,
-      score: result.score,
-      influences: Object.keys(result.influences),
-      aspects: Object.keys(result.aspects).length,
-      elements: result.elements
-    });
-    
-    // Cache the result
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(result));
-    } catch (e) {
-      console.warn('Failed to cache astro data:', e);
+    // Cache the result in localStorage (browser only)
+    if (!isNodeEnvironment()) {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          ...result,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.warn('Failed to cache astro data:', e);
+      }
     }
     
     return result;
@@ -259,184 +305,6 @@ export async function calculateAstrologicalInfluence(
     console.error('Error in calculateAstrologicalInfluence:', error);
     throw error;
   }
-}
-
-// Helper function to calculate planetary positions (simplified)
-function calculatePlanetaryPositions(currentDate: Date, birthDate: Date): Record<string, number> {
-  const positions: Record<string, number> = {};
-  
-  // Validate inputs
-  if (isNaN(currentDate.getTime()) || isNaN(birthDate.getTime())) {
-    console.error('Invalid dates in calculatePlanetaryPositions:', { 
-      currentDate, 
-      birthDate,
-      currentDateValid: !isNaN(currentDate.getTime()),
-      birthDateValid: !isNaN(birthDate.getTime())
-    });
-    // Return default values instead of NaN
-    return {
-      sun: 0,
-      moon: 0,
-      mercury: 0,
-      venus: 0,
-      mars: 0
-    };
-  }
-  
-  // Calculate positions based on current date and birth date
-  const dayOfYear = (date: Date) => {
-    const start = new Date(date.getFullYear(), 0, 0);
-    const diff = date.getTime() - start.getTime();
-    const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
-  };
-  
-  const days = dayOfYear(currentDate);
-  console.log('Planetary positions calculation:', { days });
-  
-  // Sun position (0-360 degrees)
-  positions.sun = (days * 0.9856) % 360;
-  
-  // Moon position (0-360 degrees, ~27.3 day cycle)
-  positions.moon = (days * 13.176) % 360;
-  
-  // Mercury position (0-360 degrees, ~88 day cycle)
-  positions.mercury = (days * 4.09) % 360;
-  
-  // Venus position (0-360 degrees, ~225 day cycle)
-  positions.venus = (days * 1.6) % 360;
-  
-  // Mars position (0-360 degrees, ~687 day cycle)
-  positions.mars = (days * 0.524) % 360;
-  
-  // Add some randomness to make it more interesting
-  Object.keys(positions).forEach(planet => {
-    positions[planet] = (positions[planet] + Math.random() * 10 - 5) % 360;
-    if (positions[planet] < 0) positions[planet] += 360;
-  });
-  
-  return positions;
-}
-
-// Helper function to calculate aspects between planets
-function calculateAspects(positions: Record<string, number>): Record<string, number> {
-  const aspects: Record<string, number> = {};
-  
-  // Validate input
-  if (!positions || typeof positions !== 'object') {
-    console.error('Invalid positions in calculateAspects:', positions);
-    return aspects;
-  }
-  
-  const planets = Object.keys(positions);
-  console.log('Calculating aspects for planets:', planets);
-  
-  // Check for NaN values
-  const hasNaN = Object.entries(positions).some(([planet, pos]) => isNaN(pos));
-  if (hasNaN) {
-    console.error('NaN values detected in positions:', positions);
-    return aspects;
-  }
-  
-  // Calculate aspects between all planet pairs
-  for (let i = 0; i < planets.length; i++) {
-    for (let j = i + 1; j < planets.length; j++) {
-      const planet1 = planets[i];
-      const planet2 = planets[j];
-      const angle = Math.abs(positions[planet1] - positions[planet2]) % 360;
-      const aspectName = `${planet1}-${planet2}`;
-      
-      // Calculate aspect strength (0-1)
-      let strength = 0;
-      
-      // Check for major aspects
-      if (Math.abs(angle - 0) < 8) { // Conjunction (0°)
-        strength = 1 - (Math.abs(angle - 0) / 8);
-      } else if (Math.abs(angle - 60) < 4) { // Sextile (60°)
-        strength = 0.8 - (Math.abs(angle - 60) / 5);
-      } else if (Math.abs(angle - 90) < 4) { // Square (90°)
-        strength = 0.7 - (Math.abs(angle - 90) / 6);
-      } else if (Math.abs(angle - 120) < 4) { // Trine (120°)
-        strength = 0.9 - (Math.abs(angle - 120) / 5);
-      } else if (Math.abs(angle - 180) < 8) { // Opposition (180°)
-        strength = 0.85 - (Math.abs(angle - 180) / 10);
-      }
-      
-      if (strength > 0) {
-        aspects[aspectName] = parseFloat(Math.max(0, Math.min(1, strength)).toFixed(2));
-      }
-    }
-  }
-  
-  console.log('Calculated aspects:', aspects);
-  
-  return aspects;
-}
-
-// Helper function to calculate element balance
-function calculateElementBalance(positions: Record<string, number>): Record<string, number> {
-  const elements: Record<string, number> = {
-    fire: 0,
-    earth: 0,
-    air: 0,
-    water: 0
-  };
-  
-  // Validate input
-  if (!positions || typeof positions !== 'object') {
-    console.error('Invalid positions in calculateElementBalance:', positions);
-    return elements;
-  }
-  
-  // Check for NaN values
-  const hasNaN = Object.entries(positions).some(([planet, pos]) => isNaN(pos));
-  if (hasNaN) {
-    console.error('NaN values detected in positions for element balance:', positions);
-    return elements;
-  }
-  
-  console.log('Calculating element balance for positions:', positions);
-  
-  // Count planets in each element
-  Object.entries(positions).forEach(([planet, angle]) => {
-    if (isNaN(angle)) {
-      console.error(`NaN angle for ${planet} in calculateElementBalance`);
-      return;
-    }
-    
-    const signIndex = Math.floor(angle / 30);
-    const element = getElementBySignIndex(signIndex);
-    elements[element] += 1;
-  });
-  
-  // Normalize to sum to 1
-  const total = Object.values(elements).reduce((a, b) => a + b, 0);
-  if (total > 0) {
-    Object.keys(elements).forEach(key => {
-      elements[key] = parseFloat((elements[key] / total).toFixed(2));
-    });
-  }
-  
-  console.log('Calculated element balance:', elements);
-  return elements;
-}
-
-// Helper function to get element by sign index (0-11)
-function getElementBySignIndex(signIndex: number): string {
-  const elements = ['fire', 'earth', 'air', 'water'];
-  const elementIndex = [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3][signIndex % 12];
-  return elements[elementIndex];
-}
-
-// Helper function to calculate houses (simplified)
-function calculateHouses(currentDate: Date, birthDate: Date): number[] {
-  // In a real app, you'd calculate house cusps based on time and location
-  // This is a simplified version that just returns equal houses
-  const houses: number[] = [];
-  for (let i = 0; i < 12; i++) {
-    houses.push(i * 30 + (currentDate.getHours() * 15) % 30);
-  }
-  return houses;
 }
 
 // Helper function to calculate base score based on astrological factors
@@ -453,95 +321,197 @@ function calculateBaseScore({
   houses: number[];
   playerPosition?: string;
 }): number {
-  console.log('Calculating base score with:', { 
-    planetaryPositionsKeys: Object.keys(planetaryPositions),
-    aspectsCount: Object.keys(aspects).length,
-    elementsKeys: Object.keys(elements),
-    housesLength: houses?.length,
-    playerPosition 
-  });
-  
-  // Validate inputs
-  if (!planetaryPositions || !aspects || !elements || !houses) {
-    console.error('Missing required inputs in calculateBaseScore');
-    return 0.5; // Return neutral score
+  let score = 0;
+
+  // DEBUG LOGGING
+  if (!planetaryPositions || Object.keys(planetaryPositions).length === 0) {
+    console.error('[ASTRO DEBUG] No planetary positions:', { planetaryPositions });
   }
-  
-  let score = 0.5; // Base neutral score
-  
-  // Factor in planetary positions
-  const planetScores: Record<string, number> = {
-    sun: 0.2,
-    moon: 0.15,
-    mercury: 0.1,
-    venus: 0.1,
-    mars: 0.15
-  };
-  
-  Object.entries(planetScores).forEach(([planet, weight]) => {
+  if (!aspects || Object.keys(aspects).length === 0) {
+    console.error('[ASTRO DEBUG] No aspects:', { aspects });
+  }
+  if (!elements || Object.keys(elements).length === 0) {
+    console.error('[ASTRO DEBUG] No elements:', { elements });
+  }
+  if (!houses || houses.length === 0) {
+    console.error('[ASTRO DEBUG] No houses:', { houses });
+  }
+
+  // 1. All major planets
+  const allPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  for (const planet of allPlanets) {
+    // if (traceThisPlayer) { // traceThisPlayer is not in scope here, remove or pass as argument
+    //   console.log(`[ASTRO TRACE] BaseScore: planet ${planet}, pos:`, planetaryPositions[planet]);
+    // }
     if (planetaryPositions[planet] !== undefined) {
-      // Check for NaN
-      if (isNaN(planetaryPositions[planet])) {
-        console.error(`NaN position for ${planet} in calculateBaseScore`);
-        return;
+      // Example: reward for angular houses
+      let houseBonus = 0;
+      if (houses && houses.length > 0) {
+        const houseIndex = Math.floor((planetaryPositions[planet] % 360) / 30);
+        if ([0, 3, 6, 9].includes(houseIndex)) houseBonus = 2; // Angular houses
       }
+      score += 5 + houseBonus; // base value per planet
+    }
+  }
+
+  // 2. Aspects
+  for (const aspectKey in aspects) {
+    // if (traceThisPlayer) { // traceThisPlayer is not in scope here
+    //   console.log(`[ASTRO TRACE] BaseScore: aspect ${aspectKey}, value:`, aspects[aspectKey]);
+    // }
+    // Weight by strength of aspect (absolute value)
+    score += Math.abs(aspects[aspectKey]) * 3;
+  }
+
+  // 3. Elemental & Modality balance
+  const elementVals = Object.values(elements);
+  if (elementVals.length > 0) {
+    const spread = Math.max(...elementVals) - Math.min(...elementVals);
+    // if (traceThisPlayer) { // traceThisPlayer is not in scope here
+    //   console.log('[ASTRO TRACE] BaseScore: elements:', elements, 'min:', Math.min(...elementVals), 'max:', Math.max(...elementVals), 'spread:', spread);
+    // }
+    score += (4 - spread) * 12; // drastically reward balance
+  }
+
+  // 4. Retrogrades (example: penalty for Mercury retrograde)
+  // Only checking Mercury as isMercuryRetrograde is specific to it.
+  if (isMercuryRetrograde(new Date())) { 
+    score -= 4; // Penalty for Mercury retrograde
+  }
+
+
+  // 5. Chart patterns (simple: bonus for 3+ planets in same sign = stellium)
+  const signCounts: Record<number, number> = {};
+  for (const planet of allPlanets) {
+    if (planetaryPositions[planet] !== undefined) {
+      const signIndex = Math.floor((planetaryPositions[planet] % 360) / 30);
+      signCounts[signIndex] = (signCounts[signIndex] || 0) + 1;
+    }
+  }
+  if (Object.values(signCounts).some(count => count >= 3)) {
+    score += 5; // Stellium bonus
+  }
+
+  // 7. Return raw score (will be normalized in the main function)
+  // if (traceThisPlayer) { // traceThisPlayer is not in scope here
+  //  console.log('[ASTRO TRACE] BaseScore: FINAL SCORE:', score);
+  // }
+  return score;
+}
+
+// --- PLACEHOLDER HELPER FUNCTIONS --- 
+// TODO: Implement these functions with actual astrological calculations
+
+function calculatePlanetaryPositions(date: Date, birthDate: Date): Record<string, number> {
+  // Return a deterministic structure based on day of year
+  const dayOfYear = getDayOfYear(date);
+  const birthDayOfYear = getDayOfYear(birthDate);
+  const offset = (dayOfYear + birthDayOfYear) % 30;
+  
+  return {
+    sun: (offset * 12) % 360,
+    moon: (offset * 13) % 360,
+    mercury: (offset * 14) % 360,
+    venus: (offset * 15) % 360,
+    mars: (offset * 16) % 360,
+    jupiter: (offset * 17) % 360,
+    saturn: (offset * 18) % 360,
+    uranus: (offset * 19) % 360,
+    neptune: (offset * 20) % 360,
+    pluto: (offset * 21) % 360
+  };
+}
+
+function calculateAspects(planetaryPositions: Record<string, number>): Record<string, number> {
+  // Calculate actual aspects between planets
+  const aspects: Record<string, number> = {};
+  const planets = Object.keys(planetaryPositions);
+  
+  // Calculate aspects between each planet pair
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const planet1 = planets[i];
+      const planet2 = planets[j];
+      const pos1 = planetaryPositions[planet1];
+      const pos2 = planetaryPositions[planet2];
       
-      // Favor certain positions based on player position
-      let positionFactor = 1;
-      if (playerPosition) {
-        // Adjust based on position (simplified)
-        if (['PG', 'SG'].includes(playerPosition)) {
-          // Guards benefit from air signs (communication, quick thinking)
-          positionFactor = planetaryPositions[planet] % 360 >= 150 && planetaryPositions[planet] % 360 < 240 ? 1.2 : 0.9;
-        } else if (['SF', 'PF'].includes(playerPosition)) {
-          // Forwards benefit from fire signs (energy, scoring)
-          positionFactor = planetaryPositions[planet] % 360 >= 0 && planetaryPositions[planet] % 360 < 90 ? 1.2 : 0.9;
-        } else if (playerPosition === 'C') {
-          // Centers benefit from earth signs (stability, defense)
-          positionFactor = planetaryPositions[planet] % 360 >= 90 && planetaryPositions[planet] % 360 < 180 ? 1.2 : 0.9;
+      if (pos1 !== undefined && pos2 !== undefined) {
+        // Calculate the angular difference
+        let diff = Math.abs(pos1 - pos2) % 360;
+        if (diff > 180) diff = 360 - diff;
+        
+        // Determine the aspect type based on the angle
+        let aspectType = '';
+        let aspectValue = 0;
+        
+        if (Math.abs(diff - 0) <= 10) { // Conjunction
+          aspectType = 'conjunction';
+          aspectValue = 1 - Math.abs(diff) / 10;
+        } else if (Math.abs(diff - 60) <= 10) { // Sextile
+          aspectType = 'sextile';
+          aspectValue = 0.5 - Math.abs(diff - 60) / 20;
+        } else if (Math.abs(diff - 90) <= 10) { // Square
+          aspectType = 'square';
+          aspectValue = -0.7 + Math.abs(diff - 90) / 15;
+        } else if (Math.abs(diff - 120) <= 10) { // Trine
+          aspectType = 'trine';
+          aspectValue = 0.8 - Math.abs(diff - 120) / 12;
+        } else if (Math.abs(diff - 180) <= 10) { // Opposition
+          aspectType = 'opposition';
+          aspectValue = -0.6 + Math.abs(diff - 180) / 18;
+        }
+        
+        if (aspectType) {
+          aspects[`${planet1}_${planet2}_${aspectType}`] = aspectValue;
         }
       }
-      
-      // Normalize position to 0-1 range and apply weight
-      const positionScore = (planetaryPositions[planet] % 360) / 360;
-      const contribution = positionScore * weight * positionFactor;
-      score += contribution;
-      console.log(`Planet ${planet} contribution:`, { positionScore, weight, positionFactor, contribution });
     }
-  });
-  
-  // Factor in aspects (strong aspects boost the score)
-  const aspectScores = Object.values(aspects);
-  if (aspectScores.length > 0) {
-    const avgAspect = aspectScores.reduce((a, b) => a + b, 0) / aspectScores.length;
-    const oldScore = score;
-    score = score * 0.7 + avgAspect * 0.3;
-    console.log('Aspect score contribution:', { avgAspect, oldScore, newScore: score });
   }
   
-  // Factor in elements (balance is good)
-  const elementValues = Object.values(elements);
-  if (elementValues.length > 0) {
-    const maxElement = Math.max(...elementValues);
-    const minElement = Math.min(...elementValues);
-    const elementBalance = 1 - (maxElement - minElement);
-    const oldScore = score;
-    score = score * 0.8 + elementBalance * 0.2;
-    console.log('Element balance contribution:', { 
-      elementValues, 
-      maxElement, 
-      minElement, 
-      elementBalance, 
-      oldScore, 
-      newScore: score 
-    });
-  }
-  
-  // Ensure score is between 0 and 1
-  const finalScore = Math.max(0, Math.min(1, score));
-  console.log('Final base score:', finalScore);
-  return finalScore;
+  return aspects;
 }
+
+function calculateElementBalance(planetaryPositions: Record<string, number>): Record<string, number> {
+  // Calculate element balance based on planetary positions
+  const elements = {
+    fire: 0,
+    earth: 0,
+    air: 0,
+    water: 0
+  };
+  
+  // Assign elements based on zodiac sign of each planet
+  for (const [planet, position] of Object.entries(planetaryPositions)) {
+    // Convert position to zodiac sign (0-29 Aries, 30-59 Taurus, etc.)
+    const signIndex = Math.floor(position / 30) % 12;
+    
+    // Determine element based on sign
+    let element = '';
+    if ([0, 4, 8].includes(signIndex)) element = 'fire';  // Aries, Leo, Sagittarius
+    else if ([1, 5, 9].includes(signIndex)) element = 'earth'; // Taurus, Virgo, Capricorn
+    else if ([2, 6, 10].includes(signIndex)) element = 'air';  // Gemini, Libra, Aquarius
+    else element = 'water'; // Cancer, Scorpio, Pisces
+    
+    // Weight by planet importance
+    let weight = 1;
+    if (['sun', 'moon'].includes(planet)) weight = 3;
+    else if (['mercury', 'venus', 'mars'].includes(planet)) weight = 2;
+    
+    elements[element] += weight;
+  }
+  
+  return elements;
+}
+
+function calculateHouses(date: Date, birthDate: Date): number[] {
+  // Calculate house cusps based on birth date and current date
+  // Using a simplified approach with equal houses
+  const ascendant = (getDayOfYear(date) * 360 / 365 + getDayOfYear(birthDate)) % 360;
+  
+  // Create 12 equal houses starting from the ascendant
+  return Array.from({ length: 12 }, (_, i) => (ascendant + i * 30) % 360);
+}
+// --- END PLACEHOLDER HELPER FUNCTIONS ---
 
 // Helper function to calculate sign score based on current transits
 function calculateSignScore(zodiacSign: string, currentDate: Date): number {

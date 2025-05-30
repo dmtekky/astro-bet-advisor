@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { Database, type Json } from '@/types/database.types.ts'; // Added Json import
+import { Database, type Json } from '@/integrations/supabase/types.ts'; // Corrected Database import path
 
 // Try Vite's import.meta.env first, then fall back to process.env for Node scripts
 const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL) || (typeof Deno !== 'undefined' && Deno?.env?.get?.('VITE_SUPABASE_URL')) || process.env?.VITE_SUPABASE_URL || '';
@@ -136,3 +136,44 @@ export async function fetchLatestAstrologicalData(): Promise<AstrologicalData | 
   return data as AstrologicalData;
 }
 
+// Define the type for a baseball player based on the database schema
+type BaseballPlayer = {
+  id: string;
+  player_id: string;
+  player_full_name: string | null;
+  player_first_name: string | null;
+  player_last_name: string | null;
+  player_primary_position: string | null;
+  player_official_image_src: string | null;
+  player_birth_date: string | null;
+  player_jersey_number: number | null;
+  player_current_team_abbreviation: string | null;
+  player_birth_city: string | null;
+  player_birth_country: string | null;
+  impact_score: number | null;
+  astro_influence_score: number | null;
+  [key: string]: any; // For any additional fields we might need
+};
+
+/**
+ * Fetch a single player by their player_id from the baseball_players table.
+ * @param playerId - The player_id to search for.
+ * @returns BaseballPlayer object or null if not found or error.
+ */
+export async function getPlayerByApiId(playerId: string): Promise<BaseballPlayer | null> {
+  const client = getSupabaseClient();
+
+  // Use type assertion to tell TypeScript we know what we're doing with this table
+  const { data: playerData, error: playerError } = await client
+    .from('baseball_players' as any) // Type assertion to bypass type checking
+    .select('*')
+    .eq('player_id', playerId)
+    .single();
+
+  if (playerError || !playerData) {
+    console.error(`Error fetching player by player_id ${playerId}:`, playerError?.message);
+    return null;
+  }
+
+  return playerData as BaseballPlayer;
+}

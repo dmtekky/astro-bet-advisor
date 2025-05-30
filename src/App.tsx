@@ -35,6 +35,7 @@ function AppContent() {
           
           {/* Redirects for old URLs */}
           <Route path="/team/:teamId" element={<TeamPageWrapper />} />
+          {/* Redirect old player routes to the new Astro route */}
           <Route path="/team/:teamId/player/:playerId" element={<PlayerDetailPageWrapper />} />
           <Route path="/teams/:teamId/players/:playerId" element={<PlayerDetailPageWrapper />} />
           <Route path="/search" element={<SearchResults />} />
@@ -65,8 +66,13 @@ const TeamPageWrapper = () => {
 };
 
 const PlayerDetailPageWrapper = () => {
-  const { teamId, playerId } = useParams<{ teamId: string; playerId: string }>();
-  return <Navigate to={`/teams/${teamId}/player-details/${playerId}`} replace />;
+  const { teamId, playerId } = useParams();
+  // This will trigger a full page load to the Astro route
+  if (typeof window !== 'undefined') {
+    window.location.href = `/teams/${teamId}/player-details/${playerId}`;
+    return null;
+  }
+  return null;
 };
 
 export default App;

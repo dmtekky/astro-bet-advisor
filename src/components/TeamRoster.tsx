@@ -142,7 +142,7 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
             {sortedPlayers.map((player, index) => (
               <tr key={player.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <Link to={`/teams/${teamId}/player-details/${player.player_id}`} className="hover:opacity-80 transition-opacity">
+                  <a href={`/teams/${teamId}/player-details/${player.player_id}`} className="hover:opacity-80 transition-opacity">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0 mr-3">
                         <img 
@@ -160,7 +160,7 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
                         </div>
                       </div>
                     </div>
-                  </Link>
+                  </a>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
                   {player.number || 'N/A'}
@@ -193,9 +193,9 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
                   {player.stats_fielding_assists !== undefined ? player.stats_fielding_assists : 'N/A'}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                  <Link to={`/teams/${teamId}/player-details/${player.player_id}`} className="text-blue-600 hover:text-blue-900">
+                  <a href={`/teams/${teamId}/player-details/${player.player_id}`} className="text-blue-600 hover:text-blue-900">
                     View
-                  </Link>
+                  </a>
                 </td>
               </tr>
             ))}
