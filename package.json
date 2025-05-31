@@ -106,6 +106,7 @@
     "cleanup:placeholders": "ts-node --esm scripts/cleanupPlaceholderGames.ts"
   },
   "devDependencies": {
+    "@emotion/babel-plugin": "^11.13.5",
     "@eslint/js": "^9.9.0",
     "@types/node": "^22.15.24",
     "@types/react": "^18.3.3",

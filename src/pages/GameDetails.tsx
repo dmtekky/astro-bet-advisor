@@ -579,86 +579,184 @@ const GameDetails: React.FC = () => {
           </div>
         )}
 
-        {/* Game Info and Astro Prediction Section */} 
-        {game && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-            {/* Game Information Card */} 
-            <Card>
-              <CardHeader>
-                <CardTitle>Game Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between mb-4 items-center">
-                  <div className="text-center flex-1">
-                    <h3 className="font-semibold">
-                      {game.home_team ? (
-                        <Link to={`/teams/${game.home_team.id}`} className="hover:underline">
-                          {game.home_team.name}
-                        </Link>
-                      ) : 'Home Team'}
-                    </h3>
+        {/* Game Venue Information */}
+        {game && game.home_team && (
+          <div className="my-8">
+            <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+                  {/* Venue Image/Map Section */}
+                  <div className="bg-slate-200 min-h-[200px] flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/50"></div>
+                    <div className="relative z-10 text-center p-4">
+                      <h3 className="text-white text-2xl font-bold drop-shadow-md">
+                        {game.home_team?.venue_name || 'Stadium'}
+                      </h3>
+                      <p className="text-white/90 text-sm mt-1 drop-shadow-md">
+                        {game.home_team?.venue_city || 'Location'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-center px-2 text-muted-foreground">vs</div>
-                  <div className="text-center flex-1">
-                    <h3 className="font-semibold">
-                      {game.away_team ? (
-                        <Link to={`/teams/${game.away_team.id}`} className="hover:underline">
-                          {game.away_team.name}
-                        </Link>
-                      ) : 'Away Team'}
-                    </h3>
+                  
+                  {/* Game Details Section */}
+                  <div className="p-6 flex flex-col justify-center">
+                    <h3 className="text-lg font-semibold mb-4 border-b pb-2">Game Details</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 font-medium">Date:</span>
+                        <span className="text-slate-800">
+                          {game.start_time
+                            ? new Date(game.start_time).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                              })
+                            : 'TBD'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 font-medium">Time:</span>
+                        <span className="text-slate-800">
+                          {game.start_time
+                            ? new Date(game.start_time).toLocaleTimeString(undefined, {
+                                hour: '2-digit', minute: '2-digit'
+                              })
+                            : 'TBD'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 font-medium">Status:</span>
+                        <span className="text-slate-800">{game.status || 'Scheduled'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 font-medium">League:</span>
+                        <span className="text-slate-800">{game.league?.name || 'MLB'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Astrological Prediction */}
+                  <div className="p-6 bg-indigo-50 border-l border-indigo-100">
+                    <h3 className="text-lg font-semibold mb-4 border-b pb-2 text-indigo-800">Astrological Prediction</h3>
+                    {astroLoading ? (
+                      <div className="flex flex-col items-center justify-center h-24">
+                        <Skeleton className="h-8 w-8 rounded-full mb-2" />
+                        <Skeleton className="h-4 w-3/4 mb-1" />
+                      </div>
+                    ) : astroData && gamePrediction ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-indigo-700 font-medium">Prediction:</span>
+                          <span className="text-indigo-900 font-semibold">{gamePrediction.prediction}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-indigo-700 font-medium">Moon Phase:</span>
+                          <span className="text-indigo-900">{astroData.moonPhase?.name || 'Unknown'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-indigo-700 font-medium">Confidence:</span>
+                          <span className="text-indigo-900 font-semibold">{`${Math.round(gamePrediction.confidence * 100)}%`}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-indigo-600">No astrological data available.</p>
+                    )}
                   </div>
                 </div>
-                <p className="text-muted-foreground text-sm mb-2">
-                  <strong>Status:</strong> {game.status || 'N/A'}
-                </p>
-                <p className="text-muted-foreground text-sm mb-2">
-                  <strong>Start Time:</strong>{' '}
-                  {game.start_time
-                    ? new Date(game.start_time).toLocaleString(undefined, {
-                        year: 'numeric', month: 'long', day: 'numeric',
-                        hour: '2-digit', minute: '2-digit',
-                      })
-                    : 'N/A'}
-                </p>
-                <p className="text-muted-foreground text-sm mb-2">
-                  <strong>League:</strong> {game.league?.name || 'N/A'}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  <strong>Venue:</strong> {game.venue?.name || 'N/A'}
-                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
+        {/* Game Info and Team Matchup Section */} 
+        {game && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+            {/* Home Team Card */} 
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center">
+                  <Avatar className="h-10 w-10 mr-3">
+                    {game.home_team?.logo_url ? <AvatarImage src={game.home_team.logo_url} alt={`${game.home_team.name} logo`} /> : null}
+                    <AvatarFallback>{game.home_team?.name?.substring(0,2).toUpperCase() || 'HT'}</AvatarFallback>
+                  </Avatar>
+                  <CardTitle>
+                    {game.home_team ? (
+                      <Link to={`/teams/${game.home_team.id}`} className="hover:underline">
+                        {game.home_team.name}
+                      </Link>
+                    ) : 'Home Team'}
+                  </CardTitle>
+                </div>
+                <CardDescription>Home Team</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <h4 className="text-base font-semibold mb-3 pb-1 border-b">Top Players</h4>
+                {topHomePlayers.length > 0 ? (
+                  <div className="space-y-3">
+                    {topHomePlayers.map(player => (
+                      <Link to={`/players/${player.id}`} key={player.id} className="block">
+                        <div className="flex items-center hover:bg-slate-50 p-2 rounded-md transition-colors">
+                          <Avatar className="h-8 w-8 mr-3">
+                            {player.headshot_url ? <AvatarImage src={player.headshot_url} alt={player.name} /> : null}
+                            <AvatarFallback>{player.name?.substring(0,2).toUpperCase() || 'P'}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{player.name}</div>
+                            <div className="text-xs text-muted-foreground">{player.position || 'N/A'}</div>
+                          </div>
+                          <div className="text-sm font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {player.impactScore?.toFixed(0) || 'N/A'}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
+                )}
               </CardContent>
             </Card>
 
-            {/* Astrological Prediction Card */} 
+            {/* Away Team Card */} 
             <Card>
-              <CardHeader>
-                <CardTitle>Astrological Prediction</CardTitle>
+              <CardHeader className="pb-2">
+                <div className="flex items-center">
+                  <Avatar className="h-10 w-10 mr-3">
+                    {game.away_team?.logo_url ? <AvatarImage src={game.away_team.logo_url} alt={`${game.away_team.name} logo`} /> : null}
+                    <AvatarFallback>{game.away_team?.name?.substring(0,2).toUpperCase() || 'AT'}</AvatarFallback>
+                  </Avatar>
+                  <CardTitle>
+                    {game.away_team ? (
+                      <Link to={`/teams/${game.away_team.id}`} className="hover:underline">
+                        {game.away_team.name}
+                      </Link>
+                    ) : 'Away Team'}
+                  </CardTitle>
+                </div>
+                <CardDescription>Away Team</CardDescription>
               </CardHeader>
               <CardContent>
-                {astroLoading ? (
-                  <div className="flex flex-col items-center justify-center h-40">
-                    <Skeleton className="h-12 w-12 rounded-full mb-2" />
-                    <Skeleton className="h-4 w-3/4 mb-1" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ) : astroData && gamePrediction ? (
-                  <div>
-                    <p className="mb-3">
-                      <strong>Prediction:</strong> {gamePrediction.prediction}
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      <strong>Moon Phase:</strong> {astroData.moonPhase?.name || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      <strong>Sun Sign:</strong> {astroData.planets?.sun?.sign || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Confidence:</strong> {`${Math.round(gamePrediction.confidence * 100)}%`}
-                    </p>
+                <h4 className="text-base font-semibold mb-3 pb-1 border-b">Top Players</h4>
+                {topAwayPlayers.length > 0 ? (
+                  <div className="space-y-3">
+                    {topAwayPlayers.map(player => (
+                      <Link to={`/players/${player.id}`} key={player.id} className="block">
+                        <div className="flex items-center hover:bg-slate-50 p-2 rounded-md transition-colors">
+                          <Avatar className="h-8 w-8 mr-3">
+                            {player.headshot_url ? <AvatarImage src={player.headshot_url} alt={player.name} /> : null}
+                            <AvatarFallback>{player.name?.substring(0,2).toUpperCase() || 'P'}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{player.name}</div>
+                            <div className="text-xs text-muted-foreground">{player.position || 'N/A'}</div>
+                          </div>
+                          <div className="text-sm font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {player.impactScore?.toFixed(0) || 'N/A'}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No astrological data or prediction available.</p>
+                  <p className="text-sm text-muted-foreground">No player impact data available.</p>
                 )}
               </CardContent>
             </Card>

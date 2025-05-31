@@ -912,7 +912,7 @@ const Dashboard: React.FC = () => {
                           <h3 className="text-lg font-semibold text-slate-700 mb-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
                             {format(group.date, 'EEEE, MMMM d')}
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
                             {group.games.map((game) => {
                               // const homeTeam = findTeam(String(game.home_team_id)); // Replaced by game.home_team
                               // const awayTeam = findTeam(String(game.away_team_id)); // Replaced by game.away_team
@@ -1075,7 +1075,7 @@ const Dashboard: React.FC = () => {
                     <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
   <CardHeader className="pb-2">
     <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-      <Sun className="h-5 w-5 mr-2 text-yellow-500" /> Solar Influence
+      <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" /> Solar Influence
     </CardTitle>
     <CardDescription className="text-slate-600">
       The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
@@ -1085,10 +1085,10 @@ const Dashboard: React.FC = () => {
     {/* Sun Visualization Section */}
     <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
       <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
-        <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+        <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
           {/* Sun visualization */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <Sun className="h-32 w-32 md:h-40 md:w-40 text-yellow-400 drop-shadow-lg animate-pulse" />
+            <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
             <div className="absolute w-full h-full rounded-full" style={{
               boxShadow: '0 0 80px 30px rgba(252, 211, 77, 0.4)',
               pointerEvents: 'none',
@@ -1127,7 +1127,7 @@ const Dashboard: React.FC = () => {
     </div>
     {/* Solar Influence Details */}
     <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
-      <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-4 w-4 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
+      <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
       <ul className="list-disc pl-5 space-y-1">
         {getSunSportsInfluences(astroData).map((influence, index) => (
           <li key={`sun-influence-${index}`} className="text-sm text-slate-700">{influence.text}</li>

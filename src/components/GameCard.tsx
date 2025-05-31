@@ -220,12 +220,9 @@ const GameCard: React.FC<GameCardProps> = ({
           />
           
           {/* Header content */}
-          <div className="relative flex justify-between items-center">
+          <div className="relative">
             <span className="text-xs font-medium uppercase tracking-wider" style={{ color: homeTextColor }}>
               {game.league_name || game.sport || 'Game'}
-            </span>
-            <span className="text-xs font-medium" style={{ color: homeTextColor }}>
-              {gameTime}
             </span>
           </div>
         </div>
