@@ -8,42 +8,24 @@ import { useMemo, useCallback } from 'react';
 import useSWR from 'swr';
 import type { AspectType, CelestialBody, ZodiacSign, MoonPhaseInfo } from '../types/astrology';
 
+// Import the moon phase calculation functions
+import { getMoonPhase, getMoonPhaseInfo } from '../lib/astroCalculations';
+
 // Helper function to determine moon phase value (0 to 1) and name
 const getProcessedMoonPhase = (
-  apiMoonPhase?: { angle?: number; phase?: string; illumination?: number | null },
-  apiMoon_Phase?: { phase_name?: string; illumination?: number | null }
+  _apiMoonPhase?: { angle?: number; phase?: string; illumination?: number | null },
+  _apiMoon_Phase?: { phase_name?: string; illumination?: number | null }
 ): MoonPhaseInfo => {
-  let name = 'Unknown';
-  let value = 0;
-  let illumination = 0;
-
-  if (apiMoonPhase?.phase) {
-    name = apiMoonPhase.phase;
-  } else if (apiMoon_Phase?.phase_name) {
-    name = apiMoon_Phase.phase_name;
-  }
-
-  if (apiMoonPhase?.illumination !== undefined && apiMoonPhase.illumination !== null) {
-    illumination = apiMoonPhase.illumination;
-  } else if (apiMoon_Phase?.illumination !== undefined && apiMoon_Phase.illumination !== null) {
-    illumination = apiMoon_Phase.illumination;
-  }
-
-  if (apiMoonPhase?.angle !== undefined && typeof apiMoonPhase.angle === 'number') {
-    value = (apiMoonPhase.angle % 360) / 360; // Normalize to 0-1
-  } else if (name !== 'Unknown') {
-    const lowerPhaseName = name.toLowerCase();
-    if (lowerPhaseName.includes('new moon')) value = 0;
-    else if (lowerPhaseName.includes('waxing crescent')) value = 0.125;
-    else if (lowerPhaseName.includes('first quarter')) value = 0.25;
-    else if (lowerPhaseName.includes('waxing gibbous')) value = 0.375;
-    else if (lowerPhaseName.includes('full moon')) value = 0.5;
-    else if (lowerPhaseName.includes('waning gibbous')) value = 0.625;
-    else if (lowerPhaseName.includes('last quarter')) value = 0.75;
-    else if (lowerPhaseName.includes('waning crescent')) value = 0.875;
-  }
-
-  return { name, value, illumination };
+  // Always use our accurate moon phase calculation
+  const now = new Date();
+  const phase = getMoonPhase(now);
+  const { name, illumination } = getMoonPhaseInfo(phase);
+  
+  return { 
+    name, 
+    value: phase, 
+    illumination: illumination / 100 // Convert to 0-1 range
+  };
 };
 
 // Base URL for API requests

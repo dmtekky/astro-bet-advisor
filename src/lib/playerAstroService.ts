@@ -316,19 +316,10 @@ export function generatePlayerAstroData(birthDate: string, location?: BirthLocat
   const dominantPlanets = calculateDominantPlanets(sunSign, moonSign);
   
   // Generate moon phase data
-  const date = new Date(birthDate);
-  const dayOfYear = getDayOfYear(date);
-  const moonPhaseValue = (dayOfYear % 30) / 30; // 0-1 value
-  
-  // Determine moon phase name
-  let moonPhaseName = 'New Moon';
-  if (moonPhaseValue > 0.875) moonPhaseName = 'Waning Crescent';
-  else if (moonPhaseValue > 0.75) moonPhaseName = 'Last Quarter';
-  else if (moonPhaseValue > 0.625) moonPhaseName = 'Waning Gibbous';
-  else if (moonPhaseValue > 0.5) moonPhaseName = 'Full Moon';
-  else if (moonPhaseValue > 0.375) moonPhaseName = 'Waxing Gibbous';
-  else if (moonPhaseValue > 0.25) moonPhaseName = 'First Quarter';
-  else if (moonPhaseValue > 0.125) moonPhaseName = 'Waxing Crescent';
+  const { getMoonPhase, getMoonPhaseInfo } = require('./astroCalculations');
+  const birthDateObj = new Date(birthDate);
+  const moonPhaseValue = getMoonPhase(birthDateObj);
+  const { name: moonPhaseName } = getMoonPhaseInfo(moonPhaseValue);
   
   // Return complete astrological data that matches the AstroChartData interface
   return {

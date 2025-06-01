@@ -7,6 +7,11 @@ A web-based tool that helps users make informed sports betting decisions by anal
 - Dashboard with tabs for different sports (NBA, MLB, NFL, Boxing planned).
 - Player and team cards displaying betting odds.
 - Astrological insights for players.
+- **Accurate Moon Phase Calculation:** Real-time moon phase tracking with precise illumination percentages and phase names.
+  - Uses astronomical calculations based on the lunar cycle (29.53058867 days)
+  - Tracks moon phases with high accuracy using a known new moon reference
+  - Provides illumination percentage and phase name (New Moon, Waxing Crescent, First Quarter, etc.)
+  - Updates in real-time based on the current date and time
 - **Comprehensive MLB Data Integration:** Fetches and stores MLB teams, players, venues, and game schedules from TheSportsDB.
 - Data caching and storage in Supabase for optimal performance and historical analysis.
 

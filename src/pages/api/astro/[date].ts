@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getMoonPhase, getPlanetPositions } from '../../../lib/astroCalculations.js';
+import { getMoonPhase, getMoonPhaseInfo, getPlanetPositions } from '../../../lib/astroCalculations.js';
 
 export const prerender = false; // Ensure this is serverless, not static
 
@@ -17,133 +17,72 @@ export const GET: APIRoute = async ({ params, request }) => {
     );
   }
 
-  // Example: get moon phase and planet positions
-  const moonPhase = getMoonPhase(targetDate);
-  const positions = getPlanetPositions(targetDate);
-
-  // Mock celestial events (replace with real logic as needed)
-  const celestialEvents = [
-    {
-      name: 'Full Moon',
-      description: 'Full Moon in Scorpio - A time for release and transformation.',
-      intensity: 'high',
-      date: new Date(targetDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
-
-  // Strategic insights based on moon phase
-  function getMoonPhaseInsight(phase: number): string {
-    if (phase === 0) return 'New beginnings, set intentions.';
-    if (phase < 0.25) return 'Growth and planning are favored.';
-    if (phase === 0.25) return 'Take action on goals.';
-    if (phase < 0.5) return 'Build momentum.';
-    if (phase === 0.5) return 'Full illumination, culmination of efforts.';
-    if (phase < 0.75) return 'Release and let go of what no longer serves.';
-    if (phase === 0.75) return 'Reflect and prepare for renewal.';
-    return 'Cycle is ending, rest and restore.';
-  }
-
-  const moonPhaseInsight = getMoonPhaseInsight(moonPhase);
-  const strategicInsights = [
-    {
-      type: 'moon_phase',
-      content: `Current phase: ${moonPhase}. ${moonPhaseInsight}`
-    }
-  ];
-
-  return new Response(
-    JSON.stringify({
-      moon_phase: moonPhase,
-      positions,
-      celestial_events: celestialEvents,
-      strategic_insights: strategicInsights
-    }),
-    {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    }
-  );
-};
   try {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    // Get moon phase and phase info
+    const moonPhase = getMoonPhase(targetDate);
+    const { name: moonPhaseName, illumination } = getMoonPhaseInfo(moonPhase);
+    const positions = getPlanetPositions(targetDate);
     
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
+    // Mock celestial events (replace with real logic as needed)
+    const celestialEvents = [
+      {
+        name: moonPhaseName,
+        description: `${moonPhaseName} - ${getMoonPhaseInsight(moonPhase)}`,
+        intensity: moonPhaseName === 'Full Moon' || moonPhaseName === 'New Moon' ? 'high' : 'medium',
+        date: targetDate.toISOString()
+      }
+    ];
+
+    // Strategic insights based on moon phase
+    function getMoonPhaseInsight(phase: number): string {
+      if (phase < 0.03 || phase > 0.97) return 'New beginnings, set intentions.';
+      if (phase < 0.22) return 'Growth and planning are favored.';
+      if (phase < 0.28) return 'First Quarter - Take action on goals.';
+      if (phase < 0.47) return 'Build momentum toward your objectives.';
+      if (phase < 0.53) return 'Full Moon - Culmination of efforts, time to release.';
+      if (phase < 0.72) return 'Waning phase - Let go of what no longer serves you.';
+      if (phase < 0.78) return 'Last Quarter - Reflect and prepare for renewal.';
+      return 'Balsamic phase - Rest and restore before the next cycle.';
     }
 
-    // Get the date from the URL or use current date
-    const { date } = req.query;
-    const targetDate = date || new Date().toISOString().split('T')[0];
-    
-    console.log(`[${new Date().toISOString()}] Request for date:`, targetDate);
+    const moonPhaseInsight = getMoonPhaseInsight(moonPhase);
+    const strategicInsights = [
+      {
+        type: 'moon_phase',
+        content: `${moonPhaseName} (${illumination}% illuminated). ${moonPhaseInsight}`
+      }
+    ];
 
-    // Return test data in the expected format
-    const response = {
-      success: true,
-      moon_phase: 0.75, // 0 = new moon, 1 = full moon
-      positions: {
-        moon: { 
-          longitude: 90, 
-          speed: 12.2 
+    return new Response(
+      JSON.stringify({
+        moon_phase: {
+          value: moonPhase,
+          name: moonPhaseName,
+          illumination: illumination / 100 // Convert to 0-1 range
         },
-        sun: { 
-          longitude: 45 
-        },
-        mercury: { 
-          longitude: 30, 
-          speed: 1.2 
-        },
-        venus: { 
-          longitude: 120 
-        },
-        mars: { 
-          longitude: 200,
-          speed: 0.5
-        },
-        jupiter: { 
-          longitude: 150 
-        },
-        saturn: { 
-          longitude: 300 
+        positions,
+        celestial_events: celestialEvents,
+        strategic_insights: strategicInsights
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 's-maxage=3600, stale-while-revalidate=1800'
         }
-      },
-      celestial_events: [
-        {
-          name: 'Full Moon',
-          description: 'Full Moon in Scorpio - A time for release and transformation.',
-          intensity: 'high',
-          date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          name: 'Mercury Square Mars',
-          description: 'Heightened communication and potential conflicts.',
-          intensity: 'medium',
-          date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ]
-    };
-
-    // Add next_event (first upcoming event or null)
-    const nextEvent = response.celestial_events[0] || null;
-    
-    return res.status(200).json({
-      ...response,
-      next_event: nextEvent
-    });
-    
+      }
+    );
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
-    });
+    console.error('Error generating astro data:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to generate astrological data',
+        details: error instanceof Error ? error.message : String(error)
+      }),
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
   }
-}
+};
