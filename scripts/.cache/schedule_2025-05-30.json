@@ -1,0 +1,1323 @@
+[
+  {
+    "id": "73b696a7-0a79-4964-a1c9-7081dc04af74",
+    "status": "closed",
+    "scheduled": "2025-05-30T23:10:00+00:00",
+    "home_team": {
+      "id": "03556285-bdbb-4576-a06d-42f71f46ddc5",
+      "name": "Marlins",
+      "market": "Miami",
+      "runs": 0,
+      "wins": 22,
+      "losses": 33
+    },
+    "away_team": {
+      "id": "a7723160-10b7-4277-a309-d8dd95a8ae65",
+      "name": "Giants",
+      "market": "San Francisco",
+      "runs": 0,
+      "wins": 32,
+      "losses": 25
+    },
+    "venue": "loanDepot park",
+    "attendance": 10361,
+    "duration": "2:41",
+    "raw": {
+      "id": "73b696a7-0a79-4964-a1c9-7081dc04af74",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T23:10:00+00:00",
+      "home_team": "03556285-bdbb-4576-a06d-42f71f46ddc5",
+      "away_team": "a7723160-10b7-4277-a309-d8dd95a8ae65",
+      "attendance": 10361,
+      "duration": "2:41",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777717",
+      "venue": {
+        "name": "loanDepot park",
+        "market": "Miami",
+        "capacity": 37446,
+        "surface": "turf",
+        "address": "501 Marlins Way",
+        "city": "Miami",
+        "state": "FL",
+        "zip": "33125",
+        "country": "USA",
+        "id": "d5a66fb3-ff26-4f36-910c-3df5cedb36b3",
+        "field_orientation": "SE",
+        "stadium_type": "retractable",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "25.7780567",
+          "lng": "-80.2194087"
+        }
+      },
+      "home": {
+        "name": "Marlins",
+        "market": "Miami",
+        "abbr": "MIA",
+        "id": "03556285-bdbb-4576-a06d-42f71f46ddc5",
+        "win": 22,
+        "loss": 33
+      },
+      "away": {
+        "name": "Giants",
+        "market": "San Francisco",
+        "abbr": "SF",
+        "id": "a7723160-10b7-4277-a309-d8dd95a8ae65",
+        "win": 32,
+        "loss": 25
+      },
+      "broadcasts": [
+        {
+          "network": "MLB Network",
+          "type": "TV",
+          "locale": "National",
+          "channel": "213"
+        },
+        {
+          "network": "FDSFL",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "654"
+        },
+        {
+          "network": "NBCS-BA",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "696"
+        }
+      ]
+    }
+  },
+  {
+    "id": "4866c028-6ae9-417d-801a-356cbc288bea",
+    "status": "closed",
+    "scheduled": "2025-05-31T02:10:00+00:00",
+    "home_team": {
+      "id": "ef64da7f-cfaf-4300-87b0-9313386b977c",
+      "name": "Dodgers",
+      "market": "Los Angeles",
+      "runs": 0,
+      "wins": 35,
+      "losses": 22
+    },
+    "away_team": {
+      "id": "a09ec676-f887-43dc-bbb3-cf4bbaee9a18",
+      "name": "Yankees",
+      "market": "New York",
+      "runs": 0,
+      "wins": 35,
+      "losses": 21
+    },
+    "venue": "Dodger Stadium",
+    "attendance": 53276,
+    "duration": "2:53",
+    "raw": {
+      "id": "4866c028-6ae9-417d-801a-356cbc288bea",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T02:10:00+00:00",
+      "home_team": "ef64da7f-cfaf-4300-87b0-9313386b977c",
+      "away_team": "a09ec676-f887-43dc-bbb3-cf4bbaee9a18",
+      "attendance": 53276,
+      "duration": "2:53",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777708",
+      "venue": {
+        "name": "Dodger Stadium",
+        "market": "Los Angeles",
+        "capacity": 56000,
+        "surface": "grass",
+        "address": "1000 Vin Scully Avenue",
+        "city": "Los Angeles",
+        "state": "CA",
+        "zip": "90012",
+        "country": "USA",
+        "id": "66a19c3d-24fe-477d-bee7-c6ef1b98352f",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Pacific",
+        "location": {
+          "lat": "34.0745409",
+          "lng": "-118.2408881"
+        }
+      },
+      "home": {
+        "name": "Dodgers",
+        "market": "Los Angeles",
+        "abbr": "LAD",
+        "id": "ef64da7f-cfaf-4300-87b0-9313386b977c",
+        "win": 35,
+        "loss": 22
+      },
+      "away": {
+        "name": "Yankees",
+        "market": "New York",
+        "abbr": "NYY",
+        "id": "a09ec676-f887-43dc-bbb3-cf4bbaee9a18",
+        "win": 35,
+        "loss": 21
+      },
+      "broadcasts": [
+        {
+          "network": "Apple TV+",
+          "type": "Internet",
+          "locale": "National"
+        }
+      ]
+    }
+  },
+  {
+    "id": "fe074274-5f8e-490f-8366-bfee81ce8c54",
+    "status": "closed",
+    "scheduled": "2025-05-31T00:05:00+00:00",
+    "home_team": {
+      "id": "d99f919b-1534-4516-8e8a-9cd106c6d8cd",
+      "name": "Rangers",
+      "market": "Texas",
+      "runs": 0,
+      "wins": 28,
+      "losses": 30
+    },
+    "away_team": {
+      "id": "44671792-dc02-4fdd-a5ad-f5f17edaa9d7",
+      "name": "Cardinals",
+      "market": "St. Louis",
+      "runs": 0,
+      "wins": 32,
+      "losses": 25
+    },
+    "venue": "Globe Life Field",
+    "attendance": 28679,
+    "duration": "2:39",
+    "raw": {
+      "id": "fe074274-5f8e-490f-8366-bfee81ce8c54",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T00:05:00+00:00",
+      "home_team": "d99f919b-1534-4516-8e8a-9cd106c6d8cd",
+      "away_team": "44671792-dc02-4fdd-a5ad-f5f17edaa9d7",
+      "attendance": 28679,
+      "duration": "2:39",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777709",
+      "venue": {
+        "name": "Globe Life Field",
+        "market": "Texas",
+        "capacity": 40000,
+        "surface": "turf",
+        "address": "734 Stadium Drive",
+        "city": "Arlington",
+        "state": "TX",
+        "zip": "76011",
+        "country": "USA",
+        "id": "b4372592-9dac-4387-864b-dfc94dffd645",
+        "field_orientation": "SW",
+        "stadium_type": "retractable",
+        "time_zone": "US/Central",
+        "location": {
+          "lat": "32.747300",
+          "lng": "-97.081820"
+        }
+      },
+      "home": {
+        "name": "Rangers",
+        "market": "Texas",
+        "abbr": "TEX",
+        "id": "d99f919b-1534-4516-8e8a-9cd106c6d8cd",
+        "win": 28,
+        "loss": 30
+      },
+      "away": {
+        "name": "Cardinals",
+        "market": "St. Louis",
+        "abbr": "STL",
+        "id": "44671792-dc02-4fdd-a5ad-f5f17edaa9d7",
+        "win": 32,
+        "loss": 25
+      },
+      "broadcasts": [
+        {
+          "network": "CW33",
+          "type": "TV",
+          "locale": "Home"
+        },
+        {
+          "network": "FDSMW",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "671"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ad821db9-e21a-4c14-8914-7390575cca56",
+    "status": "closed",
+    "scheduled": "2025-05-30T20:30:00+00:00",
+    "home_team": {
+      "id": "75729d34-bca7-4a0f-b3df-6f26c6ad3719",
+      "name": "Orioles",
+      "market": "Baltimore",
+      "runs": 0,
+      "wins": 20,
+      "losses": 36
+    },
+    "away_team": {
+      "id": "47f490cd-2f58-4ef7-9dfd-2ad6ba6c1ae8",
+      "name": "White Sox",
+      "market": "Chicago",
+      "runs": 0,
+      "wins": 18,
+      "losses": 39
+    },
+    "venue": "Oriole Park at Camden Yards",
+    "attendance": 22108,
+    "duration": "2:28",
+    "raw": {
+      "id": "ad821db9-e21a-4c14-8914-7390575cca56",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "D",
+      "scheduled": "2025-05-30T20:30:00+00:00",
+      "home_team": "75729d34-bca7-4a0f-b3df-6f26c6ad3719",
+      "away_team": "47f490cd-2f58-4ef7-9dfd-2ad6ba6c1ae8",
+      "attendance": 22108,
+      "duration": "2:28",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777720",
+      "venue": {
+        "name": "Oriole Park at Camden Yards",
+        "market": "Baltimore",
+        "capacity": 45971,
+        "surface": "grass",
+        "address": "333 West Camden Street",
+        "city": "Baltimore",
+        "state": "MD",
+        "zip": "21201",
+        "country": "USA",
+        "id": "434aa63c-1049-4a54-a6bc-3790c7772ee1",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "39.283787",
+          "lng": "-76.621689"
+        }
+      },
+      "home": {
+        "name": "Orioles",
+        "market": "Baltimore",
+        "abbr": "BAL",
+        "id": "75729d34-bca7-4a0f-b3df-6f26c6ad3719",
+        "win": 20,
+        "loss": 36
+      },
+      "away": {
+        "name": "White Sox",
+        "market": "Chicago",
+        "abbr": "CWS",
+        "id": "47f490cd-2f58-4ef7-9dfd-2ad6ba6c1ae8",
+        "win": 18,
+        "loss": 39
+      },
+      "broadcasts": [
+        {
+          "network": "CHSN",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "665"
+        },
+        {
+          "network": "MASN",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "640"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cb5e821e-6e07-4bb8-913d-d8738d40c5d9",
+    "status": "closed",
+    "scheduled": "2025-05-31T00:10:00+00:00",
+    "home_team": {
+      "id": "eb21dadd-8f10-4095-8bf3-dfb3b779f107",
+      "name": "Astros",
+      "market": "Houston",
+      "runs": 0,
+      "wins": 31,
+      "losses": 26
+    },
+    "away_team": {
+      "id": "bdc11650-6f74-49c4-875e-778aeb7632d9",
+      "name": "Rays",
+      "market": "Tampa Bay",
+      "runs": 0,
+      "wins": 29,
+      "losses": 28
+    },
+    "venue": "Daikin Park",
+    "attendance": 32115,
+    "duration": "2:01",
+    "raw": {
+      "id": "cb5e821e-6e07-4bb8-913d-d8738d40c5d9",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T00:10:00+00:00",
+      "home_team": "eb21dadd-8f10-4095-8bf3-dfb3b779f107",
+      "away_team": "bdc11650-6f74-49c4-875e-778aeb7632d9",
+      "attendance": 32115,
+      "duration": "2:01",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777714",
+      "venue": {
+        "name": "Daikin Park",
+        "market": "Houston",
+        "capacity": 41000,
+        "surface": "grass",
+        "address": "501 Crawford Street",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "country": "USA",
+        "id": "f0600f04-1386-4c61-a412-804960c46cb1",
+        "field_orientation": "N",
+        "stadium_type": "retractable",
+        "time_zone": "US/Central",
+        "location": {
+          "lat": "29.7577058",
+          "lng": "-95.35453989999999"
+        }
+      },
+      "home": {
+        "name": "Astros",
+        "market": "Houston",
+        "abbr": "HOU",
+        "id": "eb21dadd-8f10-4095-8bf3-dfb3b779f107",
+        "win": 31,
+        "loss": 26
+      },
+      "away": {
+        "name": "Rays",
+        "market": "Tampa Bay",
+        "abbr": "TB",
+        "id": "bdc11650-6f74-49c4-875e-778aeb7632d9",
+        "win": 29,
+        "loss": 28
+      },
+      "broadcasts": [
+        {
+          "network": "FDSSUN",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "653"
+        },
+        {
+          "network": "SCHN",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "674"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ec005bb3-82f8-4139-bd27-98ac104a7086",
+    "status": "closed",
+    "scheduled": "2025-05-31T01:40:00+00:00",
+    "home_team": {
+      "id": "25507be1-6a68-4267-bd82-e097d94b359b",
+      "name": "Diamondbacks",
+      "market": "Arizona",
+      "runs": 0,
+      "wins": 27,
+      "losses": 30
+    },
+    "away_team": {
+      "id": "d89bed32-3aee-4407-99e3-4103641b999a",
+      "name": "Nationals",
+      "market": "Washington",
+      "runs": 0,
+      "wins": 27,
+      "losses": 30
+    },
+    "venue": "Chase Field",
+    "attendance": 29435,
+    "duration": "3:00",
+    "raw": {
+      "id": "ec005bb3-82f8-4139-bd27-98ac104a7086",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T01:40:00+00:00",
+      "home_team": "25507be1-6a68-4267-bd82-e097d94b359b",
+      "away_team": "d89bed32-3aee-4407-99e3-4103641b999a",
+      "attendance": 29435,
+      "duration": "3:00",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777710",
+      "venue": {
+        "name": "Chase Field",
+        "market": "Arizona",
+        "capacity": 48359,
+        "surface": "turf",
+        "address": "401 East Jefferson Street",
+        "city": "Phoenix",
+        "state": "AZ",
+        "zip": "85004",
+        "country": "USA",
+        "id": "bf05de0d-7ced-4a19-8e17-2bbd985f8a92",
+        "field_orientation": "N",
+        "stadium_type": "retractable",
+        "time_zone": "US/Arizona",
+        "location": {
+          "lat": "33.445302",
+          "lng": "-112.066687"
+        }
+      },
+      "home": {
+        "name": "Diamondbacks",
+        "market": "Arizona",
+        "abbr": "AZ",
+        "id": "25507be1-6a68-4267-bd82-e097d94b359b",
+        "win": 27,
+        "loss": 30
+      },
+      "away": {
+        "name": "Nationals",
+        "market": "Washington",
+        "abbr": "WSH",
+        "id": "d89bed32-3aee-4407-99e3-4103641b999a",
+        "win": 27,
+        "loss": 30
+      },
+      "broadcasts": [
+        {
+          "network": "MASN2",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "640-1"
+        },
+        {
+          "network": "ARID",
+          "type": "Internet",
+          "locale": "Home"
+        }
+      ]
+    }
+  },
+  {
+    "id": "7b3eb7d8-22a6-43c3-b596-9b8603d9a8f2",
+    "status": "closed",
+    "scheduled": "2025-05-31T02:10:00+00:00",
+    "home_team": {
+      "id": "43a39081-52b4-4f93-ad29-da7f329ea960",
+      "name": "Mariners",
+      "market": "Seattle",
+      "runs": 0,
+      "wins": 30,
+      "losses": 26
+    },
+    "away_team": {
+      "id": "aa34e0ed-f342-4ec6-b774-c79b47b60e2d",
+      "name": "Twins",
+      "market": "Minnesota",
+      "runs": 0,
+      "wins": 31,
+      "losses": 25
+    },
+    "venue": "T-Mobile Park",
+    "attendance": 39614,
+    "duration": "2:51",
+    "raw": {
+      "id": "7b3eb7d8-22a6-43c3-b596-9b8603d9a8f2",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T02:10:00+00:00",
+      "home_team": "43a39081-52b4-4f93-ad29-da7f329ea960",
+      "away_team": "aa34e0ed-f342-4ec6-b774-c79b47b60e2d",
+      "attendance": 39614,
+      "duration": "2:51",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777713",
+      "venue": {
+        "name": "T-Mobile Park",
+        "market": "Seattle",
+        "capacity": 47929,
+        "surface": "grass",
+        "address": "1516 First Avenue South",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98134",
+        "country": "USA",
+        "id": "f1c03dac-3c0f-437c-a325-8d5702cd321a",
+        "field_orientation": "NE",
+        "stadium_type": "retractable",
+        "time_zone": "US/Pacific",
+        "location": {
+          "lat": "47.5899037",
+          "lng": "-122.3337561"
+        }
+      },
+      "home": {
+        "name": "Mariners",
+        "market": "Seattle",
+        "abbr": "SEA",
+        "id": "43a39081-52b4-4f93-ad29-da7f329ea960",
+        "win": 30,
+        "loss": 26
+      },
+      "away": {
+        "name": "Twins",
+        "market": "Minnesota",
+        "abbr": "MIN",
+        "id": "aa34e0ed-f342-4ec6-b774-c79b47b60e2d",
+        "win": 31,
+        "loss": 25
+      },
+      "broadcasts": [
+        {
+          "network": "MNNT",
+          "type": "Internet",
+          "locale": "Away"
+        },
+        {
+          "network": "ROOT Sports NW",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "687"
+        }
+      ]
+    }
+  },
+  {
+    "id": "82800c72-8f4a-4750-a092-cb17bfdc6817",
+    "status": "closed",
+    "scheduled": "2025-05-30T23:10:00+00:00",
+    "home_team": {
+      "id": "80715d0d-0d2a-450f-a970-1b9a3b18c7e7",
+      "name": "Guardians",
+      "market": "Cleveland",
+      "runs": 0,
+      "wins": 30,
+      "losses": 26
+    },
+    "away_team": {
+      "id": "4f735188-37c8-473d-ae32-1f7e34ccf892",
+      "name": "Angels",
+      "market": "Los Angeles",
+      "runs": 0,
+      "wins": 26,
+      "losses": 30
+    },
+    "venue": "Progressive Field",
+    "attendance": 31407,
+    "duration": "3:01",
+    "raw": {
+      "id": "82800c72-8f4a-4750-a092-cb17bfdc6817",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T23:10:00+00:00",
+      "home_team": "80715d0d-0d2a-450f-a970-1b9a3b18c7e7",
+      "away_team": "4f735188-37c8-473d-ae32-1f7e34ccf892",
+      "attendance": 31407,
+      "duration": "3:01",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777721",
+      "venue": {
+        "name": "Progressive Field",
+        "market": "Cleveland",
+        "capacity": 34788,
+        "surface": "grass",
+        "address": "2401 Ontario Street",
+        "city": "Cleveland",
+        "state": "OH",
+        "zip": "44115",
+        "country": "USA",
+        "id": "2b0ccd49-4d87-4996-ac4d-27ffc7ee4c16",
+        "field_orientation": "N",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "41.4957048",
+          "lng": "-81.6852732"
+        }
+      },
+      "home": {
+        "name": "Guardians",
+        "market": "Cleveland",
+        "abbr": "CLE",
+        "id": "80715d0d-0d2a-450f-a970-1b9a3b18c7e7",
+        "win": 30,
+        "loss": 26
+      },
+      "away": {
+        "name": "Angels",
+        "market": "Los Angeles",
+        "abbr": "LAA",
+        "id": "4f735188-37c8-473d-ae32-1f7e34ccf892",
+        "win": 26,
+        "loss": 30
+      },
+      "broadcasts": [
+        {
+          "network": "CLEG",
+          "type": "Internet",
+          "locale": "Home"
+        },
+        {
+          "network": "FDSW",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "692"
+        }
+      ]
+    }
+  },
+  {
+    "id": "1f66aeff-b27b-45e5-926c-a2efd5e0dd79",
+    "status": "closed",
+    "scheduled": "2025-05-30T23:10:00+00:00",
+    "home_team": {
+      "id": "f246a5e5-afdb-479c-9aaa-c68beeda7af6",
+      "name": "Mets",
+      "market": "New York",
+      "runs": 0,
+      "wins": 35,
+      "losses": 22
+    },
+    "away_team": {
+      "id": "29dd9a87-5bcc-4774-80c3-7f50d985068b",
+      "name": "Rockies",
+      "market": "Colorado",
+      "runs": 0,
+      "wins": 9,
+      "losses": 48
+    },
+    "venue": "Citi Field",
+    "attendance": 41270,
+    "duration": "2:17",
+    "raw": {
+      "id": "1f66aeff-b27b-45e5-926c-a2efd5e0dd79",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T23:10:00+00:00",
+      "home_team": "f246a5e5-afdb-479c-9aaa-c68beeda7af6",
+      "away_team": "29dd9a87-5bcc-4774-80c3-7f50d985068b",
+      "attendance": 41270,
+      "duration": "2:17",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777718",
+      "venue": {
+        "name": "Citi Field",
+        "market": "New York",
+        "capacity": 42136,
+        "surface": "grass",
+        "address": "41 Seaver Way",
+        "city": "Flushing, Queens",
+        "state": "NY",
+        "zip": "11368",
+        "country": "USA",
+        "id": "265c7d6c-427a-4b8a-8def-392c41954bec",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "40.7564124",
+          "lng": "-73.84589369999999"
+        }
+      },
+      "home": {
+        "name": "Mets",
+        "market": "New York",
+        "abbr": "NYM",
+        "id": "f246a5e5-afdb-479c-9aaa-c68beeda7af6",
+        "win": 35,
+        "loss": 22
+      },
+      "away": {
+        "name": "Rockies",
+        "market": "Colorado",
+        "abbr": "COL",
+        "id": "29dd9a87-5bcc-4774-80c3-7f50d985068b",
+        "win": 9,
+        "loss": 48
+      },
+      "broadcasts": [
+        {
+          "network": "COLR",
+          "type": "Internet",
+          "locale": "Away"
+        },
+        {
+          "network": "SNY",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "639"
+        }
+      ]
+    }
+  },
+  {
+    "id": "846fe849-f1b8-44aa-b972-f33e00168982",
+    "status": "closed",
+    "scheduled": "2025-05-30T23:07:00+00:00",
+    "home_team": {
+      "id": "1d678440-b4b1-4954-9b39-70afb3ebbcfa",
+      "name": "Blue Jays",
+      "market": "Toronto",
+      "runs": 0,
+      "wins": 29,
+      "losses": 28
+    },
+    "away_team": {
+      "id": "27a59d3b-ff7c-48ea-b016-4798f560f5e1",
+      "name": "Athletics",
+      "market": "ATH",
+      "runs": 0,
+      "wins": 23,
+      "losses": 35
+    },
+    "venue": "Rogers Centre",
+    "attendance": 36951,
+    "duration": "2:58",
+    "raw": {
+      "id": "846fe849-f1b8-44aa-b972-f33e00168982",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T23:07:00+00:00",
+      "home_team": "1d678440-b4b1-4954-9b39-70afb3ebbcfa",
+      "away_team": "27a59d3b-ff7c-48ea-b016-4798f560f5e1",
+      "attendance": 36951,
+      "duration": "2:58",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777716",
+      "venue": {
+        "name": "Rogers Centre",
+        "market": "Toronto",
+        "capacity": 39150,
+        "surface": "turf",
+        "address": "One Blue Jays Way",
+        "city": "Toronto",
+        "state": "ON",
+        "zip": "M5V1J3",
+        "country": "CAN",
+        "id": "84d72338-2173-4a90-9d25-99adc6c86f4b",
+        "field_orientation": "N",
+        "stadium_type": "retractable",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "43.6417388",
+          "lng": "-79.3892547"
+        }
+      },
+      "home": {
+        "name": "Blue Jays",
+        "market": "Toronto",
+        "abbr": "TOR",
+        "id": "1d678440-b4b1-4954-9b39-70afb3ebbcfa",
+        "win": 29,
+        "loss": 28
+      },
+      "away": {
+        "name": "Athletics",
+        "abbr": "ATH",
+        "id": "27a59d3b-ff7c-48ea-b016-4798f560f5e1",
+        "win": 23,
+        "loss": 35
+      },
+      "broadcasts": [
+        {
+          "network": "SN1",
+          "type": "TV",
+          "locale": "Home"
+        },
+        {
+          "network": "NBCS-CA",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "698"
+        }
+      ]
+    }
+  },
+  {
+    "id": "16b94cdc-93a4-474a-8480-354c170e9ee8",
+    "status": "closed",
+    "scheduled": "2025-05-30T22:45:00+00:00",
+    "home_team": {
+      "id": "2142e1ba-3b40-445c-b8bb-f1f8b1054220",
+      "name": "Phillies",
+      "market": "Philadelphia",
+      "runs": 0,
+      "wins": 36,
+      "losses": 21
+    },
+    "away_team": {
+      "id": "dcfd5266-00ce-442c-bc09-264cd20cf455",
+      "name": "Brewers",
+      "market": "Milwaukee",
+      "runs": 0,
+      "wins": 30,
+      "losses": 28
+    },
+    "venue": "Citizens Bank Park",
+    "attendance": 41546,
+    "duration": "2:29",
+    "raw": {
+      "id": "16b94cdc-93a4-474a-8480-354c170e9ee8",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T22:45:00+00:00",
+      "home_team": "2142e1ba-3b40-445c-b8bb-f1f8b1054220",
+      "away_team": "dcfd5266-00ce-442c-bc09-264cd20cf455",
+      "attendance": 41546,
+      "duration": "2:29",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777715",
+      "venue": {
+        "name": "Citizens Bank Park",
+        "market": "Philadelphia",
+        "capacity": 42901,
+        "surface": "grass",
+        "address": "One Citizens Bank Way",
+        "city": "Philadelphia",
+        "state": "PA",
+        "zip": "19148",
+        "country": "USA",
+        "id": "b4186004-b6d0-42e7-8dc1-82ef0d946ecc",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "39.9059929",
+          "lng": "-75.1666401"
+        }
+      },
+      "home": {
+        "name": "Phillies",
+        "market": "Philadelphia",
+        "abbr": "PHI",
+        "id": "2142e1ba-3b40-445c-b8bb-f1f8b1054220",
+        "win": 36,
+        "loss": 21
+      },
+      "away": {
+        "name": "Brewers",
+        "market": "Milwaukee",
+        "abbr": "MIL",
+        "id": "dcfd5266-00ce-442c-bc09-264cd20cf455",
+        "win": 30,
+        "loss": 28
+      },
+      "broadcasts": [
+        {
+          "network": "MLB Network",
+          "type": "TV",
+          "locale": "National",
+          "channel": "213"
+        },
+        {
+          "network": "FDSWI",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "669"
+        },
+        {
+          "network": "NBCS-PH",
+          "type": "TV",
+          "locale": "Home"
+        }
+      ]
+    }
+  },
+  {
+    "id": "632ec4dd-8026-496a-8836-0c1ae5fe840c",
+    "status": "closed",
+    "scheduled": "2025-05-31T01:40:00+00:00",
+    "home_team": {
+      "id": "d52d5339-cbdd-43f3-9dfa-a42fd588b9a3",
+      "name": "Padres",
+      "market": "San Diego",
+      "runs": 0,
+      "wins": 32,
+      "losses": 23
+    },
+    "away_team": {
+      "id": "481dfe7e-5dab-46ab-a49f-9dcc2b6e2cfd",
+      "name": "Pirates",
+      "market": "Pittsburgh",
+      "runs": 0,
+      "wins": 21,
+      "losses": 37
+    },
+    "venue": "PETCO Park",
+    "attendance": 42579,
+    "duration": "2:03",
+    "raw": {
+      "id": "632ec4dd-8026-496a-8836-0c1ae5fe840c",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T01:40:00+00:00",
+      "home_team": "d52d5339-cbdd-43f3-9dfa-a42fd588b9a3",
+      "away_team": "481dfe7e-5dab-46ab-a49f-9dcc2b6e2cfd",
+      "attendance": 42579,
+      "duration": "2:03",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777707",
+      "venue": {
+        "name": "PETCO Park",
+        "market": "San Diego",
+        "capacity": 40222,
+        "surface": "grass",
+        "address": "100 Park Boulevard",
+        "city": "San Diego",
+        "state": "CA",
+        "zip": "92101",
+        "country": "USA",
+        "id": "0ab45d79-5475-4308-9f94-74b0c185ee6f",
+        "field_orientation": "N",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Pacific",
+        "location": {
+          "lat": "32.70752890000001",
+          "lng": "-117.1568083"
+        }
+      },
+      "home": {
+        "name": "Padres",
+        "market": "San Diego",
+        "abbr": "SD",
+        "id": "d52d5339-cbdd-43f3-9dfa-a42fd588b9a3",
+        "win": 32,
+        "loss": 23
+      },
+      "away": {
+        "name": "Pirates",
+        "market": "Pittsburgh",
+        "abbr": "PIT",
+        "id": "481dfe7e-5dab-46ab-a49f-9dcc2b6e2cfd",
+        "win": 21,
+        "loss": 37
+      },
+      "broadcasts": [
+        {
+          "network": "SportsNet PT",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "659"
+        },
+        {
+          "network": "MLB Network",
+          "type": "TV",
+          "locale": "National",
+          "channel": "213"
+        },
+        {
+          "network": "SDPA",
+          "type": "Internet",
+          "locale": "Home"
+        }
+      ]
+    }
+  },
+  {
+    "id": "b658bd05-18ed-4a29-8be7-7b6f0612ccab",
+    "status": "closed",
+    "scheduled": "2025-05-31T00:10:00+00:00",
+    "home_team": {
+      "id": "833a51a9-0d84-410f-bd77-da08c3e5e26e",
+      "name": "Royals",
+      "market": "Kansas City",
+      "runs": 0,
+      "wins": 30,
+      "losses": 28
+    },
+    "away_team": {
+      "id": "575c19b7-4052-41c2-9f0a-1c5813d02f99",
+      "name": "Tigers",
+      "market": "Detroit",
+      "runs": 0,
+      "wins": 38,
+      "losses": 20
+    },
+    "venue": "Kauffman Stadium",
+    "attendance": 28785,
+    "duration": "3:03",
+    "raw": {
+      "id": "b658bd05-18ed-4a29-8be7-7b6f0612ccab",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-31T00:10:00+00:00",
+      "home_team": "833a51a9-0d84-410f-bd77-da08c3e5e26e",
+      "away_team": "575c19b7-4052-41c2-9f0a-1c5813d02f99",
+      "attendance": 28785,
+      "duration": "3:03",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777711",
+      "venue": {
+        "name": "Kauffman Stadium",
+        "market": "Kansas City",
+        "capacity": 38427,
+        "surface": "grass",
+        "address": "One Royal Way",
+        "city": "Kansas City",
+        "state": "MO",
+        "zip": "64129",
+        "country": "USA",
+        "id": "6fca95c9-7f2c-4acb-a9f3-02ef96340d2a",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Central",
+        "location": {
+          "lat": "39.051465",
+          "lng": "-94.48028889999999"
+        }
+      },
+      "home": {
+        "name": "Royals",
+        "market": "Kansas City",
+        "abbr": "KC",
+        "id": "833a51a9-0d84-410f-bd77-da08c3e5e26e",
+        "win": 30,
+        "loss": 28
+      },
+      "away": {
+        "name": "Tigers",
+        "market": "Detroit",
+        "abbr": "DET",
+        "id": "575c19b7-4052-41c2-9f0a-1c5813d02f99",
+        "win": 38,
+        "loss": 20
+      },
+      "broadcasts": [
+        {
+          "network": "FDSKC",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "671-5"
+        },
+        {
+          "network": "FDSDET",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "663"
+        }
+      ]
+    }
+  },
+  {
+    "id": "9d3a4fd0-400c-4d6f-bf22-638c7774bbff",
+    "status": "closed",
+    "scheduled": "2025-05-30T18:20:00+00:00",
+    "home_team": {
+      "id": "55714da8-fcaf-4574-8443-59bfb511a524",
+      "name": "Cubs",
+      "market": "Chicago",
+      "runs": 0,
+      "wins": 35,
+      "losses": 22
+    },
+    "away_team": {
+      "id": "c874a065-c115-4e7d-b0f0-235584fb0e6f",
+      "name": "Reds",
+      "market": "Cincinnati",
+      "runs": 0,
+      "wins": 29,
+      "losses": 29
+    },
+    "venue": "Wrigley Field",
+    "attendance": 36019,
+    "duration": "2:24",
+    "raw": {
+      "id": "9d3a4fd0-400c-4d6f-bf22-638c7774bbff",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "D",
+      "scheduled": "2025-05-30T18:20:00+00:00",
+      "home_team": "55714da8-fcaf-4574-8443-59bfb511a524",
+      "away_team": "c874a065-c115-4e7d-b0f0-235584fb0e6f",
+      "attendance": 36019,
+      "duration": "2:24",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777712",
+      "venue": {
+        "name": "Wrigley Field",
+        "market": "Chicago",
+        "capacity": 41363,
+        "surface": "grass",
+        "address": "1060 West Addison Street",
+        "city": "Chicago",
+        "state": "IL",
+        "zip": "60613",
+        "country": "USA",
+        "id": "53f8eb0d-a361-4a7a-930b-2f8735ea0698",
+        "field_orientation": "NE",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Central",
+        "location": {
+          "lat": "41.9474473",
+          "lng": "-87.6560538"
+        }
+      },
+      "home": {
+        "name": "Cubs",
+        "market": "Chicago",
+        "abbr": "CHC",
+        "id": "55714da8-fcaf-4574-8443-59bfb511a524",
+        "win": 35,
+        "loss": 22
+      },
+      "away": {
+        "name": "Reds",
+        "market": "Cincinnati",
+        "abbr": "CIN",
+        "id": "c874a065-c115-4e7d-b0f0-235584fb0e6f",
+        "win": 29,
+        "loss": 29
+      },
+      "broadcasts": [
+        {
+          "network": "MLB Network",
+          "type": "TV",
+          "locale": "National",
+          "channel": "213"
+        },
+        {
+          "network": "FDSOH",
+          "type": "TV",
+          "locale": "Away",
+          "channel": "660"
+        },
+        {
+          "network": "MARQ",
+          "type": "TV",
+          "locale": "Home",
+          "channel": "664"
+        }
+      ]
+    }
+  },
+  {
+    "id": "0b440f97-8ef2-4e02-8b26-9fdea19b7f80",
+    "status": "closed",
+    "scheduled": "2025-05-30T23:15:00+00:00",
+    "home_team": {
+      "id": "12079497-e414-450a-8bf2-29f91de646bf",
+      "name": "Braves",
+      "market": "Atlanta",
+      "runs": 0,
+      "wins": 26,
+      "losses": 30
+    },
+    "away_team": {
+      "id": "93941372-eb4c-4c40-aced-fe3267174393",
+      "name": "Red Sox",
+      "market": "Boston",
+      "runs": 0,
+      "wins": 28,
+      "losses": 31
+    },
+    "venue": "Truist Park",
+    "attendance": 39842,
+    "duration": "3:05",
+    "raw": {
+      "id": "0b440f97-8ef2-4e02-8b26-9fdea19b7f80",
+      "status": "closed",
+      "coverage": "full",
+      "game_number": 1,
+      "day_night": "N",
+      "scheduled": "2025-05-30T23:15:00+00:00",
+      "home_team": "12079497-e414-450a-8bf2-29f91de646bf",
+      "away_team": "93941372-eb4c-4c40-aced-fe3267174393",
+      "attendance": 39842,
+      "duration": "3:05",
+      "double_header": false,
+      "entry_mode": "STOMP",
+      "reference": "777719",
+      "venue": {
+        "name": "Truist Park",
+        "market": "Atlanta",
+        "capacity": 41149,
+        "surface": "grass",
+        "address": "755 Battery Avenue",
+        "city": "Atlanta",
+        "state": "GA",
+        "zip": "30339",
+        "country": "USA",
+        "id": "3ca8b577-5844-42ed-81a5-bd5d5cbe350c",
+        "field_orientation": "S",
+        "stadium_type": "outdoor",
+        "time_zone": "US/Eastern",
+        "location": {
+          "lat": "33.890672",
+          "lng": "-84.467641"
+        }
+      },
+      "home": {
+        "name": "Braves",
+        "market": "Atlanta",
+        "abbr": "ATL",
+        "id": "12079497-e414-450a-8bf2-29f91de646bf",
+        "win": 26,
+        "loss": 30
+      },
+      "away": {
+        "name": "Red Sox",
+        "market": "Boston",
+        "abbr": "BOS",
+        "id": "93941372-eb4c-4c40-aced-fe3267174393",
+        "win": 28,
+        "loss": 31
+      },
+      "broadcasts": [
+        {
+          "network": "Apple TV+",
+          "type": "Internet",
+          "locale": "National"
+        }
+      ]
+    }
+  }
+]

@@ -164,6 +164,66 @@ Data fetching is scheduled as follows (implementation via Supabase Edge Function
 - **Schedules Data:** Once per week.
 - **Teams and Players Data:** Once per day.
 
+## AI News Generation
+
+This feature leverages AI to generate unique, SEO-optimized news articles related to MLB games by combining data from SportsRadar, astrological insights, and team/player databases. The articles are written by Anthropic's Claude Haiku 3.5 LLM.
+
+### Architecture Overview
+
+1.  **Data Ingestion:**
+    *   MLB news (previews, recaps, analysis) is fetched from the **SportsRadar API**.
+    *   Relevant astrological data is retrieved from the project's internal **Astrology API**.
+    *   Team and player statistics are pulled from the **local database**.
+2.  **Content Generation (Backend Service):**
+    *   A backend service (e.g., Node.js script, serverless function) orchestrates the process.
+    *   It constructs detailed prompts for the **Anthropic Claude API**, including:
+        *   Raw sports news.
+        *   Astrological insights for the game date/teams/players.
+        *   Relevant team/player data.
+        *   SEO keywords and desired article tone.
+    *   The LLM generates the article content, title, subheading, and potentially suggestions for a feature image.
+3.  **Article Storage:**
+    *   Generated articles are stored (e.g., in a Supabase database table or as Markdown files in the repository).
+    *   The schema includes fields for title, slug, HTML content, feature image URL, SEO metadata, and publication date.
+4.  **Automated Publishing:**
+    *   A cron job or scheduled task triggers the content generation and publishing process on a regular basis (e.g., daily).
+5.  **Frontend Display:**
+    *   A new `/news` page displays a list of all generated articles and allows viewing individual articles.
+    *   A "Featured Article" section on the Dashboard highlights the latest or a specific article with its image, title, and a link.
+
+### Environment Variables
+
+The following environment variables must be set in your `.env` file for this feature to function:
+
+*   `ANTHROPIC_API_KEY`: Your API key for Anthropic Claude.
+*   `SPORTS_RADAR_NEWS_API_KEY`: Your API key for SportsRadar (specifically for news endpoints).
+*   `(Other relevant keys for Astrology API and Database if they are not already listed)`
+
+### Data Flow
+
+```
+SportsRadar API --(MLB News)--> \
+                                 \
+Astrology API --(Astro Data)--> ---- Backend Service ----(Prompt)----> Anthropic API (Claude)
+                                 /                                      |
+Database --(Team/Player Data)--> /                                       |
+                                                                        |
+                                     <----(Generated Article)------------/
+                                                                        |
+                                                                        V
+                                                                  Article Storage
+                                                                        |
+                                                                        V
+                                                         Frontend (News Page, Dashboard)
+```
+
+### Future Enhancements for AI News
+
+*   Integration with AI image generation for feature images.
+*   Advanced SEO optimization techniques.
+*   User feedback mechanism for article quality.
+*   Personalized news feeds based on user preferences.
+
 ## TODO / Future Enhancements
 
 - **Implement Scheduled Data Updates:** Set up Supabase Edge Functions (or other cron mechanism) to automate data fetching from TheSportsDB and other APIs according to the defined schedules.

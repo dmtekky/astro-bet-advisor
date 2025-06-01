@@ -1,0 +1,17 @@
+[
+  {
+    "id": "73b696a7-0a79-4964-a1c9-7081dc04af74",
+    "title": "San Francisco vs Miami - May 30",
+    "description": "Recap of the MLB game between San Francisco and Miami",
+    "publishedAt": "2025-06-01T03:31:54.467Z",
+    "image": "",
+    "teamHome": "Miami",
+    "teamAway": "San Francisco",
+    "score": "0 - 0",
+    "date": "2025-05-30T23:10:00.000Z",
+    "content": "\n    <div class=\"game-recap\">\n      <div class=\"game-header\">\n        <h1>San Francisco vs Miami</h1>\n        <div class=\"game-meta\">\n          <span>5/30/2025 • loanDepot park</span>\n        </div>\n        \n        <div class=\"final-score\">\n          <div class=\"team\">\n            <span class=\"team-name\">San Francisco</span>\n            <span class=\"team-runs\">0</span>\n          </div>\n          <div class=\"team\">\n            <span class=\"team-name\">Miami</span>\n            <span class=\"team-runs\">0</span>\n          </div>\n        </div>\n      </div>\n      \n      <div class=\"game-summary\">\n        <h2>Game Recap</h2>\n        <p>In an exciting matchup, the Giants faced off against the Marlins at loanDepot park. The game was a close contest with both teams showing strong performances.</p>\n      </div>\n      \n      \n      \n      <div class=\"game-notes\">\n        <h3>Game Notes</h3>\n        <ul>\n          <li>Attendance: 10,361</li>\n          <li>Duration: 2:41</li>\n          <li>Venue: loanDepot park</li>\n        </ul>\n      </div>\n    </div>\n    \n    <style>\n      .game-recap { max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; }\n      .game-header { text-align: center; margin-bottom: 2rem; }\n      .game-meta { color: #666; margin: 0.5rem 0; }\n      .final-score { \n        display: flex; \n        justify-content: center; \n        gap: 2rem; \n        margin: 1.5rem 0; \n        font-size: 1.5rem;\n      }\n      .team { text-align: center; }\n      .team-name { display: block; font-weight: bold; }\n      .team-runs { font-size: 2.5rem; font-weight: bold; }\n      .player-cards { \n        display: grid; \n        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); \n        gap: 1rem; \n        margin: 1rem 0; \n      }\n      .player-card {\n        background: #f9f9f9;\n        padding: 1rem;\n        border-radius: 8px;\n        box-shadow: 0 2px 4px rgba(0,0,0,0.1);\n      }\n      .player-card h3 {\n        margin-top: 0;\n        color: #333;\n      }\n      .zodiac-info {\n        margin-top: 0.5rem;\n        padding-top: 0.5rem;\n        border-top: 1px solid #eee;\n      }\n      .game-notes { \n        font-size: 0.9rem; \n        color: #666; \n        margin-top: 2rem; \n        padding-top: 1rem; \n        border-top: 1px solid #eee;\n      }\n    </style>\n  ",
+    "venue": "loanDepot park",
+    "attendance": 10361,
+    "duration": "2:41"
+  }
+]

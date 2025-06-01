@@ -9,6 +9,8 @@ import LeaguePage from "./pages/LeaguePage";
 import GamePage from "./pages/GamePage";
 import SearchResults from "./pages/SearchResults";
 import UpcomingGames from "./pages/UpcomingGames";
+import NewsPage from "./pages/NewsPage";
+import NewsArticle from "./pages/NewsArticle";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -41,6 +43,8 @@ function AppContent() {
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
           <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/news/:slug" element={<NewsArticle />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

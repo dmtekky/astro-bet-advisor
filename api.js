@@ -1,6 +1,16 @@
 import express from 'express';
 import { getMoonPhase, getPlanetPositions, getZodiacSign } from './src/lib/astroCalculations.js';
 import unifiedAstroHandler from './api/unified-astro.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Path to the news data directory
+const NEWS_DATA_DIR = path.join(__dirname, 'public/news/data');
 
 const app = express();
 const port = 3001; // Changed to match Vite proxy configuration
@@ -421,6 +431,77 @@ function getMoonPhaseName(phase) {
   if (phase === 0.75) return 'Last Quarter';
   return 'Waning Crescent';
 }
+
+// News API Endpoint to serve generated articles
+app.get('/api/news', async (req, res) => {
+  try {
+    const indexPath = path.join(NEWS_DATA_DIR, 'index.json');
+    
+    // Check if the index file exists
+    try {
+      await fs.access(indexPath);
+    } catch (error) {
+      return res.status(404).json({
+        articles: [],
+        message: "No news articles found. Run the generate:news script first."
+      });
+    }
+    
+    // Read the index file
+    const indexData = JSON.parse(await fs.readFile(indexPath, 'utf8'));
+    
+    if (!indexData.articles || !Array.isArray(indexData.articles)) {
+      return res.status(500).json({
+        error: "Invalid news data format"
+      });
+    }
+    
+    // Return the articles
+    return res.status(200).json(indexData);
+    
+  } catch (error) {
+    console.error('Error in /api/news:', error);
+    return res.status(500).json({
+      error: "Failed to fetch news articles",
+      details: error.message
+    });
+  }
+});
+
+// News article detail API endpoint
+app.get('/api/news/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!slug) {
+      return res.status(400).json({ error: "Article slug is required" });
+    }
+    
+    const articlePath = path.join(NEWS_DATA_DIR, `${slug}.json`);
+    
+    // Check if the article file exists
+    try {
+      await fs.access(articlePath);
+    } catch (error) {
+      return res.status(404).json({
+        error: "Article not found",
+        message: `No article found with slug: ${slug}`
+      });
+    }
+    
+    // Read the article file
+    const articleData = JSON.parse(await fs.readFile(articlePath, 'utf8'));
+    
+    // Return the article data
+    return res.status(200).json(articleData);
+    
+  } catch (error) {
+    console.error(`Error in /api/news/:slug:`, error);
+    return res.status(500).json({
+      error: "Failed to fetch article",
+      details: error.message
+    });
+  }
+});
 
 app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);

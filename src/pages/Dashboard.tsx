@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star,
   Calendar,
@@ -31,12 +31,14 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAstroData } from '@/hooks/useAstroData';
 import type { Team } from '@/types';
 import type { Game } from '@/types';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
 import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhaseInfo, CelestialBody, Aspect } from '@/types/astrology';
 import type { GamePredictionData } from '@/types/gamePredictions';
+import type { Article } from '../types/news';
 import { createDefaultCelestialBody } from '@/types/gamePredictions';
 
 // Extend the Team interface to include additional properties used in the component
@@ -82,6 +84,16 @@ const DEFAULT_LOGO = '/images/default-team-logo.png';
 import AstroDisclosure from '@/components/AstroDisclosure';
 
 const Dashboard: React.FC = () => {
+  const [featuredArticle, setFeaturedArticle] = useState<Article | null>({
+    slug: 'ai-astrology-mlb-deep-dive-20250531',
+    title: 'AI & Astrology: A New Frontier in MLB Predictions',
+    subheading: 'Discover how combining advanced AI with ancient astrological wisdom is changing the game for sports bettors.',
+    contentHtml: '<p>Full article content would go here...</p>',
+    featureImageUrl: 'https://images.unsplash.com/photo-1580209949904-5046cf9isfa7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // Placeholder image
+    publishedAt: new Date().toISOString(),
+    author: 'AstroBet AI Insights',
+    tags: ['MLB', 'AI', 'Astrology', 'Predictions'],
+  });
   // State for today's date
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
@@ -316,6 +328,14 @@ const Dashboard: React.FC = () => {
 
     return interpretation;
   }
+
+  // Navigation
+  const navigate = useNavigate();
+  
+  // Handle navigation to upcoming games page
+  const handleSeeMoreGames = () => {
+    navigate('/upcoming-games');
+  };
 
   // Calculate loading and error states
   const isLoading = astroLoading || gamesLoading || teamsLoading;
@@ -841,16 +861,120 @@ const Dashboard: React.FC = () => {
     return recommendation;
   }, [astroData, elementsDistribution, sportsPredictions]);
 
+  // Animation variants
+  const featuredArticleVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: 'easeOut', delay: 0.2 },
+    },
+  };
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 15
+      }
+    },
+    hover: {
+      y: -5,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    show: { 
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut'
+      }
+    }
+  };
+
+  const slideUp = {
+    hidden: { opacity: 0, y: 30 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1]
+      }
+    }
+  };
+
   return (
     <DashboardLayout>
+      {featuredArticle && (
+        <motion.section
+          variants={featuredArticleVariant}
+          initial="hidden"
+          animate="visible"
+          className="mb-8 p-6 bg-gradient-to-br from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 rounded-xl shadow-2xl text-white overflow-hidden relative"
+        >
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            {featuredArticle.featureImageUrl && (
+              <motion.div 
+                className="md:w-1/3 w-full h-64 rounded-lg overflow-hidden shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <img 
+                  src={featuredArticle.featureImageUrl} 
+                  alt={featuredArticle.title} 
+                  className="w-full h-full object-cover" 
+                />
+              </motion.div>
+            )}
+            <div className="md:w-2/3">
+              <Badge variant="secondary" className="mb-2 bg-white/20 text-white backdrop-blur-sm">Featured Insight</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-3 leading-tight">{featuredArticle.title}</h2>
+              {featuredArticle.subheading && (
+                <p className="text-lg text-indigo-100 dark:text-indigo-200 mb-4">
+                  {featuredArticle.subheading}
+                </p>
+              )}
+              <Link 
+                to={`/news/${featuredArticle.slug}`}
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-700 focus:ring-white transition-all duration-150 ease-in-out transform hover:scale-105 shadow-md"
+              >
+                Read Full Story <Star className="ml-2 h-5 w-5" />
+              </Link>
+            </div>
+          </div>
+          {/* Optional: subtle background pattern or elements */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+             {/* Example: <Sparkles className="absolute top-5 right-5 w-16 h-16 text-yellow-300" /> */}
+          </div>
+        </motion.section>
+      )}
+
+      {/* Main Dashboard Content Starts Here */}
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="min-h-screen w-full"
-        style={{
-          background: 'linear-gradient(135deg, #4338ca20 0%, #6366f110 100%)',
-        }}
+        variants={container} 
+        initial="hidden"   
+        animate="show"     
+        exit="hidden"     
+        className="space-y-8"
       >
         <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 space-y-8">
           {/* Dashboard Header */}
@@ -884,7 +1008,7 @@ const Dashboard: React.FC = () => {
             // No global error, proceed to render the main layout with individual section loading
             <div className="grid grid-cols-1 gap-8">
               {/* Upcoming Games Section (Full width) */}
-              <div className="space-y-8">
+              <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
                 {(gamesLoading && (!games || games.length === 0)) ? (
                   // Skeletons for Games section
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
@@ -1001,8 +1125,26 @@ const Dashboard: React.FC = () => {
                           </div>
                         </div>
                       ))}
-                      {games.length === 0 && !gamesLoading && (
+                      {games.length === 0 && !gamesLoading ? (
                         <p className="text-center text-slate-500 py-8">No upcoming games scheduled for this league.</p>
+                      ) : (
+                        <div className="mt-8 mb-2 flex justify-center">
+                          <Button 
+                            variant="outline" 
+                            className="group relative inline-flex items-center justify-center px-6 py-3 overflow-hidden font-medium text-indigo-600 transition duration-300 ease-out border-2 border-indigo-500 rounded-full shadow-md group"
+                            onClick={handleSeeMoreGames}
+                          >
+                            <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-indigo-500 group-hover:translate-x-0 ease">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                              </svg>
+                            </span>
+                            <span className="absolute flex items-center justify-center w-full h-full text-indigo-500 transition-all duration-300 transform group-hover:translate-x-full ease">
+                              View All Games
+                            </span>
+                            <span className="relative invisible">View All Games</span>
+                          </Button>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
@@ -1017,10 +1159,10 @@ const Dashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 ) : null}
-              </div>
+              </motion.div>
 
               {/* Astrological Insights Section */}
-              <div className="mt-12">
+              <motion.div variants={slideUp} initial="hidden" animate="show" className="mt-12">
                 <div className="flex items-center mb-6">
                   <h2 className="text-2xl font-bold text-slate-800">Astrological Insights</h2>
                   <span className="ml-3 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
@@ -1028,7 +1170,7 @@ const Dashboard: React.FC = () => {
                   </span>
                 </div>
                 {/* Elemental Balance Full-Width Card */}
-                <Card className="w-full mb-8 border border-slate-200/50 bg-white/70 backdrop-blur-sm shadow-md">
+                <motion.div variants={fadeIn} initial="hidden" animate="show" className="w-full mb-8 border border-slate-200/50 bg-white/70 backdrop-blur-sm shadow-md">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                       Elemental Balance
@@ -1059,9 +1201,9 @@ const Dashboard: React.FC = () => {
                       </div>
                     )}
                   </CardContent>
-                </Card>
+                </motion.div>
                 {/* Other astrology cards below */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(astroLoading && !astroData) ? (
                   // Skeletons for Astro section
                   <>
@@ -1072,73 +1214,74 @@ const Dashboard: React.FC = () => {
                 ) : astroData ? (
                   // Actual Astro content
                   <>
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
-  <CardHeader className="pb-2">
-    <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-      <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" /> Solar Influence
-    </CardTitle>
-    <CardDescription className="text-slate-600">
-      The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
-    </CardDescription>
-  </CardHeader>
-  <CardContent className="space-y-3 pt-2">
-    {/* Sun Visualization Section */}
-    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
-      <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
-        <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
-          {/* Sun visualization */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
-            <div className="absolute w-full h-full rounded-full" style={{
-              boxShadow: '0 0 80px 30px rgba(252, 211, 77, 0.4)',
-              pointerEvents: 'none',
-              background: 'radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)'
-            }} />
-          </div>
-        </div>
-        <div className="text-center md:text-left flex-1">
-          <h4 className="text-2xl font-bold text-yellow-700 mb-1">
-            Sun Position
-          </h4>
-          <p className="text-sm text-yellow-600 mb-2">
-            {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)})
-          </p>
-          <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-            Element: {getSunElement(sunSign)}
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
-            <p className="text-base text-slate-700 leading-relaxed">
-              {getSunSportsInfluences(astroData)[0]?.text || 'The Sun’s current sign sets the tone for vitality and momentum.'}
-            </p>
-          </div>
-          {/* Sun Details */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-white p-3 rounded-lg border border-slate-100">
-              <div className="text-xs uppercase text-slate-500 font-medium mb-1">Sun Sign</div>
-              <div className="font-semibold text-yellow-700">{sunSign}</div>
-            </div>
-            <div className="bg-white p-3 rounded-lg border border-slate-100">
-              <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
-              <div className="font-semibold text-yellow-700">{sunDegree ? `${Math.floor(sunDegree)}°` : '—'}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    {/* Solar Influence Details */}
-    <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
-      <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
-      <ul className="list-disc pl-5 space-y-1">
-        {getSunSportsInfluences(astroData).map((influence, index) => (
-          <li key={`sun-influence-${index}`} className="text-sm text-slate-700">{influence.text}</li>
-        ))}
-      </ul>
-    </div>
-  </CardContent>
-</Card>
+                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                          <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" /> Solar Influence
+                        </CardTitle>
+                        <CardDescription className="text-slate-600">
+                          The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-2">
+                        {/* Sun Visualization Section */}
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
+                          <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
+                            <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+                              {/* Sun visualization */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
+                                <div className="absolute w-full h-full rounded-full" style={{
+                                  boxShadow: '0 0 80px 30px rgba(252, 211, 77, 0.4)',
+                                  pointerEvents: 'none',
+                                  background: 'radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)'
+                                }} />
+                              </div>
+                            </div>
+                            <div className="text-center md:text-left flex-1">
+                              <h4 className="text-2xl font-bold text-yellow-700 mb-1">
+                                Sun Position
+                              </h4>
+                              <p className="text-sm text-yellow-600 mb-2">
+                                {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)})
+                              </p>
+                              <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
+                                Element: {getSunElement(sunSign)}
+                              </div>
+                              <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
+                                <p className="text-base text-slate-700 leading-relaxed">
+                                  {getSunSportsInfluences(astroData)[0]?.text || 'The Sun’s current sign sets the tone for vitality and momentum.'}
+                                </p>
+                              </div>
+                              {/* Sun Details */}
+                              <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Sun Sign</div>
+                                  <div className="font-semibold text-yellow-700">{sunSign}</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
+                                  <div className="font-semibold text-yellow-700">
+                                    {sunDegree ? `${Math.floor(sunDegree)}°` : '—'}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Solar Influence Details */}
+                        <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
+                          <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
+                          <ul className="list-disc pl-5 space-y-1">
+                            {getSunSportsInfluences(astroData).map((influence, index) => (
+                              <li key={`sun-influence-${index}`} className="text-sm text-slate-700">{influence.text}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </motion.div>
 
-
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300 md:col-span-2">
+                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300 md:col-span-2">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Moon className="h-5 w-5 mr-2 text-indigo-500" /> Lunar & Void Status
@@ -1298,9 +1441,9 @@ const Dashboard: React.FC = () => {
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
+                    </motion.div>
 
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
+                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
@@ -1324,10 +1467,9 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-slate-500">No specific planetary influences highlighted at the moment.</p>
                         )}
                       </CardContent>
-                    </Card>
+                    </motion.div>
 
-
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
+                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                           <Lightbulb className="h-5 w-5 mr-2 text-amber-500" /> Daily Astro Tip
@@ -1338,7 +1480,7 @@ const Dashboard: React.FC = () => {
                           {dailyRecommendation || 'General astrological conditions apply. Stay observant and adaptive.'}
                         </p>
                       </CardContent>
-                    </Card>
+                    </motion.div>
                   </>
                 ) : (!astroLoading && !astroData) ? (
                   // No Astro data message
@@ -1351,8 +1493,8 @@ const Dashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 ) : null}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           )}
         </div>

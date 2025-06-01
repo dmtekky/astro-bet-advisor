@@ -17,22 +17,12 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
       proxy: {
+        // Proxy API requests to our API server running on port 3001
         '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.log('Vite Proxy Error:', err);
-            });
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('Vite Proxying request:', req.method, req.url, 'to', options.target + proxyReq.path);
-            });
-            proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('Vite Received response from target:', proxyRes.statusCode, req.url);
-            });
-          }
-        }
-      }
+        },
+      },
     },
     
     build: {
