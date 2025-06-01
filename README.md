@@ -196,6 +196,40 @@ This feature leverages AI to generate unique, SEO-optimized news articles relate
     *   A new `/news` page displays a list of all generated articles and allows viewing individual articles.
     *   A "Featured Article" section on the Dashboard highlights the latest or a specific article with its image, title, and a link.
 
+## Team Chemistry Feature
+
+The Team Chemistry feature analyzes player astrological data to calculate team compatibility and performance metrics. This helps provide deeper insights into team dynamics and potential performance.
+
+### Current Implementation
+
+The team chemistry system is already set up and running with the following components:
+
+1. **Database Table**: `team_chemistry` table is created with all necessary fields
+2. **Data Population**: Team chemistry scores have been calculated and stored
+3. **Frontend Integration**: Team pages display the chemistry scores and analysis
+
+### Updating Team Chemistry
+
+To update the team chemistry data with the latest player information:
+
+```bash
+node scripts/update-player-scores.js
+```
+
+This script will:
+- Update player impact and astro influence scores
+- Recalculate team chemistry metrics
+- Update the team_chemistry table with fresh data
+
+### Viewing Team Chemistry
+
+- Navigate to any team's page to view their chemistry score and analysis
+- Scores range from 0-100, with higher numbers indicating better team chemistry
+- Detailed metrics include:
+  - Elemental balance (fire, earth, air, water)
+  - Aspect harmony (challenging and harmonious aspects)
+  - Last updated timestamp
+
 ### Environment Variables
 
 The following environment variables must be set in your `.env` file for this feature to function:

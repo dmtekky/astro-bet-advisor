@@ -9,9 +9,23 @@ export default defineConfig(({ mode }) => {
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
   
+  // Explicitly define which env vars should be exposed to the client
+  const clientEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (key.startsWith('VITE_')) {
+      clientEnv[`import.meta.env.${key}`] = JSON.stringify(value);
+    }
+  }
+
   return {
     // This ensures that the app works when served from a subdirectory
     base: env.VITE_BASE_URL || '/',
+    
+    define: {
+      ...clientEnv,
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_KEY': JSON.stringify(env.VITE_SUPABASE_KEY),
+    },
     
     server: {
       host: "::",

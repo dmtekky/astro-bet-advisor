@@ -1,143 +1,185 @@
-export interface ZodiacColorScheme {
-  bg: string; // Background color for the card
-  text: string; // Primary text color
-  accent: string; // Accent color for borders, icons, highlights
-  border: string; // Border color, often a slightly darker or lighter shade of accent or bg
-  gradient: string; // A gradient, perhaps for a subtle background effect or a bottom bar
+// Zodiac utility functions
+
+export type ZodiacSign = 'Aries' | 'Taurus' | 'Gemini' | 'Cancer' | 'Leo' | 'Virgo'
+  | 'Libra' | 'Scorpio' | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces' | null;
+
+export type ZodiacElement = 'fire' | 'earth' | 'air' | 'water' | null;
+
+/**
+ * Determines the zodiac sign based on a birth date
+ * @param birthDate - Birth date as string or Date object
+ * @returns The zodiac sign or null if date is invalid
+ */
+export function getZodiacSign(birthDate: string | Date | null | undefined): ZodiacSign {
+  if (!birthDate) return null;
+  
+  // Parse the date if it's a string
+  const date = typeof birthDate === 'string' 
+    ? new Date(birthDate) 
+    : birthDate;
+    
+  // Validate date object
+  if (!(date instanceof Date) || isNaN(date.getTime())) return null;
+  
+  const month = date.getMonth() + 1; // getMonth() returns 0-11
+  const day = date.getDate();
+  
+  // Determine zodiac sign based on month and day
+  switch (month) {
+    case 1: // January
+      return day <= 19 ? 'Capricorn' : 'Aquarius';
+    case 2: // February
+      return day <= 18 ? 'Aquarius' : 'Pisces';
+    case 3: // March
+      return day <= 20 ? 'Pisces' : 'Aries';
+    case 4: // April
+      return day <= 19 ? 'Aries' : 'Taurus';
+    case 5: // May
+      return day <= 20 ? 'Taurus' : 'Gemini';
+    case 6: // June
+      return day <= 20 ? 'Gemini' : 'Cancer';
+    case 7: // July
+      return day <= 22 ? 'Cancer' : 'Leo';
+    case 8: // August
+      return day <= 22 ? 'Leo' : 'Virgo';
+    case 9: // September
+      return day <= 22 ? 'Virgo' : 'Libra';
+    case 10: // October
+      return day <= 22 ? 'Libra' : 'Scorpio';
+    case 11: // November
+      return day <= 21 ? 'Scorpio' : 'Sagittarius';
+    case 12: // December
+      return day <= 21 ? 'Sagittarius' : 'Capricorn';
+    default:
+      return null;
+  }
 }
 
-export const getZodiacSign = (dateString?: string | null): string => {
-  if (!dateString) return 'Aries'; // Default or handle as error
-  try {
-    const date = new Date(dateString);
-    // Ensure date is valid
-    if (isNaN(date.getTime())) {
-      // Try parsing with T instead of space for ISO 8601 compatibility
-      const isoDate = new Date(dateString.replace(' ', 'T'));
-      if (isNaN(isoDate.getTime())) {
-        console.warn(`Invalid date string provided to getZodiacSign: ${dateString}`);
-        return 'Aries'; // Default or handle as error
-      }
-      date.setTime(isoDate.getTime());
-    }
-
-    const day = date.getUTCDate();
-    const month = date.getUTCMonth() + 1; // JavaScript months are 0-indexed
-
-    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'Aquarius';
-    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return 'Pisces';
-    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'Aries';
-    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'Taurus';
-    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'Gemini';
-    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'Cancer';
-    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'Leo';
-    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'Virgo';
-    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'Libra';
-    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'Scorpio';
-    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'Sagittarius';
-    // Capricorn: (month === 12 && day >= 22) || (month === 1 && day <= 19)
-    return 'Capricorn';
-  } catch (error) {
-    console.error(`Error parsing date string in getZodiacSign: ${dateString}`, error);
-    return 'Aries'; // Fallback zodiac sign
-  }
+// Define zodiac element mappings
+export const zodiacElements: Record<string, ZodiacElement> = {
+  aries: 'fire',
+  taurus: 'earth',
+  gemini: 'air',
+  cancer: 'water',
+  leo: 'fire',
+  virgo: 'earth',
+  libra: 'air',
+  scorpio: 'water',
+  sagittarius: 'fire',
+  capricorn: 'earth',
+  aquarius: 'air',
+  pisces: 'water'
 };
+
+/**
+ * Gets the element associated with a zodiac sign
+ * @param sign - The zodiac sign
+ * @returns The element (fire, earth, air, water) or null
+ */
+export function getZodiacElement(sign: string | null | undefined): ZodiacElement {
+  if (!sign) return null;
+  
+  const signLower = sign.toLowerCase();
+  return zodiacElements[signLower] || null;
+}
+
+/**
+ * Gets the emoji representing a zodiac sign
+ * @param sign - The zodiac sign
+ * @returns The emoji or a default star emoji
+ */
+export function getZodiacEmoji(sign: string | null | undefined): string {
+  if (!sign) return '⭐';
+  
+  const signLower = sign.toLowerCase();
+  
+  const emojiMap: Record<string, string> = {
+    aries: '♈',
+    taurus: '♉',
+    gemini: '♊',
+    cancer: '♋',
+    leo: '♌',
+    virgo: '♍',
+    libra: '♎',
+    scorpio: '♏',
+    sagittarius: '♐',
+    capricorn: '♑',
+    aquarius: '♒',
+    pisces: '♓'
+  };
+  
+  return emojiMap[signLower] || '⭐';
+}
+
+/**
+ * Gets the color associated with a zodiac element
+ * @param element - The element (fire, earth, air, water)
+ * @returns The color as hex code
+ */
+export function getElementColor(element: string | null | undefined): string {
+  if (!element) return '#888888';
+  
+  const elementLower = element.toLowerCase();
+  
+  const colorMap: Record<string, string> = {
+    fire: '#FF5733', // Red/orange
+    earth: '#8B4513', // Brown
+    air: '#87CEEB', // Sky blue
+    water: '#1E90FF' // Deep blue
+  };
+  
+  return colorMap[elementLower] || '#888888';
+}
+
+/**
+ * Get emoji for an element
+ * @param element - The element (fire, earth, air, water)
+ * @returns The emoji
+ */
+export function getElementEmoji(element: string | null | undefined): string {
+  if (!element) return '✨';
+  
+  const elementLower = element.toLowerCase();
+  
+  const emojiMap: Record<string, string> = {
+    fire: '🔥',
+    earth: '🌍',
+    air: '💨',
+    water: '💧'
+  };
+  
+  return emojiMap[elementLower] || '✨';
+}
+
+// Define color schemes for each zodiac sign
+export interface ZodiacColorScheme {
+  primary: string;
+  secondary: string;
+}
 
 const zodiacColorSchemes: Record<string, ZodiacColorScheme> = {
-  aries: {
-    bg: 'bg-gradient-to-br from-red-400 via-red-500 to-orange-500',
-    text: 'text-white',
-    accent: '#EF4444', // Red-500
-    border: 'border-red-600',
-    gradient: 'linear-gradient(to right, #F87171, #F97316)' // red-400 to orange-600
-  },
-  taurus: {
-    bg: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-500',
-    text: 'text-white',
-    accent: '#10B981', // Emerald-500
-    border: 'border-emerald-600',
-    gradient: 'linear-gradient(to right, #34D399, #22C55E)' // emerald-400 to green-500
-  },
-  gemini: {
-    bg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-400',
-    text: 'text-neutral-800',
-    accent: '#F59E0B', // Amber-500
-    border: 'border-yellow-500',
-    gradient: 'linear-gradient(to right, #FCD34D, #FBBF24)' // yellow-300 to amber-400
-  },
-  cancer: {
-    bg: 'bg-gradient-to-br from-slate-300 via-slate-400 to-gray-400',
-    text: 'text-neutral-800',
-    accent: '#94A3B8', // Slate-400
-    border: 'border-slate-500',
-    gradient: 'linear-gradient(to right, #D1D5DB, #9CA3AF)' // gray-300 to gray-400
-  },
-  leo: {
-    bg: 'bg-gradient-to-br from-orange-400 via-orange-500 to-amber-500',
-    text: 'text-white',
-    accent: '#F97316', // Orange-500
-    border: 'border-orange-600',
-    gradient: 'linear-gradient(to right, #FB923C, #F59E0B)' // orange-400 to amber-500
-  },
-  virgo: {
-    bg: 'bg-gradient-to-br from-lime-300 via-lime-400 to-green-400',
-    text: 'text-neutral-800',
-    accent: '#84CC16', // Lime-500
-    border: 'border-lime-500',
-    gradient: 'linear-gradient(to right, #A3E635, #4ADE80)' // lime-400 to green-400
-  },
-  libra: {
-    bg: 'bg-gradient-to-br from-pink-300 via-pink-400 to-rose-400',
-    text: 'text-white',
-    accent: '#F472B6', // Pink-400
-    border: 'border-pink-500',
-    gradient: 'linear-gradient(to right, #F9A8D4, #FB7185)' // pink-300 to rose-400
-  },
-  scorpio: {
-    bg: 'bg-gradient-to-br from-neutral-700 via-neutral-800 to-black',
-    text: 'text-slate-100',
-    accent: '#78716C', // Stone-500 (using as a dark, intense accent)
-    border: 'border-neutral-900',
-    gradient: 'linear-gradient(to right, #404040, #171717)' // neutral-700 to neutral-900
-  },
-  sagittarius: {
-    bg: 'bg-gradient-to-br from-purple-400 via-purple-500 to-indigo-500',
-    text: 'text-white',
-    accent: '#8B5CF6', // Purple-500
-    border: 'border-purple-600',
-    gradient: 'linear-gradient(to right, #A78BFA, #6366F1)' // purple-400 to indigo-500
-  },
-  capricorn: {
-    bg: 'bg-gradient-to-br from-stone-400 via-stone-500 to-neutral-500',
-    text: 'text-white',
-    accent: '#78716C', // Stone-500
-    border: 'border-stone-600',
-    gradient: 'linear-gradient(to right, #A8A29E, #737373)' // stone-400 to neutral-500
-  },
-  aquarius: {
-    bg: 'bg-gradient-to-br from-sky-300 via-sky-400 to-cyan-400',
-    text: 'text-neutral-800',
-    accent: '#38BDF8', // Sky-400
-    border: 'border-sky-500',
-    gradient: 'linear-gradient(to right, #7DD3FC, #67E8F9)' // sky-300 to cyan-300
-  },
-  pisces: {
-    bg: 'bg-gradient-to-br from-teal-300 via-teal-400 to-cyan-500',
-    text: 'text-white',
-    accent: '#2DD4BF', // Teal-400
-    border: 'border-teal-500',
-    gradient: 'linear-gradient(to right, #5EEAD4, #22D3EE)' // teal-300 to cyan-400
-  },
-  unknown: {
-    bg: 'bg-gradient-to-br from-slate-200 via-slate-300 to-gray-300',
-    text: 'text-neutral-800',
-    accent: '#9CA3AF', // Gray-400
-    border: 'border-slate-400',
-    gradient: 'linear-gradient(to right, #E5E7EB, #D1D5DB)' // slate-200 to gray-300
-  }
+  aries: { primary: '#FF5733', secondary: '#FFC300' },
+  taurus: { primary: '#8B4513', secondary: '#D2B48C' },
+  gemini: { primary: '#87CEEB', secondary: '#E0FFFF' },
+  cancer: { primary: '#1E90FF', secondary: '#87CEEB' },
+  leo: { primary: '#FF8C00', secondary: '#FFD700' },
+  virgo: { primary: '#228B22', secondary: '#90EE90' },
+  libra: { primary: '#9370DB', secondary: '#E6E6FA' },
+  scorpio: { primary: '#4B0082', secondary: '#8A2BE2' },
+  sagittarius: { primary: '#FF4500', secondary: '#FFA500' },
+  capricorn: { primary: '#2F4F4F', secondary: '#A9A9A9' },
+  aquarius: { primary: '#00BFFF', secondary: '#87CEFA' },
+  pisces: { primary: '#4169E1', secondary: '#87CEEB' }
 };
 
-export const getZodiacColorScheme = (zodiacSign: string): ZodiacColorScheme => {
-  const sign = zodiacSign?.toLowerCase() || 'unknown';
-  return zodiacColorSchemes[sign] || zodiacColorSchemes.unknown;
-};
+/**
+ * Gets the color scheme for a zodiac sign
+ * @param sign - The zodiac sign
+ * @returns Object with primary and secondary colors
+ */
+export function getZodiacColorScheme(sign: string | null | undefined): ZodiacColorScheme {
+  if (!sign) return { primary: '#888888', secondary: '#CCCCCC' };
+  
+  const signLower = sign.toLowerCase();
+  return zodiacColorSchemes[signLower] || { primary: '#888888', secondary: '#CCCCCC' };
+}

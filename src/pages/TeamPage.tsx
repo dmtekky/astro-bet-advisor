@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
+
+// Debug log for environment variables
+console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('VITE_SUPABASE_KEY:', import.meta.env.VITE_SUPABASE_KEY ? '***' : 'missing');
+console.log('Supabase client:', supabase);
 import { motion } from 'framer-motion';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, MapPin as MapPinIcon, Info, Users, Star, TrendingUp } from 'lucide-react';
+import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, Check, Info, MapPin as MapPinIcon, PlusSquare, ShieldCheck, Sparkles, Star, TrendingUp, Trophy, Users, Zap } from 'lucide-react';
 import PlayerCardNew from '@/components/PlayerCardNew';
 import { toast } from '../components/ui/use-toast';
 import TeamRoster from '../components/TeamRoster';
@@ -13,6 +18,7 @@ import { GameCarousel } from '../components/games/GameCarousel';
 import { getTeamColorStyles } from '@/utils/teamColors';
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
+import { TeamChemistryMeter } from '@/components/TeamChemistryMeter';
 
 import { calculateImpactScore } from '../utils/calculateImpactScore';
 // Type definitions for the component
@@ -151,6 +157,28 @@ type GameWithTeams = GameBase & {
 
 
 
+// Define the interfaces for team chemistry data
+interface ElementalBalance {
+  fire: number;
+  earth: number;
+  air: number;
+  water: number;
+  balance: number;
+}
+
+interface AspectHarmony {
+  harmonyScore: number;
+  challengeScore: number;
+  netHarmony: number;
+}
+
+interface TeamChemistryData {
+  score: number;
+  elements: ElementalBalance;
+  aspects: AspectHarmony;
+  calculatedAt: string;
+}
+
 const TeamPage = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
@@ -158,6 +186,14 @@ const TeamPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [topPlayers, setTopPlayers] = useState<Player[]>([]);
+  const [chemistry, setChemistry] = useState<TeamChemistryData | null>({
+    score: 50,
+    elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
+    aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+    calculatedAt: new Date().toISOString()
+  });
+  const [chemistryLoading, setChemistryLoading] = useState<boolean>(true);
+  
   // Type for games with non-null teams for the GameCarousel
   type GameWithTeams = Game & { home_team: Team; away_team: Team };
   
@@ -383,10 +419,136 @@ const TeamPage = () => {
           });
           // Show top 4 players instead of 3
           setTopPlayers(sortedPlayers.slice(0, 4));
+          
+          // Fetch team chemistry data using fetch API with proper typing
+          try {
+            setChemistryLoading(true);
+            
+            // First, try to get the team's external ID if available
+            const teamExternalId = teamData.external_id || teamData.id;
+            const teamAbbreviation = teamData.abbreviation;
+            
+            console.log(`Fetching chemistry data for team: ${teamData.name} (ID: ${teamId}, External ID: ${teamExternalId}, Abbrev: ${teamAbbreviation})`);
+            
+            // Build the query parameters
+            const queryParams = new URLSearchParams({
+              select: '*',
+              or: `team_id.eq.${teamId},team_id.eq.${teamExternalId}${teamAbbreviation ? `,team_abbreviation.eq.${teamAbbreviation}` : ''}`,
+              limit: '1'
+            });
+            
+            console.log('Query params:', queryParams.toString());
+            
+            // Use fetch API to get the chemistry data with proper typing
+            const response = await fetch(
+              `${import.meta.env.PUBLIC_SUPABASE_URL}/rest/v1/team_chemistry?${queryParams}`,
+              {
+                headers: {
+                  'apikey': import.meta.env.PUBLIC_SUPABASE_KEY || '',
+                  'Authorization': `Bearer ${import.meta.env.PUBLIC_SUPABASE_KEY || ''}`,
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/vnd.pgrst.object+json'
+                }
+              }
+            );
+
+            const responseText = await response.text();
+            console.log('Raw chemistry response:', response.status, response.statusText, responseText);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            }
+
+            let chemistryData;
+            try {
+              chemistryData = responseText ? JSON.parse(responseText) : null;
+              // If we got a single object instead of an array, wrap it in an array
+              if (chemistryData && !Array.isArray(chemistryData)) {
+                chemistryData = [chemistryData];
+              }
+            } catch (parseError) {
+              console.error('Error parsing JSON response:', parseError, 'Response:', responseText);
+              throw new Error('Invalid JSON response from server');
+            }
+            
+            console.log('Parsed chemistry data:', chemistryData);
+            
+            if (chemistryData && chemistryData.length > 0) {
+              const data = chemistryData[0];
+              console.log('Found chemistry data:', data);
+              
+              // Helper function to safely parse JSON fields
+              const safeJsonParse = (json: any, defaultValue: any = {}) => {
+                if (!json) return defaultValue;
+                if (typeof json === 'object') return json;
+                try {
+                  return JSON.parse(json);
+                } catch (e) {
+                  console.error('Error parsing JSON field:', e);
+                  return defaultValue;
+                }
+              };
+              
+              const elements = safeJsonParse(data.elements, { fire: 25, earth: 25, air: 25, water: 25, balance: 50 });
+              const aspects = safeJsonParse(data.aspects, { harmonyScore: 50, challengeScore: 20, netHarmony: 50 });
+              
+              // Ensure all required fields are present with proper defaults
+              const chemistry = {
+                score: data.score || data.overall_score || 50,
+                elements: {
+                  fire: elements?.fire || 25,
+                  earth: elements?.earth || 25,
+                  air: elements?.air || 25,
+                  water: elements?.water || 25,
+                  balance: elements?.balance || 50
+                },
+                aspects: {
+                  harmonyScore: aspects?.harmonyScore || 50,
+                  challengeScore: aspects?.challengeScore || 20,
+                  netHarmony: aspects?.netHarmony || 50
+                },
+                calculatedAt: data.calculated_at || data.last_updated || new Date().toISOString()
+              };
+              
+              console.log('Setting chemistry state:', chemistry);
+              // Ensure the chemistry object matches the expected type
+              setChemistry({
+                ...chemistry,
+                elements: {
+                  fire: Number(chemistry.elements.fire) || 25,
+                  earth: Number(chemistry.elements.earth) || 25,
+                  air: Number(chemistry.elements.air) || 25,
+                  water: Number(chemistry.elements.water) || 25,
+                  balance: Number(chemistry.elements.balance) || 50
+                },
+                aspects: {
+                  harmonyScore: Number(chemistry.aspects.harmonyScore) || 50,
+                  challengeScore: Number(chemistry.aspects.challengeScore) || 20,
+                  netHarmony: Number(chemistry.aspects.netHarmony) || 50
+                }
+              });
+            } else {
+              console.log('No chemistry data found for team. Using default values.');
+              // Set default values if no data found
+              const defaultChemistry = {
+                score: 50,
+                elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
+                aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+                calculatedAt: new Date().toISOString()
+              };
+              console.log('Setting default chemistry:', defaultChemistry);
+              setChemistry(defaultChemistry);
+            }
+          } catch (err) {
+            console.error('Error fetching chemistry data:', err);
+          } finally {
+            setChemistryLoading(false);
+          }
         } else {
           // No players found or playersData is null
           setPlayers([]);
           setTopPlayers([]);
+          setChemistryLoading(false);
         }
 
         // Fetch upcoming games with proper type handling
@@ -420,7 +582,16 @@ const TeamPage = () => {
           console.log('Fetched upcoming games:', gamesData);
           
           // Process games data to ensure it matches the Game type
-          const processedGames = gamesData.map((gameData: GameData): Game => {
+          // Filter out error responses and ensure we have valid game data
+          const processedGames = gamesData
+            .filter((item): item is GameData => {
+              // Check if this is a valid game object with required properties
+              return typeof item === 'object' && 
+                item !== null && 
+                'id' in item && 
+                !('error' in item);
+            })
+            .map((gameData: GameData): Game => {
             // Safely extract home team data
             const homeTeam: Team | null = gameData.home_team && 
               typeof gameData.home_team === 'object' && 
@@ -693,6 +864,37 @@ const TeamPage = () => {
           <Card className="bg-white">
             <CardContent className="p-6">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {/* Team Chemistry Meter */}
+                {chemistry && !chemistryLoading ? (
+                  <div className="lg:col-span-1">
+                    <TeamChemistryMeter chemistry={chemistry} />
+                  </div>
+                ) : chemistryLoading ? (
+                  <div className="p-4 rounded-lg bg-slate-50 animate-pulse">
+                    <h3 className="font-semibold mb-2 text-slate-700">Team Chemistry</h3>
+                    <div className="w-full h-48 bg-slate-200 rounded-md"></div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-slate-50 border border-dashed border-slate-300">
+                    <h3 className="font-semibold mb-2 text-slate-700 flex items-center">
+                      <Zap className="h-4 w-4 mr-1 text-amber-500" />
+                      Team Chemistry
+                    </h3>
+                    <p className="text-slate-600 text-sm mb-2">No chemistry data is available for this team. The data needs to be generated first.</p>
+                    <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                      <h4 className="text-sm font-medium text-amber-800 flex items-center mb-1">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Admin Action Required
+                      </h4>
+                      <ol className="text-xs text-amber-700 list-decimal pl-4 space-y-1">
+                        <li>Ensure the <code>team_chemistry</code> table exists in the database</li>
+                        <li>Run <code>node scripts/update-player-scores.js</code> to generate chemistry data</li>
+                        <li>Refresh this page to see the team chemistry meter</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="p-4 rounded-lg bg-slate-50">
                   <h3 className="font-semibold mb-2 text-slate-700">Season Performance</h3>
                   <div className="flex items-center">

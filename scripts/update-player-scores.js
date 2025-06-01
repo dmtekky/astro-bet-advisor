@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { calculateTeamChemistry } from '../src/utils/teamChemistry.js';
 
 dotenv.config();
 
@@ -164,8 +165,223 @@ async function updatePlayerScores() {
   }
 }
 
+// Update team chemistry data based on player scores and astro data
+async function updateTeamChemistry() {
+  const startTime = new Date();
+  console.log(`\n🔮 Starting team chemistry update at ${startTime.toISOString()}`);
+  
+  try {
+    // Check if the team_chemistry table exists
+    let tableExists = false;
+    let tableError = null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('team_chemistry')
+        .select('*')
+        .limit(1);
+      
+      tableExists = !error;
+      tableError = error;
+    } catch (err) {
+      tableError = err;
+    }
+    
+    if (tableError && tableError.code === '42P01') {
+      // Table doesn't exist, create it
+      console.log('Creating team_chemistry table...');
+      const { error: createTableError } = await supabase.rpc('create_team_chemistry_table');
+      
+      if (createTableError) {
+        console.error('❌ Error creating team_chemistry table:', createTableError);
+        console.log('Please create the team_chemistry table manually with the following schema:');
+        console.log(`
+        CREATE TABLE IF NOT EXISTS public.team_chemistry (
+          id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+          team_id UUID REFERENCES public.teams(id) ON DELETE CASCADE,
+          overall_score NUMERIC(5,2) NOT NULL,
+          elemental_balance JSONB NOT NULL,
+          aspect_harmony JSONB NOT NULL,
+          calculated_at TIMESTAMPTZ DEFAULT NOW(),
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW(),
+          UNIQUE(team_id)
+        );
+        `);
+        return false;
+      }
+    } else if (tableError) {
+      console.error('❌ Error checking for team_chemistry table:', tableError);
+      return false;
+    }
+    
+    console.log('Fetching teams with active players...');
+    const { data: teams, error: teamsError } = await supabase
+      .from('teams')
+      .select('*')
+      .order('name');
+    
+    if (teamsError) {
+      throw new Error(`Error fetching teams: ${teamsError.message}`);
+    }
+    
+    if (!teams || teams.length === 0) {
+      console.log('No teams found');
+      return;
+    }
+    
+    console.log(`✅ Found ${teams.length} teams to process`);
+    let errorCount = 0;
+    let teamsUpdated = 0;
+    let updatedCount = 0;
+    
+    for (const team of teams) {
+      // Map team abbreviations to match player data (some teams use different abbreviations)
+      const teamAbbreviationMap = {
+        'OAK': 'OAK',  // Athletics
+        'WAS': 'WAS', // Nationals
+        'TB': 'TB',   // Rays
+        'CWS': 'CWS', // White Sox
+        'LAA': 'LAA', // Angels
+        'LAD': 'LAD', // Dodgers
+        'NYM': 'NYM', // Mets
+        'NYY': 'NYY', // Yankees
+        'SD': 'SD',   // Padres
+        'SF': 'SF',   // Giants
+        'STL': 'STL', // Cardinals
+        'KC': 'KC',   // Royals
+        'CLE': 'CLE', // Guardians
+        'CIN': 'CIN', // Reds
+        'CHC': 'CHC', // Cubs
+        'BOS': 'BOS', // Red Sox
+        'BAL': 'BAL', // Orioles
+        'ATL': 'ATL', // Braves
+        'ARI': 'ARI', // Diamondbacks
+        'COL': 'COL', // Rockies
+        'DET': 'DET', // Tigers
+        'HOU': 'HOU', // Astros
+        'MIA': 'MIA', // Marlins
+        'MIL': 'MIL', // Brewers
+        'MIN': 'MIN', // Twins
+        'PHI': 'PHI', // Phillies
+        'PIT': 'PIT', // Pirates
+        'SEA': 'SEA', // Mariners
+        'TEX': 'TEX', // Rangers
+        'TOR': 'TOR'  // Blue Jays
+      };
+      
+      // Use mapped abbreviation if it exists, otherwise use the team's abbreviation
+      const playerAbbreviation = teamAbbreviationMap[team.abbreviation] || team.abbreviation;
+      
+      console.log(`\n--- Processing team ${team.name} (${team.abbreviation}) ---`);
+      console.log(`Looking for players with team_abbreviation or player_current_team_abbreviation = '${playerAbbreviation}'`);
+      
+      // First, let's check how many players we find with this query
+      const countQuery = supabase
+        .from('baseball_players')
+        .select('*', { count: 'exact', head: true })
+        .or(`team_abbreviation.eq.${playerAbbreviation},player_current_team_abbreviation.eq.${playerAbbreviation}`)
+        .not('player_first_name', 'is', null)
+        .not('player_last_name', 'is', null)
+        .not('player_birth_date', 'is', null);
+      
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) {
+        console.error(`❌ Error counting players for team ${team.name}:`, countError);
+        errorCount++;
+        continue;
+      }
+      
+      console.log(`Found ${count || 0} players for team ${team.name} (${team.abbreviation})`);
+      
+      // If we found players, fetch them
+      if (count > 0) {
+        const { data: players, error: playersError } = await supabase
+          .from('baseball_players')
+          .select('*')
+          .or(`team_abbreviation.eq.${playerAbbreviation},player_current_team_abbreviation.eq.${playerAbbreviation}`)
+          .not('player_first_name', 'is', null)
+          .not('player_last_name', 'is', null)
+          .not('player_birth_date', 'is', null);
+          
+        if (playersError) {
+          console.error(`❌ Error fetching players for team ${team.name}:`, playersError);
+          errorCount++;
+          continue;
+        }
+        
+        console.log(`Processing ${players.length} players for team ${team.name}`);
+        
+        // Calculate team chemistry
+        const chemistry = calculateTeamChemistry(players);
+        
+        // Prepare data for upsert
+        const teamChemistryData = {
+          team_id: team.id,
+          team_name: team.name,
+          team_abbreviation: team.abbreviation,
+          score: chemistry.score,
+          elements: chemistry.elements,
+          aspects: chemistry.aspects,
+          calculated_at: new Date().toISOString(),
+          last_updated: new Date().toISOString()
+        };
+        
+        // Upsert team chemistry data
+        const { error: upsertError } = await supabase
+          .from('team_chemistry')
+          .upsert(teamChemistryData, { onConflict: 'team_id' });
+          
+        if (upsertError) {
+          console.error(`❌ Error updating chemistry for team ${team.name}:`, upsertError);
+          errorCount++;
+          continue;
+        }
+        
+        console.log(`✅ Updated chemistry for team ${team.name} (${team.abbreviation}): ${chemistry.score}/100`);
+        teamsUpdated++;
+      } else {
+        console.log(`⚠️ No players found for team ${team.name} (${team.abbreviation})`);
+        continue;
+      }
+      
+      // Small delay between teams
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    const endTime = new Date();
+    const duration = (endTime - startTime) / 1000; // in seconds
+    
+    console.log(`\n🎉 Team chemistry update completed!`);
+    console.log(`   Teams updated: ${updatedCount}`);
+    console.log(`   Errors: ${errorCount}`);
+    console.log(`   Duration: ${duration.toFixed(2)} seconds`);
+    console.log(`   Finished at: ${endTime.toISOString()}`);
+    
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Unexpected error during chemistry update:', error);
+    return false;
+  }
+}
+
+// Run both updates in sequence
+async function updateAll() {
+  const playerUpdateSuccess = await updatePlayerScores();
+  console.log('\n---------------------------------------');
+  
+  if (playerUpdateSuccess) {
+    const chemistryUpdateSuccess = await updateTeamChemistry();
+    return playerUpdateSuccess && chemistryUpdateSuccess;
+  }
+  
+  return false;
+}
+
 // Run the update
-updatePlayerScores()
+updateAll()
   .then(success => {
     process.exit(success ? 0 : 1);
   })
