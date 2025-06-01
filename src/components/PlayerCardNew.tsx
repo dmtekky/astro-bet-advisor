@@ -14,6 +14,7 @@ export interface PlayerCardProps {
   primary_position?: string | null;
   impact_score?: number | null;
   astro_influence?: number | null;
+  astro_influence_score?: number | null; // Add support for both field names
   teamAverageAstroInfluence?: number | null; // Added to determine glow effect
   // No need to pass zodiac_sign explicitly if birth_date is available
   linkPath?: string; // For navigation if the card is clickable
@@ -30,18 +31,22 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
   primary_number,
   primary_position,
   impact_score = 0,
-  astro_influence = 0, // Default to 0 if not provided
-  teamAverageAstroInfluence = 0, // Default average
+  astro_influence = 0,
+  astro_influence_score = 0, // Initialize the new prop
+  teamAverageAstroInfluence = 0,
   linkPath,
 }) => {
   const actualZodiacSign = getZodiacSign(birth_date);
   const colors = getZodiacColorScheme(actualZodiacSign);
 
+  // Use astro_influence_score if available, otherwise fall back to astro_influence
+  const effectiveAstroInfluence = astro_influence_score || astro_influence || 0;
+  
   // Determine if the card should glow if astro_influence is above team average.
-  const shouldGlow = (astro_influence || 0) > (teamAverageAstroInfluence || 0);
+  const shouldGlow = effectiveAstroInfluence > (teamAverageAstroInfluence || 0);
 
   const formattedImpactScore = (impact_score || 0).toFixed(1);
-  const formattedAstroInfluence = (astro_influence || 0).toFixed(1);
+  const formattedAstroInfluence = effectiveAstroInfluence.toFixed(1);
 
   const cardVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },

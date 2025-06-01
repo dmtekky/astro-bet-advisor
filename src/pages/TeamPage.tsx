@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, MapPin as MapPinIcon, Info, Users, Star, TrendingUp } from 'lucide-react';
+import PlayerCardNew from '@/components/PlayerCardNew';
 import { toast } from '../components/ui/use-toast';
 import TeamRoster from '../components/TeamRoster';
 import { GameCarousel } from '../components/games/GameCarousel';
@@ -59,6 +60,7 @@ interface Player {
   stats_batting_runs?: number | null;
   stats_fielding_assists?: number | null;
   impact_score?: number | null; // Added impact_score
+  astro_influence?: number | null; // Added astro_influence
   [key: string]: any; // For any additional properties
 } 
 
@@ -309,6 +311,7 @@ const TeamPage = () => {
               ...(p.stats_batting_runs !== undefined && { stats_batting_runs: p.stats_batting_runs }),
               ...(p.stats_fielding_assists !== undefined && { stats_fielding_assists: p.stats_fielding_assists }),
               ...(p.impact_score !== undefined && { impact_score: p.impact_score }),
+              ...(p.astro_influence_score !== undefined && { astro_influence: p.astro_influence_score }), // Add astro influence from database
               impact_score: calculatedImpactScore
             };
             
@@ -645,35 +648,30 @@ const TeamPage = () => {
             Top Players
           </h2>
           
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-            {topPlayers.length > 0 ? topPlayers.map(player => (
-              <Link to={`/teams/${teamId}/players/${player.id}`} key={player.id}>
-                <div
-                  className="w-full bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col items-center relative"
-                  style={{ borderTop: `4px solid ${teamColors.primary}` }}
-                >
-                  {/* Player Image */}
-                  <div className="w-full h-36 bg-slate-100 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={player.headshot_url || '/placeholder-player.png'}
-                      alt={player.full_name}
-                      className="h-full w-full object-cover"
-                      onError={e => {
-                        (e.target as HTMLImageElement).src = '/placeholder-player.png';
-                      }}
-                    />
-                  </div>
-                  {/* Player Name */}
-                  <p className="font-bold text-gray-900 text-center mb-1 mt-3 px-2 truncate w-full">{player.full_name}</p>
-                  {/* Zodiac Sign */}
-                  <span className="text-xs text-purple-600 mb-2 text-center">{getZodiacSign(player.birth_date)}</span>
-                  <div className="flex justify-between w-full px-4 mt-2 mb-4 text-xs text-slate-500">
-                    <span>#{player.primary_number || 'N/A'}</span>
-                    <span>{player.primary_position || 'N/A'}</span>
-                  </div>
-                </div>
-              </Link>
-            )) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
+            {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
+              // Calculate team average astro influence for the glow effect
+              const teamAverageAstroInfluence = players.length > 0 
+                ? players.reduce((sum, p) => sum + (p.astro_influence || 0), 0) / players.length 
+                : 0;
+                
+              return (
+                <PlayerCardNew
+                  key={player.id}
+                  id={player.id}
+                  player_id={player.player_id}
+                  full_name={player.full_name}
+                  headshot_url={player.headshot_url || undefined}
+                  birth_date={player.birth_date || undefined}
+                  primary_number={player.number?.toString() || undefined}
+                  primary_position={player.position || undefined}
+                  impact_score={player.impact_score || 0}
+                  astro_influence={player.astro_influence || 0}
+                  teamAverageAstroInfluence={teamAverageAstroInfluence}
+                  linkPath={`/teams/${teamId}/players/${player.id}`}
+                />
+              );
+            }) : (
               <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
             )}
           </div>

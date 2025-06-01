@@ -39,29 +39,24 @@ function calculateImpactScore(player) {
   return Math.round(score);
 }
 
-// Calculate astro influence score
+// Calculate astro influence score based on consistent player performance metrics
 function calculateAstroInfluenceScore(player) {
   if (!player) return 0;
   
-  // Base score from player stats (similar to impact score but with different weights)
+  // Base score from player stats with consistent weights
   let score = 0;
   
-  // Batting stats (different weights for astro influence)
-  if (player.stats_batting_hits) score += player.stats_batting_hits * 0.4;
-  if (player.stats_batting_runs) score += player.stats_batting_runs * 0.6;
-  if (player.stats_batting_homeruns) score += player.stats_batting_homeruns * 2.0;
+  // Batting stats with consistent weights
+  if (player.stats_batting_hits) score += player.stats_batting_hits * 0.5;
+  if (player.stats_batting_runs) score += player.stats_batting_runs * 0.7;
+  if (player.stats_batting_homeruns) score += player.stats_batting_homeruns * 1.8;
   
-  // Recent performance boost (based on games played)
+  // Recent performance modifier (capped at 30% boost)
   const recentGames = player.stats_games_played || 0;
-  if (recentGames > 0) {
-    score *= (1 + Math.min(recentGames / 20, 0.5)); // Up to 50% boost for active players
-  }
+  const recentPerformanceModifier = 1 + (Math.min(recentGames, 30) / 100); // 1% per game up to 30%
+  score *= recentPerformanceModifier;
   
-  // Random factor to simulate astrological influence (0.8 to 1.2)
-  const randomFactor = 0.8 + Math.random() * 0.4;
-  score *= randomFactor;
-  
-  // Normalize to 0-100 range
+  // Normalize to 0-100 range with 2 decimal places
   score = Math.min(100, Math.max(0, score));
   return parseFloat(score.toFixed(2));
 }
