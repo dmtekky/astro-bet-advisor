@@ -861,44 +861,45 @@ const TeamPage = () => {
             Team Insights
           </h2>
           
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {/* Team Chemistry Meter */}
+          <Card className="bg-white w-full">
+            <CardContent className="p-0">
+              {/* Team Chemistry Meter - Full Width */}
+              <div className="w-full">
                 {chemistry && !chemistryLoading ? (
-                  <div className="lg:col-span-1">
-                    <TeamChemistryMeter chemistry={chemistry} />
-                  </div>
+                  <TeamChemistryMeter chemistry={chemistry} className="w-full" />
                 ) : chemistryLoading ? (
-                  <div className="p-4 rounded-lg bg-slate-50 animate-pulse">
-                    <h3 className="font-semibold mb-2 text-slate-700">Team Chemistry</h3>
-                    <div className="w-full h-48 bg-slate-200 rounded-md"></div>
+                  <div className="p-8 rounded-lg bg-slate-50 animate-pulse w-full">
+                    <h3 className="font-semibold mb-4 text-slate-700 text-lg">Team Chemistry</h3>
+                    <div className="w-full h-64 bg-slate-200 rounded-md"></div>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-lg bg-slate-50 border border-dashed border-slate-300">
-                    <h3 className="font-semibold mb-2 text-slate-700 flex items-center">
-                      <Zap className="h-4 w-4 mr-1 text-amber-500" />
+                  <div className="p-8 rounded-lg bg-slate-50 border border-dashed border-slate-300 w-full">
+                    <h3 className="font-semibold mb-4 text-slate-700 flex items-center text-lg">
+                      <Zap className="h-5 w-5 mr-2 text-amber-500" />
                       Team Chemistry
                     </h3>
-                    <p className="text-slate-600 text-sm mb-2">No chemistry data is available for this team. The data needs to be generated first.</p>
-                    <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
-                      <h4 className="text-sm font-medium text-amber-800 flex items-center mb-1">
-                        <AlertCircle className="h-3 w-3 mr-1" />
+                    <p className="text-slate-600 text-base mb-4">No chemistry data is available for this team. The data needs to be generated first.</p>
+                    <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+                      <h4 className="text-base font-medium text-amber-800 flex items-center mb-2">
+                        <AlertCircle className="h-4 w-4 mr-2" />
                         Admin Action Required
                       </h4>
-                      <ol className="text-xs text-amber-700 list-decimal pl-4 space-y-1">
-                        <li>Ensure the <code>team_chemistry</code> table exists in the database</li>
-                        <li>Run <code>node scripts/update-player-scores.js</code> to generate chemistry data</li>
+                      <ol className="text-sm text-amber-700 list-decimal pl-5 space-y-1">
+                        <li>Ensure the <code className="bg-amber-100 px-1.5 py-0.5 rounded">team_chemistry</code> table exists in the database</li>
+                        <li>Run <code className="bg-amber-100 px-1.5 py-0.5 rounded">node scripts/update-player-scores.js</code> to generate chemistry data</li>
                         <li>Refresh this page to see the team chemistry meter</li>
                       </ol>
                     </div>
                   </div>
                 )}
-                
-                <div className="p-4 rounded-lg bg-slate-50">
-                  <h3 className="font-semibold mb-2 text-slate-700">Season Performance</h3>
+              </div>
+              
+              {/* Additional Insights - Now in a row below */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 border-t border-slate-100">
+                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100">
+                  <h3 className="font-semibold mb-4 text-slate-800 text-lg">Season Performance</h3>
                   <div className="flex items-center">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100 mr-3">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center bg-blue-100 bg-opacity-50 border-2 border-blue-200 mr-4">
                       <TrendingUp className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
