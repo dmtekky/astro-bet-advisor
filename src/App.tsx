@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchProvider } from './context/SearchContext';
+import { Analytics } from '@vercel/analytics/react';
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
@@ -25,6 +26,7 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-grow pt-16">
+        <Analytics />
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
