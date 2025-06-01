@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { getZodiacColorScheme, getZodiacSign } from '@/utils/zodiacUtils';
 import { Zap, Sparkles, Star, Flame, Target, Award, Crown, Medal, Trophy } from 'lucide-react';
 
@@ -48,6 +49,15 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
   const isAboveAverage = effectiveAstroInfluence >= 60 && effectiveAstroInfluence < HIGH_ASTRO_THRESHOLD;
   const showAstroBadge = isHighAstro || isAboveAverage;
   
+  const navigate = useNavigate();
+  
+  // Handle card click to navigate to player details
+  const handleCardClick = () => {
+    if (linkPath) {
+      navigate(linkPath);
+    }
+  };
+
   // Format scores with 1 decimal place
   const formattedImpactScore = (impact_score || 0).toFixed(1);
   const formattedAstroInfluence = effectiveAstroInfluence.toFixed(1);
@@ -105,12 +115,14 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
       initial="initial"
       animate="animate"
       whileHover="hover"
-      className={`relative w-72 h-[550px] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 cursor-pointer group
+      onClick={handleCardClick}
+      className={`relative w-72 h-[550px] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 cursor-pointer group transition-all duration-300
         ${isHighAstro 
-          ? 'border-2 border-purple-500/50' 
+          ? 'border-2 border-purple-500/50 hover:border-purple-500/80' 
           : isAboveAverage 
-          ? 'border-2 border-green-500/30' 
-          : 'border border-gray-700/50'}`}
+          ? 'border-2 border-green-500/30 hover:border-green-500/60' 
+          : 'border border-gray-700/50 hover:border-gray-600/70'}
+        hover:scale-[1.02] hover:shadow-xl`}
       style={{
         '--glow-color': showAstroBadge 
           ? 'rgba(74, 222, 128, 0.6)'
@@ -139,7 +151,7 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
         {showAstroBadge && (
           <motion.div 
             initial={{ x: -10, y: 0, opacity: 0, rotate: -15 }}
-            animate={{ x: 0, y: 16, opacity: 1, rotate: -15 }}
+            animate={{ x: 0, y: 32, opacity: 1, rotate: -15 }}
             transition={{ type: 'spring', stiffness: 500, damping: 20 }}
             className="absolute left-0 top-0 z-50 origin-bottom-left"
           >

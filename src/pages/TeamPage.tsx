@@ -381,7 +381,8 @@ const TeamPage = () => {
             };
             return getPosValue(b.primary_position) - getPosValue(a.primary_position);
           });
-          setTopPlayers(sortedPlayers.slice(0, 3));
+          // Show top 4 players instead of 3
+          setTopPlayers(sortedPlayers.slice(0, 4));
         } else {
           // No players found or playersData is null
           setPlayers([]);
