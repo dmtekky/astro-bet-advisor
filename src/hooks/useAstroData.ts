@@ -11,21 +11,49 @@ import type { AspectType, CelestialBody, ZodiacSign, MoonPhaseInfo } from '../ty
 // Import the moon phase calculation functions
 import { getMoonPhase, getMoonPhaseInfo } from '../lib/astroCalculations';
 
-// Helper function to determine moon phase value (0 to 1) and name
+/**
+ * Helper function to determine moon phase value (0 to 1) and name
+ * @param _apiMoonPhase - Optional moon phase data from API (legacy)
+ * @param _apiMoon_Phase - Optional moon phase data from API (alternative format)
+ * @returns Complete moon phase information
+ */
 const getProcessedMoonPhase = (
   _apiMoonPhase?: { angle?: number; phase?: string; illumination?: number | null },
   _apiMoon_Phase?: { phase_name?: string; illumination?: number | null }
 ): MoonPhaseInfo => {
   // Always use our accurate moon phase calculation
   const now = new Date();
-  const phase = getMoonPhase(now);
-  const { name, illumination } = getMoonPhaseInfo(phase);
   
-  return { 
-    name, 
-    value: phase, 
-    illumination: illumination / 100 // Convert to 0-1 range
-  };
+  try {
+    const moonInfo = getMoonPhaseInfo(undefined, now);
+    
+    // Create a properly typed MoonPhaseInfo object
+    const moonPhaseInfo: MoonPhaseInfo = {
+      name: moonInfo.name,
+      value: moonInfo.phase,
+      illumination: moonInfo.illumination / 100, // Convert to 0-1 range
+      nextFullMoon: new Date(moonInfo.nextFullMoon),
+      ageInDays: moonInfo.ageInDays,
+      phaseType: moonInfo.phaseType
+    };
+    
+    return moonPhaseInfo;
+  } catch (error) {
+    console.error('Error processing moon phase:', error);
+    // Return a safe default in case of errors
+    const defaultDate = new Date(now.getTime() + 29.53 * 24 * 60 * 60 * 1000); // ~30 days from now
+    
+    const defaultMoonPhase: MoonPhaseInfo = {
+      name: 'New Moon',
+      value: 0,
+      illumination: 0,
+      nextFullMoon: defaultDate,
+      ageInDays: 0,
+      phaseType: 'new'
+    };
+    
+    return defaultMoonPhase;
+  }
 };
 
 // Base URL for API requests

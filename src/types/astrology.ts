@@ -104,6 +104,9 @@ export interface MoonPhaseInfo {
   name: string;
   value: number; // 0-1
   illumination: number; // 0-1
+  nextFullMoon: Date;
+  ageInDays: number;
+  phaseType: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
 }
 
 export interface AstroData {

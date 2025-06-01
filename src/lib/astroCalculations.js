@@ -92,11 +92,15 @@ function getMoonPhase(date = new Date()) {
  * @returns {{name: string, illumination: number}} Object containing phase name and illumination percentage
  */
 /**
- * Get moon phase information including name and illumination
- * @param {number} phase - Moon phase from 0 to 1
- * @returns {{name: string, illumination: number}} Object containing phase name and illumination percentage
+ * Get moon phase information including name, illumination, and next full moon date
+ * @param {number} [phase] - Optional moon phase from 0 to 1. If not provided, calculates for current date
+ * @param {Date} [date=new Date()] - Optional date to calculate phase for
+ * @returns {{name: string, illumination: number, nextFullMoon: Date, phase: number, ageInDays: number, phaseType: 'new'|'waxing-crescent'|'first-quarter'|'waxing-gibbous'|'full'|'waning-gibbous'|'last-quarter'|'waning-crescent'}} Object containing phase information
  */
-function getMoonPhaseInfo(phase) {
+function getMoonPhaseInfo(phase, date = new Date()) {
+  // Calculate phase if not provided
+  const currentPhase = phase !== undefined ? phase : getMoonPhase(date);
+  
   const {
     NEW_MOON,
     WAXING_CRESCENT,
@@ -108,31 +112,55 @@ function getMoonPhaseInfo(phase) {
   } = ASTRONOMICAL_CONSTANTS.MOON_PHASE_THRESHOLDS;
   
   // Calculate illumination (0-100%)
-  const illumination = Math.round(Math.sin(phase * Math.PI) * 100);
+  const illumination = Math.round(Math.sin(currentPhase * Math.PI) * 100);
   
-  // Determine phase name based on phase value
-  if (phase < NEW_MOON || phase > (1 - NEW_MOON)) {
-    return { name: 'New Moon', illumination };
+  // Calculate moon age in days (0-29.53)
+  const ageInDays = currentPhase * ASTRONOMICAL_CONSTANTS.SYNODIC_MONTH;
+  
+  // Get next full moon date
+  const nextFullMoon = getNextFullMoon(date);
+  
+  /** @type {'new'|'waxing-crescent'|'first-quarter'|'waxing-gibbous'|'full'|'waning-gibbous'|'last-quarter'|'waning-crescent'} */
+  let phaseType;
+  let name;
+  
+  if (currentPhase < NEW_MOON || currentPhase > (1 - NEW_MOON)) {
+    name = 'New Moon';
+    phaseType = 'new';
+  } else if (currentPhase < WAXING_CRESCENT) {
+    name = 'Waxing Crescent';
+    phaseType = 'waxing-crescent';
+  } else if (currentPhase < FIRST_QUARTER) {
+    name = 'First Quarter';
+    phaseType = 'first-quarter';
+  } else if (currentPhase < WAXING_GIBBOUS) {
+    name = 'Waxing Gibbous';
+    phaseType = 'waxing-gibbous';
+  } else if (currentPhase < FULL_MOON) {
+    name = 'Full Moon';
+    phaseType = 'full';
+  } else if (currentPhase < WANING_GIBBOUS) {
+    name = 'Waning Gibbous';
+    phaseType = 'waning-gibbous';
+  } else if (currentPhase < LAST_QUARTER) {
+    name = 'Last Quarter';
+    phaseType = 'last-quarter';
+  } else {
+    name = 'Waning Crescent';
+    phaseType = 'waning-crescent';
   }
-  if (phase < WAXING_CRESCENT) {
-    return { name: 'Waxing Crescent', illumination };
-  }
-  if (phase < FIRST_QUARTER) {
-    return { name: 'First Quarter', illumination };
-  }
-  if (phase < WAXING_GIBBOUS) {
-    return { name: 'Waxing Gibbous', illumination };
-  }
-  if (phase < FULL_MOON) {
-    return { name: 'Full Moon', illumination };
-  }
-  if (phase < WANING_GIBBOUS) {
-    return { name: 'Waning Gibbous', illumination };
-  }
-  if (phase < LAST_QUARTER) {
-    return { name: 'Last Quarter', illumination };
-  }
-  return { name: 'Waning Crescent', illumination };
+  
+  // Ensure we're returning all required fields with the correct types
+  const result = {
+    name: name,
+    illumination: Number(illumination),
+    nextFullMoon: new Date(nextFullMoon),
+    phase: Number(currentPhase),
+    ageInDays: Number(ageInDays),
+    phaseType: phaseType
+  };
+  
+  return result;
 }
 
 /**
@@ -273,10 +301,45 @@ function getZodiacSign(longitude) {
   return ZODIAC_SIGNS[Math.floor(normalizedLongitude / DEGREES_PER_SIGN)];
 }
 
+/**
+ * Calculate the date of the next full moon
+ * @param {Date} [fromDate=new Date()] - The date to calculate from
+ * @returns {Date} The date of the next full moon
+ */
+function getNextFullMoon(fromDate = new Date()) {
+  const { SYNODIC_MONTH, KNOWN_NEW_MOON_DATE } = ASTRONOMICAL_CONSTANTS;
+  
+  // Known full moon after the reference new moon (14.77 days after new moon)
+  const knownFullMoon = new Date(KNOWN_NEW_MOON_DATE);
+  knownFullMoon.setDate(knownFullMoon.getDate() + 14.77);
+  
+  const targetTime = fromDate.getTime();
+  const knownFullMoonTime = knownFullMoon.getTime();
+  
+  // Calculate days since known full moon
+  const daysSinceFullMoon = (targetTime - knownFullMoonTime) / MS_PER_DAY;
+  
+  // Calculate days until next full moon
+  const daysInCurrentCycle = daysSinceFullMoon % SYNODIC_MONTH;
+  const daysUntilNextFullMoon = daysInCurrentCycle > 0 
+    ? SYNODIC_MONTH - daysInCurrentCycle 
+    : -daysInCurrentCycle;
+  
+  // Return the date of the next full moon
+  const nextFullMoon = new Date(targetTime);
+  nextFullMoon.setDate(nextFullMoon.getDate() + Math.ceil(daysUntilNextFullMoon));
+  
+  // Set to noon UTC for consistency
+  nextFullMoon.setUTCHours(12, 0, 0, 0);
+  
+  return nextFullMoon;
+}
+
 // Export all functions
 export {
   getMoonPhase,
   getMoonPhaseInfo,
+  getNextFullMoon,
   getPlanetPositions,
   calculateAspects,
   getZodiacSign

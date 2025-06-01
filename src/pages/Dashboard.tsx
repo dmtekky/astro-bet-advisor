@@ -413,6 +413,9 @@ const Dashboard: React.FC = () => {
       name: hookData.moonPhase?.name || 'New Moon',
       value: hookData.moonPhase?.value ?? 0,
       illumination: hookData.moonPhase?.illumination ?? 0,
+      nextFullMoon: hookData.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000), // Default to ~30 days from now if not available
+      ageInDays: hookData.moonPhase?.ageInDays ?? 0,
+      phaseType: hookData.moonPhase?.phaseType || 'new'
     };
 
     const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
@@ -1339,16 +1342,28 @@ const Dashboard: React.FC = () => {
                                 </p>
                               </div>
                               
-                              <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Moon Sign</div>
-                                  <div className="font-semibold text-indigo-700">
+                              <div className="grid grid-cols-3 gap-2 mb-4">
+                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Moon Sign</div>
+                                  <div className="font-semibold text-indigo-700 text-sm truncate">
                                     {astroData.planets?.moon?.sign || 'Unknown'}
                                   </div>
                                 </div>
-                                <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
-                                  <div className="font-semibold text-indigo-700">
+                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Next Full Moon</div>
+                                  <div className="font-semibold text-indigo-700 text-sm">
+                                    {astroData.moonPhase?.nextFullMoon 
+                                      ? new Date(astroData.moonPhase.nextFullMoon).toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric',
+                                          year: '2-digit'
+                                        })
+                                      : '—'}
+                                  </div>
+                                </div>
+                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Zodiac Degree</div>
+                                  <div className="font-semibold text-indigo-700 text-sm">
                                     {astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
                                   </div>
                                 </div>
