@@ -1,7 +1,72 @@
-// This file has been deprecated. See /api/astro-date.ts for the new implementation.
+import type { APIRoute } from 'astro';
+import { getMoonPhase, getPlanetPositions } from '../../../lib/astroCalculations.js';
 
-// Simple test endpoint with CORS support
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export const prerender = false; // Ensure this is serverless, not static
+
+export const GET: APIRoute = async ({ params, request }) => {
+  let { date } = params;
+  // Strictly extract only YYYY-MM-DD, ignore trailing chars (e.g., :1)
+  const match = typeof date === 'string' ? date.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})/) : null;
+  const dateStr = match ? match[1] : new Date().toISOString().split('T')[0];
+
+  const targetDate = new Date(dateStr);
+  if (isNaN(targetDate.getTime())) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid date format. Please use YYYY-MM-DD' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Example: get moon phase and planet positions
+  const moonPhase = getMoonPhase(targetDate);
+  const positions = getPlanetPositions(targetDate);
+
+  // Mock celestial events (replace with real logic as needed)
+  const celestialEvents = [
+    {
+      name: 'Full Moon',
+      description: 'Full Moon in Scorpio - A time for release and transformation.',
+      intensity: 'high',
+      date: new Date(targetDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ];
+
+  // Strategic insights based on moon phase
+  function getMoonPhaseInsight(phase: number): string {
+    if (phase === 0) return 'New beginnings, set intentions.';
+    if (phase < 0.25) return 'Growth and planning are favored.';
+    if (phase === 0.25) return 'Take action on goals.';
+    if (phase < 0.5) return 'Build momentum.';
+    if (phase === 0.5) return 'Full illumination, culmination of efforts.';
+    if (phase < 0.75) return 'Release and let go of what no longer serves.';
+    if (phase === 0.75) return 'Reflect and prepare for renewal.';
+    return 'Cycle is ending, rest and restore.';
+  }
+
+  const moonPhaseInsight = getMoonPhaseInsight(moonPhase);
+  const strategicInsights = [
+    {
+      type: 'moon_phase',
+      content: `Current phase: ${moonPhase}. ${moonPhaseInsight}`
+    }
+  ];
+
+  return new Response(
+    JSON.stringify({
+      moon_phase: moonPhase,
+      positions,
+      celestial_events: celestialEvents,
+      strategic_insights: strategicInsights
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
+  );
+};
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');

@@ -53,6 +53,11 @@ export async function calculateAstrologicalImpact(
   astroData: AstroData,
   gameDate: string
 ): Promise<number> {
+  // Validate date format
+  if (!gameDate || !/^\d{4}-\d{2}-\d{2}$/.test(gameDate)) {
+    console.warn('Invalid date format:', gameDate);
+    gameDate = new Date().toISOString().split('T')[0]; // Use current date as fallback
+  }
   try {
     // Calculate base score from astrological factors
     let baseScore = 0;

@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { fileURLToPath } from 'url';
+import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react({
@@ -20,7 +19,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@components': path.resolve(__dirname, './src/components'),
       '@lib': path.resolve(__dirname, './src/lib')
-    }
+    },
   },
   server: {
     port: 5173,
@@ -35,6 +34,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'esnext',
-    emptyOutDir: true
+    emptyOutDir: true,
   }
 });
