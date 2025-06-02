@@ -60,6 +60,14 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
     const emoji = getElementEmoji(element);
     const color = getElementColor(element);
     
+    // Get the color class based on the element
+    const colorClass = {
+      fire: 'bg-red-500',
+      earth: 'bg-amber-700',
+      air: 'bg-blue-400',
+      water: 'bg-blue-600'
+    }[element];
+    
     return (
       <div key={element} className="mb-4">
         <div className="flex justify-between text-sm text-slate-600 mb-1">
@@ -69,11 +77,12 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
           </span>
           <span className="font-semibold">{Math.round(value)}%</span>
         </div>
-        <Progress 
-          value={value} 
-          className="h-2.5 bg-slate-100"
-          indicatorClassName={`bg-${color}-500`}
-        />
+        <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+          <div 
+            className={`h-full ${colorClass} rounded-full`}
+            style={{ width: `${value}%` }}
+          />
+        </div>
       </div>
     );
   };
@@ -119,11 +128,11 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
         </CardHeader>
         
         <CardContent className="flex-1 p-6">
-          {/* Elemental Balance Section */}
+          {/* Team Elemental Balance Section */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-slate-800 flex items-center">
-                Elemental Balance
+                Team Elemental Balance
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -175,7 +184,7 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
               </TooltipProvider>
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                 <div className="text-sm font-medium text-slate-500 mb-1">Harmony</div>
                 <div className="text-2xl font-bold text-emerald-600">
@@ -198,19 +207,6 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
                   <div 
                     className="h-full bg-amber-500 rounded-full"
                     style={{ width: `${chemistry.aspects.challengeScore}%` }}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="text-sm font-medium text-slate-500 mb-1">Net Harmony</div>
-                <div className={`text-2xl font-bold ${getScoreColor(chemistry.aspects.netHarmony + 50)}`}>
-                  {Math.round(chemistry.aspects.netHarmony)}%
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                  <div 
-                    className={`h-full ${getProgressColor(chemistry.aspects.netHarmony + 50)} rounded-full`}
-                    style={{ width: `${Math.max(0, chemistry.aspects.netHarmony + 50)}%` }}
                   />
                 </div>
               </div>

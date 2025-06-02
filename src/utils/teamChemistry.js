@@ -32,12 +32,21 @@ const zodiacElements = {
   pisces: 'water'
 };
 
-// Define zodiac compatibility scores (0-5, 5 being most compatible)
+// Define zodiac compatibility scores (-5 to 5, where positive is harmonious and negative is challenging)
 const elementCompatibility = {
-  fire: { fire: 4, earth: 1, air: 5, water: 2 },
-  earth: { fire: 1, earth: 4, air: 2, water: 5 },
-  air: { fire: 5, earth: 2, air: 4, water: 1 },
-  water: { fire: 2, earth: 5, air: 1, water: 4 }
+  fire: { fire: 3, earth: -3, air: 4, water: -4 },
+  earth: { fire: -3, earth: 3, air: -2, water: 4 },
+  air: { fire: 4, earth: -2, air: 3, water: -3 },
+  water: { fire: -4, earth: 4, air: -3, water: 3 }
+};
+
+// Aspect types and their weights (in degrees)
+const ASPECTS = {
+  CONJUNCTION: { degrees: 0, orb: 8, weight: 0.8 },
+  SEXTILE: { degrees: 60, orb: 4, weight: 1.2 },
+  SQUARE: { degrees: 90, orb: 6, weight: -1.0 },
+  TRINE: { degrees: 120, orb: 6, weight: 1.5 },
+  OPPOSITION: { degrees: 180, orb: 8, weight: -1.2 }
 };
 
 // Calculate weighted player scores with role and availability support
@@ -161,39 +170,60 @@ export function calculateElementalBalance(weightedPlayers) {
     }
   });
 
-  // Normalize to percentages
-  const normalize = (value) => 
-    totalWeight > 0 ? Math.round((value / totalWeight) * 100) : 25;
-
-  const normalizedElements = {
-    fire: normalize(elements.fire),
-    earth: normalize(elements.earth),
-    air: normalize(elements.air),
-    water: normalize(elements.water)
+  // Calculate raw percentages that add up to 100%
+  const total = elements.fire + elements.earth + elements.air + elements.water;
+  
+  // Calculate raw percentages
+  const rawPercentages = {
+    fire: (elements.fire / total) * 100,
+    earth: (elements.earth / total) * 100,
+    air: (elements.air / total) * 100,
+    water: (elements.water / total) * 100
   };
 
-  // Calculate balance score (higher when elements are more evenly distributed)
-  const idealPercentage = 25; // Perfect balance is 25% for each element
-  const deviations = Object.values(normalizedElements).map(
-    value => Math.abs(value - idealPercentage)
-  );
-  const avgDeviation = deviations.reduce((sum, val) => sum + val, 0) / deviations.length;
-  const balance = Math.max(0, Math.min(100, 100 - (avgDeviation * 2)));
+  // Round the percentages while ensuring they add up to 100%
+  const rounded = {
+    fire: Math.round(rawPercentages.fire),
+    earth: Math.round(rawPercentages.earth),
+    air: Math.round(rawPercentages.air),
+    water: Math.round(rawPercentages.water)
+  };
 
-  // --- Synergy/Diversity Bonuses ---
+  // Adjust for rounding errors
+  const sum = Object.values(rounded).reduce((a, b) => a + b, 0);
+  const diff = 100 - sum;
+  
+  // Adjust the largest element to make the sum 100
+  if (diff !== 0) {
+    const maxElement = Object.entries(rounded).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    rounded[maxElement] += diff;
+  }
+
+  // Calculate balance score (how close to 25% each)
+  const ideal = 25;
+  const deviations = [
+    Math.abs(rounded.fire - ideal),
+    Math.abs(rounded.earth - ideal),
+    Math.abs(rounded.air - ideal),
+    Math.abs(rounded.water - ideal)
+  ];
+  const avgDeviation = deviations.reduce((a, b) => a + b, 0) / 4;
+  const balance = Math.max(0, 100 - (avgDeviation * 4)); // Scale to 0-100
+
   // Synergy: Bonus for high concentration in one element
-  const maxElement = Math.max(...Object.values(normalizedElements));
+  const maxElement = Math.max(...Object.values(rounded));
   let synergyBonus = 0;
   if (maxElement >= 60) synergyBonus = 5; // e.g. "all-fire" team
+  
   // Diversity: Bonus for all elements present
   let diversityBonus = 0;
-  if (Object.values(normalizedElements).every(x => x > 10)) diversityBonus = 5;
+  if (Object.values(rounded).every(x => x > 10)) diversityBonus = 5;
 
   // Total chemistry element score
   const chemistryElementScore = Math.min(100, balance + synergyBonus + diversityBonus);
 
   return {
-    ...normalizedElements,
+    ...rounded,
     balance,
     synergyBonus,
     diversityBonus,
@@ -204,7 +234,7 @@ export function calculateElementalBalance(weightedPlayers) {
 // Calculate aspects between players
 export function calculateTeamAspects(weightedPlayers) {
   // Filter players with zodiac data
-  const playersWithZodiac = weightedPlayers.filter(p => p.zodiacSign);
+  const playersWithZodiac = weightedPlayers.filter(p => p.zodiacSign && p.element);
   
   if (playersWithZodiac.length < 2) {
     return {
@@ -217,68 +247,171 @@ export function calculateTeamAspects(weightedPlayers) {
 
   let totalHarmony = 0;
   let totalChallenge = 0;
-  let aspectCount = 0;
+  let totalAspectWeight = 0;
   const aspects = [];
 
+  // Get player zodiac positions (simplified to 30° per sign)
+  const playerPositions = playersWithZodiac.map(player => ({
+    ...player,
+    position: (['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
+               'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces']
+              .indexOf(player.zodiacSign.toLowerCase()) * 30) + 15
+  }));
+
   // Compare each player with every other player
-  for (let i = 0; i < playersWithZodiac.length; i++) {
-    for (let j = i + 1; j < playersWithZodiac.length; j++) {
-      const player1 = playersWithZodiac[i];
-      const player2 = playersWithZodiac[j];
+  for (let i = 0; i < playerPositions.length; i++) {
+    for (let j = i + 1; j < playerPositions.length; j++) {
+      const player1 = playerPositions[i];
+      const player2 = playerPositions[j];
       
-      // Skip if either player doesn't have an element
-      if (!player1.element || !player2.element) continue;
+      // Calculate angular distance between players (0-180°)
+      const angleDiff = Math.abs(player1.position - player2.position) % 180;
       
-      // Calculate compatibility score between the two elements (0-5)
-      const compatibilityScore = elementCompatibility[player1.element][player2.element];
+      // Find closest aspect
+      let bestAspect = null;
+      let smallestDiff = 180;
       
-      // Weight based on both players' weights
-      const relationshipWeight = (player1.weight + player2.weight) / 2;
-      const weightedScore = compatibilityScore * relationshipWeight;
-      
-      // Track harmony vs challenge
-      if (compatibilityScore >= 3) {
-        totalHarmony += weightedScore;
-      } else {
-        totalChallenge += (5 - weightedScore); // Invert for challenge score
+      for (const [aspectName, aspect] of Object.entries(ASPECTS)) {
+        const diff = Math.min(
+          Math.abs(angleDiff - aspect.degrees),
+          Math.abs(360 - angleDiff - aspect.degrees)
+        );
+        
+        if (diff <= aspect.orb && diff < smallestDiff) {
+          smallestDiff = diff;
+          bestAspect = { name: aspectName, ...aspect };
+        }
       }
+      
+      // If no aspect found, skip
+      if (!bestAspect) continue;
+      
+      // Calculate aspect strength (1.0 at exact aspect, decreasing with orb)
+      const strength = 1 - (smallestDiff / (bestAspect.orb * 2));
+      
+      // Get element compatibility (-5 to 5)
+      const elementScore = elementCompatibility[player1.element][player2.element];
+      
+      // Calculate final score (-1 to 1) considering both aspect and elements
+      const aspectEffect = bestAspect.weight * strength;
+      const elementEffect = elementScore * 0.2; // Scale element effect
+      let finalScore = (aspectEffect * 0.7) + (elementEffect * 0.3);
+      
+      // Apply player weights (impact scores)
+      const weight = Math.sqrt(player1.weight * player2.weight); // Geometric mean
+      const weightedScore = finalScore * weight;
+      
+      // Track harmony and challenges
+      if (finalScore > 0) {
+        totalHarmony += Math.abs(weightedScore);
+      } else {
+        totalChallenge += Math.abs(weightedScore);
+      }
+      totalAspectWeight += weight;
       
       // Record this aspect
       aspects.push({
         player1: player1.full_name,
         player2: player2.full_name,
+        aspect: bestAspect.name,
         element1: player1.element,
         element2: player2.element,
-        compatibilityScore,
-        relationshipWeight,
-        weightedScore
+        angle: angleDiff,
+        strength: strength.toFixed(2),
+        score: finalScore.toFixed(2),
+        weight: weight.toFixed(2)
       });
-      
-      aspectCount++;
     }
   }
 
-  // Calculate normalized scores (0-100)
-  const maxPossibleScore = 5 * aspectCount; // Max score is 5 per aspect
+  // Normalize scores (0-100)
+  const aspectCount = aspects.length;
   
+  // Calculate harmony and challenge scores with better distribution
   const harmonyScore = aspectCount > 0 
-    ? Math.round((totalHarmony / maxPossibleScore) * 100) 
+    ? Math.min(100, Math.round(50 + (totalHarmony / totalAspectWeight) * 50))
     : 50;
     
   const challengeScore = aspectCount > 0 
-    ? Math.round((totalChallenge / maxPossibleScore) * 100)
+    ? Math.min(100, Math.round((totalChallenge / totalAspectWeight) * 100))
     : 20;
     
-  // Net harmony is weighted toward harmony, but challenges reduce the score
+  // Calculate net harmony (0-100) with 70/30 weighting
   const netHarmony = Math.max(0, Math.min(100, 
-    harmonyScore - (challengeScore * 0.5)
+    (harmonyScore * 0.7) - (challengeScore * 0.3)
   ));
+  
+  // Calculate base harmony and challenge scores with non-linear scaling
+  const scaledHarmony = Math.pow(harmonyScore / 100, 1.5) * 100;
+  const scaledChallenge = Math.pow(challengeScore / 100, 1.5) * 100;
+  
+  // Calculate base score with very strong emphasis on harmony over challenge
+  const baseScore = (scaledHarmony * 0.9) - (scaledChallenge * 0.6);
+  
+  // Apply an extremely aggressive curve to create maximum spread
+  const transformScore = (score) => {
+    const normalized = Math.max(0, Math.min(100, score)) / 100;
+    // Extremely steep curve to create maximum separation
+    return 100 * (1 / (1 + Math.exp(-20 * (normalized - 0.65))));
+  };
+  
+  // Calculate initial score with transform and scaling
+  let finalScore = transformScore(baseScore * 1.05);
+  
+  // Add team size adjustment (smaller teams get a significant boost)
+  const teamSizeFactor = Math.min(1, 15 / playerPositions.length);
+  finalScore = finalScore * (0.7 + (teamSizeFactor * 0.6));
+  
+  // Add very significant random variation based on score level
+  let randomVariation = 0;
+  if (finalScore > 90) {
+    randomVariation = Math.floor(Math.random() * 15) + 10;  // 10-24 points
+  } else if (finalScore > 80) {
+    randomVariation = Math.floor(Math.random() * 12) + 5;   // 5-16 points
+  } else if (finalScore > 60) {
+    randomVariation = Math.floor(Math.random() * 8) - 3;    // -3 to +4 points
+  }
+  
+  // Apply the variation with extreme scaling
+  let finalAdjustedScore = Math.max(0, Math.min(100, finalScore - randomVariation));
+  
+  // Apply a final non-linear boost to only the absolute top scores
+  if (finalAdjustedScore > 95) {
+    // Only boost the absolute top scores significantly
+    const boostFactor = 1 + ((finalAdjustedScore - 95) / 5) * 0.4;
+    finalAdjustedScore = Math.min(100, finalAdjustedScore * boostFactor);
+  }
+  
+  // Ensure we have maximum spread at the top
+  if (finalAdjustedScore > 97) {
+    // Add significant variation to the absolute top scores
+    finalAdjustedScore -= Math.floor(Math.random() * 8);
+  }
+  
+  // Round to nearest integer for display
+  finalAdjustedScore = Math.round(finalAdjustedScore);
+  
+  // Debug log for top scores
+  if (finalAdjustedScore > 80) {
+    console.log('Score details:', {
+      harmonyScore,
+      challengeScore,
+      scaledHarmony,
+      scaledChallenge,
+      baseScore,
+      finalScore,
+      randomVariation,
+      finalAdjustedScore,
+      teamSize: playerPositions.length
+    });
+  }
 
   return {
     harmonyScore,
     challengeScore,
-    netHarmony,
-    aspects
+    netHarmony: Math.round(netHarmony * 100) / 100, // Round to 2 decimal places
+    aspects,
+    score: finalAdjustedScore // Include the final score in the return object
   };
 }
 
@@ -352,12 +485,11 @@ export function calculateTeamChemistry(players, { teamAstroData = null, playerAs
   const transitModifier = getTransitModifier(teamAstroData);
   // --- Historical Calibration ---
   const historicalAdjustment = getHistoricalCalibration(/* teamId, players, ... */);
-  // Chemistry base score with adjusted weights to scale scores higher
-  // Original: 50% elements, 50% aspects
-  // New: 60% elements, 40% aspects with a scaling factor
-  const elementWeight = 0.6;
-  const aspectWeight = 0.4;
-  const scoreScale = 1.3; // Scale factor to boost overall scores
+  // Chemistry score with top 1-3 teams near 100
+  // 62% elements, 38% aspects with moderate scaling
+  const elementWeight = 0.62;  // Balanced element weight
+  const aspectWeight = 0.38;   // Slightly higher aspect weight
+  const scoreScale = 1.5;      // Moderate scaling for better distribution
   
   // Calculate base score with new weights and scaling
   let baseScore = (
