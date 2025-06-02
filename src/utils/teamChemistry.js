@@ -202,32 +202,46 @@ export function calculateElementalBalance(weightedPlayers) {
   // Calculate balance score (how close to 25% each)
   const ideal = 25;
   const deviations = [
-    Math.abs(rounded.fire - ideal),
-    Math.abs(rounded.earth - ideal),
-    Math.abs(rounded.air - ideal),
-    Math.abs(rounded.water - ideal)
+    Math.abs(rounded.fire - ideal) / ideal * 100,  // Scale to percentage of ideal
+    Math.abs(rounded.earth - ideal) / ideal * 100,
+    Math.abs(rounded.air - ideal) / ideal * 100,
+    Math.abs(rounded.water - ideal) / ideal * 100
   ];
   const avgDeviation = deviations.reduce((a, b) => a + b, 0) / 4;
-  const balance = Math.max(0, 100 - (avgDeviation * 4)); // Scale to 0-100
+  
+  // Adjusted balance calculation to create more variation
+  const balance = Math.max(0, 100 - (avgDeviation * 1.2)); // Less punitive than before
 
-  // Synergy: Bonus for high concentration in one element
+  // Synergy: Increased bonus for high concentration
   const maxElement = Math.max(...Object.values(rounded));
   let synergyBonus = 0;
-  if (maxElement >= 60) synergyBonus = 5; // e.g. "all-fire" team
+  if (maxElement >= 65) synergyBonus = 8; // Increased bonus for strong elemental focus
   
-  // Diversity: Bonus for all elements present
+  // Diversity: Increased bonus for balanced elements
   let diversityBonus = 0;
-  if (Object.values(rounded).every(x => x > 10)) diversityBonus = 5;
+  const presentElements = Object.values(rounded).filter(x => x > 5).length;
+  if (presentElements >= 3) diversityBonus = 4; // Increased bonus for diversity
+  if (presentElements === 4) diversityBonus = 6; // Extra bonus for all 4 elements
 
-  // Total chemistry element score
-  const chemistryElementScore = Math.min(100, balance + synergyBonus + diversityBonus);
+  // Apply team size factor (less aggressive for larger teams)
+  const teamSizeFactor = Math.min(1.2, 20 / weightedPlayers.length);
+  const adjustedSynergyBonus = synergyBonus * teamSizeFactor;
+  const adjustedDiversityBonus = diversityBonus * teamSizeFactor;
+
+  // Calculate element score with stronger bonuses
+  const rawElementScore = balance + adjustedSynergyBonus + adjustedDiversityBonus;
+  
+  // Apply a curve to create more spread in top scores
+  const chemistryElementScore = Math.min(100, 
+    Math.pow(rawElementScore / 100, 0.85) * 100
+  );
 
   return {
     ...rounded,
-    balance,
-    synergyBonus,
-    diversityBonus,
-    chemistryElementScore
+    balance: Math.round(balance * 10) / 10,  // Round to 1 decimal place
+    synergyBonus: Math.round(adjustedSynergyBonus * 10) / 10,
+    diversityBonus: Math.round(adjustedDiversityBonus * 10) / 10,
+    chemistryElementScore: Math.round(chemistryElementScore * 10) / 10
   };
 }
 
@@ -327,91 +341,66 @@ export function calculateTeamAspects(weightedPlayers) {
   // Normalize scores (0-100)
   const aspectCount = aspects.length;
   
-  // Calculate harmony and challenge scores with better distribution
+  // Calculate harmony and challenge scores with more conservative scaling
   const harmonyScore = aspectCount > 0 
-    ? Math.min(100, Math.round(50 + (totalHarmony / totalAspectWeight) * 50))
+    ? Math.min(100, Math.round(40 + (totalHarmony / totalAspectWeight) * 60))  
     : 50;
     
   const challengeScore = aspectCount > 0 
-    ? Math.min(100, Math.round((totalChallenge / totalAspectWeight) * 100))
+    ? Math.min(100, Math.round((totalChallenge / totalAspectWeight) * 80))  
     : 20;
     
-  // Calculate net harmony (0-100) with 70/30 weighting
+  // Calculate net harmony with more weight on challenges (50/50 instead of 70/30)
   const netHarmony = Math.max(0, Math.min(100, 
-    (harmonyScore * 0.7) - (challengeScore * 0.3)
+    (harmonyScore * 0.5) - (challengeScore * 0.5)  
   ));
   
-  // Calculate base harmony and challenge scores with non-linear scaling
-  const scaledHarmony = Math.pow(harmonyScore / 100, 1.5) * 100;
-  const scaledChallenge = Math.pow(challengeScore / 100, 1.5) * 100;
+  // Use a less aggressive curve for harmony and challenge scores
+  const scaledHarmony = Math.pow(harmonyScore / 100, 1.2) * 100;  
+  const scaledChallenge = Math.pow(challengeScore / 100, 1.2) * 100;  
   
-  // Calculate base score with very strong emphasis on harmony over challenge
-  const baseScore = (scaledHarmony * 0.9) - (scaledChallenge * 0.6);
+  // Rebalance the base score with more weight on challenges
+  const baseScore = (scaledHarmony * 0.7) - (scaledChallenge * 0.8);  
   
-  // Apply an extremely aggressive curve to create maximum spread
+  // Apply a more moderate curve
   const transformScore = (score) => {
     const normalized = Math.max(0, Math.min(100, score)) / 100;
-    // Extremely steep curve to create maximum separation
-    return 100 * (1 / (1 + Math.exp(-20 * (normalized - 0.65))));
+    // More moderate curve
+    return 100 * (1 / (1 + Math.exp(-12 * (normalized - 0.6))));  
   };
   
   // Calculate initial score with transform and scaling
-  let finalScore = transformScore(baseScore * 1.05);
+  let finalScore = transformScore(baseScore);  
   
-  // Add team size adjustment (smaller teams get a significant boost)
-  const teamSizeFactor = Math.min(1, 15 / playerPositions.length);
-  finalScore = finalScore * (0.7 + (teamSizeFactor * 0.6));
+  // Add smaller team size adjustment
+  const teamSizeFactor = Math.min(1, 10 / playerPositions.length);  
+  finalScore = finalScore * (0.8 + (teamSizeFactor * 0.4));  
   
-  // Add very significant random variation based on score level
-  let randomVariation = 0;
-  if (finalScore > 90) {
-    randomVariation = Math.floor(Math.random() * 15) + 10;  // 10-24 points
-  } else if (finalScore > 80) {
-    randomVariation = Math.floor(Math.random() * 12) + 5;   // 5-16 points
-  } else if (finalScore > 60) {
-    randomVariation = Math.floor(Math.random() * 8) - 3;    // -3 to +4 points
-  }
+  // Cap the maximum score at 95 to prevent perfect scores
+  finalScore = Math.min(95, finalScore);
   
-  // Apply the variation with extreme scaling
-  let finalAdjustedScore = Math.max(0, Math.min(100, finalScore - randomVariation));
-  
-  // Apply a final non-linear boost to only the absolute top scores
-  if (finalAdjustedScore > 95) {
-    // Only boost the absolute top scores significantly
-    const boostFactor = 1 + ((finalAdjustedScore - 95) / 5) * 0.4;
-    finalAdjustedScore = Math.min(100, finalAdjustedScore * boostFactor);
-  }
-  
-  // Ensure we have maximum spread at the top
-  if (finalAdjustedScore > 97) {
-    // Add significant variation to the absolute top scores
-    finalAdjustedScore -= Math.floor(Math.random() * 8);
-  }
+  // Ensure minimum score of 5 for any team with aspects
+  finalScore = Math.max(5, finalScore);
   
   // Round to nearest integer for display
-  finalAdjustedScore = Math.round(finalAdjustedScore);
+  finalScore = Math.round(finalScore);
   
-  // Debug log for top scores
-  if (finalAdjustedScore > 80) {
-    console.log('Score details:', {
+  // Only log for very high scores
+  if (finalScore > 85) {
+    console.log('High score details:', {
       harmonyScore,
       challengeScore,
-      scaledHarmony,
-      scaledChallenge,
-      baseScore,
       finalScore,
-      randomVariation,
-      finalAdjustedScore,
       teamSize: playerPositions.length
     });
   }
 
   return {
-    harmonyScore,
-    challengeScore,
-    netHarmony: Math.round(netHarmony * 100) / 100, // Round to 2 decimal places
+    harmonyScore: Math.round(harmonyScore * 10) / 10,  
+    challengeScore: Math.round(challengeScore * 10) / 10,  
+    netHarmony: Math.round(netHarmony * 10) / 10, 
     aspects,
-    score: finalAdjustedScore // Include the final score in the return object
+    score: finalScore
   };
 }
 
@@ -485,22 +474,38 @@ export function calculateTeamChemistry(players, { teamAstroData = null, playerAs
   const transitModifier = getTransitModifier(teamAstroData);
   // --- Historical Calibration ---
   const historicalAdjustment = getHistoricalCalibration(/* teamId, players, ... */);
-  // Chemistry score with top 1-3 teams near 100
-  // 62% elements, 38% aspects with moderate scaling
-  const elementWeight = 0.62;  // Balanced element weight
-  const aspectWeight = 0.38;   // Slightly higher aspect weight
-  const scoreScale = 1.5;      // Moderate scaling for better distribution
+  // Chemistry score with enhanced top-team distribution
+  const elementWeight = 0.7;   // More weight to elements for higher scores
+  const aspectWeight = 0.3;
+  const scoreScale = 2.0;      // Increased to create more spread
   
-  // Calculate base score with new weights and scaling
+  // Calculate base score with element focus
   let baseScore = (
     (elements.chemistryElementScore * elementWeight) + 
     (aspects.netHarmony * aspectWeight)
   ) * scoreScale;
   
-  // Apply transit and historical modifiers
-  baseScore = baseScore * (1 + transitModifier) + historicalAdjustment;
-  // Clamp to 0-100
-  const overallScore = Math.round(Math.min(100, Math.max(0, baseScore)));
+  // Apply transit and historical modifiers (stronger for top teams)
+  const modifierStrength = baseScore > 80 ? 0.9 : 0.5;
+  baseScore = baseScore * (1 + (transitModifier * modifierStrength)) + 
+             (historicalAdjustment * modifierStrength);
+  
+  // More generous team size dampening
+  const teamSizeDampening = Math.min(1.0, 1 - (playersWithData.length / 300));
+  baseScore = baseScore * teamSizeDampening;
+  
+  // Apply a steep curve to boost top teams while maintaining differentiation
+  const curveFactor = 0.6; // Slightly steeper curve for better top-end distribution
+  let curvedScore = Math.pow(baseScore / 100, curveFactor) * 100;
+  
+  // Round to nearest integer
+  let overallScore = Math.round(Math.min(100, Math.max(10, curvedScore)));
+  
+  // Add a small deterministic boost to top teams for better separation
+  if (overallScore >= 95) {
+    // Top 2-3 teams get a small additional boost
+    overallScore = Math.min(100, overallScore + 1);
+  }
   return {
     score: overallScore,
     elements,
