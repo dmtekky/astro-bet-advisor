@@ -28,7 +28,9 @@ import {
   AlertTriangle,
   CheckCircle,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  ArrowRight,
+  Newspaper
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate, Link } from 'react-router-dom';
@@ -84,16 +86,60 @@ const DEFAULT_LOGO = '/images/default-team-logo.png';
 import AstroDisclosure from '@/components/AstroDisclosure';
 
 const Dashboard: React.FC = () => {
-  const [featuredArticle, setFeaturedArticle] = useState<Article | null>({
-    slug: 'ai-astrology-mlb-deep-dive-20250531',
-    title: 'AI & Astrology: A New Frontier in MLB Predictions',
-    subheading: 'Discover how combining advanced AI with ancient astrological wisdom is changing the game for sports bettors.',
-    contentHtml: '<p>Full article content would go here...</p>',
-    featureImageUrl: 'https://images.unsplash.com/photo-1580209949904-5046cf9isfa7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // Placeholder image
-    publishedAt: new Date().toISOString(),
-    author: 'AstroBet AI Insights',
-    tags: ['MLB', 'AI', 'Astrology', 'Predictions'],
-  });
+  const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null);
+  const [isLoadingArticle, setIsLoadingArticle] = useState(true);
+  const [articleError, setArticleError] = useState<string | null>(null);
+  
+  // Fetch the featured article from the news API
+  useEffect(() => {
+    const fetchFeaturedArticle = async () => {
+      try {
+        setIsLoadingArticle(true);
+        const response = await fetch('/news/index.json');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch articles: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const articles = Array.isArray(data) ? data : (data.articles || []);
+        
+        if (articles.length > 0) {
+          const latestArticle = articles[0];
+          // Map the article to match our Article interface
+          const mappedArticle: Article = {
+            slug: latestArticle.slug || `article-${Date.now()}`,
+            title: latestArticle.title || 'Latest News',
+            subheading: latestArticle.description || '',
+            contentHtml: latestArticle.content || `<p>${latestArticle.description || ''}</p>`,
+            featureImageUrl: latestArticle.image || '',
+            publishedAt: latestArticle.publishedAt || new Date().toISOString(),
+            author: latestArticle.author || 'AstroBet AI Insights',
+            tags: latestArticle.tags || ['MLB', 'News'],
+          };
+          setFeaturedArticle(mappedArticle);
+        }
+      } catch (err) {
+        console.error('Error fetching featured article:', err);
+        setArticleError('Failed to load the latest news. Please try again later.');
+        // Fallback to default article if API fails
+        setFeaturedArticle({
+          slug: 'ai-astrology-mlb-deep-dive-20250531',
+          title: 'AI & Astrology: A New Frontier in MLB Predictions',
+          subheading: 'Discover how combining advanced AI with ancient astrological wisdom is changing the game for sports bettors.',
+          contentHtml: '<p>Full article content would go here...</p>',
+          featureImageUrl: 'https://images.unsplash.com/photo-1580209949904-5046cf9b3f4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
+          publishedAt: new Date().toISOString(),
+          author: 'AstroBet AI Insights',
+          tags: ['MLB', 'AI', 'Astrology', 'Predictions'],
+        });
+      } finally {
+        setIsLoadingArticle(false);
+      }
+    };
+
+    fetchFeaturedArticle();
+  }, []);
   // State for today's date
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
@@ -928,47 +974,75 @@ const Dashboard: React.FC = () => {
   return (
     <DashboardLayout>
       {featuredArticle && (
-        <motion.section
-          variants={featuredArticleVariant}
-          initial="hidden"
-          animate="visible"
-          className="mb-8 p-6 bg-gradient-to-br from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 rounded-xl shadow-2xl text-white overflow-hidden relative"
-        >
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            {featuredArticle.featureImageUrl && (
-              <motion.div 
-                className="md:w-1/3 w-full h-64 rounded-lg overflow-hidden shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-              >
-                <img 
-                  src={featuredArticle.featureImageUrl} 
-                  alt={featuredArticle.title} 
-                  className="w-full h-full object-cover" 
+        <Link to={`/news/${featuredArticle.slug}`} className="block group" onClick={() => window.scrollTo(0, 0)}>
+          <motion.article
+            variants={featuredArticleVariant}
+            initial="hidden"
+            animate="visible"
+            className="relative h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-2xl shadow-2xl mb-8 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20"
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+              {featuredArticle.featureImageUrl ? (
+                <img
+                  src={featuredArticle.featureImageUrl}
+                  alt={featuredArticle.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+                  }}
                 />
-              </motion.div>
-            )}
-            <div className="md:w-2/3">
-              <Badge variant="secondary" className="mb-2 bg-white/20 text-white backdrop-blur-sm">Featured Insight</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-3 leading-tight">{featuredArticle.title}</h2>
-              {featuredArticle.subheading && (
-                <p className="text-lg text-indigo-100 dark:text-indigo-200 mb-4">
-                  {featuredArticle.subheading}
-                </p>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
+                  <Newspaper className="w-32 h-32 text-white/20" />
+                </div>
               )}
-              <Link 
-                to={`/news/${featuredArticle.slug}`}
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-700 focus:ring-white transition-all duration-150 ease-in-out transform hover:scale-105 shadow-md"
-              >
-                Read Full Story <Star className="ml-2 h-5 w-5" />
-              </Link>
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
             </div>
-          </div>
-          {/* Optional: subtle background pattern or elements */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-             {/* Example: <Sparkles className="absolute top-5 right-5 w-16 h-16 text-yellow-300" /> */}
-          </div>
-        </motion.section>
+
+            {/* Content */}
+            <div className="relative z-10 flex flex-col justify-end h-full p-8 md:p-12">
+              <div className="max-w-4xl mx-auto w-full">
+                <Badge 
+                  variant="secondary" 
+                  className="mb-4 bg-white/20 text-white backdrop-blur-sm border-0 group-hover:bg-white/30 transition-colors duration-300"
+                >
+                  Featured Insight
+                </Badge>
+                
+                <div className="space-y-3">
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white drop-shadow-lg">
+                    {featuredArticle.title}
+                  </h2>
+                  
+                  {featuredArticle.subheading && (
+                    <p className="text-base md:text-lg text-white/90 max-w-3xl leading-relaxed line-clamp-2">
+                      {featuredArticle.subheading}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center mt-4 space-x-3">
+                    <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm font-medium border border-white/20 group-hover:bg-white/20 transition-colors duration-300">
+                      Read Full Story
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </span>
+                    {featuredArticle.publishedAt && (
+                      <span className="text-sm text-white/70">
+                        {new Date(featuredArticle.publishedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.article>
+        </Link>
       )}
 
       {/* Main Dashboard Content Starts Here */}
@@ -979,21 +1053,7 @@ const Dashboard: React.FC = () => {
         exit="hidden"     
         className="space-y-8"
       >
-        <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 space-y-8">
-          {/* Dashboard Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 flex items-center">
-                <Star className="h-6 w-6 mr-2 text-yellow-500 fill-yellow-400" />
-                Astro Plays
-              </h1>
-              <p className="text-slate-500 mt-1">{formattedDate}</p>
-            </div>
-            <Badge variant="outline" className="bg-white/50 backdrop-blur-sm px-3 py-1 text-sm">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>Daily Forecast</span>
-            </Badge>
-          </div>
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 space-y-8">
 
           {/* Main Content */}
           {error ? (
@@ -1031,7 +1091,6 @@ const Dashboard: React.FC = () => {
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-xl font-semibold text-slate-800">Upcoming Games</CardTitle>
-                      <CardDescription>Insights and predictions for upcoming MLB games.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {groupedGames.map((group) => (
