@@ -316,8 +316,30 @@ export function generatePlayerAstroData(birthDate: string, location?: BirthLocat
   const dominantPlanets = calculateDominantPlanets(sunSign, moonSign);
   
   // Generate moon phase data
-  const { getMoonPhase, getMoonPhaseInfo } = require('./astroCalculations');
   const birthDateObj = new Date(birthDate);
+  
+  // Simple moon phase calculation (0 = new moon, 0.5 = full moon, 1 = new moon)
+  const getMoonPhase = (date: Date): number => {
+    // This is a simplified calculation - in a real app, you'd use a proper astronomical calculation
+    const synodicMonth = 29.53; // days
+    const knownNewMoon = new Date('2000-01-06T06:14:00Z').getTime(); // Known new moon
+    const daysSinceKnownNewMoon = (date.getTime() - knownNewMoon) / (1000 * 60 * 60 * 24);
+    const phase = (daysSinceKnownNewMoon % synodicMonth) / synodicMonth;
+    return phase;
+  };
+  
+  // Get moon phase info based on phase value (0-1)
+  const getMoonPhaseInfo = (phase: number) => {
+    if (phase < 0.03 || phase >= 0.97) return { name: 'New Moon', emoji: '🌑' };
+    if (phase < 0.22) return { name: 'Waxing Crescent', emoji: '🌒' };
+    if (phase < 0.28) return { name: 'First Quarter', emoji: '🌓' };
+    if (phase < 0.47) return { name: 'Waxing Gibbous', emoji: '🌔' };
+    if (phase < 0.53) return { name: 'Full Moon', emoji: '🌕' };
+    if (phase < 0.72) return { name: 'Waning Gibbous', emoji: '🌖' };
+    if (phase < 0.78) return { name: 'Last Quarter', emoji: '🌗' };
+    return { name: 'Waning Crescent', emoji: '🌘' };
+  };
+  
   const moonPhaseValue = getMoonPhase(birthDateObj);
   const { name: moonPhaseName } = getMoonPhaseInfo(moonPhaseValue);
   

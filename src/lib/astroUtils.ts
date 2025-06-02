@@ -370,16 +370,21 @@ export function calculateMoonPhase(date: Date): number {
   return (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
 }
 
-import { getMoonPhaseInfo } from './astroCalculations';
-
 /**
  * Gets the name of a moon phase
  * @param phase Moon phase value (0-1)
  * @returns Name of the moon phase
  */
 export function getMoonPhaseName(phase: number): string {
-  const { name } = getMoonPhaseInfo(phase);
-  return name;
+  // Simple moon phase name lookup
+  if (phase < 0.03 || phase >= 0.97) return 'New Moon';
+  if (phase < 0.22) return 'Waxing Crescent';
+  if (phase < 0.28) return 'First Quarter';
+  if (phase < 0.47) return 'Waxing Gibbous';
+  if (phase < 0.53) return 'Full Moon';
+  if (phase < 0.72) return 'Waning Gibbous';
+  if (phase < 0.78) return 'Last Quarter';
+  return 'Waning Crescent';
 }
 
 /**
