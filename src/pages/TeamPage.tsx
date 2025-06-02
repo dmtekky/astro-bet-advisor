@@ -430,10 +430,11 @@ const TeamPage = () => {
             
             console.log(`Fetching chemistry data for team: ${teamData.name} (ID: ${teamId}, External ID: ${teamExternalId}, Abbrev: ${teamAbbreviation})`);
             
-            // Build the query parameters
+            // Build the query parameters - use exact match on team_id
             const queryParams = new URLSearchParams({
               select: '*',
-              or: `team_id.eq.${teamId},team_id.eq.${teamExternalId}${teamAbbreviation ? `,team_abbreviation.eq.${teamAbbreviation}` : ''}`,
+              team_id: `eq.${teamId}`,  // Exact match on team_id
+              order: 'calculated_at.desc',  // Get the most recent chemistry data first
               limit: '1'
             });
             
@@ -441,13 +442,14 @@ const TeamPage = () => {
             
             // Use fetch API to get the chemistry data with proper typing
             const response = await fetch(
-              `${import.meta.env.PUBLIC_SUPABASE_URL}/rest/v1/team_chemistry?${queryParams}`,
+              `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/team_chemistry?${queryParams}`,
               {
                 headers: {
-                  'apikey': import.meta.env.PUBLIC_SUPABASE_KEY || '',
-                  'Authorization': `Bearer ${import.meta.env.PUBLIC_SUPABASE_KEY || ''}`,
+                  'apikey': import.meta.env.VITE_SUPABASE_KEY || '',
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY || ''}`,
                   'Content-Type': 'application/json',
-                  'Accept': 'application/vnd.pgrst.object+json'
+                  'Accept': 'application/json',
+                  'Prefer': 'return=representation'
                 }
               }
             );
@@ -461,86 +463,80 @@ const TeamPage = () => {
 
             let chemistryData;
             try {
-              chemistryData = responseText ? JSON.parse(responseText) : null;
-              // If we got a single object instead of an array, wrap it in an array
-              if (chemistryData && !Array.isArray(chemistryData)) {
-                chemistryData = [chemistryData];
+              chemistryData = responseText ? JSON.parse(responseText) : [];
+              console.log('Parsed chemistry data:', chemistryData);
+              
+              if (chemistryData && chemistryData.length > 0) {
+                const data = chemistryData[0];
+                console.log('Found chemistry data for team:', teamData.name, data);
+                
+                // Helper function to safely parse JSON fields
+                const safeJsonParse = (json: any, defaultValue: any = {}) => {
+                  if (!json) return defaultValue;
+                  if (typeof json === 'object') return json;
+                  try {
+                    return JSON.parse(json);
+                  } catch (e) {
+                    console.error('Error parsing JSON field:', e);
+                    return defaultValue;
+                  }
+                };
+                
+                // Parse the elements and aspects from the database
+                const elements = safeJsonParse(data.elements, { fire: 25, earth: 25, air: 25, water: 25, balance: 50 });
+                const aspects = safeJsonParse(data.aspects, { harmonyScore: 50, challengeScore: 20, netHarmony: 50 });
+                
+                // Create the chemistry object with proper typing
+                const chemistry: TeamChemistryData = {
+                  score: data.score || 50,
+                  elements: {
+                    fire: elements.fire || 25,
+                    earth: elements.earth || 25,
+                    air: elements.air || 25,
+                    water: elements.water || 25,
+                    balance: elements.balance || 50
+                  },
+                  aspects: {
+                    harmonyScore: aspects.harmonyScore || 50,
+                    challengeScore: aspects.challengeScore || 20,
+                    netHarmony: aspects.netHarmony || 50
+                  },
+                  calculatedAt: data.calculated_at || new Date().toISOString()
+                };
+                
+                console.log('Setting chemistry data:', chemistry);
+                setChemistry(chemistry);
+              } else {
+                console.log('No chemistry data found for team:', teamData.name);
+                // Set default chemistry data if none found
+                setChemistry({
+                  score: 50,
+                  elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
+                  aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+                  calculatedAt: new Date().toISOString()
+                });
               }
             } catch (parseError) {
-              console.error('Error parsing JSON response:', parseError, 'Response:', responseText);
-              throw new Error('Invalid JSON response from server');
-            }
-            
-            console.log('Parsed chemistry data:', chemistryData);
-            
-            if (chemistryData && chemistryData.length > 0) {
-              const data = chemistryData[0];
-              console.log('Found chemistry data:', data);
-              
-              // Helper function to safely parse JSON fields
-              const safeJsonParse = (json: any, defaultValue: any = {}) => {
-                if (!json) return defaultValue;
-                if (typeof json === 'object') return json;
-                try {
-                  return JSON.parse(json);
-                } catch (e) {
-                  console.error('Error parsing JSON field:', e);
-                  return defaultValue;
-                }
-              };
-              
-              const elements = safeJsonParse(data.elements, { fire: 25, earth: 25, air: 25, water: 25, balance: 50 });
-              const aspects = safeJsonParse(data.aspects, { harmonyScore: 50, challengeScore: 20, netHarmony: 50 });
-              
-              // Ensure all required fields are present with proper defaults
-              const chemistry = {
-                score: data.score || data.overall_score || 50,
-                elements: {
-                  fire: elements?.fire || 25,
-                  earth: elements?.earth || 25,
-                  air: elements?.air || 25,
-                  water: elements?.water || 25,
-                  balance: elements?.balance || 50
-                },
-                aspects: {
-                  harmonyScore: aspects?.harmonyScore || 50,
-                  challengeScore: aspects?.challengeScore || 20,
-                  netHarmony: aspects?.netHarmony || 50
-                },
-                calculatedAt: data.calculated_at || data.last_updated || new Date().toISOString()
-              };
-              
-              console.log('Setting chemistry state:', chemistry);
-              // Ensure the chemistry object matches the expected type
-              setChemistry({
-                ...chemistry,
-                elements: {
-                  fire: Number(chemistry.elements.fire) || 25,
-                  earth: Number(chemistry.elements.earth) || 25,
-                  air: Number(chemistry.elements.air) || 25,
-                  water: Number(chemistry.elements.water) || 25,
-                  balance: Number(chemistry.elements.balance) || 50
-                },
-                aspects: {
-                  harmonyScore: Number(chemistry.aspects.harmonyScore) || 50,
-                  challengeScore: Number(chemistry.aspects.challengeScore) || 20,
-                  netHarmony: Number(chemistry.aspects.netHarmony) || 50
-                }
-              });
-            } else {
-              console.log('No chemistry data found for team. Using default values.');
-              // Set default values if no data found
+              console.error('Error parsing chemistry data:', parseError);
+              // Set default chemistry data on error
               const defaultChemistry = {
                 score: 50,
                 elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
                 aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
                 calculatedAt: new Date().toISOString()
               };
-              console.log('Setting default chemistry:', defaultChemistry);
+              console.log('Setting default chemistry due to error:', defaultChemistry);
               setChemistry(defaultChemistry);
             }
           } catch (err) {
             console.error('Error fetching chemistry data:', err);
+            // Set default chemistry data on error
+            setChemistry({
+              score: 50,
+              elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
+              aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+              calculatedAt: new Date().toISOString()
+            });
           } finally {
             setChemistryLoading(false);
           }
@@ -548,6 +544,12 @@ const TeamPage = () => {
           // No players found or playersData is null
           setPlayers([]);
           setTopPlayers([]);
+          setChemistry({
+            score: 50,
+            elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
+            aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+            calculatedAt: new Date().toISOString()
+          });
           setChemistryLoading(false);
         }
 
