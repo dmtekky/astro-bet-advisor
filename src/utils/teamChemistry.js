@@ -352,8 +352,19 @@ export function calculateTeamChemistry(players, { teamAstroData = null, playerAs
   const transitModifier = getTransitModifier(teamAstroData);
   // --- Historical Calibration ---
   const historicalAdjustment = getHistoricalCalibration(/* teamId, players, ... */);
-  // Chemistry base score (50% elements, 50% aspects)
-  let baseScore = (elements.chemistryElementScore * 0.5) + (aspects.netHarmony * 0.5);
+  // Chemistry base score with adjusted weights to scale scores higher
+  // Original: 50% elements, 50% aspects
+  // New: 60% elements, 40% aspects with a scaling factor
+  const elementWeight = 0.6;
+  const aspectWeight = 0.4;
+  const scoreScale = 1.3; // Scale factor to boost overall scores
+  
+  // Calculate base score with new weights and scaling
+  let baseScore = (
+    (elements.chemistryElementScore * elementWeight) + 
+    (aspects.netHarmony * aspectWeight)
+  ) * scoreScale;
+  
   // Apply transit and historical modifiers
   baseScore = baseScore * (1 + transitModifier) + historicalAdjustment;
   // Clamp to 0-100
