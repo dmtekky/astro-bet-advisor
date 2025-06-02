@@ -14,6 +14,9 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
+  Sparkles,
+  Newspaper,
+  ArrowRight,
   Star,
   Calendar,
   Sun,
@@ -24,13 +27,10 @@ import {
   BarChart,
   BarChart2,
   Lightbulb,
-  Sparkles,
   AlertTriangle,
   CheckCircle,
   AlertCircle,
-  TrendingUp,
-  ArrowRight,
-  Newspaper
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate, Link } from 'react-router-dom';
@@ -974,20 +974,67 @@ const Dashboard: React.FC = () => {
   return (
     <DashboardLayout>
       {featuredArticle && (
-        <Link to={`/news/${featuredArticle.slug}`} className="block group" onClick={() => window.scrollTo(0, 0)}>
-          <motion.article
-            variants={featuredArticleVariant}
-            initial="hidden"
-            animate="visible"
-            className="relative h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-2xl shadow-2xl mb-8 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20"
-          >
-            {/* Background Image */}
-            <div className="absolute inset-0 z-0">
+        <Link to={`/news/${featuredArticle.slug}`} className="block group relative overflow-hidden" onClick={() => window.scrollTo(0, 0)}>
+          {/* Animated cosmic background */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950">
+              {/* Animated stars */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={`star-${i}`}
+                  className="absolute rounded-full bg-white/30"
+                  style={{
+                    width: `${Math.random() * 3 + 1}px`,
+                    height: `${Math.random() * 3 + 1}px`,
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    opacity: Math.random() * 0.5 + 0.1,
+                  }}
+                  animate={{
+                    opacity: [0.3, 0.8, 0.3],
+                  }}
+                  transition={{
+                    duration: Math.random() * 3 + 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: Math.random() * 2
+                  }}
+                />
+              ))}
+              
+              {/* Animated gradient orbs */}
+              <motion.div 
+                className="absolute rounded-full w-64 h-64 -top-32 -right-32 bg-gradient-to-br from-purple-500/20 to-transparent blur-3xl"
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute rounded-full w-96 h-96 -bottom-48 -left-48 bg-gradient-to-tr from-indigo-500/20 to-transparent blur-3xl"
+                animate={{
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 2
+                }}
+              />
+            </div>
+            
+            {/* Main content image with overlay */}
+            <div className="absolute inset-0 z-10">
               {featuredArticle.featureImageUrl ? (
                 <img
                   src={featuredArticle.featureImageUrl}
                   alt={featuredArticle.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
@@ -999,47 +1046,81 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="relative z-10 flex flex-col justify-end h-full p-8 md:p-12">
-              <div className="max-w-4xl mx-auto w-full">
+          {/* Content */}
+          <motion.article
+            variants={featuredArticleVariant}
+            initial="hidden"
+            animate="visible"
+            className="relative z-20 flex flex-col justify-end h-[300px] md:h-[350px] lg:h-[400px] p-8 md:p-12"
+          >
+            <div className="max-w-4xl mx-auto w-full">
+              {/* Decorative elements */}
+              <motion.div 
+                className="absolute top-6 right-6 w-16 h-1 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              />
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 <Badge 
                   variant="secondary" 
-                  className="mb-4 bg-white/20 text-white backdrop-blur-sm border-0 group-hover:bg-white/30 transition-colors duration-300"
+                  className="mb-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-0 group-hover:from-purple-500 group-hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-purple-500/20"
                 >
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                   Featured Insight
                 </Badge>
                 
-                <div className="space-y-3">
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white drop-shadow-lg">
-                    {featuredArticle.title}
-                  </h2>
+                <motion.h2 
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {featuredArticle.title}
+                </motion.h2>
+                
+                {featuredArticle.subheading && (
+                  <motion.p 
+                    className="text-base md:text-lg text-white/90 max-w-3xl leading-relaxed line-clamp-2 font-light"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {featuredArticle.subheading}
+                  </motion.p>
+                )}
+                
+                <motion.div 
+                  className="flex items-center mt-6 space-x-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <span className="inline-flex items-center px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium border-0 group-hover:from-purple-500 group-hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30">
+                    Read Full Story
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </span>
                   
-                  {featuredArticle.subheading && (
-                    <p className="text-base md:text-lg text-white/90 max-w-3xl leading-relaxed line-clamp-2">
-                      {featuredArticle.subheading}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center mt-4 space-x-3">
-                    <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm font-medium border border-white/20 group-hover:bg-white/20 transition-colors duration-300">
-                      Read Full Story
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  {featuredArticle.publishedAt && (
+                    <span className="text-sm text-white/70">
+                      {new Date(featuredArticle.publishedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </span>
-                    {featuredArticle.publishedAt && (
-                      <span className="text-sm text-white/70">
-                        {new Date(featuredArticle.publishedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+                  )}
+                </motion.div>
+              </motion.div>
             </div>
           </motion.article>
         </Link>
