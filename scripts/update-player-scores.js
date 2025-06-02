@@ -2,17 +2,41 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fetch from 'node-fetch'; // For making HTTP requests in Node.js
 import { calculateTeamChemistry } from '../src/utils/teamChemistry.js';
 
-dotenv.config();
+// Get the current directory in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in the project root
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Initialize Supabase client
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.PUBLIC_SUPABASE_KEY;
 
+// Get API URL from command line argument or environment variable
+const astroApiUrl = process.argv[2] || process.env.ASTRO_API_URL;
+
+console.log('Configuration:', { 
+  hasSupabaseUrl: !!supabaseUrl,
+  hasSupabaseKey: !!supabaseKey,
+  astroApiUrl: astroApiUrl || 'Not provided'
+});
+
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Missing Supabase environment variables');
   process.exit(1);
+}
+
+if (!astroApiUrl) {
+  console.warn('Warning: No astrodata API URL provided. Astrodata will not be fetched for chemistry.');
+  console.warn('Usage: node scripts/update-player-scores.js [astro-api-url]');
+} else {
+  console.log(`✅ Will fetch astrodata from: ${astroApiUrl}`);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -165,6 +189,32 @@ async function updatePlayerScores() {
   }
 }
 
+// Helper to get current date in YYYY-MM-DD format
+const getCurrentDate = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+// Helper to fetch astrodata for a given date
+async function fetchAstroDataForDate(dateString) {
+  if (!astroApiUrl) {
+    console.log('Skipping astrodata fetch as ASTRO_API_URL is not set.');
+    return null;
+  }
+  try {
+    const response = await fetch(`${astroApiUrl}?date=${dateString}`);
+    if (!response.ok) {
+      console.error(`Error fetching astrodata for ${dateString}: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    const data = await response.json();
+    console.log(`✨ Successfully fetched astrodata for ${dateString}`);
+    return data;
+  } catch (error) {
+    console.error(`❌ Exception fetching astrodata for ${dateString}:`, error.message);
+    return null;
+  }
+}
+
 // Update team chemistry data based on player scores and astro data
 async function updateTeamChemistry() {
   const startTime = new Date();
@@ -234,6 +284,15 @@ async function updateTeamChemistry() {
     let errorCount = 0;
     let teamsUpdated = 0;
     let updatedCount = 0;
+
+    // Fetch astrodata for the current date once for all teams in this run
+    const currentDateStr = getCurrentDate();
+    console.log(`
+📅 Fetching master astrodata for date: ${currentDateStr}`);
+    const masterAstroDataToday = await fetchAstroDataForDate(currentDateStr);
+    if (!masterAstroDataToday) {
+      console.warn('⚠️ Master astrodata for today could not be fetched. Chemistry scores might be less accurate.');
+    }
     
     for (const team of teams) {
       // Map team abbreviations to match player data (some teams use different abbreviations)
@@ -313,19 +372,42 @@ async function updateTeamChemistry() {
         
         console.log(`Processing ${players.length} players for team ${team.name}`);
         
-        // Calculate team chemistry
-        const chemistry = calculateTeamChemistry(players);
+        // Map player data to the format expected by calculateTeamChemistry
+        const mappedPlayers = players.map(player => ({
+          id: player.id,
+          birth_date: player.player_birth_date,
+          impact_score: calculateImpactScore(player),
+          astro_influence: calculateAstroInfluenceScore(player),
+          position: player.player_position,
+          is_active: true, // Assuming active unless we have data saying otherwise
+          injury_status: 'active' // Default to active unless we have injury data
+        }));
+        
+        console.log(`Calculating chemistry for ${mappedPlayers.length} mapped players`);
+        
+        // Calculate team chemistry using the masterAstroDataToday fetched once
+        const chemistry = calculateTeamChemistry(mappedPlayers, { 
+          teamAstroData: masterAstroDataToday 
+        });
+        
+        console.log('Chemistry calculation result:', {
+          score: chemistry.score,
+          elements: chemistry.elements,
+          aspects: chemistry.aspects,
+          metadata: chemistry.metadata
+        });
         
         // Prepare data for upsert
         const teamChemistryData = {
           team_id: team.id,
-          team_name: team.name,
-          team_abbreviation: team.abbreviation,
-          score: chemistry.score,
-          elements: chemistry.elements,
-          aspects: chemistry.aspects,
+          team_name: team.name, // Required field
+          team_abbreviation: team.abbreviation, // Required field
+          score: chemistry.score, // Using 'score' instead of 'overall_score'
+          elements: chemistry.elements, // Using 'elements' instead of 'elemental_balance'
+          aspects: chemistry.aspects, // Using 'aspects' instead of 'aspect_harmony'
           calculated_at: new Date().toISOString(),
-          last_updated: new Date().toISOString()
+          last_updated: new Date().toISOString() // Using 'last_updated' instead of 'updated_at'
+          // Note: metadata field removed as it doesn't exist in the database schema
         };
         
         // Upsert team chemistry data

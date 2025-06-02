@@ -1,7 +1,20 @@
 // Team Chemistry Calculation Utilities
 import { getZodiacSign } from './zodiacUtils.js';
-// Note: When importing from a TypeScript file in Node.js scripts, we use .js extension
-// This is because Node.js will look for the compiled JS file, not the TS source
+
+/**
+ * INFRASTRUCTURE ENHANCEMENT: Team chemistry calculation now supports:
+ * - Player role/position weighting
+ * - Availability/injury status filtering/down-weighting
+ * - Synergy/diversity bonuses for elemental distribution
+ * - Hooks for astrological transits (stub)
+ * - Hooks for historical chemistry calibration (stub)
+ * - Extensible metadata for future features
+ *
+ * Player object should include:
+ *   impact_score, astro_influence, birth_date, position/role, is_active, injury_status, etc.
+ *
+ * TODO: Implement real transit and historical logic where marked.
+ */
 
 // Define zodiac element mappings
 const zodiacElements = {
@@ -27,52 +40,102 @@ const elementCompatibility = {
   water: { fire: 2, earth: 5, air: 1, water: 4 }
 };
 
-// Calculate weighted player scores
+// Calculate weighted player scores with role and availability support
 export function calculatePlayerWeights(players) {
   if (!players || players.length === 0) return [];
 
-  // Get min and max impact scores for normalization
-  const impactScores = players
-    .map(p => p.impact_score || 0)
-    .filter(score => score > 0);
-  
+  // Filter out unavailable players or down-weight them
+  // (Set is_active=false or injury_status='out' to zero weight, or <1 for partial)
+  // You may adjust this logic as needed.
+  const AVAILABILITY_WEIGHTS = {
+    active: 1.0,
+    questionable: 0.7,
+    day_to_day: 0.5,
+    out: 0.0
+  };
+
+  // Role/position weighting (customize as needed)
+  const ROLE_WEIGHTS = {
+    pitcher: 1.2,
+    catcher: 1.1,
+    shortstop: 1.1,
+    first_base: 1.05,
+    second_base: 1.05,
+    third_base: 1.05,
+    outfield: 1.0,
+    default: 1.0
+  };
+
+  // Normalize impact and astro influence
+  const impactScores = players.map(p => p.impact_score || 0).filter(score => score > 0);
+  const astroScores = players.map(p => p.astro_influence || 0).filter(score => score > 0);
   const minImpact = impactScores.length > 0 ? Math.min(...impactScores) : 0;
   const maxImpact = impactScores.length > 0 ? Math.max(...impactScores) : 100;
-  const range = maxImpact - minImpact || 1; // Avoid division by zero
+  const minAstro = astroScores.length > 0 ? Math.min(...astroScores) : 0;
+  const maxAstro = astroScores.length > 0 ? Math.max(...astroScores) : 100;
+  const impactRange = maxImpact - minImpact || 1;
+  const astroRange = maxAstro - minAstro || 1;
 
   return players.map(player => {
-    // Use impact_score if available, otherwise astro_influence_score, with a default fallback
-    const impactScore = player.impact_score || player.astro_influence_score || 0;
-    
-    // Normalize impact score to 0-1 range
-    const normalizedImpact = range > 0 
-      ? ((impactScore) - minImpact) / range 
-      : 0.5; // Default if all scores are equal
-    
-    // Apply minimum weight (0.2) so all players have some influence
-    // Players with higher impact scores will have more weight (up to 1.0)
-    const weight = 0.2 + (0.8 * normalizedImpact);
-    
-    // Get zodiac sign and element if birth date is available
+    // Availability weighting
+    let availabilityKey = 'active';
+    if (player.injury_status && AVAILABILITY_WEIGHTS[player.injury_status] !== undefined) {
+      availabilityKey = player.injury_status;
+    } else if (player.is_active === false) {
+      availabilityKey = 'out';
+    }
+    const availabilityWeight = AVAILABILITY_WEIGHTS[availabilityKey] ?? 1.0;
+
+    // Role/position weighting
+    let roleKey = 'default';
+    if (player.position) {
+      const pos = String(player.position).toLowerCase();
+      if (pos.includes('pitcher') || pos === 'p') roleKey = 'pitcher';
+      else if (pos.includes('catcher') || pos === 'c') roleKey = 'catcher';
+      else if (pos.includes('shortstop') || pos === 'ss') roleKey = 'shortstop';
+      else if (pos.includes('first') || pos === '1b') roleKey = 'first_base';
+      else if (pos.includes('second') || pos === '2b') roleKey = 'second_base';
+      else if (pos.includes('third') || pos === '3b') roleKey = 'third_base';
+      else if (pos.includes('outfield') || pos.includes('of')) roleKey = 'outfield';
+    }
+    const roleWeight = ROLE_WEIGHTS[roleKey] ?? 1.0;
+
+    // Normalize impact and astro
+    const normalizedImpact = impactRange > 0 
+      ? ((player.impact_score || 0) - minImpact) / impactRange 
+      : 0.5;
+    const normalizedAstro = astroRange > 0
+      ? ((player.astro_influence || 0) - minAstro) / astroRange
+      : 0.5;
+    // Combined score (customize weighting)
+    const combinedScore = (normalizedImpact * 0.6) + (normalizedAstro * 0.4);
+    // Final player weight
+    let weight = 0.2 + (0.8 * combinedScore);
+    weight *= availabilityWeight * roleWeight;
+
+    // Zodiac info
     let zodiacSign = null;
     let element = null;
-    
     if (player.birth_date) {
       zodiacSign = getZodiacSign(player.birth_date);
       element = zodiacSign ? zodiacElements[zodiacSign.toLowerCase()] : null;
     }
-    
+
     return {
       ...player,
       normalizedImpact,
+      normalizedAstro,
+      combinedScore,
       weight,
       zodiacSign,
-      element
+      element,
+      availabilityWeight,
+      roleWeight
     };
   });
 }
 
-// Calculate elemental balance
+// Calculate elemental balance with synergy/diversity bonuses
 export function calculateElementalBalance(weightedPlayers) {
   // Filter players that have astrological data
   const playersWithElements = weightedPlayers.filter(p => p.element);
@@ -114,16 +177,27 @@ export function calculateElementalBalance(weightedPlayers) {
   const deviations = Object.values(normalizedElements).map(
     value => Math.abs(value - idealPercentage)
   );
-  
-  // Average deviation from ideal (0 = perfect balance)
   const avgDeviation = deviations.reduce((sum, val) => sum + val, 0) / deviations.length;
-  
-  // Convert deviation to balance score (0-100, higher is better)
   const balance = Math.max(0, Math.min(100, 100 - (avgDeviation * 2)));
+
+  // --- Synergy/Diversity Bonuses ---
+  // Synergy: Bonus for high concentration in one element
+  const maxElement = Math.max(...Object.values(normalizedElements));
+  let synergyBonus = 0;
+  if (maxElement >= 60) synergyBonus = 5; // e.g. "all-fire" team
+  // Diversity: Bonus for all elements present
+  let diversityBonus = 0;
+  if (Object.values(normalizedElements).every(x => x > 10)) diversityBonus = 5;
+
+  // Total chemistry element score
+  const chemistryElementScore = Math.min(100, balance + synergyBonus + diversityBonus);
 
   return {
     ...normalizedElements,
-    balance
+    balance,
+    synergyBonus,
+    diversityBonus,
+    chemistryElementScore
   };
 }
 
@@ -208,39 +282,95 @@ export function calculateTeamAspects(weightedPlayers) {
   };
 }
 
-// Main function to calculate team chemistry
-export function calculateTeamChemistry(players) {
+// --- Astrological Transit Modifier using teamAstroData (from astrodata API) ---
+/**
+ * Calculates a chemistry modifier based on team-level astrodata (e.g., moon phase, planetary retrogrades)
+ * @param {object|null} teamAstroData - AstroData object for the team/date (from astrodata API)
+ * @returns {number} - Modifier between -1 and +1 (e.g., 0.05 for +5% boost)
+ */
+function getTransitModifier(teamAstroData) {
+  if (!teamAstroData) return 0;
+  let modifier = 0;
+
+  // Example: Mercury retrograde penalty
+  if (teamAstroData.planets?.mercury?.retrograde) {
+    modifier -= 0.05;
+  }
+
+  // Example: Moon in fire sign bonus
+  // Accessing moon sign via teamAstroData.planets.moon.sign
+  const moonSign = teamAstroData.planets?.moon?.sign?.toLowerCase();
+  if (moonSign && ['aries', 'leo', 'sagittarius'].includes(moonSign)) {
+    modifier += 0.03;
+  }
+
+  // Example: Full moon bonus
+  // Accessing moon phase name via teamAstroData.moon_phases.current.phase_name
+  const moonPhaseName = teamAstroData.moon_phases?.current?.phase_name?.toLowerCase();
+  if (moonPhaseName === 'full moon') {
+    modifier += 0.02;
+  }
+  
+  // Add more custom logic as needed
+  return modifier;
+}
+
+// --- Historical Chemistry Calibration Hook (stub) ---
+function getHistoricalCalibration(/* teamId, players, ... */) {
+  // TODO: Use regression/ML or heuristics to calibrate chemistry score
+  // Return a value between -10 and +10 (score adjustment)
+  return 0; // No effect by default
+}
+
+// Main function to calculate team chemistry (astrodata-aware)
+/**
+ * Calculates team chemistry score, using player data and teamAstroData (from astrodata API)
+ * @param {Array} players - Array of player objects
+ * @param {object} options - Options object
+ *   @property {object|null} teamAstroData - AstroData object for the team/date (from astrodata API)
+ *   @property {object} [playerAstroDataMap] - (optional) Map of playerId to AstroData
+ * @returns {object} Chemistry result with score, elements, aspects, and metadata
+ */
+export function calculateTeamChemistry(players, { teamAstroData = null, playerAstroDataMap = {}, ...options } = {}) {
   // Filter out players without birth dates (can't calculate zodiac without them)
   const playersWithData = players.filter(p => p.birth_date);
-  
-  // Handle case with insufficient data
   if (playersWithData.length < 2) {
     return {
       score: 50,
       elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
       aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
-      calculatedAt: new Date().toISOString()
+      calculatedAt: new Date().toISOString(),
+      metadata: { reason: 'Insufficient player data' }
     };
   }
-
-  // Calculate weighted players
+  // Calculate weighted players (roles, availability)
   const weightedPlayers = calculatePlayerWeights(playersWithData);
-  
   // Calculate components
   const elements = calculateElementalBalance(weightedPlayers);
   const aspects = calculateTeamAspects(weightedPlayers);
-  
-  // Calculate overall team chemistry score (0-100)
-  // 60% from elemental balance, 40% from aspect harmony
-  const overallScore = Math.round(
-    (elements.balance * 0.6) + 
-    (aspects.netHarmony * 0.4)
-  );
-
+  // --- Astrological Transit Modifier ---
+  const transitModifier = getTransitModifier(teamAstroData);
+  // --- Historical Calibration ---
+  const historicalAdjustment = getHistoricalCalibration(/* teamId, players, ... */);
+  // Chemistry base score (50% elements, 50% aspects)
+  let baseScore = (elements.chemistryElementScore * 0.5) + (aspects.netHarmony * 0.5);
+  // Apply transit and historical modifiers
+  baseScore = baseScore * (1 + transitModifier) + historicalAdjustment;
+  // Clamp to 0-100
+  const overallScore = Math.round(Math.min(100, Math.max(0, baseScore)));
   return {
-    score: Math.min(100, Math.max(0, overallScore)),
+    score: overallScore,
     elements,
     aspects,
-    calculatedAt: new Date().toISOString()
+    calculatedAt: new Date().toISOString(),
+    metadata: {
+      playerCount: playersWithData.length,
+      avgImpact: Math.round(weightedPlayers.reduce((sum, p) => sum + p.normalizedImpact, 0) / weightedPlayers.length * 100) / 100,
+      synergyBonus: elements.synergyBonus,
+      diversityBonus: elements.diversityBonus,
+      transitModifier,
+      historicalAdjustment,
+      astrodataUsed: !!teamAstroData
+    }
   };
 }
