@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import MarkdownContent from '../components/MarkdownContent';
 
 interface Article {
   id: string;
@@ -178,9 +179,9 @@ const NewsArticle: React.FC = () => {
             </div>
           )}
           
-          <div className="prose dark:prose-invert max-w-none">
+          <div className="mt-6">
             {article.content ? (
-              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+              <MarkdownContent content={article.content} />
             ) : (
               <div className="text-gray-500 italic">
                 No content available for this article.

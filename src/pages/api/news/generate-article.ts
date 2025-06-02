@@ -191,23 +191,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // For now, let's try to generate content for the first news item if available
     if (rawNewsItems.length > 0) {
       const firstNewsItem = rawNewsItems[0]; // Process only the first item for now
-      // TODO: Extract actual title/summary from firstNewsItem once structure is known
-      const placeholderTitle = firstNewsItem.title || 'a recent MLB event';
-      const simplePrompt = `Write a short, engaging news paragraph about ${placeholderTitle}. Make it suitable for sports fans interested in astrology.`;
+      // Extract article details
+      const title = firstNewsItem.title || 'Recent MLB Event';
+      const summary = firstNewsItem.summary || firstNewsItem.description || 'An exciting MLB game took place recently.';
+      
+      const prompt = `Write a well-structured, engaging news article about the following MLB event:
+
+**Title:** ${title}
+**Summary:** ${summary}
+
+## Article Requirements:
+1. Write in a professional sports journalism style
+2. Include relevant statistics and key moments
+3. Add astrological insights where relevant
+4. Use proper markdown formatting including:
+   - Headers (##, ###)
+   - Bullet points for key points
+   - **Bold** for important names/teams
+   - *Italics* for emphasis
+   - > Blockquotes for notable quotes
+   - \`code\` for statistics
+   - [Links](https://example.com) to relevant sources
+
+## Article Structure:
+### Introduction
+Brief overview of the game/event
+
+### Game Highlights
+Key moments and turning points
+
+### Player Performances
+Top performers with statistics
+
+### Astrological Insights
+How astrological factors may have influenced the game
+
+### Conclusion
+Summary and looking ahead
+
+## Start your article below this line:
+# ${title}`;
 
       if (!anthropicApiKey) { // Should be caught by earlier check
         throw new Error('Anthropic API Key is not configured.');
       }
-      const generatedContent = await generateArticleWithClaude(anthropicApiKey, simplePrompt);
+      // Generate content using the structured prompt
+      const generatedContent = await generateArticleWithClaude(anthropicApiKey, prompt);
 
       if (generatedContent) {
         articlesGeneratedCount++;
         generatedArticleSnippets.push(generatedContent.substring(0, 100) + '...'); // Store a snippet
-        console.log(`Generated content for news item: ${placeholderTitle}`);
+        console.log(`Generated content for news item: ${title}`);
         // TODO: Step 4: Parse Anthropic's response (content, title, SEO meta, image ideas)
         // TODO: Step 5: Store the generated article in Supabase `articles` table
       } else {
-        console.log(`Failed to generate content for news item: ${placeholderTitle}`);
+        console.log(`Failed to generate content for news item: ${title}`);
       }
     }
 

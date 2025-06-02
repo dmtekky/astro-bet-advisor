@@ -78,11 +78,15 @@
     "react-hook-form": "^7.53.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.3",
     "react-router-dom": "^6.30.0",
     "react-slick": "^0.30.3",
     "react-tooltip": "^5.28.1",
     "recharts": "^2.12.7",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
     "slick-carousel": "^1.8.1",
     "sonner": "^1.5.0",
     "stream-browserify": "^3.0.0",
@@ -109,7 +113,8 @@
     "sync:games": "node scripts/syncGames.cjs",
     "cleanup:placeholders": "ts-node --esm scripts/cleanupPlaceholderGames.ts",
     "generate:test-articles": "node scripts/generate-test-articles.js",
-    "generate:news": "ts-node --esm scripts/generate-news.ts"
+    "generate:news": "ts-node --esm scripts/generate-news.ts",
+    "generate:daily-recap": "ts-node --esm scripts/generate-daily-recap.ts"
   },
   "devDependencies": {
     "@emotion/babel-plugin": "^11.13.5",
