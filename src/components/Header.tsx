@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface HeaderProps {
   location?: {
@@ -8,10 +19,21 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = () => {
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaguesOpen, setIsLeaguesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to sign out', error);
+    }
+  };
   
   // Keep leagues menu open if we're on a league page
   useEffect(() => {
@@ -73,7 +95,7 @@ const Header: React.FC<HeaderProps> = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4 flex-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -87,63 +109,121 @@ const Header: React.FC<HeaderProps> = () => {
                 {link.label}
               </Link>
             ))}
-
-            {/* Leagues Dropdown */}
-            <div 
-              className="relative"
-              ref={dropdownRef}
+          </div>
+          
+          {/* Leagues Dropdown */}
+          <div 
+            className="relative"
+            ref={dropdownRef}
+          >
+            <button
+              className={`px-4 py-2.5 rounded-md text-base font-medium flex items-center ${
+                location.pathname.startsWith('/league/')
+                  ? 'bg-transparent text-gray-800 dark:text-white font-semibold'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+              } transition-colors duration-200`}
+              onClick={() => setIsLeaguesOpen(!isLeaguesOpen)}
+              onMouseEnter={() => setIsLeaguesOpen(true)}
+              aria-expanded={isLeaguesOpen}
+              aria-haspopup="true"
             >
-              <button
-                className={`px-4 py-2.5 rounded-md text-base font-medium flex items-center ${
-                  location.pathname.startsWith('/league/')
-                    ? 'bg-transparent text-gray-800 dark:text-white font-semibold'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-                } transition-colors duration-200`}
-                onClick={() => setIsLeaguesOpen(!isLeaguesOpen)}
-                onMouseEnter={() => setIsLeaguesOpen(true)}
-                aria-expanded={isLeaguesOpen}
-                aria-haspopup="true"
-              >
-                Leagues
-                <span className={`ml-1 transition-transform duration-200 ${isLeaguesOpen ? 'transform rotate-180' : ''}`}>▼</span>
-              </button>
-              
-              <div 
-                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 ring-opacity-100 ${
-                  isLeaguesOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 pointer-events-none'
-                } transform transition-all duration-200 ease-out z-50`}
-              >
-                <div className="py-1">
-                  {leagues.map((league) => (
-                    <Link
-                      key={league.id}
-                      to={league.comingSoon ? '#' : `/league/${league.id}`}
-                      className={`block px-4 py-2 text-sm ${
-                        league.comingSoon 
-                          ? 'text-gray-500 cursor-not-allowed' 
-                          : location.pathname === `/league/${league.id}`
-                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }`}
-                      onClick={(e) => {
-                        if (league.comingSoon) {
-                          e.preventDefault();
-                        } else {
-                          setIsLeaguesOpen(true);
-                        }
-                      }}
-                    >
-                      <span className="mr-2">{league.icon}</span>
-                      {league.name}
-                      {league.comingSoon && <span className="ml-2 text-xs text-yellow-400">(Coming Soon)</span>}
-                    </Link>
-                  ))}
-                </div>
+              Leagues
+              <span className={`ml-1 transition-transform duration-200 ${isLeaguesOpen ? 'transform rotate-180' : ''}`}>▼</span>
+            </button>
+            
+            <div 
+              className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 ring-opacity-100 ${
+                isLeaguesOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 pointer-events-none'
+              } transform transition-all duration-200 ease-out z-50`}
+            >
+              <div className="py-1">
+                {leagues.map((league) => (
+                  <Link
+                    key={league.id}
+                    to={league.comingSoon ? '#' : `/league/${league.id}`}
+                    className={`block px-4 py-2 text-sm ${
+                      league.comingSoon 
+                        ? 'text-gray-500 cursor-not-allowed' 
+                        : location.pathname === `/league/${league.id}`
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={(e) => {
+                      if (league.comingSoon) {
+                        e.preventDefault();
+                      } else {
+                        setIsLeaguesOpen(true);
+                      }
+                    }}
+                  >
+                    <span className="mr-2">{league.icon}</span>
+                    {league.name}
+                    {league.comingSoon && <span className="ml-2 text-xs text-yellow-400">(Coming Soon)</span>}
+                  </Link>
+                ))}
               </div>
             </div>
-          </nav>
+          </div>
 
-          {/* Mobile menu button */}
+          {/* User Menu */}
+          <div className="ml-4 flex items-center">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage 
+                        src={user.user_metadata?.avatar_url} 
+                        alt={user.user_metadata?.name || user.email?.charAt(0).toUpperCase()} 
+                      />
+                      <AvatarFallback>
+                        {user.user_metadata?.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.user_metadata?.name || user.email}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/login')}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Sign in
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => navigate('/signup')}
+                >
+                  Sign up
+                </Button>
+              </div>
+            )}
+          </div>
+          
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
@@ -208,6 +288,59 @@ const Header: React.FC<HeaderProps> = () => {
                       {league.comingSoon && <span className="ml-2 text-xs text-yellow-400">(Coming Soon)</span>}
                     </Link>
                   ))}
+                </div>
+              </div>
+              
+              {/* Mobile User Menu */}
+              <div className="pt-4 border-t border-gray-700">
+                <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Account
+                </h3>
+                <div className="mt-2 space-y-1">
+                  {user ? (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-transparent"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-transparent"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Settings
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          await handleSignOut();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-transparent"
+                      >
+                        Sign out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-transparent"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary/90"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Sign up
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

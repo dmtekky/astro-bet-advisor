@@ -2,6 +2,9 @@ import { Routes, Route, useLocation, Navigate, useParams } from "react-router-do
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchProvider } from './context/SearchContext';
 import { Analytics } from '@vercel/analytics/react';
+import { PageViewProvider } from './contexts/PageViewContext';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import TeamPage from "./pages/TeamPage";
@@ -15,6 +18,11 @@ import NewsArticle from "./pages/NewsArticle";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -47,6 +55,18 @@ function AppContent() {
           <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/news/:slug" element={<NewsArticle />} />
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Protected Routes */}
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -58,9 +78,13 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchProvider>
-        <AppContent />
-      </SearchProvider>
+      <AuthProvider>
+        <PageViewProvider>
+          <SearchProvider>
+            <AppContent />
+          </SearchProvider>
+        </PageViewProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

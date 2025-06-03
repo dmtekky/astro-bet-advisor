@@ -6,6 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// Import the profiles table type augmentation
+import './profiles';
+
 export type Database = {
   public: {
     Tables: {
