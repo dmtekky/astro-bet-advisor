@@ -215,16 +215,17 @@ export function calculateElementalBalance(weightedPlayers) {
   // Synergy: Increased bonus for high concentration
   const maxElement = Math.max(...Object.values(rounded));
   let synergyBonus = 0;
-  if (maxElement >= 65) synergyBonus = 8; // Increased bonus for strong elemental focus
+  if (maxElement >= 65) synergyBonus = 6; // Increased bonus for strong elemental focus
+  if (maxElement >= 75) synergyBonus = 8; // Extra bonus for very strong focus
   
   // Diversity: Increased bonus for balanced elements
   let diversityBonus = 0;
   const presentElements = Object.values(rounded).filter(x => x > 5).length;
-  if (presentElements >= 3) diversityBonus = 4; // Increased bonus for diversity
-  if (presentElements === 4) diversityBonus = 6; // Extra bonus for all 4 elements
+  if (presentElements >= 3) diversityBonus = 3; // Increased bonus for diversity
+  if (presentElements === 4) diversityBonus = 5; // Extra bonus for all 4 elements
 
   // Apply team size factor (less aggressive for larger teams)
-  const teamSizeFactor = Math.min(1.2, 20 / weightedPlayers.length);
+  const teamSizeFactor = Math.min(1.0, 15 / weightedPlayers.length); // Reduced team size impact
   const adjustedSynergyBonus = synergyBonus * teamSizeFactor;
   const adjustedDiversityBonus = diversityBonus * teamSizeFactor;
 
@@ -341,46 +342,46 @@ export function calculateTeamAspects(weightedPlayers) {
   // Normalize scores (0-100)
   const aspectCount = aspects.length;
   
-  // Calculate harmony and challenge scores with more conservative scaling
+  // Calculate harmony and challenge scores with more balanced scaling
   const harmonyScore = aspectCount > 0 
-    ? Math.min(100, Math.round(40 + (totalHarmony / totalAspectWeight) * 60))  
-    : 50;
+    ? Math.min(100, Math.round(30 + (totalHarmony / totalAspectWeight) * 50))  
+    : 30;
     
   const challengeScore = aspectCount > 0 
-    ? Math.min(100, Math.round((totalChallenge / totalAspectWeight) * 80))  
-    : 20;
+    ? Math.min(100, Math.round((totalChallenge / totalAspectWeight) * 60))  
+    : 30;
     
-  // Calculate net harmony with more weight on challenges (50/50 instead of 70/30)
+  // Calculate net harmony with balanced weights
   const netHarmony = Math.max(0, Math.min(100, 
-    (harmonyScore * 0.5) - (challengeScore * 0.5)  
+    (harmonyScore * 0.6) - (challengeScore * 0.6)  
   ));
   
-  // Use a less aggressive curve for harmony and challenge scores
-  const scaledHarmony = Math.pow(harmonyScore / 100, 1.2) * 100;  
-  const scaledChallenge = Math.pow(challengeScore / 100, 1.2) * 100;  
+  // Use a steeper curve for harmony and challenge scores
+  const scaledHarmony = Math.pow(harmonyScore / 100, 1.1) * 100;  
+  const scaledChallenge = Math.pow(challengeScore / 100, 1.1) * 100;  
   
-  // Rebalance the base score with more weight on challenges
-  const baseScore = (scaledHarmony * 0.7) - (scaledChallenge * 0.8);  
+  // Rebalance the base score with more weight on harmony
+  const baseScore = (scaledHarmony * 0.7) - (scaledChallenge * 0.6);  
   
-  // Apply a more moderate curve
+  // Apply a steeper curve to create more separation
   const transformScore = (score) => {
     const normalized = Math.max(0, Math.min(100, score)) / 100;
-    // More moderate curve
-    return 100 * (1 / (1 + Math.exp(-12 * (normalized - 0.6))));  
+    // Steeper curve for more separation
+    return 100 * (1 / (1 + Math.exp(-12 * (normalized - 0.55))));  
   };
   
   // Calculate initial score with transform and scaling
   let finalScore = transformScore(baseScore);  
   
-  // Add smaller team size adjustment
-  const teamSizeFactor = Math.min(1, 10 / playerPositions.length);  
-  finalScore = finalScore * (0.8 + (teamSizeFactor * 0.4));  
+  // Add minimal team size adjustment
+  const teamSizeFactor = Math.min(1, 8 / playerPositions.length);  
+  finalScore = finalScore * (0.85 + (teamSizeFactor * 0.3));  
   
-  // Cap the maximum score at 95 to prevent perfect scores
-  finalScore = Math.min(95, finalScore);
+  // Cap the maximum score at 90 to prevent perfect scores
+  finalScore = Math.min(90, finalScore);
   
-  // Ensure minimum score of 5 for any team with aspects
-  finalScore = Math.max(5, finalScore);
+  // Remove minimum score floor to allow for lower scores
+  finalScore = Math.max(0, finalScore);
   
   // Round to nearest integer for display
   finalScore = Math.round(finalScore);
@@ -454,71 +455,141 @@ function getHistoricalCalibration(/* teamId, players, ... */) {
  * @returns {object} Chemistry result with score, elements, aspects, and metadata
  */
 export function calculateTeamChemistry(players, { teamAstroData = null, playerAstroDataMap = {}, ...options } = {}) {
-  // Filter out players without birth dates (can't calculate zodiac without them)
+  // Count high-impact players (impact score > 70) and calculate average impact
+  const highImpactPlayers = players.filter(p => p.impact_score > 70);
+  const highImpactCount = highImpactPlayers.length;
+  const avgImpact = players.reduce((sum, p) => sum + (p.impact_score || 0), 0) / players.length;
+
+  // Return 0 if no players or not enough players with birth dates
   const playersWithData = players.filter(p => p.birth_date);
   if (playersWithData.length < 2) {
+    console.warn('Not enough players with birth dates to calculate chemistry');
     return {
-      score: 50,
-      elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-      aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
+      score: 0,  // Explicitly 0 for no/insufficient data
+      elements: { chemistryElementScore: 0, balance: 0, fire: 0, earth: 0, air: 0, water: 0, synergyBonus: 0, diversityBonus: 0 },
+      aspects: { netHarmony: 0, harmonyScore: 0, challengeScore: 0, aspects: [], score: 0 },
       calculatedAt: new Date().toISOString(),
-      metadata: { reason: 'Insufficient player data' }
+      metadata: {
+        playerCount: 0,
+        highImpactPlayers: 0,
+        avgImpact: 0,
+        synergyBonus: 0,
+        diversityBonus: 0,
+        transitModifier: 0,
+        historicalAdjustment: 0,
+        astrodataUsed: false
+      }
     };
   }
-  // Calculate weighted players (roles, availability)
+
   const weightedPlayers = calculatePlayerWeights(playersWithData);
+  
   // Calculate components
   const elements = calculateElementalBalance(weightedPlayers);
   const aspects = calculateTeamAspects(weightedPlayers);
-  // --- Astrological Transit Modifier ---
-  const transitModifier = getTransitModifier(teamAstroData);
-  // --- Historical Calibration ---
-  const historicalAdjustment = getHistoricalCalibration(/* teamId, players, ... */);
-  // Chemistry score with enhanced top-team distribution
-  const elementWeight = 0.7;   // More weight to elements for higher scores
-  const aspectWeight = 0.3;
-  const scoreScale = 2.0;      // Increased to create more spread
   
-  // Calculate base score with element focus
-  let baseScore = (
-    (elements.chemistryElementScore * elementWeight) + 
-    (aspects.netHarmony * aspectWeight)
-  ) * scoreScale;
+  // Combine element and aspect scores with weights (60/40)
+  // Ensure scores are never undefined or null
+  const elementScore = elements.chemistryElementScore || 0;
+  const aspectScore = aspects.netHarmony || 0;
   
-  // Apply transit and historical modifiers (stronger for top teams)
-  const modifierStrength = baseScore > 80 ? 0.9 : 0.5;
-  baseScore = baseScore * (1 + (transitModifier * modifierStrength)) + 
-             (historicalAdjustment * modifierStrength);
-  
-  // More generous team size dampening
-  const teamSizeDampening = Math.min(1.0, 1 - (playersWithData.length / 300));
-  baseScore = baseScore * teamSizeDampening;
-  
-  // Apply a steep curve to boost top teams while maintaining differentiation
-  const curveFactor = 0.6; // Slightly steeper curve for better top-end distribution
-  let curvedScore = Math.pow(baseScore / 100, curveFactor) * 100;
-  
-  // Round to nearest integer
-  let overallScore = Math.round(Math.min(100, Math.max(10, curvedScore)));
-  
-  // Add a small deterministic boost to top teams for better separation
-  if (overallScore >= 95) {
-    // Top 2-3 teams get a small additional boost
-    overallScore = Math.min(100, overallScore + 1);
+  // If either score is 0, the team gets a 0 (no partial credit for missing data)
+  if (elementScore <= 0 || aspectScore <= 0) {
+    return {
+      score: 0,
+      elements: { ...elements, chemistryElementScore: 0 },
+      aspects: { ...aspects, netHarmony: 0 },
+      calculatedAt: new Date().toISOString(),
+      metadata: {
+        playerCount: playersWithData.length,
+        highImpactPlayers: 0,
+        avgImpact: 0,
+        synergyBonus: elements.synergyBonus || 0,
+        diversityBonus: elements.diversityBonus || 0,
+        transitModifier: 0,
+        historicalAdjustment: 0,
+        astrodataUsed: false
+      }
+    };
   }
+  
+  // Calculate base score (will be between 0-100)
+  let score = (elementScore * 0.6) + (aspectScore * 0.4);
+  
+  // Methodical boost based on high-impact players
+  if (highImpactCount > 0) {
+    // Calculate average impact of high-impact players (70-100 scale)
+    const avgHighImpact = highImpactPlayers.reduce((sum, p) => sum + p.impact_score, 0) / highImpactCount;
+    
+    // Base boost starts at 5% per high-impact player
+    let boostPercentage = highImpactCount * 5;
+    
+    // Additional boost based on how high the impact scores are (0-15% extra)
+    const impactQualityBonus = ((avgHighImpact - 70) / 30) * 15;
+    boostPercentage += impactQualityBonus;
+    
+    // Cap total boost at 30%
+    boostPercentage = Math.min(30, boostPercentage);
+    
+    // Apply boost to the score
+    score = score * (1 + (boostPercentage / 100));
+    
+    console.log(`High-impact boost: ${highImpactCount} players (avg: ${avgHighImpact.toFixed(1)}), ` +
+                `boost: +${boostPercentage.toFixed(1)}%, new score: ${score.toFixed(1)}`);
+  }
+  
+  // Apply a steeper curve to create more separation and boost top teams significantly
+  // But only if we have a valid score to begin with
+  if (score > 0) {
+    score = Math.pow(score / 100, 0.65) * 100; // Steeper curve (lower exponent)
+  } else {
+    score = 0; // Ensure 0 stays 0
+  }
+  
+  // Apply transit modifier if available (capped at ±8%)
+  if (teamAstroData) {
+    const transitModifier = getTransitModifier(teamAstroData);
+    score = score * (1 + Math.min(0.08, Math.max(-0.05, transitModifier)));
+  }
+  
+  // Apply historical calibration if available (capped at ±5%)
+  const historicalCalibration = getHistoricalCalibration(teamAstroData?.team_id, weightedPlayers);
+  score = score * (1 + Math.min(0.05, Math.max(-0.03, historicalCalibration)));
+  
+  // Apply team size adjustment (smaller teams get a bigger boost)
+  const teamSizeFactor = Math.min(1, 10 / playersWithData.length);
+  const sizeAdjustment = 1 + (teamSizeFactor * 0.2); // Up to 20% boost for very small teams
+  score = score * sizeAdjustment;
+  
+  // Ensure score is within bounds and round to nearest integer
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  
+  // Calculate transit modifier if teamAstroData is available
+  let transitModifier = 0;
+  if (teamAstroData) {
+    transitModifier = getTransitModifier(teamAstroData);
+  }
+  
+  // Calculate historical adjustment
+  const historicalAdjustment = getHistoricalCalibration(teamAstroData?.team_id, weightedPlayers);
+  
+  // Add to metadata
+  const metadata = {
+    playerCount: players.length,
+    highImpactPlayers: highImpactCount,
+    avgImpact,
+    synergyBonus: elements.synergyBonus || 0,
+    diversityBonus: elements.diversityBonus || 0,
+    transitModifier,
+    historicalAdjustment,
+    astrodataUsed: !!teamAstroData
+  };
+  
   return {
-    score: overallScore,
+    score: score,
     elements,
     aspects,
     calculatedAt: new Date().toISOString(),
-    metadata: {
-      playerCount: playersWithData.length,
-      avgImpact: Math.round(weightedPlayers.reduce((sum, p) => sum + p.normalizedImpact, 0) / weightedPlayers.length * 100) / 100,
-      synergyBonus: elements.synergyBonus,
-      diversityBonus: elements.diversityBonus,
-      transitModifier,
-      historicalAdjustment,
-      astrodataUsed: !!teamAstroData
-    }
+    metadata
   };
 }

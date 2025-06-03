@@ -253,14 +253,23 @@ const TeamPage = () => {
           } else if (!allPlayers || allPlayers.length === 0) {
             console.log('No players found in database');
           } else {
+            // Special case for Athletics (OAK/ATH)
+            const isAthletics = teamData.abbreviation.toUpperCase() === 'OAK';
+            const abbreviation = teamData.abbreviation.toUpperCase();
+            
             // Filter players client-side where either abbreviation field matches
             const playersForTeam = allPlayers.filter(player => {
               // Safely access fields that might not exist
               const currentTeamAbbr = player.player_current_team_abbreviation as string | null;
               const teamAbbr = (player as any).team_abbreviation as string | null;
-              const abbreviation = teamData.abbreviation.toUpperCase();
               
-              // Match either abbreviation field with case-insensitive comparison
+              // For Athletics, check both OAK and ATH abbreviations
+              if (isAthletics) {
+                return (currentTeamAbbr && (currentTeamAbbr.toUpperCase() === 'OAK' || currentTeamAbbr.toUpperCase() === 'ATH')) || 
+                       (teamAbbr && (teamAbbr.toUpperCase() === 'OAK' || teamAbbr.toUpperCase() === 'ATH'));
+              }
+              
+              // For other teams, match the exact abbreviation
               return (currentTeamAbbr && currentTeamAbbr.toUpperCase() === abbreviation) || 
                      (teamAbbr && teamAbbr.toUpperCase() === abbreviation);
             });

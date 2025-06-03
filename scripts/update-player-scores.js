@@ -326,7 +326,9 @@ async function updateTeamChemistry() {
         'PIT': 'PIT', // Pirates
         'SEA': 'SEA', // Mariners
         'TEX': 'TEX', // Rangers
-        'TOR': 'TOR'  // Blue Jays
+        'TOR': 'TOR',  // Blue Jays
+        'OAK': 'ATH',  // Athletics (using ATH as the player abbreviation)
+        'ATH': 'ATH'   // Also map ATH to ATH in case the team is referenced this way
       };
       
       // Use mapped abbreviation if it exists, otherwise use the team's abbreviation
@@ -424,7 +426,32 @@ async function updateTeamChemistry() {
         console.log(`✅ Updated chemistry for team ${team.name} (${team.abbreviation}): ${chemistry.score}/100`);
         teamsUpdated++;
       } else {
-        console.log(`⚠️ No players found for team ${team.name} (${team.abbreviation})`);
+        console.log(`⚠️ No players found for team ${team.name} (${team.abbreviation}), setting score to 0`);
+        
+        // Prepare data for upsert with score 0
+        const teamChemistryData = {
+          team_id: team.id,
+          team_name: team.name,
+          team_abbreviation: team.abbreviation,
+          score: 0,
+          elements: { chemistryElementScore: 0, balance: 0, fire: 0, earth: 0, air: 0, water: 0, synergyBonus: 0, diversityBonus: 0 },
+          aspects: { netHarmony: 0, harmonyScore: 0, challengeScore: 0, aspects: [], score: 0 },
+          calculated_at: new Date().toISOString(),
+          last_updated: new Date().toISOString()
+        };
+        
+        // Upsert team chemistry data with score 0
+        const { error: upsertError } = await supabase
+          .from('team_chemistry')
+          .upsert(teamChemistryData, { onConflict: 'team_id' });
+          
+        if (upsertError) {
+          console.error(`❌ Error updating chemistry for team ${team.name}:`, upsertError);
+          errorCount++;
+        } else {
+          console.log(`✅ Set chemistry to 0 for team ${team.name} (${team.abbreviation})`);
+          teamsUpdated++;
+        }
         continue;
       }
       
