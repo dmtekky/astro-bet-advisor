@@ -187,102 +187,43 @@ const GameCard: React.FC<GameCardProps> = ({
   });
 
   return (
-    <Link 
-      to={`/game/${game.id}`}
-      state={{ game }}
-      className="block h-full hover:no-underline focus:outline-none"
-    >
-      <Card 
-        className="h-full border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800/90 overflow-hidden hover:shadow-xl transition-all duration-300 group"
-        style={{
-          borderWidth: '2px',
-          borderStyle: 'solid',
-          borderColor: homeTeam?.primary_color || '#1E40AF',
-          borderRadius: '0.75rem',
-          boxShadow: `0 4px 12px -2px rgba(${parseInt(homeTeam?.primary_color?.slice(1, 3) || '30', 16)}, ${parseInt(homeTeam?.primary_color?.slice(3, 5) || '64', 16)}, ${parseInt(homeTeam?.primary_color?.slice(5, 7) || '175', 16)}, 0.15)`,
-          background: 'rgba(255, 255, 255, 0.95)',
-        }}
-      >
-        {/* Header with gradient */}
-        <div 
-          className="relative px-4 py-2 border-b overflow-hidden"
-          style={{
-            background: `linear-gradient(to right, ${homeTeam?.primary_color || '#1E40AF'}, ${homeTeam?.secondary_color || '#3B82F6'})`
-          }}
-        >
-          {/* Texture overlay */}
-          <div 
-            className="absolute inset-0 opacity-20" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.8' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-              backgroundSize: '80px 80px',
-            }}
-          />
-          
-          {/* Header content */}
-          <div className="relative">
-            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: homeTextColor }}>
-              {game.league_name || game.sport || 'Game'}
-            </span>
-          </div>
-        </div>
-        
-        <CardContent className="p-0">
-          <div className="p-4 space-y-4">
+    <Link to={`/game/${game.id}`} className="block">
+      <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/30 h-full flex flex-col">
+        <CardContent className="p-0 flex-1 flex flex-col">
+          <div className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col">
             {/* Home Team */}
             {homeTeam ? (
               <div 
-                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
-                style={{ boxShadow: homeBoxShadow }}
+                className="flex justify-between items-center mb-2 sm:mb-3"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center min-w-0">
                   <div 
-                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
-                    }}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0"
                   >
-                    {homeTeam.logo_url || homeTeam.logo ? (
-                      <img 
-                        src={homeTeam.logo_url || homeTeam.logo} 
-                        alt={`${homeTeam.name || 'Home Team'} logo`}
-                        className="w-8 h-8 object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          console.error('Failed to load home team logo:', {
-                            teamId: homeTeam.id,
-                            teamName: homeTeam.name,
-                            logoUrl: homeTeam.logo_url,
-                            logo: homeTeam.logo,
-                            defaultLogo: defaultLogo,
-                            currentSrc: target.currentSrc
-                          });
-                          // Use the default SVG logo as fallback
-                          target.src = defaultLogo;
-                        }}
-                      />
-                    ) : (
-                      // Use the default SVG directly if no logo is set
-                      <img 
-                        src={defaultLogo} 
-                        alt="Default team logo"
-                        className="w-8 h-8 object-contain"
-                      />
-                    )}
+                    <img 
+                      src={homeTeam.logo_url || defaultLogo} 
+                      alt={homeTeam.name} 
+                      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = defaultLogo;
+                      }}
+                    />
                   </div>
-                  <div className="ml-3 min-w-0">
-                    <h4 className="text-sm font-semibold text-gray-900 truncate">{homeTeam.name || 'Home Team'}</h4>
-                    <p className="text-xs text-gray-500">{homeTeam.record || '0-0'}</p>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-xs sm:text-sm truncate text-gray-900 dark:text-white">
+                      {homeTeam.name}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{homeTeam.record || '0-0'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-4">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 whitespace-nowrap">
                     Home
                   </span>
                   {game.home_score !== undefined && (
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                       {game.home_score}
                     </span>
                   )}
@@ -297,7 +238,7 @@ const GameCard: React.FC<GameCardProps> = ({
             {/* VS Divider */}
             <div className="relative flex justify-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
               </div>
               <div className="relative px-2 bg-white dark:bg-gray-900 text-xs font-medium text-gray-500 dark:text-gray-400">
                 VS
@@ -307,57 +248,36 @@ const GameCard: React.FC<GameCardProps> = ({
             {/* Away Team */}
             {awayTeam ? (
               <div 
-                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/30 shadow-inner"
-                style={{ boxShadow: awayBoxShadow }}
+                className="flex justify-between items-center mt-2 sm:mt-3"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center min-w-0">
                   <div 
-                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, white, #f5f5f5)',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9)'
-                    }}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0"
                   >
-                    {awayTeam.logo_url || awayTeam.logo ? (
-                      <img 
-                        src={awayTeam.logo_url || awayTeam.logo} 
-                        alt={`${awayTeam.name || 'Away Team'} logo`}
-                        className="w-8 h-8 object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          console.error('Failed to load away team logo:', {
-                            teamId: awayTeam.id,
-                            teamName: awayTeam.name,
-                            logoUrl: awayTeam.logo_url,
-                            logo: awayTeam.logo,
-                            defaultLogo: defaultLogo,
-                            currentSrc: target.currentSrc
-                          });
-                          // Use the default SVG logo as fallback
-                          target.src = defaultLogo;
-                        }}
-                      />
-                    ) : (
-                      // Use the default SVG directly if no logo is set
-                      <img 
-                        src={defaultLogo} 
-                        alt="Default team logo"
-                        className="w-8 h-8 object-contain"
-                      />
-                    )}
+                    <img 
+                      src={awayTeam.logo_url || defaultLogo} 
+                      alt={awayTeam.name} 
+                      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = defaultLogo;
+                      }}
+                    />
                   </div>
-                  <div className="ml-3 min-w-0">
-                    <h4 className="text-sm font-semibold text-gray-900 truncate">{awayTeam.name || 'Away Team'}</h4>
-                    <p className="text-xs text-gray-500">{awayTeam.record || '0-0'}</p>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-xs sm:text-sm truncate text-gray-900 dark:text-white">
+                      {awayTeam.name}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{awayTeam.record || '0-0'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-4">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 whitespace-nowrap">
                     Away
                   </span>
                   {game.away_score !== undefined && (
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                       {game.away_score}
                     </span>
                   )}
@@ -369,29 +289,23 @@ const GameCard: React.FC<GameCardProps> = ({
               </div>
             )}
             {/* Game Info */}
-            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                <span>Start Time</span>
+            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex justify-between items-center text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                <span>Start</span>
                 <span className="font-medium">{formatGameTime(game.start_time)}</span>
               </div>
               
               {/* Game Status */}
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">Status</span>
-                  <span className="font-medium text-green-600 dark:text-green-400">
+              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Status</span>
+                  <span className="font-medium text-green-600 dark:text-green-400 text-[10px] sm:text-xs">
                     {game.status === 'scheduled' ? 'Upcoming' : 
                      game.status === 'in_progress' ? 'Live' : 
                      game.status === 'final' ? 'Final' : 
                      game.status?.replace('_', ' ').toLowerCase() || 'Scheduled'}
                   </span>
                 </div>
-                {game.venue && (
-                  <div className="flex justify-between items-center text-xs mt-1">
-                    <span className="text-gray-500 dark:text-gray-400">Venue</span>
-                    <span className="font-medium">{game.venue}</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
