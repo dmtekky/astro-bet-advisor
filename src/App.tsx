@@ -23,6 +23,7 @@ import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FloatingBackButton from "./components/common/FloatingBackButton";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
+      <FloatingBackButton />
       <main className="flex-grow pt-16">
         <Analytics />
         <Routes location={location} key={location.pathname}>
