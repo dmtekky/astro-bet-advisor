@@ -761,7 +761,7 @@ const TeamPage = () => {
       className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8"
       style={{ background: teamColors.gradientBg }}
     >
-      <div className="container pb-12 pt-8 md:pt-12 px-4 md:px-6 mx-auto">
+      <div className="container pb-12 pt-0 px-4 md:px-6 mx-auto">
         
         {/* Team Header */}
         <motion.div 

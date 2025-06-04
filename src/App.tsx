@@ -35,7 +35,7 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <FloatingBackButton />
-      <main className="flex-grow pt-0">
+      <main className="flex-grow pt-16 md:pt-20">
         <Analytics />
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

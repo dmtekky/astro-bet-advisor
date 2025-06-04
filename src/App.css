@@ -1,3 +1,29 @@
+/* Mobile-first border width overrides */
+@media (max-width: 768px) {
+  .border, 
+  .border-2, 
+  .border-4, 
+  .border-8,
+  [class*='border-'] {
+    border-width: 0.5px !important;
+  }
+  
+  /* Specific component overrides */
+  .border-b, 
+  .border-t, 
+  .border-l, 
+  .border-r,
+  .border-x,
+  .border-y {
+    border-width: 0.5px !important;
+  }
+  
+  /* Card borders */
+  .card {
+    border-width: 0.5px !important;
+  }
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

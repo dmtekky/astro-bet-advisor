@@ -132,7 +132,7 @@ export const GameCard: React.FC<GameCardProps> = ({
   };
 
   return (
-    <Card className={`w-[252px] md:w-[336px] flex-shrink-0 bg-white border border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden ${className}`}>
+    <Card className={`w-[252px] md:w-[336px] flex-shrink-0 bg-white border-0.5 border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden ${className}`}>
       {/* Game Status Bar */}
       <div 
         className={`h-1 w-full ${isLive ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}`}

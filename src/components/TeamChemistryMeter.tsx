@@ -36,6 +36,28 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
   chemistry, 
   className = '' 
 }) => {
+  // Helper function to get the dominant element
+  const getDominantElement = () => {
+    const { fire, earth, air, water, ...rest } = chemistry.elements;
+    const elements = { fire, earth, air, water };
+    const [dominantElement] = Object.entries(elements).sort((a, b) => b[1] - a[1])[0];
+    return dominantElement as keyof typeof elements;
+  };
+
+  const dominantElement = getDominantElement();
+  const dominantElementName = {
+    fire: 'Fire',
+    earth: 'Earth',
+    air: 'Air',
+    water: 'Water'
+  }[dominantElement];
+
+  const elementColors = {
+    fire: 'bg-red-50 text-red-800 border-red-200',
+    earth: 'bg-amber-50 text-amber-800 border-amber-200',
+    air: 'bg-blue-50 text-blue-800 border-blue-200',
+    water: 'bg-blue-50 text-blue-800 border-blue-200'
+  };
   // Helper function to get color based on score
   const getScoreColor = (score: number) => {
     if (score >= 75) return 'text-emerald-500';
@@ -92,7 +114,10 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
             <span className="whitespace-nowrap">{label}</span>
           </span>
           <motion.span 
-            className="font-semibold text-xs sm:text-sm"
+            className={`font-semibold text-xs sm:text-sm ${
+              element === dominantElement ? 'text-white bg-opacity-20 px-1.5 py-0.5 rounded' : ''
+            }`}
+            style={element === dominantElement ? { backgroundColor: getElementColor(element) } : {}}
             initial={{ opacity: 0, y: 5 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 5 }}
             transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
@@ -102,7 +127,9 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
         </div>
         <div className="h-2 sm:h-2.5 bg-slate-100 rounded-full overflow-hidden">
           <motion.div 
-            className={`h-full ${colorClass} rounded-full`}
+            className={`h-full ${colorClass} rounded-full ${
+              element === dominantElement ? 'ring-2 ring-offset-1 ring-opacity-70 ring-white' : ''
+            }`}
             initial={{ width: 0 }}
             animate={isInView ? { width: `${value}%` } : { width: 0 }}
             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
@@ -119,7 +146,7 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
           <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
             <CardTitle className="text-2xl font-bold flex items-center">
               <span className="bg-white/10 px-3 py-1 rounded-full text-sm font-semibold mr-3">
-                Team Chemistry
+                Astro Chemistry
               </span>
               <TooltipProvider>
                 <Tooltip>
@@ -128,8 +155,8 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs bg-slate-800 text-white border-0">
                     <p>
-                      Team Chemistry measures the astrological compatibility among players, 
-                      weighted by their impact scores. Higher scores indicate better synergy.
+                      Astro Chemistry measures the astrological compatibility among players, 
+                      weighted by their impact scores. Higher scores indicate better performance potential.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -145,22 +172,6 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="flex justify-between text-xs text-white/80 mb-1">
-              <span>Team Synergy</span>
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-                transition={{ 
-                  delay: 0.5, 
-                  type: 'spring', 
-                  stiffness: 400, 
-                  damping: 20,
-                  duration: 1
-                }}
-              >
-                {Math.round(chemistry.score)}%
-              </motion.span>
-            </div>
             <motion.div 
               initial={{ opacity: 0, scaleX: 0.9 }}
               animate={isInView ? { opacity: 1, scaleX: 1 } : { opacity: 0, scaleX: 0.9 }}
@@ -201,8 +212,10 @@ export const TeamChemistryMeter: React.FC<TeamChemistryMeterProps> = ({
                   </TooltipProvider>
                 </h3>
               </div>
-              <div className="text-sm font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full inline-flex">
-                Balance: <span className="font-semibold ml-1">{Math.round(chemistry.elements.balance)}%</span>
+              <div className={`text-sm font-medium px-3 py-1 rounded-md inline-flex items-center border ${elementColors[dominantElement]}`}>
+                <span className="font-semibold">
+                  {dominantElementName} Dominant
+                </span>
               </div>
             </div>
             
