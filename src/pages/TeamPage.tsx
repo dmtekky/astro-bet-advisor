@@ -761,32 +761,32 @@ const TeamPage = () => {
       className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8"
       style={{ background: teamColors.gradientBg }}
     >
-      <div className="container pb-12 pt-4 md:pt-6 px-4 md:px-6 mx-auto">
+      <div className="container pb-12 pt-8 md:pt-12 px-4 md:px-6 mx-auto">
         
         {/* Team Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 md:mb-12 flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 max-w-4xl"
+          className="mb-8 md:mb-12 flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 mt-1.5"
         >
-          <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-lg shadow-lg overflow-hidden bg-gray-100 border border-gray-200">
+          <div className="flex-shrink-0 w-32 h-32 md:w-42 md:h-42">
             {team?.logo_url ? (
               <img 
                 src={team.logo_url} 
                 alt={`${team.name} logo`} 
-                className="w-full h-full object-contain p-2" 
+                className="w-full h-full object-contain" 
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                <span className="text-gray-600 font-bold text-xl">{team?.abbreviation || '?'}</span>
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-full">
+                <span className="text-gray-600 font-bold text-2xl">{team?.abbreviation || '?'}</span>
               </div>
             )}
           </div>
           
           <div className="text-center md:text-left flex-1">
-            <div className="flex flex-row items-start justify-center md:justify-start space-x-3 mb-2">
+            <div className="flex flex-row items-start justify-center md:justify-start space-x-3 mb-3.5">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold">{team?.name}</h1>
                 <p className="text-slate-500 text-sm">
@@ -813,7 +813,7 @@ const TeamPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-8 md:mb-12"
+        className="-mt-1.5 mb-8 md:mb-12"
       >
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
           <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
@@ -964,7 +964,7 @@ const TeamPage = () => {
                 }))
               }
               defaultLogo="/placeholder-team.png"
-              className="mt-6"
+              className="mt-6 -ml-5"
             />
           ) : (
             <p className="text-center py-8 text-slate-500">No upcoming games scheduled</p>

@@ -4,11 +4,17 @@ import { Clock, Zap, Star, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Team, Game } from "@/types/dashboard";
+import { Link } from 'react-router-dom';
 
 interface GameCardProps {
   game: Game & {
     astroEdge?: number;
     astroInfluence?: string;
+    odds?: Array<{
+      market?: string;
+      outcome?: string;
+      price?: number;
+    }>;
   };
   homeTeam: Team;
   awayTeam: Team;
@@ -49,20 +55,29 @@ export const GameCard: React.FC<GameCardProps> = ({
     gameDate = new Date();
   }
   const isLive = game.status === 'in_progress' || game.status === 'in-progress';
-  const homePrimaryColor = homeTeam.primary_color || '#6366f1';
-  const awayPrimaryColor = awayTeam.primary_color || '#8b5cf6';
+  const getTeamColor = (team: Team, defaultColor: string) => {
+    if (!team || typeof team === 'string') return defaultColor;
+    return 'primary_color' in team ? team.primary_color || defaultColor : defaultColor;
+  };
+
+  const homePrimaryColor = getTeamColor(homeTeam, '#6366f1');
+  const awayPrimaryColor = getTeamColor(awayTeam, '#8b5cf6');
   
   // Get team logo or fallback to default
   const getTeamLogo = (team: Team) => {
-    if (team.logo_url) return team.logo_url;
-    if (team.logo) return team.logo;
+    if (!team) return defaultLogo;
+    if (typeof team === 'string') return defaultLogo;
+    if ('logo_url' in team && team.logo_url) return team.logo_url;
+    if ('logo' in team && team.logo) return team.logo;
     return defaultLogo;
   };
 
   // Get team record string
   const getTeamRecord = (team: Team): string => {
-    if (team.record) return team.record;
-    if (team.wins !== undefined && team.losses !== undefined) {
+    if (!team) return '';
+    if (typeof team === 'string') return '';
+    if ('record' in team && team.record) return team.record;
+    if ('wins' in team && 'losses' in team && team.wins !== undefined && team.losses !== undefined) {
       return `${team.wins}-${team.losses}`;
     }
     return '';
@@ -117,7 +132,7 @@ export const GameCard: React.FC<GameCardProps> = ({
   };
 
   return (
-    <Card className={`w-[360px] flex-shrink-0 bg-white border border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden ${className}`}>
+    <Card className={`w-[252px] md:w-[336px] flex-shrink-0 bg-white border border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden ${className}`}>
       {/* Game Status Bar */}
       <div 
         className={`h-1 w-full ${isLive ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}`}
@@ -146,10 +161,14 @@ export const GameCard: React.FC<GameCardProps> = ({
         {/* Teams */}
         <div className="flex items-center justify-between">
           {/* Home Team */}
-          <div className="flex flex-col items-center w-2/5">
-            <div className="relative group">
+          <Link 
+            to={`/teams/${homeTeam.id}`}
+            className="flex flex-col items-center w-2/5 group/team"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
               <div 
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 rounded-full opacity-0 group-hover/team:opacity-100 transition-opacity duration-300"
                 style={{
                   background: `radial-gradient(circle at center, ${homePrimaryColor}15, transparent 70%)`,
                 }}
@@ -157,22 +176,22 @@ export const GameCard: React.FC<GameCardProps> = ({
               <img
                 src={getTeamLogo(homeTeam)}
                 alt={homeTeam.name}
-                className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover:scale-110"
+                className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover/team:scale-110"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = defaultLogo;
                 }}
               />
             </div>
-            <span className="font-semibold text-center mt-1 text-sm text-gray-800 truncate w-full px-1">
-              {homeTeam.name}
+            <span className="font-semibold text-center mt-1 text-sm text-gray-800 truncate w-full px-1 group-hover/team:text-blue-600 transition-colors">
+              {typeof homeTeam === 'string' ? homeTeam : homeTeam.name}
             </span>
             {getTeamRecord(homeTeam) && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 group-hover/team:text-blue-500 transition-colors">
                 {getTeamRecord(homeTeam)}
               </span>
             )}
-          </div>
+          </Link>
 
           {/* Game Info */}
           <div className="flex flex-col items-center px-2">
@@ -202,42 +221,46 @@ export const GameCard: React.FC<GameCardProps> = ({
           </div>
 
           {/* Away Team */}
-          <div className="flex flex-col items-center w-2/5">
-            <div className="relative group">
+          <Link 
+            to={`/teams/${typeof awayTeam === 'string' ? '' : awayTeam.id}`}
+            className="flex flex-col items-center w-2/5 group/team"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
               <div 
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 rounded-full opacity-0 group-hover/team:opacity-100 transition-opacity duration-300"
                 style={{
                   background: `radial-gradient(circle at center, ${awayPrimaryColor}15, transparent 70%)`,
                 }}
               />
               <img
                 src={getTeamLogo(awayTeam)}
-                alt={awayTeam.name}
-                className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover:scale-110"
+                alt={typeof awayTeam === 'string' ? awayTeam : awayTeam.name}
+                className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover/team:scale-110"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = defaultLogo;
                 }}
               />
             </div>
-            <span className="font-semibold text-center mt-1 text-sm text-gray-800 truncate w-full px-1">
-              {awayTeam.name}
+            <span className="font-semibold text-center mt-1 text-sm text-gray-800 truncate w-full px-1 group-hover/team:text-blue-600 transition-colors">
+              {typeof awayTeam === 'string' ? awayTeam : awayTeam.name}
             </span>
             {getTeamRecord(awayTeam) && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 group-hover/team:text-blue-500 transition-colors">
                 {getTeamRecord(awayTeam)}
               </span>
             )}
-          </div>
+          </Link>
         </div>
 
         {/* Odds & Additional Info */}
-        {(game.odds && game.odds.length > 0) && (
+        {(game.odds && game.odds.length > 0 && game.odds[0]?.market) && (
           <div className="mt-3 pt-2 border-t border-gray-100">
             <div className="flex items-center justify-center space-x-2">
               <Zap className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium text-gray-700">
-                {game.odds[0]?.market || 'Odds'}: {game.odds[0]?.outcome} {game.odds[0]?.price > 0 ? '+' : ''}{game.odds[0]?.price}
+                {game.odds[0].market}: {game.odds[0]?.outcome || ''} {game.odds[0]?.price ? (game.odds[0].price > 0 ? '+' : '') + game.odds[0].price : ''}
               </span>
               {game.astroEdge && (
                 <Badge variant="secondary" className="h-6 text-xs px-2 bg-blue-50 text-blue-700 border-blue-200">
@@ -254,11 +277,11 @@ export const GameCard: React.FC<GameCardProps> = ({
 
 // Carousel Component
 type GameCarouselProps = {
-  games: Array<{
-    id: string;
+  games: Array<Game & {
     home_team: Team;
     away_team: Team;
-    [key: string]: any;
+    astroEdge?: number;
+    astroInfluence?: string;
   }>;
   defaultLogo: string;
   className?: string;

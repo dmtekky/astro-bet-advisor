@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Game, Team } from "@/types/dashboard";
 import { GameCard } from './GameCard';
+import { motion, PanInfo, useAnimation } from 'framer-motion';
+import { useWindowSize } from '@/hooks/useWindowSize';
 
 // Carousel Component
 type GameCarouselProps = {
@@ -19,68 +21,85 @@ export const GameCarousel: React.FC<GameCarouselProps> = ({
   defaultLogo, 
   className = '' 
 }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [touchStart, setTouchStart] = React.useState(0);
-  const [touchEnd, setTouchEnd] = React.useState(0);
-  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimation();
+  const windowSize = useWindowSize();
 
-  // Number of cards to show based on screen size
-  const [cardsToShow, setCardsToShow] = React.useState(3);
+  // Calculate card width based on screen size
+  const getCardWidth = () => {
+    if (!windowSize.width) return 336; // Default width
+    if (windowSize.width < 640) return windowSize.width * 0.85; // Full width on mobile
+    if (windowSize.width < 1024) return windowSize.width * 0.5 - 32; // 2 cards on tablet
+    return 336; // 3 cards on desktop
+  };
 
-  React.useEffect(() => {
-    const updateCardsToShow = () => {
-      if (typeof window !== 'undefined') {
-        if (window.innerWidth < 640) {
-          setCardsToShow(1);
-        } else if (window.innerWidth < 1024) {
-          setCardsToShow(2);
-        } else {
-          setCardsToShow(3);
-        }
-      }
-    };
+  const [cardWidth, setCardWidth] = useState(getCardWidth());
+  const gap = windowSize.width < 640 ? 16 : 32; // Smaller gap on mobile
 
-    // Set initial value
-    updateCardsToShow();
+  // Update card width when window resizes
+  useEffect(() => {
+    setCardWidth(getCardWidth());
+  }, [windowSize.width]);
 
-    // Add event listener
-    window.addEventListener('resize', updateCardsToShow);
+  // Handle drag end with momentum
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+    
+    // If we're not dragging enough, snap back to the current position
+    if (Math.abs(info.offset.x) < cardWidth * 0.2) {
+      controls.start({ x: -currentIndex * (cardWidth + gap), transition: { type: 'spring', bounce: 0.3 } });
+      return;
+    }
 
-    // Clean up
-    return () => window.removeEventListener('resize', updateCardsToShow);
-  }, []);
+    // Determine direction of swipe
+    const direction = info.offset.x < 0 ? 1 : -1;
+    let newIndex = currentIndex + direction;
 
-  const canGoNext = currentIndex < games.length - cardsToShow;
-  const canGoPrev = currentIndex > 0;
+    // Ensure we don't go out of bounds
+    newIndex = Math.max(0, Math.min(newIndex, games.length - 1));
 
-  const next = () => {
-    if (canGoNext) {
-      setCurrentIndex(prev => Math.min(prev + 1, games.length - cardsToShow));
+    // Update current index and animate to the new position
+    setCurrentIndex(newIndex);
+    controls.start({ 
+      x: -newIndex * (cardWidth + gap),
+      transition: { 
+        type: 'spring',
+        damping: 30,
+        stiffness: 300,
+        mass: 0.5
+      } 
+    });
+  };
+
+  // Handle touch start to improve responsiveness
+  const handleTouchStart = () => {
+    setIsDragging(true);
+  };
+
+  // Handle touch move to prevent page scroll when swiping
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging) {
+      e.preventDefault();
     }
   };
 
-  const prev = () => {
-    if (canGoPrev) {
-      setCurrentIndex(prev => Math.max(0, prev - 1));
+  // Add/remove touch move event listener
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
+      return () => {
+        carousel.removeEventListener('touchmove', handleTouchMove as EventListener);
+      };
     }
-  };
+  }, [isDragging]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 50) {
-      next();
-    }
-    if (touchStart - touchEnd < -50) {
-      prev();
-    }
-  };
+  // Handle window resize
+  useEffect(() => {
+    controls.start({ x: -currentIndex * (cardWidth + gap) });
+  }, [cardWidth, gap, currentIndex, controls]);
 
   if (games.length === 0) {
     return (
@@ -90,75 +109,86 @@ export const GameCarousel: React.FC<GameCarouselProps> = ({
     );
   }
 
+  // Calculate the total width of the carousel content
+  const contentWidth = games.length * (cardWidth + gap) - gap;
+
   return (
-    <div className={`relative ${className}`}>
-      {/* Carousel Container */}
-      <div 
+    <div className={`relative w-full overflow-hidden ${className}`}>
+      <motion.div 
         ref={carouselRef}
-        className="relative w-full overflow-x-auto pb-6 px-4 scrollbar-hide"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        className="w-full py-4 px-4"
+        drag="x"
+        dragConstraints={{
+          left: -contentWidth + cardWidth,
+          right: 0,
+        }}
+        onDragStart={handleTouchStart}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        dragElastic={0.1}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
       >
-        <div 
-          className="flex transition-transform duration-300 ease-out gap-8"
+        <motion.div 
+          className="flex"
           style={{
-            width: 'max-content',
-            padding: '0 20px',
+            width: contentWidth,
+            gap: `${gap}px`,
           }}
         >
           {games.map((game, index) => (
-            <div 
+            <motion.div 
               key={game.id} 
-              className="flex-shrink-0 w-[336px]"
-              ref={el => {
-                if (index === 0) {
-                  // @ts-ignore
-                  carouselRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
-                }
+              className="flex-shrink-0"
+              style={{
+                width: cardWidth,
+                scale: currentIndex === index ? 1 : 0.95,
+                opacity: currentIndex === index ? 1 : 0.8,
+                transition: 'all 0.3s ease',
               }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="px-1">
-                <GameCard
-                  game={game}
-                  homeTeam={game.home_team}
-                  awayTeam={game.away_team}
-                  defaultLogo={defaultLogo}
-                  className="mx-auto"
-                />
-              </div>
-            </div>
+              <GameCard
+                game={game}
+                homeTeam={game.home_team}
+                awayTeam={game.away_team}
+                defaultLogo={defaultLogo}
+                className="w-full h-full"
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.div>
+
+      {/* Scroll indicators */}
+      {games.length > 1 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          {games.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setCurrentIndex(index);
+                controls.start({ 
+                  x: -index * (cardWidth + gap),
+                  transition: { 
+                    type: 'spring',
+                    damping: 30,
+                    stiffness: 300,
+                    mass: 0.5
+                  } 
+                });
+              }}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentIndex 
+                  ? 'bg-blue-600 w-6' 
+                  : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
-      </div>
-      
-      {/* Hidden Dots Indicator (kept for future use) */}
-      <div className="hidden">
-        {games.length > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
-            {games.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  if (carouselRef.current) {
-                    carouselRef.current.scrollTo({
-                      left: index * (336 + 32), // card width (336px) + gap (32px = 2rem)
-                      behavior: 'smooth'
-                    });
-                  }
-                  setCurrentIndex(index);
-                }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentIndex 
-                    ? 'bg-blue-600 w-6' 
-                    : 'bg-gray-300'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
