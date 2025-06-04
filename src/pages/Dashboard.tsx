@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import React, { useState, useEffect, useMemo, useCallback, Fragment } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import GameCard from '@/components/GameCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -972,7 +971,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-background">
       {featuredArticle && (
         <Link to={`/news/${featuredArticle.slug}`} className="block group relative overflow-hidden" onClick={() => window.scrollTo(0, 0)}>
           {/* Animated cosmic background */}
@@ -1654,7 +1653,7 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </motion.div>
-    </DashboardLayout>
+    </div>
   );
 }
 
