@@ -215,7 +215,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} Full Moon Odds. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Venusian Labs. All rights reserved.</p>
           <p className="mt-2">Not affiliated with any professional sports league.</p>
         </div>
       </div>

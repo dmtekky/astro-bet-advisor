@@ -314,48 +314,57 @@ const LeaguePage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-8">
-        {/* League Header & Astrological Influence */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="border-0 shadow-md bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-3xl shadow-lg">
-                    {LEAGUE_EMOJIS[leagueId] || '🏆'}
-                  </div>
-                  <div>
-                    <CardTitle className="text-3xl">{LEAGUE_NAMES[leagueId] || 'League'}</CardTitle>
-                    <CardDescription>
-                      {teams.length} Teams • {upcomingGames.length} Upcoming Games
-                    </CardDescription>
-                  </div>
+      <div className="space-y-6 sm:space-y-8">
+        {/* League Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full"
+        >
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 overflow-hidden relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-600/5 dark:from-indigo-500/10 dark:to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10 p-6 md:p-8">
+              <div className="flex flex-col items-start">
+                <div className="inline-flex items-center mb-2">
+                  <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                    {LEAGUE_NAMES[leagueId] || 'LEAGUE'}
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
-                    View team details, schedules, and performance metrics for the {LEAGUE_NAMES[leagueId] || 'league'}.
-                  </p>
+                
+                <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 mb-2">
+                  {LEAGUE_NAMES[leagueId] || 'League'}
+                </h1>
+                
+                <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                  <span className="flex items-center">
+                    <Users className="h-4 w-4 mr-1.5" />
+                    {teams.length} Teams
+                  </span>
+                  <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                  <span className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1.5" />
+                    {upcomingGames.length} Upcoming Games
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+                
+                <p className="text-slate-600 dark:text-slate-300 text-base max-w-2xl">
+                  View team details, schedules, and performance metrics for the {LEAGUE_NAMES[leagueId]?.toLowerCase() || 'league'}. Get insights, stats, and analysis to stay ahead of the game.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
 
         {/* Upcoming Games - Only show if we have games */}
         {upcomingGames.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <Calendar className="mr-2 h-6 w-6" />
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
+              <Calendar className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
               Upcoming Games
             </h2>
             
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
               {upcomingGames
                 .map((game, idx) => {
                   const homeTeam = teams.find(t => t.id === game.home_team_id);
@@ -410,47 +419,59 @@ const LeaguePage: React.FC = () => {
         {/* Teams - Only show if we have teams */}
         {teams.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <Users className="mr-2 h-6 w-6" />
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
+              <Users className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
               Teams
             </h2>
             
-            <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {teams.map((team) => (
-                <motion.div
-                  key={team.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
+                <Link 
+                  key={team.id} 
+                  to={`/teams/${team.id}`}
+                  className="block h-full active:scale-95 transition-transform duration-150"
                 >
-                  <Link to={`/teams/${team.id}`}>
-                    <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 hover:shadow-xl transition-all duration-300 group overflow-hidden">
-                      <CardContent className="p-5 flex flex-col items-center">
-                        <div className="relative mb-3">
-                          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative bg-white/80 dark:bg-slate-600/50 p-2 rounded-full shadow-sm">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full flex flex-col"
+                  >
+                    <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 group overflow-hidden">
+                      <CardContent className="p-2 sm:p-3 md:p-4 flex flex-col items-center h-full">
+                        <div className="relative mb-2 sm:mb-3 flex-1 flex items-center justify-center w-full">
+                          <div className="relative bg-white/80 dark:bg-slate-600/50 p-1.5 sm:p-2 rounded-full shadow-sm">
                             <img 
                               src={team.logo_url || '/placeholder-team.png'} 
                               alt={team.name}
-                              className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-110"
+                              className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain transition-transform duration-300"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/placeholder-team.png';
                               }}
+                              loading="lazy"
+                              draggable="false"
                             />
                           </div>
                         </div>
-                        <p className="text-slate-800 dark:text-white text-center font-medium text-sm">{team.name}</p>
-                        {team.venue_city && (
-                          <Badge variant="outline" className="mt-2 text-xs bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200">
-                            {team.venue_city}
-                          </Badge>
-                        )}
+                        <div className="w-full text-center">
+                          <p className="text-slate-800 dark:text-white font-medium text-xs sm:text-sm line-clamp-1">
+                            {team.name}
+                          </p>
+                          {team.venue_city && (
+                            <div className="mt-1">
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] sm:text-xs bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+                              >
+                                {team.venue_city}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
-                  </Link>
-                </motion.div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </div>
@@ -473,9 +494,13 @@ const LeaguePage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      {renderContent()}
-    </DashboardLayout>
+    <div className="pb-16 md:pb-0">
+      <DashboardLayout>
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+          {renderContent()}
+        </div>
+      </DashboardLayout>
+    </div>
   );
 };
 

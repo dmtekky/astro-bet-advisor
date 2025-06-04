@@ -317,7 +317,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-100 text-sm text-slate-500 text-center">
-            © {new Date().getFullYear()} Full Moon Odds. All rights reserved.
+            © {new Date().getFullYear()} Venusian Labs. All rights reserved.
           </div>
         </div>
       </footer>
