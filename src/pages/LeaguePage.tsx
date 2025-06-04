@@ -13,26 +13,36 @@ import { Separator } from '@/components/ui/separator';
 import GameCard from '@/components/GameCard'; // Import the GameCard component
 import { Game, Team as TeamType, Sport } from '@/types'; // Import our main types
 
-// Extend the base Team type with additional database fields
-interface Team extends Omit<TeamType, 'external_id'> {
-  // Override external_id to be number to match the database schema
-  external_id: number;
-  // Add database-specific fields
-  is_active: boolean | null;
-  last_updated: string | null;
-  league_id: string;
-  full_name: string | null;
-  venue_name: string | null;
-  venue_city: string | null;
-  venue_state: string | null;
-  venue_capacity: number | null;
-  venue_surface: string | null;
-  venue_zip: string | null;
-  venue_latitude: number | null;
-  venue_longitude: number | null;
-  // Ensure sport is included from the league context
+// Define a simplified Team interface that matches our data structure
+interface Team {
+  id: string;
+  external_id?: string | number;
+  external_team_id?: string;
+  name: string;
+  abbreviation: string;
+  logo_url?: string;
+  city: string;
   sport: Sport;
+  is_active?: boolean | null;
+  last_updated?: string | null;
+  league_id?: string;
+  full_name?: string | null;
+  venue_name?: string | null;
+  venue_city?: string | null;
+  venue_state?: string | null;
+  venue_capacity?: number | null;
+  venue_surface?: string | null;
+  venue_zip?: string | null;
+  venue_latitude?: number | null;
+  venue_longitude?: number | null;
+  conference?: string | null;
+  division?: string | null;
+  // Add any other fields that might be used in the component
+  [key: string]: any;
 }
+
+// Helper type to avoid deep type instantiation
+type SimpleTeam = Omit<Team, 'sport'> & { sport: string };
 import { Database } from '@/types/database.types'; // For raw DB types if needed
 
 // League ID mapping for database queries
@@ -111,19 +121,32 @@ const LeaguePage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch teams from database with all required fields
-        const teamsResult = await supabase
-          .from('teams')
-          .select(`
-            id, name, abbreviation, logo_url, city, 
-            primary_color, secondary_color, full_name, 
-            external_id, is_active, last_updated, league_id,
-            venue_name, venue_city, venue_state, venue_capacity,
-            venue_surface, venue_zip, venue_latitude, venue_longitude
-          `)
-          .eq('league_id', dbLeagueId);
-        console.log('[LeaguePage] teams query result:', teamsResult);
+               let teamsResult;
+        let nbaTeams: any[] = [];
+        if (leagueId === 'nba') {
+          // Use the NBA helper for NBA league
+          try {
+            nbaTeams = await (await import('../lib/supabase')).fetchNbaTeams();
+            teamsResult = { data: nbaTeams, error: null };
+            console.log('[LeaguePage] NBA teams fetched from nba_teams:', nbaTeams);
+          } catch (nbaErr) {
+            teamsResult = { data: null, error: nbaErr };
+            console.error('[LeaguePage] Error fetching NBA teams:', nbaErr);
+          }
+        } else {
+          // Fetch teams from database with all required fields
+          teamsResult = await supabase
+            .from('teams')
+            .select(`
+              id, name, abbreviation, logo_url, city, 
+              primary_color, secondary_color, full_name, 
+              external_id, is_active, last_updated, league_id,
+              venue_name, venue_city, venue_state, venue_capacity,
+              venue_surface, venue_zip, venue_latitude, venue_longitude
+            `)
+            .eq('league_id', dbLeagueId);
+          console.log('[LeaguePage] teams query result:', teamsResult);
+        }
         
         // Fetch upcoming games from database
         const upcomingGamesResult = await supabase
@@ -143,30 +166,44 @@ const LeaguePage: React.FC = () => {
           console.error('Error fetching teams:', teamsResult.error);
           setError(teamsResult.error.message);
         } else if (teamsResult.data) {
+          // Log the raw data for debugging
+          console.log('[LeaguePage] Raw team data:', teamsResult.data);
+          
           // Transform team data to match the Team interface
-          const transformedTeams = teamsResult.data.map(team => ({
-            id: team.id,
-            name: team.name,
-            abbreviation: team.abbreviation,
-            logo_url: team.logo_url || null,
-            city: team.city,
-            primary_color: team.primary_color || null,
-            secondary_color: team.secondary_color || null,
-            sport: leagueId as Sport, // Use the current league as the sport
-            external_id: team.external_id,
-            is_active: team.is_active ?? true,
-            last_updated: team.last_updated || null,
-            league_id: team.league_id,
-            full_name: team.full_name || team.name,
-            venue_name: team.venue_name || null,
-            venue_city: team.venue_city || null,
-            venue_state: team.venue_state || null,
-            venue_capacity: team.venue_capacity || null,
-            venue_surface: team.venue_surface || null,
-            venue_zip: team.venue_zip || null,
-            venue_latitude: team.venue_latitude || null,
-            venue_longitude: team.venue_longitude || null
-          }));
+          const transformedTeams = teamsResult.data.map(team => {
+            // For NBA teams, make sure to preserve external_team_id
+            const transformedTeam = {
+              id: String(team.id), // Convert number to string for consistent Team interface
+              name: team.name,
+              abbreviation: team.abbreviation,
+              logo_url: team.logo_url || null,
+              city: team.city,
+              primary_color: team.primary_color || null,
+              secondary_color: team.secondary_color || null,
+              sport: leagueId as Sport, // Use the current league as the sport
+              external_id: team.external_id,
+              external_team_id: team.external_team_id, // Preserve this field for NBA teams
+              is_active: team.is_active ?? true,
+              last_updated: team.last_updated || null,
+              league_id: team.league_id,
+              full_name: team.full_name || team.name,
+              venue_name: team.venue_name || null,
+              venue_city: team.venue_city || null,
+              venue_state: team.venue_state || null,
+              venue_capacity: team.venue_capacity || null,
+              venue_surface: team.venue_surface || null,
+              venue_zip: team.venue_zip || null,
+              venue_latitude: team.venue_latitude || null,
+              venue_longitude: team.venue_longitude || null
+            };
+            
+            // Log each transformed team (especially external_team_id)
+            if (leagueId === 'nba') {
+              console.log(`[LeaguePage] NBA Team ${team.name} - external_team_id:`, team.external_team_id);
+            }
+            
+            return transformedTeam;
+          });
           
           setTeams(transformedTeams);
         }
@@ -367,8 +404,22 @@ const LeaguePage: React.FC = () => {
             <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
               {upcomingGames
                 .map((game, idx) => {
-                  const homeTeam = teams.find(t => t.id === game.home_team_id);
-                  const awayTeam = teams.find(t => t.id === game.away_team_id);
+                  // For NBA, match on external_team_id or external_id (nba_teams), otherwise match on id
+                  const homeTeam = leagueId === 'nba'
+                    ? teams.find(t => 
+                        t.external_team_id === game.home_team_id || 
+                        String(t.external_id) === String(game.home_team_id) || 
+                        t.id === game.home_team_id
+                      )
+                    : teams.find(t => t.id === game.home_team_id);
+                  
+                  const awayTeam = leagueId === 'nba'
+                    ? teams.find(t => 
+                        t.external_team_id === game.away_team_id || 
+                        String(t.external_id) === String(game.away_team_id) || 
+                        t.id === game.away_team_id
+                      )
+                    : teams.find(t => t.id === game.away_team_id);
                   
                   // Debug: Log the game and team info for the first few cards
                   if (idx < 5) {
@@ -429,7 +480,7 @@ const LeaguePage: React.FC = () => {
                 <Link 
                   key={team.id} 
                   to={`/teams/${team.id}`}
-                  className="block h-full active:scale-95 transition-transform duration-150"
+                  className="block h-full group-hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 active:scale-95"
                 >
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -437,14 +488,14 @@ const LeaguePage: React.FC = () => {
                     transition={{ duration: 0.2 }}
                     className="h-full flex flex-col"
                   >
-                    <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 group overflow-hidden">
+                    <Card className="h-full border border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800/90 group hover:border-primary/30 dark:hover:border-primary/50 transition-colors duration-300 overflow-hidden">
                       <CardContent className="p-2 sm:p-3 md:p-4 flex flex-col items-center h-full">
                         <div className="relative mb-2 sm:mb-3 flex-1 flex items-center justify-center w-full">
                           <div className="relative bg-white/80 dark:bg-slate-600/50 p-1.5 sm:p-2 rounded-full shadow-sm">
                             <img 
                               src={team.logo_url || '/placeholder-team.png'} 
                               alt={team.name}
-                              className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain transition-transform duration-300"
+                              className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain transition-transform duration-300 group-hover:scale-110"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/placeholder-team.png';
                               }}

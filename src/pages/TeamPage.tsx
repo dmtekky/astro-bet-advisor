@@ -212,7 +212,71 @@ const TeamPage = () => {
       try {
         setLoading(true);
 
-        // Fetch team data
+        // --- NBA TEAM LOGIC ---
+        // Try to fetch from nba_teams first
+        const { data: nbaTeam, error: nbaTeamError } = await supabase
+          .from('nba_teams')
+          .select('*')
+          .eq('id', teamId)
+          .single();
+
+        if (nbaTeam) {
+          // Found NBA team, fetch NBA players
+          setTeam({
+            id: nbaTeam.id?.toString() ?? '',
+            name: nbaTeam.name ?? '',
+            logo_url: nbaTeam.logo_url ?? '/placeholder-team.png',
+            city: nbaTeam.city ?? '',
+            venue: nbaTeam.venue ?? '',
+            conference: nbaTeam.conference ?? '',
+            division: nbaTeam.division ?? '',
+            abbreviation: nbaTeam.abbreviation ?? '',
+            primary_color: nbaTeam.primary_color ?? '#17408B', // Default NBA blue
+            secondary_color: nbaTeam.secondary_color ?? '#C9082A', // Default NBA red
+            league_id: 'nba',
+            external_id: nbaTeam.external_team_id ?? nbaTeam.id,
+            intFormedYear: nbaTeam.int_formed_year ?? '',
+            strStadium: nbaTeam.str_stadium ?? '',
+            strDescriptionEN: nbaTeam.str_description_en ?? '',
+            sport: 'Basketball',
+            // Optionally map league object if needed
+            league: { id: 'nba', name: 'NBA', sport: 'Basketball' },
+          });
+
+          // Fetch NBA players for this team
+          const { data: nbaPlayers, error: nbaPlayersError } = await supabase
+            .from('nba_players')
+            .select('*')
+            .eq('team_id', nbaTeam.external_team_id);
+          if (nbaPlayersError) {
+            setError(nbaPlayersError.message);
+            setLoading(false);
+            return;
+          }
+          // Map NBA player fields to generic Player fields if needed
+          const mappedPlayers = nbaPlayers.map((p: any) => ({
+            id: p.id,
+            player_id: p.external_player_id,
+            full_name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
+            first_name: p.first_name,
+            last_name: p.last_name,
+            headshot_url: p.photo_url,
+            position: p.primary_position,
+            number: p.jersey_number,
+            team_id: p.team_id,
+            team_name: nbaTeam.name,
+            birth_date: p.birth_date,
+            is_active: p.active,
+            // Add any other fields as necessary
+          }));
+          setPlayers(mappedPlayers);
+          setTopPlayers(mappedPlayers.slice(0, 4));
+          setLoading(false);
+          return;
+        }
+        // --- END NBA TEAM LOGIC ---
+
+        // Fallback: Fetch team from regular teams table (existing logic)
         const { data: teamData, error: teamError } = await supabase
           .from('teams')
           .select(`
@@ -819,7 +883,6 @@ const TeamPage = () => {
           <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
           Top Players
         </h2>
-        
         <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-4 md:space-x-0 md:mx-0 md:px-0 md:grid md:gap-4 md:grid-cols-2 lg:grid-cols-4 md:justify-items-center md:overflow-visible">
           {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
             // Calculate team average astro influence for the glow effect

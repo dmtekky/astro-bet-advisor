@@ -83,6 +83,32 @@ export const fetchFromSupabase = async <T>(
   }
 };
 
+// NBA Types
+import type { NbaTeam, NbaPlayer } from '@/types/nba.types';
+
+// NBA fetchers
+export async function fetchNbaTeams(): Promise<NbaTeam[]> {
+  const { data, error } = await supabase.from('nba_teams').select('*');
+  if (error) throw error;
+  return data as NbaTeam[];
+}
+
+export async function fetchNbaPlayers(): Promise<NbaPlayer[]> {
+  const { data, error } = await supabase.from('nba_players').select('*');
+  if (error) throw error;
+  return data as NbaPlayer[];
+}
+
+export async function fetchNbaPlayerById(id: string): Promise<NbaPlayer | null> {
+  const { data, error } = await supabase
+    .from('nba_players')
+    .select('*')
+    .eq('external_player_id', id)
+    .single();
+  if (error) throw error;
+  return data as NbaPlayer | null;
+}
+
 // Export types for use in other files
 export type { Database };
 

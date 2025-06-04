@@ -24,6 +24,12 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import FloatingBackButton from "./components/common/FloatingBackButton";
+// NBA imports
+import NbaTeamsPage from "./pages/NbaTeamsPage";
+import NbaTeamDetailPage from "./pages/NbaTeamDetailPage";
+import NbaPlayersPage from "./pages/NbaPlayersPage";
+import NbaPlayerDetailPage from "./pages/NbaPlayerDetailPage";
+
 
 // Create a client
 const queryClient = new QueryClient();
@@ -43,6 +49,11 @@ function AppContent() {
           <Route path="/league/:leagueId" element={<LeaguePage />} />
           <Route path="/game/:gameId" element={<GamePage />} />
           <Route path="/event/:id" element={<EventDetails />} />
+          {/* NBA-specific routes */}
+          <Route path="/nba/teams" element={<NbaTeamsPage />} />
+          <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
+          <Route path="/nba/players" element={<NbaPlayersPage />} />
+          <Route path="/nba/players/:playerId" element={<NbaPlayerDetailPage />} />
           {/* New routes with plural form */}
           <Route path="/teams/:teamId" element={<TeamPage />} />
           <Route path="/teams/:teamId/player-details/:playerId" element={<PlayerDetailPage />} />
