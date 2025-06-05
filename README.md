@@ -200,6 +200,67 @@ This feature leverages AI to generate unique, SEO-optimized news articles relate
 
 The Team Chemistry feature analyzes player astrological data to calculate team compatibility and performance metrics. This helps provide deeper insights into team dynamics and potential performance.
 
+## Player Impact and Astro Influence Scores
+
+The application uses two key metrics to evaluate players across different sports:
+
+### Impact Score
+
+Impact scores measure a player's statistical performance on a 0-100 scale. The calculation varies by sport to reflect different key performance indicators:
+
+#### MLB (Baseball) Impact Score
+For baseball players, the impact score is calculated based on:
+- **Batting Stats**: Hits (0.5 points each) and Runs (0.75 points each)
+- **Fielding Stats**: Assists (0.3 points each)
+- The score is normalized to a 0-100 range
+
+```typescript
+export function calculateImpactScore(player: ImpactScorePlayer | null | undefined): number {
+  if (!player) return 0;
+  let score = 0;
+  // Batting stats
+  if (player.stats_batting_hits) score += player.stats_batting_hits * 0.5;
+  if (player.stats_batting_runs) score += player.stats_batting_runs * 0.75;
+  // Fielding stats
+  if (player.stats_fielding_assists) score += player.stats_fielding_assists * 0.3;
+  // Normalize score to 0-100 range
+  score = Math.min(100, Math.max(0, score));
+  return Math.round(score);
+}
+```
+
+#### NBA (Basketball) Impact Score
+For NBA players, the impact score is weighted across several performance categories:
+- **Scoring**: Points per game (1.5× weight)
+- **Playmaking**: Assists per game (2× weight)
+- **Rebounding**: Rebounds per game (1.5× weight)
+- **Defense**: Steals and blocks per game (4× weight each)
+- **Efficiency**: Field goal % and three-point % (10-15× weight)
+- **Playing Time**: Minutes per game (0.1× weight)
+- **Team Impact**: Positive plus/minus (0.5× weight)
+- The score is normalized to a 0-100 range with one decimal precision
+
+```typescript
+export function calculateNbaImpactScore(player: NbaImpactScorePlayer | null | undefined): number {
+  // Calculate weighted combination of stats
+  // See implementation in src/utils/calculateNbaImpactScore.ts
+}
+```
+
+### Astro Influence Score
+
+Astro influence scores (0-100) measure the astrological factors affecting a player's performance:
+
+- **Moon Phase Impact**: Based on the player's birth date in relation to lunar cycles
+- **Planetary Aspects**: Influence of planetary alignments like Sun-Mars, Sun-Saturn, and Sun-Jupiter
+- **Zodiac Elements**: Impact of elemental alignments (fire, earth, air, water)
+- **Birth Chart Analysis**: Calculations based on sun sign, moon sign, and ascendant
+- **Mercury Retrograde**: Negative impact (-50 points) when Mercury is in retrograde
+
+The astro influence score is calculated consistently across all sports to ensure uniformity in astrological analysis. Scores above 75 are considered "high" and receive special UI treatment in player cards.
+
+These scores are used throughout the application to provide insights into player performance and help users make more informed betting decisions by considering both traditional statistics and astrological factors.
+
 ### Current Implementation
 
 The team chemistry system is already set up and running with the following components:

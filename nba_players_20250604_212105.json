@@ -1,0 +1,3280 @@
+[
+  {
+    "player": {
+      "id": 17408,
+      "firstName": "Muhammad-Ali",
+      "lastName": "Abdur-Rahkman",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 12,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 190,
+      "birthDate": "1994-09-01",
+      "age": 30,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": "Michigan",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629240.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1629240
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 144297,
+      "firstName": "Max",
+      "lastName": "Abmas",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 30,
+      "currentTeam": {
+        "id": 98,
+        "abbreviation": "UTA"
+      },
+      "currentRosterStatus": "UNDRAFTED",
+      "currentInjury": null,
+      "height": "6'0\"",
+      "weight": 175,
+      "birthDate": "2001-04-02",
+      "age": 24,
+      "birthCity": "Rockwell, TX",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Texas",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": null,
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:792012"
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 98,
+      "abbreviation": "UTA"
+    }
+  },
+  {
+    "player": {
+      "id": 10138,
+      "firstName": "Alex",
+      "lastName": "Abrines",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 8,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'6\"",
+      "weight": 190,
+      "birthDate": "1993-08-01",
+      "age": 31,
+      "birthCity": "Palma de Mallorca",
+      "birthCountry": "Spain",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/203518.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2013,
+        "team": {
+          "id": 96,
+          "abbreviation": "OKL"
+        },
+        "pickTeam": {
+          "id": 93,
+          "abbreviation": "CHA"
+        },
+        "round": 2,
+        "roundPick": 2,
+        "overallPick": 32
+      },
+      "externalMappings": [
+        {
+          "source": "basketball-reference.com",
+          "id": "abrinal01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 36054
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1532831
+        },
+        {
+          "source": "FanDuel",
+          "id": 40206
+        },
+        {
+          "source": "DraftKings",
+          "id": 739963
+        },
+        {
+          "source": "NBA.com",
+          "id": 203518
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 27843,
+      "firstName": "Precious",
+      "lastName": "Achiuwa",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 5,
+      "currentTeam": {
+        "id": 83,
+        "abbreviation": "NYK"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'8\"",
+      "weight": 244,
+      "birthDate": "1999-09-19",
+      "age": 25,
+      "birthCity": "Port Harcourt",
+      "birthCountry": "Nigeria",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Memphis",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630173.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": {
+        "seasonStartYear": 2024,
+        "baseSalary": 0,
+        "minorsSalary": 0,
+        "signingBonus": 0,
+        "otherBonuses": 0,
+        "capHit": 0,
+        "fullNoTradeClause": false,
+        "modifiedNoTradeClause": false,
+        "noMovementClause": false,
+        "overallContract": {
+          "signingTeam": {
+            "id": 92,
+            "abbreviation": "MIA"
+          },
+          "signedOn": "2020-11-25T10:00:00.000Z",
+          "totalYears": 5,
+          "totalSalary": 12513127,
+          "totalBonuses": 0,
+          "expiryStatus": "RFA",
+          "annualAverageSalary": 2502625
+        }
+      },
+      "drafted": {
+        "year": 2020,
+        "team": {
+          "id": 92,
+          "abbreviation": "MIA"
+        },
+        "pickTeam": {
+          "id": 92,
+          "abbreviation": "MIA"
+        },
+        "round": 1,
+        "roundPick": 20,
+        "overallPick": 20
+      },
+      "externalMappings": [
+        {
+          "source": "Rotowire",
+          "id": "precious-achiuwa-5249"
+        },
+        {
+          "source": "RealGM",
+          "id": 107977
+        },
+        {
+          "source": "spotrac",
+          "id": 70662
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 2439312
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:790829"
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6412"
+        },
+        {
+          "source": "FanDuel",
+          "id": 145314
+        },
+        {
+          "source": "NBA.com",
+          "id": 1630173
+        },
+        {
+          "source": "DraftKings",
+          "id": 1175124
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 83,
+      "abbreviation": "NYK"
+    }
+  },
+  {
+    "player": {
+      "id": 9466,
+      "firstName": "Quincy",
+      "lastName": "Acy",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 13,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'7\"",
+      "weight": 240,
+      "birthDate": "1990-10-04",
+      "age": 34,
+      "birthCity": "Tyler, TX",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Mesquite Horn",
+      "college": "Baylor University",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/203112.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "QuincyAcy"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2012,
+        "team": {
+          "id": 81,
+          "abbreviation": "TOR"
+        },
+        "pickTeam": {
+          "id": 81,
+          "abbreviation": "TOR"
+        },
+        "round": 2,
+        "roundPick": 7,
+        "overallPick": 37
+      },
+      "externalMappings": [
+        {
+          "source": "RotoGrinders",
+          "id": 13972
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1995
+        },
+        {
+          "source": "FanDuel",
+          "id": 15469
+        },
+        {
+          "source": "DraftKings",
+          "id": 469234
+        },
+        {
+          "source": "NBA.com",
+          "id": 203112
+        },
+        {
+          "source": "spotrac",
+          "id": 10862
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "acyqu01"
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17207,
+      "firstName": "Jalen",
+      "lastName": "Adams",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'2\"",
+      "weight": 195,
+      "birthDate": "1995-12-11",
+      "age": 29,
+      "birthCity": "Melrose, MA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Melrose",
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629824.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6297"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629824
+        },
+        {
+          "source": "DraftKings",
+          "id": 887554
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 15312,
+      "firstName": "Jaylen",
+      "lastName": "Adams",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 6,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'0\"",
+      "weight": 225,
+      "birthDate": "1996-05-04",
+      "age": 29,
+      "birthCity": "Elkridge, MD",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629121.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:762208"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 846840
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6118"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 436365
+        },
+        {
+          "source": "FanDuel",
+          "id": 84808
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629121
+        },
+        {
+          "source": "DraftKings",
+          "id": 846840
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9301,
+      "firstName": "Jordan",
+      "lastName": "Adams",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 3,
+      "currentTeam": null,
+      "currentRosterStatus": "RETIRED",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 209,
+      "birthDate": "1994-07-08",
+      "age": 30,
+      "birthCity": "Atlanta, GA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Oak Hill Academy",
+      "college": "University of California, Los Angeles",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/203919.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "jordanadams1231"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2014,
+        "team": {
+          "id": 107,
+          "abbreviation": "MEM"
+        },
+        "pickTeam": {
+          "id": 107,
+          "abbreviation": "MEM"
+        },
+        "round": 1,
+        "roundPick": 22,
+        "overallPick": 22
+      },
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 15374
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "adamsjo01"
+        },
+        {
+          "source": "NBA.com",
+          "id": 203919
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 2028
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9390,
+      "firstName": "Steven",
+      "lastName": "Adams",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": 12,
+      "currentTeam": {
+        "id": 109,
+        "abbreviation": "HOU"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'11\"",
+      "weight": 265,
+      "birthDate": "1993-07-20",
+      "age": 31,
+      "birthCity": "Wellington",
+      "birthCountry": "New Zealand",
+      "rookie": false,
+      "highSchool": "Notre Dame Preparatory School",
+      "college": "Pittsburgh",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/203500.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "RealStevenAdams"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2013,
+        "team": {
+          "id": 96,
+          "abbreviation": "OKL"
+        },
+        "pickTeam": {
+          "id": 81,
+          "abbreviation": "TOR"
+        },
+        "round": 1,
+        "roundPick": 12,
+        "overallPick": 12
+      },
+      "externalMappings": [
+        {
+          "source": "FantasyCruncher",
+          "id": 2012
+        },
+        {
+          "source": "FanDuel",
+          "id": 23169
+        },
+        {
+          "source": "DraftKings",
+          "id": 679478
+        },
+        {
+          "source": "Rotowire",
+          "id": "steven-adams-3445"
+        },
+        {
+          "source": "NBA.com",
+          "id": 203500
+        },
+        {
+          "source": "RealGM",
+          "id": 27993
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5163"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 679478
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:751542"
+        },
+        {
+          "source": "spotrac",
+          "id": 13325
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "adamsst01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 16848
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 109,
+      "abbreviation": "HOU"
+    }
+  },
+  {
+    "player": {
+      "id": 13742,
+      "firstName": "Bam",
+      "lastName": "Adebayo",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 13,
+      "currentTeam": {
+        "id": 92,
+        "abbreviation": "MIA"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'9\"",
+      "weight": 255,
+      "birthDate": "1997-07-18",
+      "age": 27,
+      "birthCity": "Newark, New Jersey",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "High Point Christian Academy",
+      "college": "Kentucky",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628389.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "Bam1of1"
+        }
+      ],
+      "currentContractYear": {
+        "seasonStartYear": 2024,
+        "baseSalary": 34848340,
+        "minorsSalary": 34848340,
+        "signingBonus": 0,
+        "otherBonuses": 0,
+        "capHit": 34848340,
+        "fullNoTradeClause": false,
+        "modifiedNoTradeClause": false,
+        "noMovementClause": false,
+        "overallContract": {
+          "signingTeam": {
+            "id": 92,
+            "abbreviation": "MIA"
+          },
+          "signedOn": "2020-11-28T10:00:01.000Z",
+          "totalYears": 5,
+          "totalSalary": 163000300,
+          "totalBonuses": 0,
+          "expiryStatus": "UFA",
+          "annualAverageSalary": 32600060
+        }
+      },
+      "drafted": {
+        "year": 2017,
+        "team": {
+          "id": 92,
+          "abbreviation": "MIA"
+        },
+        "pickTeam": {
+          "id": 92,
+          "abbreviation": "MIA"
+        },
+        "round": 1,
+        "roundPick": 14,
+        "overallPick": 14
+      },
+      "externalMappings": [
+        {
+          "source": "basketball-reference.com",
+          "id": "adebaba01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 37835
+        },
+        {
+          "source": "NBA.com",
+          "id": 1628389
+        },
+        {
+          "source": "DraftKings",
+          "id": 957486
+        },
+        {
+          "source": "FanDuel",
+          "id": 80817
+        },
+        {
+          "source": "Rotowire",
+          "id": "bam-adebayo-4153"
+        },
+        {
+          "source": "RealGM",
+          "id": 76939
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 957486
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5827"
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:774814"
+        },
+        {
+          "source": "spotrac",
+          "id": 23609
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 92,
+      "abbreviation": "MIA"
+    }
+  },
+  {
+    "player": {
+      "id": 15343,
+      "firstName": "Deng",
+      "lastName": "Adel",
+      "primaryPosition": "SF",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'7\"",
+      "weight": 200,
+      "birthDate": "1997-02-01",
+      "age": 28,
+      "birthCity": "Juba",
+      "birthCountry": "South Sudan",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629061.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6094"
+        },
+        {
+          "source": "DraftKings",
+          "id": 879705
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629061
+        },
+        {
+          "source": "FanDuel",
+          "id": 95117
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9375,
+      "firstName": "Arron",
+      "lastName": "Afflalo",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 4,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 210,
+      "birthDate": "1985-10-15",
+      "age": 39,
+      "birthCity": "Los Angeles, CA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Centennial",
+      "college": "University of California, Los Angeles",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/201167.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2007,
+        "team": {
+          "id": 88,
+          "abbreviation": "DET"
+        },
+        "pickTeam": {
+          "id": 88,
+          "abbreviation": "DET"
+        },
+        "round": 1,
+        "roundPick": 27,
+        "overallPick": 27
+      },
+      "externalMappings": [
+        {
+          "source": "FantasyCruncher",
+          "id": 1830
+        },
+        {
+          "source": "FanDuel",
+          "id": 9507
+        },
+        {
+          "source": "DraftKings",
+          "id": 263229
+        },
+        {
+          "source": "NBA.com",
+          "id": 201167
+        },
+        {
+          "source": "spotrac",
+          "id": 2297
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "afflaar01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1000
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 38571,
+      "firstName": "Ochai",
+      "lastName": "Agbaji",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 30,
+      "currentTeam": {
+        "id": 81,
+        "abbreviation": "TOR"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 215,
+      "birthDate": "2000-04-20",
+      "age": 25,
+      "birthCity": "Kansas City, KS",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Kansas",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630534.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "FanDuel",
+          "id": 171781
+        },
+        {
+          "source": "NBA.com",
+          "id": 1630534
+        },
+        {
+          "source": "DraftKings",
+          "id": 1132831
+        },
+        {
+          "source": "Rotowire",
+          "id": "ochai-agbaji-5683"
+        },
+        {
+          "source": "RealGM",
+          "id": 130970
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:785361"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 3587751
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6704"
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 81,
+      "abbreviation": "TOR"
+    }
+  },
+  {
+    "player": {
+      "id": 38483,
+      "firstName": "Dimitrios",
+      "lastName": "Agravanis",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UNASSIGNED",
+      "currentInjury": null,
+      "height": "6'10\"",
+      "weight": 256,
+      "birthDate": "1994-12-20",
+      "age": 30,
+      "birthCity": "Marousi",
+      "birthCountry": "Greece",
+      "rookie": true,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": null,
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2015,
+        "team": {
+          "id": 91,
+          "abbreviation": "ATL"
+        },
+        "pickTeam": {
+          "id": 91,
+          "abbreviation": "ATL"
+        },
+        "round": 2,
+        "roundPick": 29,
+        "overallPick": 59
+      },
+      "externalMappings": []
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9357,
+      "firstName": "Alexis",
+      "lastName": "Ajinca",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": 42,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "7'2\"",
+      "weight": 248,
+      "birthDate": "1988-05-06",
+      "age": 37,
+      "birthCity": "Saint-Etienne",
+      "birthCountry": "France",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/201582.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "FantasyCruncher",
+          "id": 720
+        },
+        {
+          "source": "FanDuel",
+          "id": 9804
+        },
+        {
+          "source": "DraftKings",
+          "id": 456449
+        },
+        {
+          "source": "NBA.com",
+          "id": 201582
+        },
+        {
+          "source": "spotrac",
+          "id": 6087
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "ajincal01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 17095
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 144265,
+      "firstName": "James",
+      "lastName": "Akinjo",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 23,
+      "currentTeam": {
+        "id": 90,
+        "abbreviation": "MIL"
+      },
+      "currentRosterStatus": "UNDRAFTED",
+      "currentInjury": null,
+      "height": "6'1\"",
+      "weight": 190,
+      "birthDate": "2000-11-27",
+      "age": 24,
+      "birthCity": "Oakland, CA",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Baylor",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1631231.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:785813"
+        },
+        {
+          "source": "FanDuel",
+          "id": 213249
+        },
+        {
+          "source": "DraftKings",
+          "id": 1134627
+        },
+        {
+          "source": "NBA.com",
+          "id": 1631231
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 90,
+      "abbreviation": "MIL"
+    }
+  },
+  {
+    "player": {
+      "id": 15289,
+      "firstName": "DeVaughn",
+      "lastName": "Akoon-Purcell",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 44,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 201,
+      "birthDate": "1993-06-05",
+      "age": 31,
+      "birthCity": "Orlando, FL",
+      "birthCountry": "Trinidad and Tobago",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629152.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6080"
+        },
+        {
+          "source": "FanDuel",
+          "id": 85522
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629152
+        },
+        {
+          "source": "DraftKings",
+          "id": 847456
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 31059,
+      "firstName": "Santi",
+      "lastName": "Aldama",
+      "primaryPosition": "SF",
+      "alternatePositions": [],
+      "jerseyNumber": 7,
+      "currentTeam": {
+        "id": 107,
+        "abbreviation": "MEM"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'11\"",
+      "weight": 224,
+      "birthDate": "2001-01-10",
+      "age": 24,
+      "birthCity": "Las Palmas de Gran Canaria",
+      "birthCountry": "Spain",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Loyola",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630583.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": {
+        "seasonStartYear": 2024,
+        "baseSalary": 3960531,
+        "minorsSalary": 3960531,
+        "signingBonus": 0,
+        "otherBonuses": 0,
+        "capHit": 3960531,
+        "fullNoTradeClause": false,
+        "modifiedNoTradeClause": false,
+        "noMovementClause": false,
+        "overallContract": {
+          "signingTeam": {
+            "id": 107,
+            "abbreviation": "MEM"
+          },
+          "signedOn": "2021-08-08T09:00:01.000Z",
+          "totalYears": 5,
+          "totalSalary": 10243491,
+          "totalBonuses": 0,
+          "expiryStatus": "RFA",
+          "annualAverageSalary": 2048698
+        }
+      },
+      "drafted": {
+        "year": 2021,
+        "team": {
+          "id": 98,
+          "abbreviation": "UTA"
+        },
+        "pickTeam": {
+          "id": 98,
+          "abbreviation": "UTA"
+        },
+        "round": 1,
+        "roundPick": 30,
+        "overallPick": 30
+      },
+      "externalMappings": [
+        {
+          "source": "FanDuel",
+          "id": 157844
+        },
+        {
+          "source": "NBA.com",
+          "id": 1630583
+        },
+        {
+          "source": "Rotowire",
+          "id": "santi-aldama-5428"
+        },
+        {
+          "source": "RealGM",
+          "id": 119596
+        },
+        {
+          "source": "spotrac",
+          "id": 74137
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 3005397
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:791548"
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6572"
+        },
+        {
+          "source": "DraftKings",
+          "id": 1177024
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 107,
+      "abbreviation": "MEM"
+    }
+  },
+  {
+    "player": {
+      "id": 11936,
+      "firstName": "Furkan",
+      "lastName": "Aldemir",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "ASSIGNED_TO_OTHER",
+      "currentInjury": null,
+      "height": "6'10\"",
+      "weight": 240,
+      "birthDate": "1991-08-07",
+      "age": 33,
+      "birthCity": "Konak, Izmur",
+      "birthCountry": "Turkey",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": null,
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2012,
+        "team": {
+          "id": 102,
+          "abbreviation": "LAC"
+        },
+        "pickTeam": {
+          "id": 102,
+          "abbreviation": "LAC"
+        },
+        "round": 2,
+        "roundPick": 23,
+        "overallPick": 53
+      },
+      "externalMappings": [
+        {
+          "source": "FantasyCruncher",
+          "id": 65157
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9272,
+      "firstName": "Cole",
+      "lastName": "Aldrich",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": 45,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'11\"",
+      "weight": 253,
+      "birthDate": "1988-10-31",
+      "age": 36,
+      "birthCity": "Burnsville, MN",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Thomas Jefferson",
+      "college": "University of Kansas",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/202332.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "colea45"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2010,
+        "team": {
+          "id": 110,
+          "abbreviation": "NO"
+        },
+        "pickTeam": {
+          "id": 110,
+          "abbreviation": "NO"
+        },
+        "round": 1,
+        "roundPick": 11,
+        "overallPick": 11
+      },
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 6893
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "aldrico01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1385
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 2040
+        },
+        {
+          "source": "FanDuel",
+          "id": 12354
+        },
+        {
+          "source": "DraftKings",
+          "id": 398443
+        },
+        {
+          "source": "NBA.com",
+          "id": 202332
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9480,
+      "firstName": "LaMarcus",
+      "lastName": "Aldridge",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 21,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'11\"",
+      "weight": 250,
+      "birthDate": "1985-07-19",
+      "age": 39,
+      "birthCity": "Dallas, TX",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Seagoville",
+      "college": "University of Texas at Austin",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/200746.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "aldridge_12"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2006,
+        "team": {
+          "id": 89,
+          "abbreviation": "CHI"
+        },
+        "pickTeam": {
+          "id": 89,
+          "abbreviation": "CHI"
+        },
+        "round": 1,
+        "roundPick": 2,
+        "overallPick": 2
+      },
+      "externalMappings": [
+        {
+          "source": "FanDuel",
+          "id": 9688
+        },
+        {
+          "source": "DraftKings",
+          "id": 266554
+        },
+        {
+          "source": "NBA.com",
+          "id": 200746
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.4130"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 266554
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:722954"
+        },
+        {
+          "source": "spotrac",
+          "id": 2672
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "aldrila01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1349
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1807
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9454,
+      "firstName": "Cliff",
+      "lastName": "Alexander",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 34,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'8\"",
+      "weight": 240,
+      "birthDate": "1995-11-16",
+      "age": 29,
+      "birthCity": "Chicago, IL",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Curie",
+      "college": "University of Kansas",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1626146.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 18049
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "alexacl01"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1626146
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1193567
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17238,
+      "firstName": "Kyle",
+      "lastName": "Alexander",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'10\"",
+      "weight": 216,
+      "birthDate": "1996-10-21",
+      "age": 28,
+      "birthCity": "Milton, ON",
+      "birthCountry": "Canada",
+      "rookie": true,
+      "highSchool": "Orangeville Prep",
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629734.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "FantasyDraft",
+          "id": 887466
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6261"
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:767532"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629734
+        },
+        {
+          "source": "DraftKings",
+          "id": 887466
+        },
+        {
+          "source": "FanDuel",
+          "id": 111702
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 134186,
+      "firstName": "Trey",
+      "lastName": "Alexander",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 23,
+      "currentTeam": {
+        "id": 99,
+        "abbreviation": "DEN"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 190,
+      "birthDate": "2003-05-02",
+      "age": 22,
+      "birthCity": "Oklahoma City, OK",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Creighton",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1641725.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1641725
+        },
+        {
+          "source": "FanDuel",
+          "id": 204448
+        },
+        {
+          "source": "DraftKings",
+          "id": 1323633
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:800636"
+        },
+        {
+          "source": "Rotowire",
+          "id": "trey-alexander-6291"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 6447980
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.10385"
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 99,
+      "abbreviation": "DEN"
+    }
+  },
+  {
+    "player": {
+      "id": 27717,
+      "firstName": "Ty-Shon",
+      "lastName": "Alexander",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 0,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 195,
+      "birthDate": "1998-07-16",
+      "age": 26,
+      "birthCity": "Charlotte, NC",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Creighton",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630234.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "RotoGrinders",
+          "id": 2455576
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6455"
+        },
+        {
+          "source": "FanDuel",
+          "id": 145624
+        },
+        {
+          "source": "DraftKings",
+          "id": 1060385
+        },
+        {
+          "source": "NBA.com",
+          "id": 1630234
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17507,
+      "firstName": "Courtney",
+      "lastName": "Alexander II",
+      "primaryPosition": "F",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'8\"",
+      "weight": 205,
+      "birthDate": "1997-05-08",
+      "age": 28,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629812.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1629812
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17208,
+      "firstName": "Nickeil",
+      "lastName": "Alexander-Walker",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 9,
+      "currentTeam": {
+        "id": 100,
+        "abbreviation": "MIN"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 205,
+      "birthDate": "1998-09-02",
+      "age": 26,
+      "birthCity": "Toronto",
+      "birthCountry": "Canada",
+      "rookie": false,
+      "highSchool": "Vaughan Secondary School",
+      "college": "Virginia Tech",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629638.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2019,
+        "team": {
+          "id": 84,
+          "abbreviation": "BRO"
+        },
+        "pickTeam": {
+          "id": 84,
+          "abbreviation": "BRO"
+        },
+        "round": 1,
+        "roundPick": 17,
+        "overallPick": 17
+      },
+      "externalMappings": [
+        {
+          "source": "RotoGrinders",
+          "id": 1115445
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6205"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 1067668
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:781618"
+        },
+        {
+          "source": "FanDuel",
+          "id": 110356
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629638
+        },
+        {
+          "source": "DraftKings",
+          "id": 1067668
+        },
+        {
+          "source": "Rotowire",
+          "id": "nickeil-alexander-walker-4765"
+        },
+        {
+          "source": "RealGM",
+          "id": 95702
+        },
+        {
+          "source": "spotrac",
+          "id": 31574
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 100,
+      "abbreviation": "MIN"
+    }
+  },
+  {
+    "player": {
+      "id": 15253,
+      "firstName": "Bryce",
+      "lastName": "Alford",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 22,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'3\"",
+      "weight": 185,
+      "birthDate": "1995-01-17",
+      "age": 30,
+      "birthCity": null,
+      "birthCountry": null,
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": null,
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:756158"
+        },
+        {
+          "source": "DraftKings",
+          "id": 743779
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 15356,
+      "firstName": "Rawle",
+      "lastName": "Alkins",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 20,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 225,
+      "birthDate": "1997-10-29",
+      "age": 27,
+      "birthCity": "Brooklyn, NY",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628959.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:774825"
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6074"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 555010
+        },
+        {
+          "source": "FanDuel",
+          "id": 85242
+        },
+        {
+          "source": "NBA.com",
+          "id": 1628959
+        },
+        {
+          "source": "DraftKings",
+          "id": 949117
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17418,
+      "firstName": "Dakarai",
+      "lastName": "Allen",
+      "primaryPosition": "G",
+      "alternatePositions": [],
+      "jerseyNumber": 4,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 193,
+      "birthDate": "1995-02-04",
+      "age": 30,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": "San Diego State",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628614.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1628614
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 15218,
+      "firstName": "Grayson",
+      "lastName": "Allen",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 8,
+      "currentTeam": {
+        "id": 104,
+        "abbreviation": "PHX"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 198,
+      "birthDate": "1995-10-08",
+      "age": 29,
+      "birthCity": "Jacksonville, FL",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": "Duke",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628960.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2018,
+        "team": {
+          "id": 98,
+          "abbreviation": "UTA"
+        },
+        "pickTeam": {
+          "id": 98,
+          "abbreviation": "UTA"
+        },
+        "round": 1,
+        "roundPick": 21,
+        "overallPick": 21
+      },
+      "externalMappings": [
+        {
+          "source": "DraftKings",
+          "id": 842296
+        },
+        {
+          "source": "FanDuel",
+          "id": 84711
+        },
+        {
+          "source": "Rotowire",
+          "id": "grayson-allen-4454"
+        },
+        {
+          "source": "RealGM",
+          "id": 52340
+        },
+        {
+          "source": "spotrac",
+          "id": 26987
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 842296
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6032"
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:761297"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1628960
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 409227
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 104,
+      "abbreviation": "PHX"
+    }
+  },
+  {
+    "player": {
+      "id": 13749,
+      "firstName": "Jarrett",
+      "lastName": "Allen",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": 31,
+      "currentTeam": {
+        "id": 86,
+        "abbreviation": "CLE"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'11\"",
+      "weight": 243,
+      "birthDate": "1998-04-21",
+      "age": 27,
+      "birthCity": "Round Rock, TX",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "St. Stephen's Episcopal School",
+      "college": "Texas",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628386.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "JarrettAllen55"
+        }
+      ],
+      "currentContractYear": {
+        "seasonStartYear": 2024,
+        "baseSalary": 20000000,
+        "minorsSalary": 20000000,
+        "signingBonus": 0,
+        "otherBonuses": 0,
+        "capHit": 20000000,
+        "fullNoTradeClause": false,
+        "modifiedNoTradeClause": false,
+        "noMovementClause": false,
+        "overallContract": {
+          "signingTeam": {
+            "id": 86,
+            "abbreviation": "CLE"
+          },
+          "signedOn": "2021-08-06T09:00:00.000Z",
+          "totalYears": 5,
+          "totalSalary": 100000000,
+          "totalBonuses": 0,
+          "expiryStatus": "UFA",
+          "annualAverageSalary": 20000000
+        }
+      },
+      "drafted": {
+        "year": 2017,
+        "team": {
+          "id": 84,
+          "abbreviation": "BRO"
+        },
+        "pickTeam": {
+          "id": 94,
+          "abbreviation": "WAS"
+        },
+        "round": 1,
+        "roundPick": 22,
+        "overallPick": 22
+      },
+      "externalMappings": [
+        {
+          "source": "basketball-reference.com",
+          "id": "allenja01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 37794
+        },
+        {
+          "source": "FanDuel",
+          "id": 80821
+        },
+        {
+          "source": "NBA.com",
+          "id": 1628386
+        },
+        {
+          "source": "DraftKings",
+          "id": 956574
+        },
+        {
+          "source": "Rotowire",
+          "id": "jarrett-allen-4122"
+        },
+        {
+          "source": "RealGM",
+          "id": 85599
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 956574
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5835"
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:776012"
+        },
+        {
+          "source": "spotrac",
+          "id": 23617
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 86,
+      "abbreviation": "CLE"
+    }
+  },
+  {
+    "player": {
+      "id": 13776,
+      "firstName": "Kadeem",
+      "lastName": "Allen",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 0,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'1\"",
+      "weight": 200,
+      "birthDate": "1993-01-15",
+      "age": 32,
+      "birthCity": "Wilmington, NC",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "New Hanover",
+      "college": "University of Arizona",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628443.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2017,
+        "team": {
+          "id": 82,
+          "abbreviation": "BOS"
+        },
+        "pickTeam": {
+          "id": 86,
+          "abbreviation": "CLE"
+        },
+        "round": 2,
+        "roundPick": 23,
+        "overallPick": 53
+      },
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1628443
+        },
+        {
+          "source": "DraftKings",
+          "id": 844150
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5866"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 844150
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:761282"
+        },
+        {
+          "source": "spotrac",
+          "id": 23654
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "allenka01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 37787
+        },
+        {
+          "source": "FanDuel",
+          "id": 58289
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9254,
+      "firstName": "Lavoy",
+      "lastName": "Allen",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 5,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'9\"",
+      "weight": 260,
+      "birthDate": "1989-02-04",
+      "age": 36,
+      "birthCity": "Morrisville, PA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Pennsbury",
+      "college": "Temple University",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/202730.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2011,
+        "team": {
+          "id": 85,
+          "abbreviation": "PHI"
+        },
+        "pickTeam": {
+          "id": 110,
+          "abbreviation": "NO"
+        },
+        "round": 2,
+        "roundPick": 20,
+        "overallPick": 50
+      },
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 202730
+        },
+        {
+          "source": "spotrac",
+          "id": 8102
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "allenla01"
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 3894
+        },
+        {
+          "source": "FanDuel",
+          "id": 14549
+        },
+        {
+          "source": "DraftKings",
+          "id": 402984
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17434,
+      "firstName": "Marcus",
+      "lastName": "Allen",
+      "primaryPosition": "G",
+      "alternatePositions": [],
+      "jerseyNumber": 14,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'2\"",
+      "weight": 192,
+      "birthDate": "1994-09-14",
+      "age": 30,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": "Stanford",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629305.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6352"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1629305
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17506,
+      "firstName": "Noah",
+      "lastName": "Allen",
+      "primaryPosition": "G",
+      "alternatePositions": [],
+      "jerseyNumber": 11,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'7\"",
+      "weight": 215,
+      "birthDate": "1995-02-01",
+      "age": 30,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629249.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1629249
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 133814,
+      "firstName": "Timmy",
+      "lastName": "Allen",
+      "primaryPosition": "SF",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": {
+        "id": 107,
+        "abbreviation": "MEM"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'6\"",
+      "weight": 210,
+      "birthDate": "2000-01-09",
+      "age": 25,
+      "birthCity": "Mesa, AZ",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Utah,Texas",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1641851.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "Yahoo",
+          "id": "nba.p.10233"
+        },
+        {
+          "source": "DraftKings",
+          "id": 1135165
+        },
+        {
+          "source": "FanDuel",
+          "id": 196041
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 5392658
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:786723"
+        },
+        {
+          "source": "NBA.com",
+          "id": 1641851
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 107,
+      "abbreviation": "MEM"
+    }
+  },
+  {
+    "player": {
+      "id": 9299,
+      "firstName": "Tony",
+      "lastName": "Allen",
+      "primaryPosition": "SF",
+      "alternatePositions": [],
+      "jerseyNumber": 24,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 213,
+      "birthDate": "1982-01-09",
+      "age": 43,
+      "birthCity": "Chicago, IL",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Crane Technical Preparatory",
+      "college": "Oklahoma State University",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/2754.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "aa000G9"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2004,
+        "team": {
+          "id": 82,
+          "abbreviation": "BOS"
+        },
+        "pickTeam": {
+          "id": 82,
+          "abbreviation": "BOS"
+        },
+        "round": 1,
+        "roundPick": 25,
+        "overallPick": 25
+      },
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 2210
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "allento01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1284
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1932
+        },
+        {
+          "source": "FanDuel",
+          "id": 9458
+        },
+        {
+          "source": "DraftKings",
+          "id": 172922
+        },
+        {
+          "source": "NBA.com",
+          "id": 2754
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 35176,
+      "firstName": "Derrick",
+      "lastName": "Alston Jr.",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'9\"",
+      "weight": 190,
+      "birthDate": "1997-09-17",
+      "age": 27,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Boise State",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630247.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1630247
+        },
+        {
+          "source": "DraftKings",
+          "id": 951198
+        },
+        {
+          "source": "FanDuel",
+          "id": 161658
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 17457,
+      "firstName": "Shizz",
+      "lastName": "Alston Jr.",
+      "primaryPosition": "G",
+      "alternatePositions": [],
+      "jerseyNumber": 10,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'4\"",
+      "weight": 181,
+      "birthDate": "1996-09-21",
+      "age": 28,
+      "birthCity": null,
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": null,
+      "college": "Temple",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630005.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 1630005
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 35219,
+      "firstName": "Jose",
+      "lastName": "Alvarado",
+      "primaryPosition": "PG",
+      "alternatePositions": [],
+      "jerseyNumber": 15,
+      "currentTeam": {
+        "id": 110,
+        "abbreviation": "NOP"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'0\"",
+      "weight": 179,
+      "birthDate": "1998-04-12",
+      "age": 27,
+      "birthCity": "Brooklyn, NY",
+      "birthCountry": "USA",
+      "rookie": true,
+      "highSchool": null,
+      "college": "Georgia Tech",
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1630631.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "RealGM",
+          "id": 104934
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:781457"
+        },
+        {
+          "source": "spotrac",
+          "id": 74331
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 3015773
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.6613"
+        },
+        {
+          "source": "FanDuel",
+          "id": 158373
+        },
+        {
+          "source": "DraftKings",
+          "id": 1060919
+        },
+        {
+          "source": "NBA.com",
+          "id": 1630631
+        },
+        {
+          "source": "Rotowire",
+          "id": "jose-alvarado-5424"
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 110,
+      "abbreviation": "NOP"
+    }
+  },
+  {
+    "player": {
+      "id": 9452,
+      "firstName": "Al-Farouq",
+      "lastName": "Aminu",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 5,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'8\"",
+      "weight": 220,
+      "birthDate": "1990-09-21",
+      "age": 34,
+      "birthCity": "Atlanta, GA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Norcross",
+      "college": "Wake Forest University",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/202329.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "farouq1"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2010,
+        "team": {
+          "id": 102,
+          "abbreviation": "LAC"
+        },
+        "pickTeam": {
+          "id": 102,
+          "abbreviation": "LAC"
+        },
+        "round": 1,
+        "roundPick": 8,
+        "overallPick": 8
+      },
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 6890
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "aminual01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1279
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 751
+        },
+        {
+          "source": "FanDuel",
+          "id": 12342
+        },
+        {
+          "source": "DraftKings",
+          "id": 457688
+        },
+        {
+          "source": "NBA.com",
+          "id": 202329
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.4723"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 457688
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:740174"
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9379,
+      "firstName": "Lou",
+      "lastName": "Amundson",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 17,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'9\"",
+      "weight": 220,
+      "birthDate": "1982-12-07",
+      "age": 42,
+      "birthCity": "Ventura, CA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Monarch",
+      "college": "University of Nevada, Las Vegas",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/200811.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "LouAmundson17"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "NBA.com",
+          "id": 200811
+        },
+        {
+          "source": "spotrac",
+          "id": 2645
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "amundlo01"
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 2661
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9297,
+      "firstName": "Chris",
+      "lastName": "Andersen",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": 7,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": null,
+      "weight": null,
+      "birthDate": "1978-07-07",
+      "age": 46,
+      "birthCity": "Long Beach, CA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Iola",
+      "college": "Blinn College",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/2365.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 6102
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "anderch01"
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1974
+        },
+        {
+          "source": "FanDuel",
+          "id": 9513
+        },
+        {
+          "source": "DraftKings",
+          "id": 75344
+        },
+        {
+          "source": "NBA.com",
+          "id": 2365
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9527,
+      "firstName": "Alan",
+      "lastName": "Anderson",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 26,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'6\"",
+      "weight": 220,
+      "birthDate": "1982-10-16",
+      "age": 42,
+      "birthCity": "Minneapolis, MN",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "DeLaSalle",
+      "college": "Michigan State University",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/101187.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "ASqared06"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 9261
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "anderal01"
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1925
+        },
+        {
+          "source": "DraftKings",
+          "id": 66858
+        },
+        {
+          "source": "FanDuel",
+          "id": 21665
+        },
+        {
+          "source": "NBA.com",
+          "id": 101187
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 15329,
+      "firstName": "C.J.",
+      "lastName": "Anderson",
+      "primaryPosition": "C",
+      "alternatePositions": [],
+      "jerseyNumber": null,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": null,
+      "weight": null,
+      "birthDate": "2018-10-17",
+      "age": 6,
+      "birthCity": null,
+      "birthCountry": null,
+      "rookie": false,
+      "highSchool": null,
+      "college": null,
+      "handedness": {
+        "shoots": null
+      },
+      "officialImageSrc": null,
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "FanDuel",
+          "id": 101411
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9469,
+      "firstName": "James",
+      "lastName": "Anderson",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 5,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'6\"",
+      "weight": 213,
+      "birthDate": "1989-03-25",
+      "age": 36,
+      "birthCity": "El Dorado, AR",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Junction City",
+      "college": "Oklahoma State University",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/202341.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2010,
+        "team": {
+          "id": 106,
+          "abbreviation": "SAS"
+        },
+        "pickTeam": {
+          "id": 106,
+          "abbreviation": "SAS"
+        },
+        "round": 1,
+        "roundPick": 20,
+        "overallPick": 20
+      },
+      "externalMappings": [
+        {
+          "source": "basketball-reference.com",
+          "id": "anderja01"
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1961
+        },
+        {
+          "source": "NBA.com",
+          "id": 202341
+        },
+        {
+          "source": "spotrac",
+          "id": 6902
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9178,
+      "firstName": "Justin",
+      "lastName": "Anderson",
+      "primaryPosition": "SG",
+      "alternatePositions": [],
+      "jerseyNumber": 10,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'5\"",
+      "weight": 231,
+      "birthDate": "1993-11-19",
+      "age": 31,
+      "birthCity": "Montross, VA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Montrose Christian",
+      "college": "University of Virginia",
+      "handedness": {
+        "shoots": "L"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1626147.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "JusAnderson1"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2015,
+        "team": {
+          "id": 108,
+          "abbreviation": "DAL"
+        },
+        "pickTeam": {
+          "id": 108,
+          "abbreviation": "DAL"
+        },
+        "round": 1,
+        "roundPick": 21,
+        "overallPick": 21
+      },
+      "externalMappings": [
+        {
+          "source": "RotoGrinders",
+          "id": 18927
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 1193469
+        },
+        {
+          "source": "FanDuel",
+          "id": 23744
+        },
+        {
+          "source": "DraftKings",
+          "id": 697982
+        },
+        {
+          "source": "NBA.com",
+          "id": 1626147
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:751369"
+        },
+        {
+          "source": "FantasyDraft",
+          "id": 697982
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5481"
+        },
+        {
+          "source": "spotrac",
+          "id": 17849
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "anderju01"
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  },
+  {
+    "player": {
+      "id": 9475,
+      "firstName": "Kyle",
+      "lastName": "Anderson",
+      "primaryPosition": "SF",
+      "alternatePositions": [],
+      "jerseyNumber": 20,
+      "currentTeam": {
+        "id": 92,
+        "abbreviation": "MIA"
+      },
+      "currentRosterStatus": "ROSTER",
+      "currentInjury": null,
+      "height": "6'9\"",
+      "weight": 230,
+      "birthDate": "1993-09-20",
+      "age": 31,
+      "birthCity": "Fairview, New Jersey",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "St. Anthony's",
+      "college": "UCLA",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/203937.png",
+      "socialMediaAccounts": [
+        {
+          "mediaType": "TWITTER",
+          "value": "KyleAnderson5"
+        }
+      ],
+      "currentContractYear": null,
+      "drafted": {
+        "year": 2014,
+        "team": {
+          "id": 106,
+          "abbreviation": "SAS"
+        },
+        "pickTeam": {
+          "id": 106,
+          "abbreviation": "SAS"
+        },
+        "round": 1,
+        "roundPick": 30,
+        "overallPick": 30
+      },
+      "externalMappings": [
+        {
+          "source": "FantasyDraft",
+          "id": 697720
+        },
+        {
+          "source": "Yahoo",
+          "id": "nba.p.5341"
+        },
+        {
+          "source": "Gracenote Sports",
+          "id": "/sport/basketball/player:751276"
+        },
+        {
+          "source": "spotrac",
+          "id": 15382
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "anderky01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 18615
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 748
+        },
+        {
+          "source": "FanDuel",
+          "id": 23716
+        },
+        {
+          "source": "DraftKings",
+          "id": 697720
+        },
+        {
+          "source": "Rotowire",
+          "id": "kyle-anderson-3586"
+        },
+        {
+          "source": "NBA.com",
+          "id": 203937
+        },
+        {
+          "source": "RealGM",
+          "id": 24265
+        }
+      ]
+    },
+    "teamAsOfDate": {
+      "id": 92,
+      "abbreviation": "MIA"
+    }
+  },
+  {
+    "player": {
+      "id": 9353,
+      "firstName": "Ryan",
+      "lastName": "Anderson",
+      "primaryPosition": "PF",
+      "alternatePositions": [],
+      "jerseyNumber": 33,
+      "currentTeam": null,
+      "currentRosterStatus": "UFA",
+      "currentInjury": null,
+      "height": "6'10\"",
+      "weight": 240,
+      "birthDate": "1988-05-06",
+      "age": 37,
+      "birthCity": "Sacramento, CA",
+      "birthCountry": "USA",
+      "rookie": false,
+      "highSchool": "Oak Ridge",
+      "college": "University of California",
+      "handedness": {
+        "shoots": "R"
+      },
+      "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/201583.png",
+      "socialMediaAccounts": [],
+      "currentContractYear": null,
+      "drafted": null,
+      "externalMappings": [
+        {
+          "source": "spotrac",
+          "id": 6133
+        },
+        {
+          "source": "basketball-reference.com",
+          "id": "anderry01"
+        },
+        {
+          "source": "RotoGrinders",
+          "id": 1281
+        },
+        {
+          "source": "FantasyCruncher",
+          "id": 690
+        },
+        {
+          "source": "DraftKings",
+          "id": 329715
+        },
+        {
+          "source": "FanDuel",
+          "id": 9772
+        },
+        {
+          "source": "NBA.com",
+          "id": 201583
+        }
+      ]
+    },
+    "teamAsOfDate": null
+  }
+]

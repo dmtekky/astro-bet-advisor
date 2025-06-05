@@ -1,0 +1,42 @@
+{
+  "lastUpdatedOn": "2025-06-04T12:10:29.467Z",
+  "players": [
+    {
+      "player": {
+        "id": 17408,
+        "firstName": "Muhammad-Ali",
+        "lastName": "Abdur-Rahkman",
+        "primaryPosition": "PG",
+        "alternatePositions": [],
+        "jerseyNumber": 12,
+        "currentTeam": null,
+        "currentRosterStatus": "UFA",
+        "currentInjury": null,
+        "height": "6'4\"",
+        "weight": 190,
+        "birthDate": "1994-09-01",
+        "age": 30,
+        "birthCity": null,
+        "birthCountry": "USA",
+        "rookie": false,
+        "highSchool": null,
+        "college": "Michigan",
+        "handedness": {
+          "shoots": null
+        },
+        "officialImageSrc": "https://cdn.nba.com/headshots/nba/latest/1040x760/1629240.png",
+        "socialMediaAccounts": [],
+        "currentContractYear": null,
+        "drafted": null,
+        "externalMappings": [
+          {
+            "source": "NBA.com",
+            "id": 1629240
+          }
+        ]
+      },
+      "teamAsOfDate": null
+    }
+  ],
+  "references": null
+}

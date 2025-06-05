@@ -59,12 +59,68 @@ async def fetch_nba_teams():
 
 # --- Fetch NBA Players ---
 async def fetch_nba_players():
+    """Fetch NBA players with detailed information including stats."""
+    all_players = []
+    
+    # First, get the basic player list
     url = f"{MSF_BASE_URL}/players.json?season={SEASON}"
-    async with httpx.AsyncClient(auth=(MSF_API_KEY, MSF_PASSWORD)) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        data = resp.json()
-        return data['players']
+    try:
+        async with httpx.AsyncClient(auth=(MSF_API_KEY, MSF_PASSWORD), timeout=30.0) as client:
+            # Get player list first
+            logger.info("Fetching NBA players list...")
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            players = data.get('players', [])
+            
+            # Fetch detailed stats for each player
+            for i, player in enumerate(players):
+                try:
+                    player_id = player['player']['id']
+                    logger.info(f"Fetching stats for player {i+1}/{len(players)}: {player_id}")
+                    
+                    # Get player game logs for the season
+                    stats_url = f"{MSF_BASE_URL}/players/{player_id}/player_gamelogs.json?season={SEASON}"
+                    stats_resp = await client.get(stats_url)
+                    
+                    if stats_resp.status_code == 200:
+                        stats_data = stats_resp.json()
+                        # Add stats to player data
+                        if 'gamelogs' in stats_data and stats_data['gamelogs']:
+                            # Calculate some basic stats
+                            games = stats_data['gamelogs']
+                            total_points = sum(g.get('stats', {}).get('points', {}).get('decimalValue', 0) for g in games)
+                            total_rebounds = sum(g.get('stats', {}).get('rebounds', {}).get('decimalValue', 0) for g in games)
+                            total_assists = sum(g.get('stats', {}).get('assists', {}).get('decimalValue', 0) for g in games)
+                            
+                            # Add calculated stats to player
+                            player['stats'] = {
+                                'games_played': len(games),
+                                'points_per_game': round(total_points / len(games), 1) if games else 0,
+                                'rebounds_per_game': round(total_rebounds / len(games), 1) if games else 0,
+                                'assists_per_game': round(total_assists / len(games), 1) if games else 0,
+                                'total_points': total_points,
+                                'total_rebounds': total_rebounds,
+                                'total_assists': total_assists
+                            }
+                    
+                    all_players.append(player)
+                    
+                    # Be nice to the API
+                    await asyncio.sleep(0.5)
+                    
+                except Exception as e:
+                    logger.error(f"Error fetching stats for player {player_id}: {str(e)}")
+                    # Still add the player even if stats fetch fails
+                    all_players.append(player)
+                    continue
+                    
+    except Exception as e:
+        logger.error(f"Error in fetch_nba_players: {str(e)}")
+        return []
+    
+    logger.info(f"Fetched {len(all_players)} NBA players with stats")
+    return all_players
 
 # --- Helper: Prepare teams for upsert ---
 def prepare_team_rows(team_stats_totals):
@@ -84,31 +140,98 @@ def prepare_team_rows(team_stats_totals):
 
 # --- Helper: Prepare players for upsert ---
 def prepare_player_rows(players):
+    """Prepare player data for database insertion with enhanced fields."""
     player_rows = []
+    
     for p in players:
-        player = p['player']
-        team = player.get('currentTeam', {}) or player.get('team', {})
-        player_rows.append({
-            'external_player_id': int(player['id']),
-            'first_name': player.get('firstName'),
-            'last_name': player.get('lastName'),
-            'team_id': str(team['id']) if team and 'id' in team else None,
-            'primary_position': player.get('primaryPosition'),
-            'jersey_number': player.get('jerseyNumber'),
-            'birth_date': player.get('birthDate'),
-            'birth_city': player.get('birthCity'),
-            'birth_country': player.get('birthCountry'),
-            'height': player.get('height'),
-            'weight': player.get('weight'),
-            'college': player.get('college'),
-            'rookie': player.get('rookie'),
-            'active': player.get('active'),
-            'photo_url': player.get('photoUrl'),
-            'status': player.get('status'),
-            'birth_state': player.get('birthState'),
-            'experience': player.get('experience'),
-            'updated_at': datetime.now(timezone.utc).isoformat()
-        })
+        try:
+            player = p.get('player', {})
+            team = player.get('currentTeam', {}) or player.get('team', {}) or {}
+            stats = p.get('stats', {})  # Stats we calculated earlier
+            
+            # Handle height conversion (if needed)
+            height = player.get('height')
+            if isinstance(height, str) and '"' in height:
+                # Convert from format like "6' 8"" to inches
+                try:
+                    feet, inches = height.replace('"', '').split("'")
+                    height = int(feet) * 12 + int(inches.strip() or 0)
+                except (ValueError, AttributeError):
+                    height = None
+            
+            # Handle weight (remove 'lbs' if present)
+            weight = player.get('weight')
+            if isinstance(weight, str) and 'lbs' in weight:
+                weight = weight.replace('lbs', '').strip()
+            
+            # Calculate age from birth date if available
+            age = None
+            birth_date = player.get('birthDate')
+            if birth_date:
+                try:
+                    birth_date = datetime.strptime(birth_date, '%Y-%m-%d')
+                    today = datetime.now()
+                    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+                except (ValueError, TypeError):
+                    pass
+            
+            # Prepare the player row with all fields
+            player_row = {
+                # Core identification
+                'external_player_id': int(player.get('id', 0)) or None,
+                'first_name': player.get('firstName', '').strip(),
+                'last_name': player.get('lastName', '').strip(),
+                'full_name': f"{player.get('firstName', '').strip()} {player.get('lastName', '').strip()}".strip(),
+                'team_id': str(team.get('id')) if team and 'id' in team else None,
+                
+                # Personal info
+                'primary_position': player.get('primaryPosition'),
+                'jersey_number': player.get('jerseyNumber'),
+                'birth_date': birth_date.isoformat() if isinstance(birth_date, datetime) else birth_date,
+                'birth_city': player.get('birthCity'),
+                'birth_country': player.get('birthCountry'),
+                'birth_state': player.get('birthState'),
+                'height': height,
+                'weight': weight,
+                'college': player.get('college'),
+                'rookie': bool(player.get('rookie', False)),
+                'active': bool(player.get('active', False)),
+                'status': player.get('status'),
+                'experience': player.get('experience'),
+                'age': age,
+                
+                # Media
+                'photo_url': player.get('photoUrl') or f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player.get('id')}.png",
+                
+                # Stats (from our earlier calculation)
+                'games_played': stats.get('games_played', 0),
+                'points_per_game': stats.get('points_per_game', 0.0),
+                'rebounds_per_game': stats.get('rebounds_per_game', 0.0),
+                'assists_per_game': stats.get('assists_per_game', 0.0),
+                'total_points': stats.get('total_points', 0),
+                'total_rebounds': stats.get('total_rebounds', 0),
+                'total_assists': stats.get('total_assists', 0),
+                
+                # Timestamps
+                'updated_at': datetime.now(timezone.utc).isoformat(),
+                'last_synced': datetime.now(timezone.utc).isoformat(),
+                
+                # Additional metadata
+                'draft_year': player.get('draft', {}).get('year') if isinstance(player.get('draft'), dict) else None,
+                'draft_round': player.get('draft', {}).get('round') if isinstance(player.get('draft'), dict) else None,
+                'draft_pick': player.get('draft', {}).get('pick') if isinstance(player.get('draft'), dict) else None,
+                'draft_team': player.get('draft', {}).get('team', {}).get('abbreviation') if isinstance(player.get('draft'), dict) else None,
+            }
+            
+            # Remove None values
+            player_row = {k: v for k, v in player_row.items() if v is not None}
+            player_rows.append(player_row)
+            
+        except Exception as e:
+            logger.error(f"Error preparing player row: {str(e)}")
+            continue
+            
+    logger.info(f"Prepared {len(player_rows)} player rows for database")
     return player_rows
 
 # --- Helper: Upsert to Supabase ---

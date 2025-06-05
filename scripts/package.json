@@ -1,0 +1,29 @@
+{
+  "name": "astro-bet-advisor-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for syncing NBA player stats with astrological influence scores",
+  "main": "sync_nba_astro_scores.js",
+  "scripts": {
+    "sync:nba:astro": "node sync_nba_astro_scores.js",
+    "sync:nba:astro:dev": "NODE_ENV=development node sync_nba_astro_scores.js",
+    "sync:nba:astro:prod": "NODE_ENV=production node sync_nba_astro_scores.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nba",
+    "basketball",
+    "astrology",
+    "sports-analytics",
+    "supabase"
+  ],
+  "author": "Astro Bet Advisor Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1",
+    "luxon": "^3.4.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

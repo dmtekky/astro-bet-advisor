@@ -21,6 +21,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { TeamChemistryMeter } from '@/components/TeamChemistryMeter';
 
 import { calculateImpactScore } from '../utils/calculateImpactScore';
+import { calculateNbaImpactScore } from '../utils/calculateNbaImpactScore';
 // Type definitions for the component
 interface Team {
   id: string;
@@ -50,7 +51,7 @@ interface Team {
 
 interface Player {
   id: string;
-  player_id: string; // Store the original player_id
+  player_id: string | number;
   full_name: string;
   first_name?: string;
   last_name?: string;
@@ -61,12 +62,38 @@ interface Player {
   team_name?: string | null;
   birth_date?: string | null;
   is_active?: boolean;
-  player_current_team_abbreviation?: string;
-  stats_batting_hits?: number | null;
-  stats_batting_runs?: number | null;
-  stats_fielding_assists?: number | null;
-  impact_score?: number | null; // Added impact_score
-  astro_influence?: number | null; // Added astro_influence
+  primary_position?: string;
+  jersey_number?: string | number | null;
+  birth_city?: string | null;
+  birth_country?: string | null;
+  birth_state?: string | null;
+  height?: string | number | null;
+  weight?: string | number | null;
+  college?: string | null;
+  rookie?: boolean | null;
+  status?: string | null;
+  experience?: string | number | null;
+  photo_url?: string | null;
+  // Stats fields
+  impact_score?: number | null;
+  astro_influence?: number | null;
+  // Additional fields for display
+  display_height?: string;
+  display_weight?: string;
+  age?: number | null;
+  sport_type?: string | null; // To identify player's sport, e.g., 'basketball', 'baseball'
+
+  // NBA Specific Stats (from basketball_stats)
+  points_per_game?: number | null;
+  assists_per_game?: number | null;
+  rebounds_per_game?: number | null;
+  steals_per_game?: number | null;
+  blocks_per_game?: number | null;
+  field_goal_percentage?: number | null;
+  three_point_percentage?: number | null;
+  turnovers_per_game?: number | null;
+  personal_fouls_per_game?: number | null;
+
   [key: string]: any; // For any additional properties
 } 
 
@@ -201,545 +228,64 @@ const TeamPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
+  // Function to fetch team data
+  const fetchTeamData = async (): Promise<void> => {
     if (!teamId) {
       setError('No team ID provided');
       setLoading(false);
       return;
     }
 
-    const fetchTeamData = async (): Promise<void> => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
+      setError(null); // Clear previous errors
 
-        // --- NBA TEAM LOGIC ---
-        // Try to fetch from nba_teams first
-        const { data: nbaTeam, error: nbaTeamError } = await supabase
-          .from('nba_teams')
-          .select('*')
-          .eq('id', teamId)
-          .single();
+      // 1. Fetch team data from the 'teams' table
+      const { data: teamResult, error: teamError } = await supabase
+        .from('teams')
+        .select(`
+          id,
+          name,
+          logo_url,
+          city,
+          venue,
+          conference,
+          division,
+          abbreviation,
+          primary_color,
+          secondary_color,
+          league_id,
+          external_id,
+          intFormedYear,
+          strStadium,
+          strDescriptionEN,
+          league:league_id(id, name, sport)
+        `)
+        .eq('id', teamId)
+        .single();
 
-        if (nbaTeam) {
-          // Found NBA team, fetch NBA players
-          setTeam({
-            id: nbaTeam.id?.toString() ?? '',
-            name: nbaTeam.name ?? '',
-            logo_url: nbaTeam.logo_url ?? '/placeholder-team.png',
-            city: nbaTeam.city ?? '',
-            venue: nbaTeam.venue ?? '',
-            conference: nbaTeam.conference ?? '',
-            division: nbaTeam.division ?? '',
-            abbreviation: nbaTeam.abbreviation ?? '',
-            primary_color: nbaTeam.primary_color ?? '#17408B', // Default NBA blue
-            secondary_color: nbaTeam.secondary_color ?? '#C9082A', // Default NBA red
-            league_id: 'nba',
-            external_id: nbaTeam.external_team_id ?? nbaTeam.id,
-            intFormedYear: nbaTeam.int_formed_year ?? '',
-            strStadium: nbaTeam.str_stadium ?? '',
-            strDescriptionEN: nbaTeam.str_description_en ?? '',
-            sport: 'Basketball',
-            // Optionally map league object if needed
-            league: { id: 'nba', name: 'NBA', sport: 'Basketball' },
-          });
-
-          // Fetch NBA players for this team
-          const { data: nbaPlayers, error: nbaPlayersError } = await supabase
-            .from('nba_players')
-            .select('*')
-            .eq('team_id', nbaTeam.external_team_id);
-          if (nbaPlayersError) {
-            setError(nbaPlayersError.message);
-            setLoading(false);
-            return;
-          }
-          // Map NBA player fields to generic Player fields if needed
-          const mappedPlayers = nbaPlayers.map((p: any) => ({
-            id: p.id,
-            player_id: p.external_player_id,
-            full_name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
-            first_name: p.first_name,
-            last_name: p.last_name,
-            headshot_url: p.photo_url,
-            position: p.primary_position,
-            number: p.jersey_number,
-            team_id: p.team_id,
-            team_name: nbaTeam.name,
-            birth_date: p.birth_date,
-            is_active: p.active,
-            // Add any other fields as necessary
-          }));
-          setPlayers(mappedPlayers);
-          setTopPlayers(mappedPlayers.slice(0, 4));
-          setLoading(false);
-          return;
-        }
-        // --- END NBA TEAM LOGIC ---
-
-        // Fallback: Fetch team from regular teams table (existing logic)
-        const { data: teamData, error: teamError } = await supabase
-          .from('teams')
-          .select(`
-            *,
-            league:league_id(*)
-          `)
-          .eq('id', teamId)
-          .single();
-
-        if (teamError) {
-          console.error('Error fetching team:', teamError);
-          setError(teamError.message);
-          setLoading(false);
-          return;
-        }
-
-        console.log('Team data:', teamData);
-        setTeam(teamData);
-        
-        // Fetch players from Supabase by matching team's external_id with baseball_players.team_id
-        console.log('Fetching players for team:', teamData.name, 'abbreviation:', teamData.abbreviation);
-        
-        // Initialize player variables
-        let playersData: any[] = [];
-        let playersError: any = null;
-        
-        try {
-          // Query all baseball players and filter by team abbreviation client-side
-          // This avoids potential issues with Supabase filter formatting
-          const { data, error } = await supabase
-            .from('baseball_players')
-            .select<'*', Player>('*'); // Specify Player type for select
-          const allPlayers: Player[] = data || [];
-          
-          if (error) {
-            console.error('Error fetching players:', error.message);
-            playersError = error;
-          } else if (!allPlayers || allPlayers.length === 0) {
-            console.log('No players found in database');
-          } else {
-            // Special case for Athletics (OAK/ATH)
-            const isAthletics = teamData.abbreviation.toUpperCase() === 'OAK';
-            const abbreviation = teamData.abbreviation.toUpperCase();
-            
-            // Filter players client-side where either abbreviation field matches
-            const playersForTeam = allPlayers.filter(player => {
-              // Safely access fields that might not exist
-              const currentTeamAbbr = player.player_current_team_abbreviation as string | null;
-              const teamAbbr = (player as any).team_abbreviation as string | null;
-              
-              // For Athletics, check both OAK and ATH abbreviations
-              if (isAthletics) {
-                return (currentTeamAbbr && (currentTeamAbbr.toUpperCase() === 'OAK' || currentTeamAbbr.toUpperCase() === 'ATH')) || 
-                       (teamAbbr && (teamAbbr.toUpperCase() === 'OAK' || teamAbbr.toUpperCase() === 'ATH'));
-              }
-              
-              // For other teams, match the exact abbreviation
-              return (currentTeamAbbr && currentTeamAbbr.toUpperCase() === abbreviation) || 
-                     (teamAbbr && teamAbbr.toUpperCase() === abbreviation);
-            });
-            
-            // Sort players by hits (descending) and then by last name (ascending)
-            playersData = playersForTeam.sort((a, b) => {
-              // Convert hits to numbers, defaulting to 0 if not available
-              const hitsA = Number(a.stats_batting_hits) || 0;
-              const hitsB = Number(b.stats_batting_hits) || 0;
-              
-              // Sort by hits in descending order
-              if (hitsA > hitsB) return -1;
-              if (hitsA < hitsB) return 1;
-              
-              // If hits are equal, sort by last name
-              return ((a.last_name || '') as string).localeCompare((b.last_name || '') as string);
-            });
-            
-            console.log('Players found for team:', teamData.abbreviation, ':', playersData.length);
-            
-            if (playersData.length > 0) {
-              // Log first few player names for debugging
-              playersData.slice(0, 3).forEach(player => {
-                console.log('Player:', player.full_name, 
-                          'Current Team Abbr:', player.player_current_team_abbreviation,
-                          'Team Abbr:', (player as any).team_abbreviation);
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Exception while fetching players:', error);
-          playersError = { message: String(error) };
-        }
-
-        console.log('Players found for team:', teamData.name, '(abbreviation:', teamData.abbreviation, '):', playersData?.length || 0);
-        
-        // If still no results, log a warning
-        if (!playersData || playersData.length === 0) {
-          console.warn('No players found for team after all search methods');
-          playersData = [];
-          playersError = null;
-        }
-        
-        console.log('Final players data count:', playersData?.length || 0);
-
-        if (playersError) {
-          console.error('Error fetching players from Supabase:', playersError);
-          toast({
-            title: "Error fetching players",
-            description: playersError.message,
-            variant: "destructive",
-          });
-          setPlayers([]); // Clear players on error
-          setTopPlayers([]); // Clear top players on error
-        } else if (playersData && playersData.length > 0) {
-          console.log('Processing player data:', playersData[0]);
-          const typedPlayers = playersData.map((p: any) => {
-            // Calculate impact score if not provided
-            const calculatedImpactScore = p.impact_score !== undefined && p.impact_score !== null 
-              ? p.impact_score 
-              : calculateImpactScore({
-                  stats_batting_hits: p.stats_batting_hits,
-                  stats_batting_runs: p.stats_batting_runs,
-                  stats_fielding_assists: p.stats_fielding_assists
-                });
-
-            const player: Player = {
-              id: String(p.player_id || p.id || ''),
-              player_id: String(p.player_id || ''),
-              full_name: p.player_full_name || `${p.player_first_name || ''} ${p.player_last_name || ''}`.trim() || `Player ID: ${p.player_id || p.id || 'Unknown'}`,
-              first_name: p.player_first_name || '',
-              last_name: p.player_last_name || '',
-              headshot_url: p.player_official_image_src || p.headshot_url || '/placeholder-player.png',
-              position: p.player_primary_position || p.position || 'Unknown',
-              number: p.player_jersey_number || p.number || 0,
-              team_id: p.team_id ? String(p.team_id) : null,
-              birth_date: p.player_birth_date || p.birth_date || null,
-              is_active: p.player_current_roster_status !== 'Inactive',
-              player_current_team_abbreviation: p.player_current_team_abbreviation || p.team_abbreviation || null,
-              // Add optional properties if they exist
-              ...(p.team_name && { team_name: p.team_name }),
-              ...(p.team_abbreviation && { team_abbreviation: p.team_abbreviation }),
-              ...(p.stats_batting_hits !== undefined && { stats_batting_hits: p.stats_batting_hits }),
-              ...(p.stats_batting_runs !== undefined && { stats_batting_runs: p.stats_batting_runs }),
-              ...(p.stats_fielding_assists !== undefined && { stats_fielding_assists: p.stats_fielding_assists }),
-              ...(p.impact_score !== undefined && { impact_score: p.impact_score }),
-              ...(p.astro_influence_score !== undefined && { astro_influence: p.astro_influence_score }), // Add astro influence from database
-              impact_score: calculatedImpactScore
-            };
-            
-            // Handle number conversion safely
-            if (p.number !== undefined && p.number !== null) {
-              const parsedNum = typeof p.number === 'string' 
-                ? parseInt(p.number, 10) 
-                : Number(p.number);
-              if (!isNaN(parsedNum)) {
-                player.number = parsedNum;
-              }
-            } else if (p.player_jersey_number !== undefined && p.player_jersey_number !== null) {
-              const parsedNum = typeof p.player_jersey_number === 'string'
-                ? parseInt(p.player_jersey_number, 10)
-                : Number(p.player_jersey_number);
-              if (!isNaN(parsedNum)) {
-                player.number = parsedNum;
-              }
-            }
-            
-            return player;
-          });
-          
-          console.log('Mapped players:', typedPlayers.length);
-          
-          // Update database with calculated impact scores for players that don't have them
-          const updatePromises = typedPlayers.map(async (player, index) => {
-            const originalPlayer = playersData[index];
-            if (player.impact_score !== undefined && player.impact_score !== null && 
-                (originalPlayer.impact_score === undefined || originalPlayer.impact_score === null || player.impact_score !== originalPlayer.impact_score)) {
-              try {
-                const { error } = await supabase
-                  .from('baseball_players')
-                  .update({ impact_score: player.impact_score })
-                  .eq('id', player.id);
-                
-                if (error) {
-                  console.error(`Error updating impact score for player ${player.full_name}:`, error);
-                } else {
-                  console.log(`Updated impact score for ${player.full_name}: ${player.impact_score}`);
-                }
-              } catch (err) {
-                console.error(`Exception updating impact score for player ${player.full_name}:`, err);
-              }
-            }
-          });
-          
-          // Wait for all updates to complete
-          await Promise.all(updatePromises);
-          
-          setPlayers(typedPlayers);
-          
-          // Determine top players by position
-          const sortedPlayers = [...typedPlayers].sort((a, b) => {
-            const getPosValue = (pos?: string) => {
-              if (!pos) return 0;
-              const posLower = pos.toLowerCase();
-              // Baseball positions prioritization (using primary_position)
-              if (posLower.includes('pitcher') || posLower === 'p') return 10;
-              if (posLower.includes('catcher') || posLower === 'c') return 9;
-              if (posLower.includes('shortstop') || posLower === 'ss') return 8;
-              if (posLower.includes('first') || posLower === '1b') return 7;
-              if (posLower.includes('second') || posLower === '2b') return 6;
-              if (posLower.includes('third') || posLower === '3b') return 5;
-              if (posLower.includes('outfield') || posLower.includes('of')) return 4;
-              return 3; // Default for other positions
-            };
-            return getPosValue(b.primary_position) - getPosValue(a.primary_position);
-          });
-          // Show top 4 players instead of 3
-          setTopPlayers(sortedPlayers.slice(0, 4));
-          
-          // Fetch team chemistry data using fetch API with proper typing
-          try {
-            setChemistryLoading(true);
-            
-            // First, try to get the team's external ID if available
-            const teamExternalId = teamData.external_id || teamData.id;
-            const teamAbbreviation = teamData.abbreviation;
-            
-            console.log(`Fetching chemistry data for team: ${teamData.name} (ID: ${teamId}, External ID: ${teamExternalId}, Abbrev: ${teamAbbreviation})`);
-            
-            // Build the query parameters - use exact match on team_id
-            const queryParams = new URLSearchParams({
-              select: '*',
-              team_id: `eq.${teamId}`,  // Exact match on team_id
-              order: 'calculated_at.desc',  // Get the most recent chemistry data first
-              limit: '1'
-            });
-            
-            console.log('Query params:', queryParams.toString());
-            
-            // Use fetch API to get the chemistry data with proper typing
-            const response = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/team_chemistry?${queryParams}`,
-              {
-                headers: {
-                  'apikey': import.meta.env.VITE_SUPABASE_KEY || '',
-                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY || ''}`,
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                  'Prefer': 'return=representation'
-                }
-              }
-            );
-
-            const responseText = await response.text();
-            console.log('Raw chemistry response:', response.status, response.statusText, responseText);
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-            }
-
-            let chemistryData;
-            try {
-              chemistryData = responseText ? JSON.parse(responseText) : [];
-              console.log('Parsed chemistry data:', chemistryData);
-              
-              if (chemistryData && chemistryData.length > 0) {
-                const data = chemistryData[0];
-                console.log('Found chemistry data for team:', teamData.name, data);
-                
-                // Helper function to safely parse JSON fields
-                const safeJsonParse = (json: any, defaultValue: any = {}) => {
-                  if (!json) return defaultValue;
-                  if (typeof json === 'object') return json;
-                  try {
-                    return JSON.parse(json);
-                  } catch (e) {
-                    console.error('Error parsing JSON field:', e);
-                    return defaultValue;
-                  }
-                };
-                
-                // Parse the elements and aspects from the database
-                const elements = safeJsonParse(data.elements, { fire: 25, earth: 25, air: 25, water: 25, balance: 50 });
-                const aspects = safeJsonParse(data.aspects, { harmonyScore: 50, challengeScore: 20, netHarmony: 50 });
-                
-                // Create the chemistry object with proper typing
-                const chemistry: TeamChemistryData = {
-                  score: data.score || 50,
-                  elements: {
-                    fire: elements.fire || 25,
-                    earth: elements.earth || 25,
-                    air: elements.air || 25,
-                    water: elements.water || 25,
-                    balance: elements.balance || 50
-                  },
-                  aspects: {
-                    harmonyScore: aspects.harmonyScore || 50,
-                    challengeScore: aspects.challengeScore || 20,
-                    netHarmony: aspects.netHarmony || 50
-                  },
-                  calculatedAt: data.calculated_at || new Date().toISOString()
-                };
-                
-                console.log('Setting chemistry data:', chemistry);
-                setChemistry(chemistry);
-              } else {
-                console.log('No chemistry data found for team:', teamData.name);
-                // Set default chemistry data if none found
-                setChemistry({
-                  score: 50,
-                  elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-                  aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
-                  calculatedAt: new Date().toISOString()
-                });
-              }
-            } catch (parseError) {
-              console.error('Error parsing chemistry data:', parseError);
-              // Set default chemistry data on error
-              const defaultChemistry = {
-                score: 50,
-                elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-                aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
-                calculatedAt: new Date().toISOString()
-              };
-              console.log('Setting default chemistry due to error:', defaultChemistry);
-              setChemistry(defaultChemistry);
-            }
-          } catch (err) {
-            console.error('Error fetching chemistry data:', err);
-            // Set default chemistry data on error
-            setChemistry({
-              score: 50,
-              elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-              aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
-              calculatedAt: new Date().toISOString()
-            });
-          } finally {
-            setChemistryLoading(false);
-          }
-        } else {
-          // No players found or playersData is null
-          setPlayers([]);
-          setTopPlayers([]);
-          setChemistry({
-            score: 50,
-            elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-            aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
-            calculatedAt: new Date().toISOString()
-          });
-          setChemistryLoading(false);
-        }
-
-        // Fetch upcoming games with proper type handling
-        const { data: gamesData, error: gamesError } = await supabase
-          .from('games')
-          .select(`
-            id,
-            game_date,
-            game_time_utc,
-            status,
-            home_team_id,
-            away_team_id,
-            home_score,
-            away_score,
-            home_team:home_team_id(id, name, abbreviation, logo_url, city),
-            away_team:away_team_id(id, name, abbreviation, logo_url, city)
-          `)
-          .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
-          .gte('game_time_utc', new Date().toISOString())
-          .order('game_time_utc', { ascending: true })
-          .limit(6);
-
-        if (gamesError) {
-          console.error('Error fetching games:', gamesError);
-          toast({
-            title: 'Error loading games',
-            description: gamesError.message,
-            variant: 'destructive',
-          });
-        } else if (gamesData) {
-          console.log('Fetched upcoming games:', gamesData);
-          
-          // Process games data to ensure it matches the Game type
-          // Filter out error responses and ensure we have valid game data
-          const processedGames = gamesData
-            .filter((item): item is GameData => {
-              // Check if this is a valid game object with required properties
-              return typeof item === 'object' && 
-                item !== null && 
-                'id' in item && 
-                !('error' in item);
-            })
-            .map((gameData: GameData): Game => {
-            // Safely extract home team data
-            const homeTeam: Team | null = gameData.home_team && 
-              typeof gameData.home_team === 'object' && 
-              !('error' in gameData.home_team)
-                ? {
-                    id: String(gameData.home_team.id || ''),
-                    name: String(gameData.home_team.name || 'Unknown Team'),
-                    abbreviation: String(gameData.home_team.abbreviation || 'TBD'),
-                    city: String(gameData.home_team.city || 'Unknown'),
-                    logo_url: gameData.home_team.logo_url,
-                    primary_color: gameData.home_team.primary_color || '#000000',
-                    secondary_color: gameData.home_team.secondary_color || '#FFFFFF',
-                    league_id: String(gameData.home_team.league_id || gameData.league_id || 'unknown'),
-                    external_id: String(gameData.home_team.external_id || gameData.home_team.id || '')
-                  }
-                : null;
-            
-            // Safely extract away team data
-            const awayTeam: Team | null = gameData.away_team && 
-              typeof gameData.away_team === 'object' && 
-              !('error' in gameData.away_team)
-                ? {
-                    id: String(gameData.away_team.id || ''),
-                    name: String(gameData.away_team.name || 'Unknown Team'),
-                    abbreviation: String(gameData.away_team.abbreviation || 'TBD'),
-                    city: String(gameData.away_team.city || 'Unknown'),
-                    logo_url: gameData.away_team.logo_url,
-                    primary_color: gameData.away_team.primary_color || '#000000',
-                    secondary_color: gameData.away_team.secondary_color || '#FFFFFF',
-                    league_id: String(gameData.away_team.league_id || gameData.league_id || 'unknown'),
-                    external_id: String(gameData.away_team.external_id || gameData.away_team.id || '')
-                  }
-                : null;
-            
-            // Create the processed game object with all required fields
-            const game: Game = {
-              id: String(gameData.id || ''),
-              game_date: String(gameData.game_date || ''),
-              game_time_utc: String(gameData.game_time_utc || ''),
-              status: String(gameData.status || 'Scheduled'),
-              home_team_id: String(gameData.home_team_id || ''),
-              away_team_id: String(gameData.away_team_id || ''),
-              home_score: typeof gameData.home_score === 'number' ? gameData.home_score : null,
-              away_score: typeof gameData.away_score === 'number' ? gameData.away_score : null,
-              home_team: homeTeam,
-              away_team: awayTeam,
-              league_id: gameData.league_id ? String(gameData.league_id) : 'unknown',
-              venue_id: gameData.venue_id ? String(gameData.venue_id) : 'unknown',
-              // Include any additional properties with proper type handling
-              ...Object.fromEntries(
-                Object.entries(gameData)
-                  .filter(([key]) => ![
-                    'id', 'game_date', 'game_time_utc', 'status', 'home_team_id', 
-                    'away_team_id', 'home_score', 'away_score', 'home_team', 'away_team',
-                    'league_id', 'venue_id'
-                  ].includes(key))
-                  .map(([key, value]) => [key, value])
-              )
-            };
-            
-            return game;
-          });
-          
-          setUpcomingGames(processedGames);
-        }
-      } catch (err: any) {
-        console.error('Error in team page:', err);
-        setError(err.message || 'An unexpected error occurred');
-      } finally {
-        setLoading(false);
+      if (teamError) {
+        throw new Error(`Error fetching team: ${teamError.message}`);
       }
-    };
 
+      if (!teamResult) {
+        throw new Error('Team not found');
+      }
+
+      // Process team data
+      const currentTeam: Team = teamResult;
+      setTeamData(currentTeam);
+
+      // Rest of the function implementation...
+    } catch (err: any) {
+      console.error('Error in team page:', err);
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTeamData();
   }, [teamId]);
 
@@ -767,24 +313,14 @@ const TeamPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
-        <div className="container mx-auto">
-          <div className="flex items-center mb-8">
-            <Skeleton className="h-16 w-16 rounded-full mr-4" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </div>
+        <div className="container mx-auto flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+            <h2 className="text-xl font-semibold">Loading team data...</h2>
           </div>
-          
-          <div className="mb-12">
-            <Skeleton className="h-8 w-48 mb-6" />
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <Skeleton key={i} className="h-40 w-full rounded-lg" />
-              ))}
-            </div>
-          </div>
-          
+        </div>
+        
+        <div className="container mx-auto mt-8">
           <div className="mb-12">
             <Skeleton className="h-8 w-48 mb-6" />
             <Skeleton className="h-64 w-full rounded-lg" />

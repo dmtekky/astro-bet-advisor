@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Stats API Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #loading {
+            display: none;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>NBA Stats API Test</h1>
+    <div>
+        <label for="apiKey">API Key:</label>
+        <input type="password" id="apiKey" size="50" value="">
+    </div>
+    <div style="margin-top: 10px;">
+        <label for="season">Season:</label>
+        <select id="season">
+            <option value="2024-2025-regular">2024-2025 Regular Season</option>
+            <option value="2024-playoff">2024 Playoffs</option>
+            <option value="2023-2024-regular">2023-2024 Regular Season</option>
+            <option value="2023-playoff">2023 Playoffs</option>
+        </select>
+    </div>
+    <div style="margin-top: 10px;">
+        <button id="fetchData">Fetch Player Stats</button>
+        <div id="loading">Loading...</div>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        $(document).ready(function() {
+            // Load API key from localStorage if available
+            const savedKey = localStorage.getItem('mysportsfeeds_api_key');
+            if (savedKey) {
+                $('#apiKey').val(savedKey);
+            }
+
+            $('#fetchData').click(function() {
+                const apiKey = $('#apiKey').val().trim();
+                const season = $('#season').val();
+                
+                if (!apiKey) {
+                    alert('Please enter your API key');
+                    return;
+                }
+
+                // Save API key to localStorage
+                localStorage.setItem('mysportsfeeds_api_key', apiKey);
+                
+                // Show loading indicator
+                $('#loading').show();
+                $('#result').html('');
+                
+                // Make the API request
+                const url = `https://api.mysportsfeeds.com/v2.1/pull/nba/${season}/player_stats_totals.json`;
+                
+                console.log('Making request to:', url);
+                
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    dataType: 'json',
+                    async: true,
+                    headers: {
+                        "Authorization": "Basic " + btoa(apiKey + ":MYSPORTSFEEDS")
+                    },
+                    success: function(response) {
+                        console.log('API Response:', response);
+                        $('#loading').hide();
+                        
+                        // Display the raw response
+                        $('#result').html(`
+                            <h3>API Response (${season})</h3>
+                            <div>Total players: ${response.playerStatsTotals ? response.playerStatsTotals.length : 0}</div>
+                            <pre>${JSON.stringify(response, null, 2)}</pre>
+                        `);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('API Error:', {status, error, responseText: xhr.responseText});
+                        $('#loading').hide();
+                        
+                        let errorMessage = `Error: ${status}`;
+                        if (xhr.responseText) {
+                            try {
+                                const errorData = JSON.parse(xhr.responseText);
+                                errorMessage += ` - ${errorData.error || xhr.responseText}`;
+                            } catch (e) {
+                                errorMessage += ` - ${xhr.responseText}`;
+                            }
+                        }
+                        
+                        $('#result').html(`
+                            <div style="color: red; margin: 10px 0;">
+                                <strong>Error:</strong> ${errorMessage}
+                            </div>
+                        `);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
