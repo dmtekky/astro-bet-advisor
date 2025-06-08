@@ -2,6 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 // Simple test endpoint to verify webhook functionality
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Bypass Vercel's authentication for this endpoint
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    res.setHeader('x-vercel-protection-bypass', 'true');
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
