@@ -5,6 +5,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  
+  // Bypass authentication for testing
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Running in development mode - authentication bypassed');
+  }
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   
