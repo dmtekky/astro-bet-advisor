@@ -1,0 +1,149 @@
+import React, { useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useUpcomingGames } from '@/hooks/useUpcomingGames';
+import GameCard from '@/components/GameCard';
+import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
+import { useTeams } from '@/hooks/useTeams';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Calendar, BarChart2 } from 'lucide-react';
+import type { Team } from '@/hooks/useTeams';
+
+// Constants
+const MLB_LEAGUE_KEY = 'baseball_mlb';
+const DEFAULT_LOGO = '/images/default-team-logo.png';
+
+const Dashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'games' | 'insights'>('games');
+  
+  // Fetch teams and games data
+  const { 
+    teams, 
+    teamMap, 
+    teamByExternalId, 
+    loading: teamsLoading, 
+    error: teamsError 
+  } = useTeams(MLB_LEAGUE_KEY);
+  
+  const { 
+    games, 
+    loading, 
+    error 
+  } = useUpcomingGames({ sport: 'baseball_mlb', limit: 12 });
+
+  // Group games by date
+  const groupedGames = games ? groupGamesByDate(games) : [];
+  const formattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Helper function to find a team
+  const findTeam = (teamId: string): Team | undefined => {
+    return teamMap?.[teamId];
+  };
+
+  const defaultLogo = DEFAULT_LOGO;
+
+  return (
+    <DashboardLayout>
+      {/* PlayerPage-inspired background gradient */}
+      <div 
+        className="min-h-screen w-full p-4 sm:p-6 md:p-8"
+        style={{
+          background: 'linear-gradient(135deg, #4338ca20 0%, #6366f110 100%)',
+        }}
+      >
+        <section className="mb-8">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="border-b border-gray-100">
+              <div className="px-6 py-4 flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-sm text-gray-500">{formattedDate}</p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="border-b border-gray-100 px-6">
+              <div className="flex space-x-4">
+                <button
+                  className={`py-3 border-b-2 ${
+                    activeTab === 'games'
+                      ? 'border-indigo-600 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('games')}
+                >
+                  <Calendar className="inline-block mr-2 h-4 w-4" /> Upcoming Games
+                </button>
+                <button
+                  className={`py-3 border-b-2 ${
+                    activeTab === 'insights'
+                      ? 'border-indigo-600 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('insights')}
+                >
+                  <BarChart2 className="inline-block mr-2 h-4 w-4" /> Insights
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {loading || teamsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-64 rounded-xl" />
+                  ))}
+                </div>
+              ) : error || teamsError ? (
+                <div className="text-center p-8 text-red-500">
+                  <p>
+                    {error?.message || teamsError?.message || 'Failed to load data. Please try again later.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {groupedGames.slice(0, 3).map(({ date, games: dateGames }) => (
+                    <div key={date.toString()} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {formatGameDate(date.toString())}
+                        </h3>
+                        <span className="text-sm text-gray-500">
+                          {dateGames.length} {dateGames.length === 1 ? 'game' : 'games'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {dateGames.map((game) => {
+                          const homeTeam = game.home_team ? findTeam(game.home_team) : undefined;
+                          const awayTeam = game.away_team ? findTeam(game.away_team) : undefined;
+                          
+                          return (
+                            <GameCard
+                              key={game.id}
+                              game={game}
+                              homeTeam={homeTeam as Team}
+                              awayTeam={awayTeam as Team}
+                              defaultLogo={defaultLogo}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Dashboard;

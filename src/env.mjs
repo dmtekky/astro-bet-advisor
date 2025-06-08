@@ -1,0 +1,6 @@
+export const env = {
+  VITE_THE_ODDS_API_KEY: import.meta.env.VITE_THE_ODDS_API_KEY,
+  VITE_SPORTS_GAME_ODDS_API_KEY: import.meta.env.VITE_SPORTS_GAME_ODDS_API_KEY,
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_KEY: import.meta.env.VITE_SUPABASE_KEY,
+};
