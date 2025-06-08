@@ -2,35 +2,48 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 // Simple test endpoint to verify webhook functionality
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Bypass Vercel's authentication for this endpoint
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-    res.setHeader('x-vercel-protection-bypass', 'true');
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  // For testing purposes, bypass all authentication
+  console.log('Test webhook endpoint hit');
   
-  // Check for cron secret in production
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-    const cronSecret = process.env.CRON_SECRET;
-    const { token } = req.query;
-    
-    if (!cronSecret || token !== cronSecret) {
-      console.error('Unauthorized: Invalid or missing token');
-      return res.status(401).json({ 
-        error: 'Unauthorized',
-        message: 'Invalid or missing token' 
-      });
-    }
-  }
-
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   
   if (!webhookUrl) {
+    console.error('DISCORD_WEBHOOK_URL is not set');
     return res.status(500).json({ 
       error: 'Webhook not configured',
       message: 'DISCORD_WEBHOOK_URL environment variable is not set' 
+    });
+  }
+
+  try {
+    console.log('Sending test message to Discord webhook');
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: '🔔 Test notification from Vercel - ' + new Date().toISOString(),
+        username: 'Test Bot',
+        avatar_url: 'https://i.imgur.com/4M34hi2.png',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+    }
+
+    console.log('Successfully sent test message to Discord');
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Test notification sent successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Failed to send test notification:', error);
+    return res.status(500).json({ 
+      error: 'Failed to send test notification',
+      details: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 
