@@ -6,9 +6,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
   
-  // Bypass authentication for testing
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Running in development mode - authentication bypassed');
+  // Check for cron secret in production
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    const cronSecret = process.env.CRON_SECRET;
+    const { token } = req.query;
+    
+    if (!cronSecret || token !== cronSecret) {
+      console.error('Unauthorized: Invalid or missing token');
+      return res.status(401).json({ 
+        error: 'Unauthorized',
+        message: 'Invalid or missing token' 
+      });
+    }
   }
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
