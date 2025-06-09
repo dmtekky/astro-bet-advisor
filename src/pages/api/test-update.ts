@@ -1,10 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { updateAstroScores } from '../../lib/updateAstroScores';
 
+// Load environment variables
+const cronSecret = process.env.CRON_SECRET;
+
 // Simple test endpoint to verify the update functionality
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Only allow GET requests
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check for secret token in query parameter
+  const { token } = req.query;
+  
+  if (token !== cronSecret) {
+    console.error('Unauthorized request: Invalid or missing token');
+    return res.status(401).json({ 
+      error: 'Unauthorized',
+      message: 'Invalid or missing token' 
+    });
   }
 
   try {
