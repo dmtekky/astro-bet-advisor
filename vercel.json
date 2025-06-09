@@ -5,27 +5,22 @@
   "installCommand": "npm install && npm uninstall swisseph",
   "outputDirectory": "dist",
   "functions": {
-    "api/*.ts": {
-      "memory": 2048,
-      "maxDuration": 60
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 30
     }
   },
   "crons": [
     {
       "path": "/api/update-scores",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/test-update",
-      "schedule": "*/5 * * * *"
     }
   ],
   "rewrites": [
-    { "source": "/api/astro", "destination": "/api/astro.ts" },
-    { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.ts" },
-    { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.ts" },
-    { "source": "/api/update-scores", "destination": "/api/update-scores.ts" },
-    { "source": "/api/test-update", "destination": "/api/test-update.ts" },
+    { "source": "/api/astro", "destination": "/api/astro.js" },
+    { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
+    { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
+    { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
