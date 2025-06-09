@@ -1,0 +1,18 @@
+# Edit this file to change the schedule
+# ┌───────────── minute (0 - 59)
+# │ ┌───────────── hour (0 - 23)
+# │ │ ┌───────────── day of month (1 - 31)
+# │ │ │ ┌───────────── month (1 - 12)
+# │ │ │ │ ┌───────────── day of week (0 - 6, Sunday=0 or 7)
+# │ │ │ │ │
+# * * * * *  command to execute
+# │ │ │ │ │
+# │ │ │ │ │
+# │ │ │ │ │
+# * * * * *  /bin/bash -l -c 'cd /Users/dmtekk/Desktop/FMO1/astro-bet-advisor && ./scripts/run-nba-update.sh >> logs/cron-nba-update.log 2>&1'
+
+# Run daily at 3:05 AM
+5 3 * * * /bin/bash -l -c 'cd /Users/dmtekk/Desktop/FMO1/astro-bet-advisor && ./scripts/run-nba-update.sh >> logs/cron-nba-update.log 2>&1'
+
+# Test job - runs every 10 minutes (comment out after testing)
+# */10 * * * * /bin/bash -l -c 'cd /Users/dmtekk/Desktop/FMO1/astro-bet-advisor && ./scripts/test-cron.sh >> logs/cron-test.log 2>&1'

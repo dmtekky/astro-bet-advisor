@@ -118,7 +118,51 @@ The impact score is a comprehensive metric that evaluates player performance acr
 
 The baseball player scores are updated using the `update-baseball-scores.js` script, which runs the following updates in sequence:
 
-1. **Player Stats Update**
+## NBA Data Update Pipeline
+
+The NBA data update process is managed by `scripts/update_nba_pipeline.js`, which coordinates the following steps:
+
+1. **Fetch NBA Data**
+   - Updates teams, players, games, and stats from MySportsFeeds
+   - Script: `scripts/fetch_nba_data.js`
+   - Updates tables: `nba_teams`, `nba_players`, `nba_games`, `nba_player_season_stats_2025`
+
+2. **Update Player Impact Scores**
+   - Calculates and updates player impact scores based on performance metrics
+   - Script: `scripts/update-player-scores.js`
+   - Updates `impact_score` in `nba_player_season_stats_2025`
+
+3. **Update Astrological Influence Scores**
+   - Updates astrological influence scores for all NBA players
+   - Script: `scripts/update-nba-astro-scores-fixed.cjs`
+   - Updates both `nba_players` and `nba_player_season_stats_2025` tables
+   - Uses `msf_player_id` to match records between tables
+
+### Running the Pipeline
+
+```bash
+# Run the complete NBA update pipeline
+node scripts/update_nba_pipeline.js
+
+# Or run individual components as needed
+node scripts/fetch_nba_data.js
+node scripts/update-player-scores.js
+node scripts/update-nba-astro-scores-fixed.cjs
+```
+
+### Scheduling Updates
+
+To run the pipeline daily, add a cron job:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line to run daily at 3 AM
+0 3 * * * cd /path/to/astro-bet-advisor && node scripts/update_nba_pipeline.js >> logs/nba-update-$(date +\%Y\%m\%d).log 2>&1
+```
+
+## Player Stats Update
    - Updates basic player statistics
    - Script: `scripts/update-player-scores.ts`
 
