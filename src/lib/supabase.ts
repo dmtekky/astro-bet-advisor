@@ -221,24 +221,215 @@ type BaseballPlayer = {
 };
 
 /**
- * Fetch a single player by their player_id from the baseball_players table.
- * @param playerId - The player_id to search for.
- * @returns BaseballPlayer object or null if not found or error.
+ * Fetch a single player by their ID from either baseball_players or nba_players table.
+ * @param playerId - The player ID to search for.
+ * @param sport - The sport ('mlb' or 'nba') to determine which tables to query.
+ * @returns Player object or null if not found or error.
  */
-export async function getPlayerByApiId(playerId: string): Promise<BaseballPlayer | null> {
+export async function getPlayerByApiId(playerId: string, sport: 'mlb' | 'nba' = 'mlb'): Promise<BaseballPlayer | NbaPlayer | null> {
   const client = getSupabaseClient();
+  console.log(`[getPlayerByApiId] Fetching ${sport} player with ID: ${playerId}`);
+  
+  if (sport === 'nba') {
+    try {
+      // First try to find by external_player_id in nba_players
+      const { data: nbaPlayerData, error: nbaPlayerError } = await client
+        .from('nba_players')
+        .select('*')
+        .eq('external_player_id', playerId)
+        .maybeSingle();
 
-  // Use type assertion to tell TypeScript we know what we're doing with this table
-  const { data: playerData, error: playerError } = await client
-    .from('baseball_players' as any) // Type assertion to bypass type checking
-    .select('*')
-    .eq('player_id', playerId)
-    .single();
+      if (nbaPlayerError) {
+        console.error(`Error fetching NBA player by external_player_id ${playerId}:`, nbaPlayerError.message);
+      } else if (nbaPlayerData) {
+        console.log(`[getPlayerByApiId] Found NBA player by external_player_id: ${nbaPlayerData.first_name} ${nbaPlayerData.last_name}`);
+        
+        // Fetch player stats from nba_player_season_stats_2025
+        const msf_player_id = nbaPlayerData.external_player_id || nbaPlayerData.id.toString();
+        const { data: statsData, error: statsError } = await client
+          .from('nba_player_season_stats_2025')
+          .select('*')
+          .eq('msf_player_id', msf_player_id)
+          .maybeSingle();
+          
+        if (statsError) {
+          console.error(`Error fetching stats for player ${msf_player_id}:`, statsError.message);
+        }
+        
+        // Calculate per-game stats if stats are available
+        let impactScore = null;
+        let astroInfluence = nbaPlayerData.astro_influence;
+        
+        if (statsData) {
+          console.log('Found stats data for player:', statsData);
+          impactScore = statsData.impact_score !== null && statsData.impact_score !== undefined
+            ? (typeof statsData.impact_score === 'string' 
+                ? parseFloat(statsData.impact_score) 
+                : statsData.impact_score)
+            : null;
+            
+          // Use astro_influence from stats if available, otherwise fall back to player data
+          astroInfluence = statsData.astro_influence || nbaPlayerData.astro_influence;
+        }
+        
+        // Map NBA player to BaseballPlayer format for compatibility
+        return {
+          id: nbaPlayerData.id,
+          player_id: nbaPlayerData.external_player_id || nbaPlayerData.id.toString(),
+          player_full_name: `${nbaPlayerData.first_name || ''} ${nbaPlayerData.last_name || ''}`.trim(),
+          player_first_name: nbaPlayerData.first_name,
+          player_last_name: nbaPlayerData.last_name,
+          player_primary_position: nbaPlayerData.primary_position,
+          player_official_image_src: nbaPlayerData.photo_url,
+          player_birth_date: nbaPlayerData.birth_date,
+          player_jersey_number: nbaPlayerData.jersey_number,
+          player_current_team_abbreviation: nbaPlayerData.team_abbreviation,
+          player_birth_city: nbaPlayerData.birth_city,
+          player_birth_country: nbaPlayerData.birth_country,
+          impact_score: impactScore,
+          astro_influence_score: astroInfluence,
+          astro_influence: astroInfluence // Add this for backward compatibility
+        } as BaseballPlayer;
+      }
+      
+      // If not found by external_player_id, try by id
+      if (!nbaPlayerData) {
+        const { data: nbaPlayerById, error: nbaIdError } = await client
+          .from('nba_players')
+          .select('*')
+          .eq('id', playerId)
+          .maybeSingle();
+          
+        if (nbaIdError) {
+          console.error(`Error fetching NBA player by id ${playerId}:`, nbaIdError.message);
+        } else if (nbaPlayerById) {
+          console.log(`[getPlayerByApiId] Found NBA player by id: ${nbaPlayerById.first_name} ${nbaPlayerById.last_name}`);
+          
+          // Map NBA player to BaseballPlayer format for compatibility
+          return {
+            id: nbaPlayerById.id,
+            player_id: nbaPlayerById.external_player_id || nbaPlayerById.id.toString(),
+            player_full_name: `${nbaPlayerById.first_name || ''} ${nbaPlayerById.last_name || ''}`.trim(),
+            player_first_name: nbaPlayerById.first_name,
+            player_last_name: nbaPlayerById.last_name,
+            player_primary_position: nbaPlayerById.primary_position,
+            player_official_image_src: nbaPlayerById.photo_url,
+            player_birth_date: nbaPlayerById.birth_date,
+            player_jersey_number: nbaPlayerById.jersey_number,
+            player_current_team_abbreviation: nbaPlayerById.team_abbreviation,
+            player_birth_city: nbaPlayerById.birth_city,
+            player_birth_country: nbaPlayerById.birth_country,
+            impact_score: null,
+            astro_influence_score: nbaPlayerById.astro_influence
+          } as BaseballPlayer;
+        }
+      }
+      
+      // If still not found, try the nba_player_season_stats_2025 table
+      // Convert playerId to a number if it's a string of digits
+      const msf_player_id = /^\d+$/.test(playerId) ? parseInt(playerId) : playerId;
+      console.log(`[getPlayerByApiId] Trying to find NBA player in stats table with msf_player_id: ${msf_player_id}`);
+      
+      const { data: statsData, error: statsError } = await client
+        .from('nba_player_season_stats_2025')
+        .select('*')
+        .eq('msf_player_id', msf_player_id)
+        .maybeSingle();
+        
+      if (statsError) {
+        console.error(`Error fetching NBA player stats by msf_player_id ${msf_player_id}:`, statsError.message);
+      } else if (statsData) {
+        console.log(`[getPlayerByApiId] Found NBA player stats by msf_player_id: ${msf_player_id}, player_id: ${statsData.player_id}`);
+        
+        // Now fetch the player details using the player_id from stats
+        const { data: playerData, error: playerError } = await client
+          .from('nba_players')
+          .select('*')
+          .eq('id', statsData.player_id)
+          .maybeSingle();
+          
+        if (playerError) {
+          console.error(`Error fetching NBA player by id ${statsData.player_id}:`, playerError.message);
+        } else if (playerData) {
+          console.log(`[getPlayerByApiId] Found NBA player via stats: ${playerData.first_name} ${playerData.last_name}`);
+          
+          // Log the raw stats data for debugging
+          console.log('Raw statsData:', statsData);
+          console.log('Raw impact_score from stats:', statsData.impact_score, 'Type:', typeof statsData.impact_score);
+          
+          // Calculate per-game stats
+          const gamesPlayed = statsData.games_played || 1; // Avoid division by zero
+          const totalRebounds = (statsData.defensive_rebounds || 0) + (statsData.offensive_rebounds || 0);
+          
+          // Combine player data with stats data
+          const combinedData = {
+            ...playerData,
+            stats_points_per_game: (statsData.points || 0) / gamesPlayed,
+            stats_rebounds_per_game: totalRebounds / gamesPlayed,
+            stats_assists_per_game: (statsData.assists || 0) / gamesPlayed,
+            stats_steals_per_game: (statsData.steals || 0) / gamesPlayed,
+            stats_blocks_per_game: (statsData.blocks || 0) / gamesPlayed,
+            stats_field_goal_pct: statsData.field_goal_pct,
+            stats_three_point_pct: statsData.three_point_pct,
+            stats_free_throw_pct: statsData.free_throw_pct,
+            stats_minutes_per_game: statsData.minutes_played / statsData.games_played,
+            stats_games_played: statsData.games_played,
+            stats_plus_minus: statsData.plus_minus,
+            impact_score: statsData.impact_score ? 
+              (typeof statsData.impact_score === 'string' ? 
+                parseFloat(statsData.impact_score) : 
+                statsData.impact_score) : 
+              undefined,
+            astro_influence: statsData.astro_influence || playerData.astro_influence
+          };
+          
+          console.log('Combined data with impact_score:', combinedData.impact_score, 'Type:', typeof combinedData.impact_score);
+          
+          // Return the player data directly - PlayerDetailPage will handle the mapping
+          return combinedData as NbaPlayer;
+        }
+      }
+      
+      console.warn(`[getPlayerByApiId] NBA player not found with ID: ${playerId}`);
+      return null;
+    } catch (err) {
+      console.error(`[getPlayerByApiId] Unexpected error fetching NBA player ${playerId}:`, err);
+      return null;
+    }
+  } else {
+    // Original MLB player lookup logic
+    try {
+      // First check if this might actually be an NBA player despite the sport parameter
+      if (/^\d+$/.test(playerId) && parseInt(playerId) > 10000) {
+        console.log(`[getPlayerByApiId] Player ID ${playerId} looks like an NBA ID, trying NBA tables first...`);
+        const nbaPlayer = await getPlayerByApiId(playerId, 'nba');
+        if (nbaPlayer) {
+          console.log(`[getPlayerByApiId] Successfully found player in NBA tables despite MLB sport parameter`);
+          return nbaPlayer;
+        }
+      }
+      
+      // If not found in NBA tables or doesn't look like an NBA ID, try MLB tables
+      const { data: playerData, error: playerError } = await client
+        .from('baseball_players' as any)
+        .select('*')
+        .eq('player_id', playerId)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid 406 errors
 
-  if (playerError || !playerData) {
-    console.error(`Error fetching player by player_id ${playerId}:`, playerError?.message);
-    return null;
+      if (playerError) {
+        console.error(`Error fetching MLB player by player_id ${playerId}:`, playerError?.message);
+        return null;
+      }
+      
+      if (!playerData) {
+        console.log(`[getPlayerByApiId] MLB player not found with ID: ${playerId}`);
+        return null;
+      }
+
+      return playerData as BaseballPlayer;
+    } catch (err) {
+      console.error(`[getPlayerByApiId] Unexpected error fetching MLB player ${playerId}:`, err);
+      return null;
+    }
   }
-
-  return playerData as BaseballPlayer;
 }

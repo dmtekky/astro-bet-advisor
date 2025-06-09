@@ -1,6 +1,6 @@
 // src/pages/PlayerDetailPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { getPlayerByApiId } from '../lib/supabase';
 import { generatePlayerAstroData as getAstroData, BirthLocation } from '../lib/playerAstroService';
 import { AstroData, AstroSignInfo, ZodiacSign, FieldingStats, Player as BasePlayer, BattingStats } from '../types/app.types';
@@ -192,114 +192,172 @@ const getFullAstroSignInfo = (signName: ZodiacSign): AstroSignInfo => {
 
 const PlayerDetailPage: React.FC = () => {
   const { teamId, playerId } = useParams<{ teamId: string; playerId: string }>();
+  const location = useLocation();
   const [player, setPlayer] = useState<Player | null>(null); // Player type from app.types.ts should align with data structure
   const [astro, setAstro] = useState<AstroData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [sport, setSport] = useState<'mlb' | 'nba'>('mlb'); // Default to MLB
+
+  // Determine the sport based on URL path
+  useEffect(() => {
+    // Check if the URL path contains 'nba' to determine the sport
+    const isNba = location.pathname.includes('/nba/') || 
+                  location.pathname.includes('/NBA/') || 
+                  (teamId && teamId.toLowerCase().includes('nba'));
+    setSport(isNba ? 'nba' : 'mlb');
+    console.log(`[PlayerDetailPage] Sport determined from URL path: ${isNba ? 'NBA' : 'MLB'}`);
+  }, [location.pathname, teamId]);
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('[PlayerDetailPage] Attempting to fetch data for playerId (player_api_id):', playerId);
-      if (!playerId) { // Check if playerId is undefined
-        console.error('[PlayerDetailPage] Player ID is missing from URL params.');
-        setError('Player ID is missing.');
-        setLoading(false);
-        return;
-      }
       setLoading(true);
+      setError(null);
+
       try {
-        // Use playerId (which is player_api_id from URL) to fetch player
-        console.log(`[PlayerDetailPage] Calling getPlayerByApiId with: ${playerId}`);
-        const fetchedPlayer = await getPlayerByApiId(playerId); // This is the critical call
+        if (!playerId) {
+          setError('No player ID provided.');
+          setLoading(false);
+          return;
+        }
+
+        console.log(`[PlayerDetailPage] Fetching player with ID: ${playerId}, sport: ${sport}`);
+        const fetchedPlayer = await getPlayerByApiId(playerId, sport);
         console.log('[PlayerDetailPage] Fetched player data:', fetchedPlayer);
 
         if (!fetchedPlayer) {
           setError('Player not found.');
           setPlayer(null);
         } else {
-          // Map the fetched player data from baseball_players table to our Player type
-          const formattedPlayer: Player = {
-            id: fetchedPlayer.player_id,                    // Using player_id as the ID since it's the unique identifier
-            player_id: fetchedPlayer.player_id,              // The external player ID
-            full_name: fetchedPlayer.player_full_name || 
-                     `${fetchedPlayer.player_first_name || ''} ${fetchedPlayer.player_last_name || ''}`.trim(),
-            position: fetchedPlayer.player_primary_position || 'N/A',
-            headshot_url: fetchedPlayer.player_official_image_src || undefined,
-            birth_date: fetchedPlayer.player_birth_date || undefined,
-            
-            // Map optional fields
-            number: fetchedPlayer.player_jersey_number ? String(fetchedPlayer.player_jersey_number) : undefined,
-            team_name: fetchedPlayer.player_current_team_abbreviation || undefined,
-            birth_location: fetchedPlayer.player_birth_city ? 
-                         `${fetchedPlayer.player_birth_city}${fetchedPlayer.player_birth_country ? `, ${fetchedPlayer.player_birth_country}` : ''}` : 
-                         undefined,
-            impact_score: fetchedPlayer.impact_score ? String(fetchedPlayer.impact_score) : undefined,
-            astro_influence_score: fetchedPlayer.astro_influence_score ?? undefined,
-            // For backward compatibility with existing code
-            astro_influence: fetchedPlayer.astro_influence_score ?? undefined,
+          let formattedPlayer: Player;
 
-            // Map stats fields from the database columns
-            stats_batting_at_bats: fetchedPlayer.stats_batting_at_bats ?? undefined,
-            stats_batting_runs: fetchedPlayer.stats_batting_runs ?? undefined,
-            stats_batting_hits: fetchedPlayer.stats_batting_hits ?? undefined,
-            stats_batting_rbi: fetchedPlayer.stats_batting_runs_batted_in ?? undefined,
-            stats_batting_home_runs: fetchedPlayer.stats_batting_homeruns ?? undefined,
-            stats_batting_strikeouts: fetchedPlayer.stats_batting_strikeouts ?? undefined,
-            stats_batting_walks: fetchedPlayer.stats_batting_walks ?? undefined,
-            stats_batting_avg: fetchedPlayer.stats_batting_batting_avg ?? undefined,
-            stats_batting_obp: fetchedPlayer.stats_batting_on_base_pct ?? undefined,
-            stats_batting_slg: fetchedPlayer.stats_batting_slugging_pct ?? undefined,
-            stats_batting_ops: fetchedPlayer.stats_batting_on_base_plus_slugging_pct ?? undefined,
-            stats_fielding_putouts: undefined, // Not in the current schema
-            stats_fielding_assists: fetchedPlayer.stats_fielding_assists ?? undefined,
-            stats_fielding_errors: fetchedPlayer.stats_fielding_errors ?? undefined,
-            stats_fielding_pct: undefined, // Not in the current schema
-          };
+          if (sport === 'nba') {
+            const nbaPlayer = fetchedPlayer as any;
+            console.log('NBA Player Data:', nbaPlayer);
+            console.log('Impact Score Raw:', nbaPlayer.impact_score, 'Type:', typeof nbaPlayer.impact_score);
+            formattedPlayer = {
+              id: nbaPlayer.id?.toString() || '',
+              player_id: nbaPlayer.external_player_id || nbaPlayer.id?.toString() || '',
+              full_name: `${nbaPlayer.first_name || ''} ${nbaPlayer.last_name || ''}`.trim(),
+              position: nbaPlayer.primary_position || 'N/A',
+              headshot_url: nbaPlayer.photo_url || undefined,
+              birth_date: nbaPlayer.birth_date || undefined,
+
+              number: nbaPlayer.jersey_number ? String(nbaPlayer.jersey_number) : undefined,
+              team_name: nbaPlayer.team_abbreviation || undefined,
+              birth_location: nbaPlayer.birth_city ? `${nbaPlayer.birth_city}${nbaPlayer.birth_country ? `, ${nbaPlayer.birth_country}` : ''}` : undefined,
+              impact_score: nbaPlayer.impact_score !== null && nbaPlayer.impact_score !== undefined
+                ? (typeof nbaPlayer.impact_score === 'string'
+                    ? parseFloat(nbaPlayer.impact_score)
+                    : nbaPlayer.impact_score)
+                : (nbaPlayer.astro_influence_score !== null && nbaPlayer.astro_influence_score !== undefined
+                    ? (typeof nbaPlayer.astro_influence_score === 'string'
+                        ? parseFloat(nbaPlayer.astro_influence_score)
+                        : nbaPlayer.astro_influence_score)
+                    : undefined),
+              astro_influence_score: nbaPlayer.astro_influence ?? undefined,
+              astro_influence: nbaPlayer.astro_influence ?? undefined,
+
+              stats_points_per_game: nbaPlayer.stats_points_per_game ?? undefined,
+              stats_rebounds_per_game: nbaPlayer.stats_rebounds_per_game ?? undefined,
+              stats_assists_per_game: nbaPlayer.stats_assists_per_game ?? undefined,
+              stats_steals_per_game: nbaPlayer.stats_steals_per_game ?? undefined,
+              stats_blocks_per_game: nbaPlayer.stats_blocks_per_game ?? undefined,
+              stats_field_goal_pct: nbaPlayer.stats_field_goal_pct ?? undefined,
+              stats_three_point_pct: nbaPlayer.stats_three_point_pct ?? undefined,
+              stats_free_throw_pct: nbaPlayer.stats_free_throw_pct ?? undefined,
+              stats_minutes_per_game: nbaPlayer.stats_minutes_per_game ?? undefined,
+              stats_games_played: nbaPlayer.stats_games_played ?? undefined,
+              stats_plus_minus: nbaPlayer.stats_plus_minus ?? undefined,
+            };
+          } else {
+            const mlbPlayer = fetchedPlayer as any;
+            formattedPlayer = {
+              id: mlbPlayer.player_id || '',
+              player_id: mlbPlayer.player_id || '',
+              full_name: mlbPlayer.player_full_name || `${mlbPlayer.player_first_name || ''} ${mlbPlayer.player_last_name || ''}`.trim(),
+              position: mlbPlayer.player_primary_position || 'N/A',
+              headshot_url: mlbPlayer.player_official_image_src || undefined,
+              birth_date: mlbPlayer.player_birth_date || undefined,
+
+              number: mlbPlayer.player_jersey_number ? String(mlbPlayer.player_jersey_number) : undefined,
+              team_name: mlbPlayer.player_current_team_abbreviation || undefined,
+              birth_location: mlbPlayer.player_birth_city ? `${mlbPlayer.player_birth_city}${mlbPlayer.player_birth_country ? `, ${mlbPlayer.player_birth_country}` : ''}` : undefined,
+              impact_score: mlbPlayer.impact_score ? String(mlbPlayer.impact_score) : undefined,
+              astro_influence_score: mlbPlayer.astro_influence_score ?? undefined,
+              astro_influence: mlbPlayer.astro_influence_score ?? undefined,
+
+              stats_batting_at_bats: mlbPlayer.stats_batting_at_bats ?? undefined,
+              stats_batting_runs: mlbPlayer.stats_batting_runs ?? undefined,
+              stats_batting_hits: mlbPlayer.stats_batting_hits ?? undefined,
+              stats_batting_rbi: mlbPlayer.stats_batting_runs_batted_in ?? undefined,
+              stats_batting_home_runs: mlbPlayer.stats_batting_homeruns ?? undefined,
+              stats_batting_strikeouts: mlbPlayer.stats_batting_strikeouts ?? undefined,
+              stats_batting_walks: mlbPlayer.stats_batting_walks ?? undefined,
+              stats_batting_avg: mlbPlayer.stats_batting_batting_avg ?? undefined,
+              stats_batting_obp: mlbPlayer.stats_batting_on_base_pct ?? undefined,
+              stats_batting_slg: mlbPlayer.stats_batting_slugging_pct ?? undefined,
+              stats_batting_ops: mlbPlayer.stats_batting_on_base_plus_slugging_pct ?? undefined,
+            };
+          }
           setPlayer(formattedPlayer);
 
-          // Log the mapped player data for debugging
-          console.log('Mapped player data:', formattedPlayer);
-          console.log('Raw player data:', fetchedPlayer);
-          if (fetchedPlayer.astro_influence_score !== undefined) {
-            console.log('Astro influence score:', fetchedPlayer.astro_influence_score);
-          }
-          
-          // Fetch astrological data only if birth_date is available
+          console.log('[PlayerDetailPage] Mapped player data:', formattedPlayer);
+
           if (formattedPlayer.birth_date) {
-            // getAstroData (generatePlayerAstroData) expects location object
-            const location = formattedPlayer.birth_location ? { city: formattedPlayer.birth_location } : undefined;
-            const rawAstroData = await getAstroData(formattedPlayer.birth_date, location);
-            if (rawAstroData) {
+            try {
+              const birthLocation: BirthLocation | undefined = formattedPlayer.birth_location ? {
+                city: formattedPlayer.birth_location.split(',')[0]?.trim(),
+                country: formattedPlayer.birth_location.split(',')[1]?.trim() || 'USA'
+              } : undefined;
+
+              const rawAstroData = await getAstroData(formattedPlayer.birth_date, birthLocation);
+              
+              // Transform raw astro data to match AstroData type
               const structuredAstroData: AstroData = {
-                sunSign: getFullAstroSignInfo(rawAstroData.sunSign as ZodiacSign),
-                moonSign: getFullAstroSignInfo(rawAstroData.moonSign as ZodiacSign),
+                sunSign: getFullAstroSignInfo(rawAstroData.planets.sun.sign as ZodiacSign),
+                moonSign: getFullAstroSignInfo(rawAstroData.planets.moon.sign as ZodiacSign),
                 ascendant: getFullAstroSignInfo(rawAstroData.ascendant as ZodiacSign),
-                // rawAstroData does not contain dailyHoroscope, interpretation, or chineseZodiac directly.
-                // These are optional in AstroData, so we can set them to undefined or default values.
-                interpretation: undefined, // Or a default string like "Interpretation not available."
-                chineseZodiac: undefined,  // Or a default string
-                // dailyHoroscope is also optional in AstroData and can be omitted if not available
+                // Optional fields
+                interpretation: undefined,
+                chineseZodiac: undefined
               };
+              
               setAstro(structuredAstroData);
-            } else {
-              setAstro(null);
+              console.log('[PlayerDetailPage] Generated astro data:', structuredAstroData);
+            } catch (astroError) {
+              console.error('Error generating astrological data:', astroError);
             }
           } else {
-            setAstro(null); // No birth date, no astro data
+            setAstro(null);
           }
         }
       } catch (err) {
-        console.error('Error fetching player or astro data:', err);
-        setError('Failed to load player details.');
-        setPlayer(null);
-        setAstro(null);
+        console.error('Error fetching player data:', err);
+        setError(`Failed to load player data: ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [playerId]);
+    if (playerId && sport) {
+      fetchData();
+    }
+  }, [playerId, sport]);
+
+  useEffect(() => {
+    // Enhanced sport detection logic
+    const isNba = 
+      location.pathname.includes('/nba/') || 
+      location.pathname.includes('/NBA/') || 
+      (teamId && teamId.toLowerCase().includes('nba')) ||
+      // Check for specific NBA team IDs that we know about
+      (teamId === 'a27df587-8432-4a6a-9b9c-0d0e17dbdff0'); // This is an NBA team ID
+      
+    setSport(isNba ? 'nba' : 'mlb');
+    console.log(`[PlayerDetailPage] Sport determined from URL path: ${isNba ? 'NBA' : 'MLB'}`);
+    console.log(`[PlayerDetailPage] Team ID: ${teamId}, Player ID: ${playerId}`);
+  }, [location.pathname, teamId, playerId]);
 
   if (loading) {
     return (
@@ -434,22 +492,30 @@ const PlayerDetailPage: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">Astrological Influence</h2>
             <div className="flex flex-col items-center">
-              <div className="flex flex-col items-center">
-                <CircularProgress 
-                  value={player.astro_influence_score || 0} 
-                  size={160}
-                  strokeWidth={12}
-                  showDescription={true}
-                >
-                  <span className="text-3xl font-bold">
-                    {player.astro_influence_score !== undefined ? Math.round(player.astro_influence_score) : 0}%
-                  </span>
-                  <span className="text-sm text-gray-500 mt-1">Astro Influence</span>
-                </CircularProgress>
-                <p className="mt-2 text-sm text-gray-600 max-w-xs text-center">
-                  {player.full_name?.split(' ')[0]}'s performance may be {getInfluenceStrength(player.astro_influence_score || 0)} by today's celestial alignments.
-                </p>
-              </div>
+            <div className="flex flex-col items-center">
+              {player.astro_influence !== undefined && player.astro_influence !== null ? (
+                <>
+                  <CircularProgress 
+                    value={player.astro_influence} 
+                    size={160}
+                    strokeWidth={12}
+                    showDescription={true}
+                  >
+                    <span className="text-3xl font-bold">
+                      {Math.round(player.astro_influence)}%
+                    </span>
+                    <span className="text-sm text-gray-500 mt-1">Astro Influence</span>
+                  </CircularProgress>
+                  <p className="mt-2 text-sm text-gray-600 max-w-xs text-center">
+                    {player.full_name?.split(' ')[0]}'s performance may be {getInfluenceStrength(player.astro_influence)} by today's celestial alignments.
+                  </p>
+                </>
+              ) : (
+                <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <p className="text-yellow-700">Astrological influence data not available</p>
+                </div>
+              )}
+            </div>
             </div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
@@ -457,13 +523,26 @@ const PlayerDetailPage: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center justify-between">
                 <p className="text-lg">Overall Impact:</p>
-                <span className="font-bold text-blue-600 text-xl">{player.impact_score || 'N/A'}</span>
+                {player.impact_score !== undefined && player.impact_score !== null ? (
+                  <span className="font-bold text-blue-600 text-xl">
+                    {typeof player.impact_score === 'number' ? player.impact_score.toFixed(1) : player.impact_score}
+                  </span>
+                ) : (
+                  <span className="text-gray-500">N/A</span>
+                )}
               </div>
-              {player.impact_score && (
+              {player.impact_score !== undefined && player.impact_score !== null && (
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                   <div 
                     className="bg-blue-600 h-2.5 rounded-full" 
-                    style={{ width: `${Math.min(parseFloat(player.impact_score.toString()) * 10, 100)}%` }}
+                    style={{ 
+                      width: `${Math.min(
+                        (typeof player.impact_score === 'number' 
+                          ? player.impact_score 
+                          : parseFloat(player.impact_score) || 0) * 10, 
+                        100
+                      )}%` 
+                    }}
                   ></div>
                 </div>
               )}
