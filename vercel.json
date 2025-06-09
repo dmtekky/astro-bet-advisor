@@ -22,6 +22,7 @@
     { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
     { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
     { "source": "/api/test-update", "destination": "/api/test-update.ts" },
+    { "source": "/api/health-check", "destination": "/api/health-check.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
