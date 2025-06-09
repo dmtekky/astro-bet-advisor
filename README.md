@@ -404,8 +404,24 @@ This script ensures that all data dependencies are respected and that the databa
   This script:
   1. Fetches and upserts NBA teams, players, and player season stats for 2024-25 (`fetch_nba_data.js`)
   2. Calculates and updates player impact scores (`calculate_player_impact_scores.js`)
-  3. Calculates and updates player astro scores (`sync_nba_astro_scores_fixed.js`)
-  4. Calculates and updates team astro/chemistry scores (`calculate_nba_team_astro_scores.js`)
+
+- `scripts/update-nba-astro-scores-fixed.cjs`: **Updates astrological influence scores for NBA players.**
+
+  This script should be run after updating player stats to ensure astrological data is current:
+  ```bash
+  node scripts/update-nba-astro-scores-fixed.cjs
+  ```
+  
+  **Features:**
+  - Processes players in batches for efficiency
+  - Updates both `nba_players` and `nba_player_season_stats_2025` tables
+  - Matches players using `msf_player_id` for accurate cross-table updates
+  - Provides detailed logging of updates and any missing records
+  
+  **Note:** Some players may show "No stats record found" if they don't have entries in the stats table for the current season.
+
+- `scripts/sync_nba_astro_scores_fixed.js`: **Updates player astro scores**
+- `scripts/calculate_nba_team_astro_scores.js`: **Calculates and updates team astro/chemistry scores**
 
   **Usage:**
   ```bash
