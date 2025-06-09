@@ -21,6 +21,7 @@
     { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
     { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
     { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
+    { "source": "/api/test-update", "destination": "/api/test-update.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
