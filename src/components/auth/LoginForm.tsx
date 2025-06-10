@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ReloadIcon, EnvelopeOpenIcon } from '@radix-ui/react-icons';
+import { Loader2 as ReloadIcon, Mail, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { FcGoogle } from 'react-icons/fc';
+import { supabase } from '@/lib/supabase';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -25,100 +28,164 @@ const LoginForm = () => {
       if (error) throw error;
       navigate('/');
     } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+      setError(error.message || 'Failed to sign in. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message || 'Failed to sign in with Google');
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
-        <p className="text-sm text-muted-foreground">
-          Enter your email and password to sign in
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full max-w-md mx-auto bg-slate-800/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-600/50 shadow-xl"
+    >
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Welcome Back, Stargazer</h2>
+        <p className="text-slate-200">
+          Sign in to continue your cosmic betting journey
         </p>
       </div>
 
+      <Button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2 h-12 text-base bg-white/5 hover:bg-white/10 border-slate-700 text-white"
+      >
+        <FcGoogle className="text-xl" />
+        Continue with Google
+      </Button>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-slate-700" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-slate-900/80 px-3 text-sm text-slate-200">or sign in with email</span>
+        </div>
+      </div>
+
       {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="bg-red-900/30 border-red-800/50 text-red-200">
+          <AlertDescription className="flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={loading}
-            className="h-10"
-          />
+          <Label htmlFor="email" className="text-slate-200 text-sm font-medium">
+            Email Address
+          </Label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-4 w-4 text-slate-500" />
+            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="h-12 pl-10 bg-slate-700/80 border-slate-500 text-white placeholder-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-slate-200 text-sm font-medium">
+              Password
+            </Label>
             <Link
               to="/forgot-password"
-              className="text-xs text-muted-foreground hover:underline"
+              className="text-sm font-medium text-blue-300 hover:text-blue-200 transition-colors"
             >
               Forgot password?
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            className="h-10"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-4 w-4 text-slate-500" />
+            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="h-12 pl-10 bg-slate-700/80 border-slate-500 text-white placeholder-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <div className="flex items-center">
+          <input
+            id="remember-me"
+            name="remember-me"
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
+          />
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-200">
+            Remember this device
+          </label>
+        </div>
+
+        <motion.button
+          type="submit"
+          className="w-full mt-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium h-12 text-base rounded-md flex items-center justify-center"
+          disabled={loading}
+          whileTap={{ scale: 0.98 }}
+        >
           {loading ? (
             <>
-              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
+              <ReloadIcon className="mr-2 h-5 w-5 animate-spin" />
+              Accessing the Cosmos...
             </>
           ) : (
-            'Sign in'
+            <>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Sign In to Your Account
+            </>
           )}
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          type="button"
-          className="w-full"
-          onClick={() => {
-            // Handle Google sign in
-          }}
-          disabled={loading}
-        >
-          <EnvelopeOpenIcon className="mr-2 h-4 w-4" />
-          Continue with Email
-        </Button>
+        </motion.button>
       </form>
-    </div>
+
+      <p className="text-center text-sm text-slate-400 mt-6">
+        Don't have an account?{' '}
+        <Link 
+          to="/signup" 
+          className="font-medium text-blue-300 hover:text-blue-200 transition-colors"
+        >
+          Create one now
+        </Link>
+      </p>
+    </motion.div>
   );
 };
 
