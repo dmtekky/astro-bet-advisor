@@ -1,5 +1,5 @@
 export interface NbaTeam {
-  id: number;
+  id: number; // Reverted to number as per DB schema
   external_team_id: string;
   external_id?: number; // For backward compatibility
   abbreviation: string | null;
@@ -17,7 +17,7 @@ export interface NbaTeam {
 }
 
 export interface NbaPlayer {
-  id: number;
+  id: number; // Reverted to number as per DB schema
   external_player_id: string;
   first_name: string | null;
   last_name: string | null;
@@ -32,4 +32,6 @@ export interface NbaPlayer {
   college: string | null;
   rookie: boolean | null;
   active: boolean | null;
+  team_abbreviation?: string | null; // Added for consistency
+  league?: string; // Added to indicate player's league (e.g., 'NBA')
 }

@@ -1072,32 +1072,32 @@ const TeamPage = () => {
       <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
         <div className="container mx-auto">
           <div className="flex items-center mb-8">
-            <Skeleton className="h-16 w-16 rounded-full mr-4" />
+            <div className="h-16 w-16 rounded-full bg-gray-200 mr-4" />
             <div className="space-y-2">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64" />
+              <div className="h-8 w-48 bg-gray-200 rounded" />
+              <div className="h-4 w-64 bg-gray-200 rounded" />
             </div>
           </div>
           
           <div className="mb-12">
-            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <Skeleton key={i} className="h-40 w-full rounded-lg" />
+                <div key={i} className="h-40 w-full bg-gray-200 rounded-lg" />
               ))}
             </div>
           </div>
           
           <div className="mb-12">
-            <Skeleton className="h-8 w-48 mb-6" />
-            <Skeleton className="h-64 w-full rounded-lg" />
+            <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
+            <div className="h-64 w-full bg-gray-200 rounded-lg" />
           </div>
           
           <div className="mb-12">
-            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-40 w-full rounded-lg" />
+                <div key={i} className="h-40 w-full bg-gray-200 rounded-lg" />
               ))}
             </div>
           </div>

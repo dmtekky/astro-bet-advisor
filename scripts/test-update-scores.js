@@ -1,6 +1,10 @@
 // Test script for the update-scores endpoint
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { createRequire } from 'module';
+
+// Create require function for ES modules
+const require = createRequire(import.meta.url);
 
 // Set up __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -45,7 +49,21 @@ async function runTest() {
       code: error.code,
       stack: error.stack
     });
-    process.exit(1);
+    
+    // Try alternative import method
+    console.log('\n🔄 Trying alternative import method...');
+    try {
+      const { updateAstroScores } = require('../dist/lib/updateAstroScores.js');
+      console.log('✅ Successfully imported updateAstroScores using require');
+      
+      console.log('Calling updateAstroScores...');
+      const result = await updateAstroScores();
+      console.log('\n📊 Update Result (require):', result);
+      process.exit(0);
+    } catch (requireError) {
+      console.error('❌ Failed to import with require:', requireError);
+      process.exit(1);
+    }
   }
 }
 

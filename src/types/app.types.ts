@@ -95,6 +95,7 @@ export interface Player {
   impact_score?: string | number | null; // Optional - placeholder or to be derived
   birth_date: string | null; // Corresponds to 'birth_date' in DB
   birth_location?: string | null; // Optional - not directly in 'players' table (e.g. birth_city)
+  league?: string; // Added to indicate player's league (e.g., 'NBA', 'MLB')
 
   // Batting Stats (prefix with stats_batting_)
   stats_batting_at_bats?: number | null;

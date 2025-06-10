@@ -95,7 +95,7 @@ export interface TeamWithChemistry {
   name: string | null;
   abbreviation: string | null;
   team_chemistry: { // Normalized to be an object or null after fetching
-    overall_score: number | null;
+    overall_score?: number | null; // Made optional
   } | null;
 }
 
@@ -202,22 +202,24 @@ export async function fetchLatestAstrologicalData(): Promise<AstrologicalData | 
 }
 
 // Define the type for a baseball player based on the database schema
-type BaseballPlayer = {
-  id: string;
-  player_id: string;
+export type BaseballPlayer = {
+  id: number; // Assuming this is the primary key from the baseball_players table (typically number)
+  player_id: string; // external player id from API
   player_full_name: string | null;
   player_first_name: string | null;
   player_last_name: string | null;
   player_primary_position: string | null;
   player_official_image_src: string | null;
   player_birth_date: string | null;
-  player_jersey_number: number | null;
-  player_current_team_abbreviation: string | null;
+  player_jersey_number: string | null; // Changed to string | null
+  player_current_team_abbreviation: string | null; // Already exists
+  team_abbreviation?: string | null; // Added to match potential data structure from queries
   player_birth_city: string | null;
   player_birth_country: string | null;
   impact_score: number | null;
   astro_influence_score: number | null;
-  [key: string]: any; // For any additional fields we might need
+  league?: string; // Added to indicate player's league (e.g., 'NBA', 'MLB')
+  // [key: string]: any; // Avoid overly broad types if possible, add specific fields as needed
 };
 
 /**

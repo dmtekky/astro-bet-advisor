@@ -23,6 +23,7 @@ interface Player extends Omit<BasePlayer, 'id'> {
   birth_date: string | null;
   birth_location?: string | null;
   astro_influence_score?: number | null;
+  league?: 'NBA' | 'MLB' | string; // Added for clarity and type safety
   // Map database fields to component props for backward compatibility
   astro_influence?: number | null;
   // Add all the missing fields from the original Player type
@@ -269,6 +270,7 @@ const PlayerDetailPage: React.FC = () => {
               stats_minutes_per_game: nbaPlayer.stats_minutes_per_game ?? undefined,
               stats_games_played: nbaPlayer.stats_games_played ?? undefined,
               stats_plus_minus: nbaPlayer.stats_plus_minus ?? undefined,
+              league: fetchedPlayer.league, // Use league from the fetched data
             };
           } else {
             const mlbPlayer = fetchedPlayer as any;
@@ -298,7 +300,12 @@ const PlayerDetailPage: React.FC = () => {
               stats_batting_obp: mlbPlayer.stats_batting_on_base_pct ?? undefined,
               stats_batting_slg: mlbPlayer.stats_batting_slugging_pct ?? undefined,
               stats_batting_ops: mlbPlayer.stats_batting_on_base_plus_slugging_pct ?? undefined,
+              league: fetchedPlayer.league, // Use league from the fetched data
             };
+          }
+          // Always set league for safety
+          if (!formattedPlayer.league) {
+            formattedPlayer.league = sport === 'nba' ? 'NBA' : 'MLB';
           }
           setPlayer(formattedPlayer);
 
@@ -394,6 +401,16 @@ const PlayerDetailPage: React.FC = () => {
       </div>
     );
   }
+
+  // Diagnostic log to observe state before rendering
+  console.log('PlayerDetailPage Render State:', {
+    playerExists: !!player,
+    playerId: player?.id,
+    playerLeague: player?.league,
+    isNBAExpected: player?.league === 'NBA',
+    isLoading: loading,
+    error: error
+  });
 
   // Map player stats to BattingStats interface
   const battingStats: BattingStats = {
@@ -782,88 +799,135 @@ const PlayerDetailPage: React.FC = () => {
           </section>
         )}
 
-        {/* Baseball Statistics */}
-        <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Baseball Statistics</h2>
-          
-          {/* Stats Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-100">
-              <p className="text-sm text-blue-600 font-medium">BATTING AVG</p>
-              <p className="text-2xl font-bold text-gray-800">{battingStats.avg || '.000'}</p>
+        {/* Sports Statistics - Conditionally render based on sport */}
+        {player.league === 'NBA' ? (
+          <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Basketball Statistics</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-3 py-2">GP</th>
+                    <th className="px-3 py-2">MIN</th>
+                    <th className="px-3 py-2">PTS</th>
+                    <th className="px-3 py-2">REB</th>
+                    <th className="px-3 py-2">AST</th>
+                    <th className="px-3 py-2">STL</th>
+                    <th className="px-3 py-2">BLK</th>
+                    <th className="px-3 py-2">FG%</th>
+                    <th className="px-3 py-2">3P%</th>
+                    <th className="px-3 py-2">FT%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="px-3 py-2">{player.stats_games_played ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_minutes_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_points_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_rebounds_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_assists_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_steals_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_blocks_per_game ?? 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_field_goal_pct !== undefined ? (parseFloat(player.stats_field_goal_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_three_point_pct !== undefined ? (parseFloat(player.stats_three_point_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td className="px-3 py-2">{player.stats_free_throw_pct !== undefined ? (parseFloat(player.stats_free_throw_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100">
-              <p className="text-sm text-green-600 font-medium">HOME RUNS</p>
-              <p className="text-2xl font-bold text-gray-800">{battingStats.home_runs || '0'}</p>
+          </section>
+        ) : (
+          <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Baseball Statistics</h2>
+            {/* Stats Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-100">
+                <p className="text-sm text-blue-600 font-medium">BATTING AVG</p>
+                <p className="text-2xl font-bold text-gray-800">{battingStats?.avg || '.000'}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100">
+                <p className="text-sm text-green-600 font-medium">HOME RUNS</p>
+                <p className="text-2xl font-bold text-gray-800">{battingStats?.home_runs || '0'}</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-100">
+                <p className="text-sm text-purple-600 font-medium">RBI</p>
+                <p className="text-2xl font-bold text-gray-800">{battingStats?.rbi || '0'}</p>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-100">
+                <p className="text-sm text-yellow-600 font-medium">OPS</p>
+                <p className="text-2xl font-bold text-gray-800">{battingStats?.ops || '.000'}</p>
+              </div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-100">
-              <p className="text-sm text-purple-600 font-medium">RBI</p>
-              <p className="text-2xl font-bold text-gray-800">{battingStats.rbi || '0'}</p>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-100">
-              <p className="text-sm text-yellow-600 font-medium">OPS</p>
-              <p className="text-2xl font-bold text-gray-800">{battingStats.ops || '.000'}</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Batting Stats */}
-            <div>
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Batting Stats */}
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Batting Statistics</h3>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800">Batting Statistics</h3>
+                {battingStats ? (
+                  <BattingStatsComponent stats={battingStats} />
+                ) : (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                    No batting statistics available for this player.
+                  </p>
+                )}
               </div>
-              <BattingStatsComponent stats={battingStats} />
-            </div>
 
-            {/* Fielding Stats */}
-            <div>
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-                  </svg>
+              {/* Fielding Stats */}
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Fielding Statistics</h3>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800">Fielding Statistics</h3>
-              </div>
-              <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statistic</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {Object.entries(fieldingStats).map(([key, value]) => (
-                      <tr key={key} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-700">
-                          {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                          {value !== null && value !== undefined ? value : 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {fieldingStats ? (
+                  <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statistic</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {Object.entries(fieldingStats).map(([key, value]) => (
+                          <tr key={key} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-700">
+                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
+                              {value !== null && value !== undefined ? value : 'N/A'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                    No fielding statistics available for this player.
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-          
-          {/* Recent Performance Graph Placeholder */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Performance Trend</h3>
-            <div className="h-48 bg-white p-4 rounded border border-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">Performance trend visualization will be available soon.</p>
+            {/* Recent Performance Graph Placeholder */}
+            <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Performance Trend</h3>
+              <div className="h-48 bg-white p-4 rounded border border-gray-200 flex items-center justify-center">
+                <p className="text-gray-500">Performance trend visualization will be available soon.</p>
+              </div>
             </div>
-          </div>
-        </section>
-
+          </section>
+        )}
+        
         {/* Elemental Influence Section */}
         {astro && (
           <section className="bg-white p-6 rounded-lg shadow-md mt-8">
