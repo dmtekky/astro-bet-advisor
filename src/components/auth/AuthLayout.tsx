@@ -34,9 +34,9 @@ const AuthLayout = ({
             <img 
               src="/images/auth/Auth%20Basketball%20Galaxy%20Collage.jpg" 
               alt="Basketball Galaxy"
-              className="h-full w-full object-cover opacity-40"
+              className="h-full w-full object-cover opacity-90"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/70 to-slate-900/90" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-700/60 via-slate-500/30 to-slate-700/50" />
           </div>
           
           {/* Quote Box */}
@@ -44,8 +44,12 @@ const AuthLayout = ({
             
             <blockquote className="bg-slate-800/70 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 shadow-2xl">
               <div className="absolute -top-2 -left-2 text-5xl text-blue-400/15 font-serif">"</div>
-              <p className="relative z-10 text-slate-100 text-xl leading-relaxed font-medium">
-                Millionaires don't use astrology, billionaires do.
+              <p className="relative z-10 text-slate-100 text-2xl md:text-3xl leading-tight font-semibold tracking-wide">
+                <div className="font-normal">{"Millionaires don't use astrology,"}</div>
+                <div className="mt-2 font-semibold">
+                  <span className="text-2xl md:text-3xl">B</span>
+                  {"illionaires do."}
+                </div>
               </p>
               <div className="mt-4 text-right text-sm text-slate-400 font-medium">
                 <span className="border-t border-border pt-2 inline-block">— J.P. Morgan</span>
@@ -66,7 +70,7 @@ const AuthLayout = ({
             Back
           </Button>
           
-          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] py-8">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[480px] pt-16 pb-8">
             <div className="bg-card p-6 rounded-lg shadow-sm border">
               {children}
             </div>
