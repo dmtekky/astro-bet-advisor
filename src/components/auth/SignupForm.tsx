@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ReloadIcon, EnvelopeOpenIcon } from '@radix-ui/react-icons';
+import { supabase } from '@/lib/supabase';
+import { FcGoogle } from 'react-icons/fc';
+
 
 const SignupForm = () => {
   const [email, setEmail] = useState('');
@@ -35,6 +38,20 @@ const SignupForm = () => {
     }
   };
 
+  // Handler for Google sign up
+  const handleGoogleSignUp = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
+      // Supabase will redirect to Google, no need to manually navigate
+    } catch (error: any) {
+      setError(error.message || 'Failed to sign up with Google');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -42,6 +59,26 @@ const SignupForm = () => {
         <p className="text-sm text-muted-foreground">
           Enter your details to get started
         </p>
+      </div>
+
+      <Button
+        type="button"
+        onClick={handleGoogleSignUp}
+        disabled={loading}
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2"
+      >
+        <FcGoogle className="text-xl" />
+        Sign up with Google
+      </Button>
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-slate-400">or</span>
+        </div>
       </div>
 
       {error && (
