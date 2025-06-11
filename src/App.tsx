@@ -28,7 +28,7 @@ import FloatingBackButton from "./components/common/FloatingBackButton";
 import NbaTeamsPage from "./pages/NbaTeamsPage";
 import NbaTeamDetailPage from "./pages/NbaTeamDetailPage";
 import NbaPlayersPage from "./pages/NbaPlayersPage";
-import NbaPlayerDetailPage from "./pages/NbaPlayerDetailPage";
+import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
 
 
 // Create a client
@@ -53,16 +53,18 @@ function AppContent() {
           <Route path="/nba/teams" element={<NbaTeamsPage />} />
           <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
           <Route path="/nba/players" element={<NbaPlayersPage />} />
-          <Route path="/nba/players/:playerId" element={<NbaPlayerDetailPage />} />
-          {/* New routes with plural form */}
-          <Route path="/teams/:teamId" element={<TeamPage />} />
-          <Route path="/teams/:teamId/player-details/:playerId" element={<PlayerDetailPage />} />
+          <Route path="/nba/players/:playerId" element={<BasketballPlayerPage />} />
           
-          {/* Redirects for old URLs */}
+          {/* Team and player routes */}
+          <Route path="/teams/:teamId" element={<TeamPage />} />
+          
+          {/* Redirects for old NBA player URLs */}
           <Route path="/team/:teamId" element={<TeamPageWrapper />} />
-          {/* Redirect old player routes to the new Astro route */}
           <Route path="/team/:teamId/player/:playerId" element={<PlayerDetailPageWrapper />} />
           <Route path="/teams/:teamId/players/:playerId" element={<PlayerDetailPageWrapper />} />
+          
+          {/* Legacy player detail route - redirect to basketball player page */}
+          <Route path="/teams/:teamId/player-details/:playerId" element={<BasketballPlayerPage />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
           <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
@@ -110,9 +112,17 @@ const TeamPageWrapper = () => {
 
 const PlayerDetailPageWrapper = () => {
   const { teamId, playerId } = useParams();
-  // This will trigger a full page load to the Astro route
+  // Redirect to the basketball player page for NBA teams
   if (typeof window !== 'undefined') {
-    window.location.href = `/teams/${teamId}/player-details/${playerId}`;
+    // Check if this is an NBA team (you might need to adjust this condition based on your team IDs)
+    const isNbaTeam = teamId && (teamId.startsWith('nba-') || teamId.toLowerCase().includes('nba'));
+    
+    if (isNbaTeam) {
+      window.location.href = `/nba/players/${playerId}`;
+    } else {
+      // For non-NBA teams, use the generic player detail page
+      window.location.href = `/teams/${teamId}/player-details/${playerId}`;
+    }
     return null;
   }
   return null;

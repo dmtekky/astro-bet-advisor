@@ -1206,7 +1206,10 @@ const TeamPage = () => {
                 impact_score={player.impact_score || 0}
                 astro_influence={player.astro_influence || 0}
                 teamAverageAstroInfluence={teamAverageAstroInfluence}
-                linkPath={`/teams/${teamId}/players/${player.id}`}
+                linkPath={team?.league_id === 'nba' 
+                  ? `/nba/players/${player.id}`
+                  : `/teams/${teamId}/players/${player.id}`
+                }
               />
             );
           }) : (
