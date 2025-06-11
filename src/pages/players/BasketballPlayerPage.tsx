@@ -23,7 +23,7 @@ interface Player extends Omit<BasePlayer, 'id'> {
   birth_date: string | null;
   birth_location?: string | null;
   astro_influence_score?: number | null;
-  league?: 'NBA' | 'MLB' | string; // Added for clarity and type safety
+  league?: 'NBA' | string; // Only NBA supported now
   // Map database fields to component props for backward compatibility
   astro_influence?: number | null;
   // Add all the missing fields from the original Player type
@@ -198,17 +198,6 @@ const PlayerDetailPage: React.FC = () => {
   const [astro, setAstro] = useState<AstroData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [sport, setSport] = useState<'mlb' | 'nba'>('mlb'); // Default to MLB
-
-  // Determine the sport based on URL path
-  useEffect(() => {
-    // Check if the URL path contains 'nba' to determine the sport
-    const isNba = location.pathname.includes('/nba/') || 
-                  location.pathname.includes('/NBA/') || 
-                  (teamId && teamId.toLowerCase().includes('nba'));
-    setSport(isNba ? 'nba' : 'mlb');
-    console.log(`[PlayerDetailPage] Sport determined from URL path: ${isNba ? 'NBA' : 'MLB'}`);
-  }, [location.pathname, teamId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -222,114 +211,70 @@ const PlayerDetailPage: React.FC = () => {
           return;
         }
 
-        console.log(`[PlayerDetailPage] Fetching player with ID: ${playerId}, sport: ${sport}`);
-        const fetchedPlayer = await getPlayerByApiId(playerId, sport);
+        console.log(`[PlayerDetailPage] Fetching NBA player with ID: ${playerId}`);
+        const fetchedPlayer = await getPlayerByApiId(playerId, 'nba');
         console.log('[PlayerDetailPage] Fetched player data:', fetchedPlayer);
 
         if (!fetchedPlayer) {
           setError('Player not found.');
           setPlayer(null);
         } else {
-          let formattedPlayer: Player;
+          const nbaPlayer = fetchedPlayer as any;
+          console.log('NBA Player Data:', nbaPlayer);
+          console.log('Impact Score Raw:', nbaPlayer.impact_score, 'Type:', typeof nbaPlayer.impact_score);
+          const formattedPlayer: Player = {
+            id: nbaPlayer.id?.toString() || '',
+            player_id: nbaPlayer.external_player_id || nbaPlayer.id?.toString() || '',
+            full_name: `${nbaPlayer.first_name || ''} ${nbaPlayer.last_name || ''}`.trim(),
+            position: nbaPlayer.primary_position || 'N/A',
+            headshot_url: nbaPlayer.photo_url || undefined,
+            birth_date: nbaPlayer.birth_date || undefined,
 
-          if (sport === 'nba') {
-            const nbaPlayer = fetchedPlayer as any;
-            console.log('NBA Player Data:', nbaPlayer);
-            console.log('Impact Score Raw:', nbaPlayer.impact_score, 'Type:', typeof nbaPlayer.impact_score);
-            formattedPlayer = {
-              id: nbaPlayer.id?.toString() || '',
-              player_id: nbaPlayer.external_player_id || nbaPlayer.id?.toString() || '',
-              full_name: `${nbaPlayer.first_name || ''} ${nbaPlayer.last_name || ''}`.trim(),
-              position: nbaPlayer.primary_position || 'N/A',
-              headshot_url: nbaPlayer.photo_url || undefined,
-              birth_date: nbaPlayer.birth_date || undefined,
+            number: nbaPlayer.jersey_number ? String(nbaPlayer.jersey_number) : undefined,
+            team_name: nbaPlayer.team_abbreviation || undefined,
+            birth_location: nbaPlayer.birth_city ? `${nbaPlayer.birth_city}${nbaPlayer.birth_country ? `, ${nbaPlayer.birth_country}` : ''}` : undefined,
+            impact_score: nbaPlayer.impact_score !== null && nbaPlayer.impact_score !== undefined
+              ? (typeof nbaPlayer.impact_score === 'string'
+                  ? parseFloat(nbaPlayer.impact_score)
+                  : nbaPlayer.impact_score)
+              : (nbaPlayer.astro_influence_score !== null && nbaPlayer.astro_influence_score !== undefined
+                  ? (typeof nbaPlayer.astro_influence_score === 'string'
+                      ? parseFloat(nbaPlayer.astro_influence_score)
+                      : nbaPlayer.astro_influence_score)
+                  : undefined),
+            astro_influence_score: nbaPlayer.astro_influence ?? undefined,
+            astro_influence: nbaPlayer.astro_influence ?? undefined,
 
-              number: nbaPlayer.jersey_number ? String(nbaPlayer.jersey_number) : undefined,
-              team_name: nbaPlayer.team_abbreviation || undefined,
-              birth_location: nbaPlayer.birth_city ? `${nbaPlayer.birth_city}${nbaPlayer.birth_country ? `, ${nbaPlayer.birth_country}` : ''}` : undefined,
-              impact_score: nbaPlayer.impact_score !== null && nbaPlayer.impact_score !== undefined
-                ? (typeof nbaPlayer.impact_score === 'string'
-                    ? parseFloat(nbaPlayer.impact_score)
-                    : nbaPlayer.impact_score)
-                : (nbaPlayer.astro_influence_score !== null && nbaPlayer.astro_influence_score !== undefined
-                    ? (typeof nbaPlayer.astro_influence_score === 'string'
-                        ? parseFloat(nbaPlayer.astro_influence_score)
-                        : nbaPlayer.astro_influence_score)
-                    : undefined),
-              astro_influence_score: nbaPlayer.astro_influence ?? undefined,
-              astro_influence: nbaPlayer.astro_influence ?? undefined,
-
-              stats_points_per_game: nbaPlayer.stats_points_per_game ?? undefined,
-              stats_rebounds_per_game: nbaPlayer.stats_rebounds_per_game ?? undefined,
-              stats_assists_per_game: nbaPlayer.stats_assists_per_game ?? undefined,
-              stats_steals_per_game: nbaPlayer.stats_steals_per_game ?? undefined,
-              stats_blocks_per_game: nbaPlayer.stats_blocks_per_game ?? undefined,
-              stats_field_goal_pct: nbaPlayer.stats_field_goal_pct ?? undefined,
-              stats_three_point_pct: nbaPlayer.stats_three_point_pct ?? undefined,
-              stats_free_throw_pct: nbaPlayer.stats_free_throw_pct ?? undefined,
-              stats_minutes_per_game: nbaPlayer.stats_minutes_per_game ?? undefined,
-              stats_games_played: nbaPlayer.stats_games_played ?? undefined,
-              stats_plus_minus: nbaPlayer.stats_plus_minus ?? undefined,
-              league: fetchedPlayer.league, // Use league from the fetched data
-            };
-          } else {
-            const mlbPlayer = fetchedPlayer as any;
-            formattedPlayer = {
-              id: mlbPlayer.player_id || '',
-              player_id: mlbPlayer.player_id || '',
-              full_name: mlbPlayer.player_full_name || `${mlbPlayer.player_first_name || ''} ${mlbPlayer.player_last_name || ''}`.trim(),
-              position: mlbPlayer.player_primary_position || 'N/A',
-              headshot_url: mlbPlayer.player_official_image_src || undefined,
-              birth_date: mlbPlayer.player_birth_date || undefined,
-
-              number: mlbPlayer.player_jersey_number ? String(mlbPlayer.player_jersey_number) : undefined,
-              team_name: mlbPlayer.player_current_team_abbreviation || undefined,
-              birth_location: mlbPlayer.player_birth_city ? `${mlbPlayer.player_birth_city}${mlbPlayer.player_birth_country ? `, ${mlbPlayer.player_birth_country}` : ''}` : undefined,
-              impact_score: mlbPlayer.impact_score ? String(mlbPlayer.impact_score) : undefined,
-              astro_influence_score: mlbPlayer.astro_influence_score ?? undefined,
-              astro_influence: mlbPlayer.astro_influence_score ?? undefined,
-
-              stats_batting_at_bats: mlbPlayer.stats_batting_at_bats ?? undefined,
-              stats_batting_runs: mlbPlayer.stats_batting_runs ?? undefined,
-              stats_batting_hits: mlbPlayer.stats_batting_hits ?? undefined,
-              stats_batting_rbi: mlbPlayer.stats_batting_runs_batted_in ?? undefined,
-              stats_batting_home_runs: mlbPlayer.stats_batting_homeruns ?? undefined,
-              stats_batting_strikeouts: mlbPlayer.stats_batting_strikeouts ?? undefined,
-              stats_batting_walks: mlbPlayer.stats_batting_walks ?? undefined,
-              stats_batting_avg: mlbPlayer.stats_batting_batting_avg ?? undefined,
-              stats_batting_obp: mlbPlayer.stats_batting_on_base_pct ?? undefined,
-              stats_batting_slg: mlbPlayer.stats_batting_slugging_pct ?? undefined,
-              stats_batting_ops: mlbPlayer.stats_batting_on_base_plus_slugging_pct ?? undefined,
-              league: fetchedPlayer.league, // Use league from the fetched data
-            };
-          }
-          // Always set league for safety
-          if (!formattedPlayer.league) {
-            formattedPlayer.league = sport === 'nba' ? 'NBA' : 'MLB';
-          }
+            stats_points_per_game: nbaPlayer.stats_points_per_game ?? undefined,
+            stats_rebounds_per_game: nbaPlayer.stats_rebounds_per_game ?? undefined,
+            stats_assists_per_game: nbaPlayer.stats_assists_per_game ?? undefined,
+            stats_steals_per_game: nbaPlayer.stats_steals_per_game ?? undefined,
+            stats_blocks_per_game: nbaPlayer.stats_blocks_per_game ?? undefined,
+            stats_field_goal_pct: nbaPlayer.stats_field_goal_pct ?? undefined,
+            stats_three_point_pct: nbaPlayer.stats_three_point_pct ?? undefined,
+            stats_free_throw_pct: nbaPlayer.stats_free_throw_pct ?? undefined,
+            stats_minutes_per_game: nbaPlayer.stats_minutes_per_game ?? undefined,
+            stats_games_played: nbaPlayer.stats_games_played ?? undefined,
+            stats_plus_minus: nbaPlayer.stats_plus_minus ?? undefined,
+            league: 'NBA',
+          };
           setPlayer(formattedPlayer);
 
-          console.log('[PlayerDetailPage] Mapped player data:', formattedPlayer);
+          if (formattedPlayer.birth_date && formattedPlayer.birth_location) {
+            const birthLocation: BirthLocation | undefined = formattedPlayer.birth_location ? {
+              city: formattedPlayer.birth_location.split(',')[0]?.trim(),
+              country: formattedPlayer.birth_location.split(',')[1]?.trim() || 'USA'
+            } : undefined;
 
-          if (formattedPlayer.birth_date) {
             try {
-              const birthLocation: BirthLocation | undefined = formattedPlayer.birth_location ? {
-                city: formattedPlayer.birth_location.split(',')[0]?.trim(),
-                country: formattedPlayer.birth_location.split(',')[1]?.trim() || 'USA'
-              } : undefined;
-
               const rawAstroData = await getAstroData(formattedPlayer.birth_date, birthLocation);
-              
-              // Transform raw astro data to match AstroData type
               const structuredAstroData: AstroData = {
                 sunSign: getFullAstroSignInfo(rawAstroData.planets.sun.sign as ZodiacSign),
                 moonSign: getFullAstroSignInfo(rawAstroData.planets.moon.sign as ZodiacSign),
                 ascendant: getFullAstroSignInfo(rawAstroData.ascendant as ZodiacSign),
-                // Optional fields
                 interpretation: undefined,
                 chineseZodiac: undefined
               };
-              
               setAstro(structuredAstroData);
               console.log('[PlayerDetailPage] Generated astro data:', structuredAstroData);
             } catch (astroError) {
@@ -347,24 +292,10 @@ const PlayerDetailPage: React.FC = () => {
       }
     };
 
-    if (playerId && sport) {
+    if (playerId) {
       fetchData();
     }
-  }, [playerId, sport]);
-
-  useEffect(() => {
-    // Enhanced sport detection logic
-    const isNba = 
-      location.pathname.includes('/nba/') || 
-      location.pathname.includes('/NBA/') || 
-      (teamId && teamId.toLowerCase().includes('nba')) ||
-      // Check for specific NBA team IDs that we know about
-      (teamId === 'a27df587-8432-4a6a-9b9c-0d0e17dbdff0'); // This is an NBA team ID
-      
-    setSport(isNba ? 'nba' : 'mlb');
-    console.log(`[PlayerDetailPage] Sport determined from URL path: ${isNba ? 'NBA' : 'MLB'}`);
-    console.log(`[PlayerDetailPage] Team ID: ${teamId}, Player ID: ${playerId}`);
-  }, [location.pathname, teamId, playerId]);
+  }, [playerId]);
 
   if (loading) {
     return (
@@ -799,7 +730,7 @@ const PlayerDetailPage: React.FC = () => {
           </section>
         )}
 
-        {/* Sports Statistics - Conditionally render based on sport */}
+
         {player.league === 'NBA' ? (
           <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Basketball Statistics</h2>
