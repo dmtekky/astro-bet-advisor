@@ -10,7 +10,7 @@ import CircularProgress from '../../components/CircularProgress';
 import AstroPeakDay from '../AstroPeakDay';
 import BigThreeAstroCards from '../BigThreeAstroCards';
 
-// Extend the base Player type with additional fields
+// Extend the base Player type with NBA-specific fields
 interface Player extends Omit<BasePlayer, 'id'> {
   id: string;
   player_id: string;
@@ -19,15 +19,36 @@ interface Player extends Omit<BasePlayer, 'id'> {
   number?: string | number | null;
   headshot_url: string | null;
   team_name?: string | null;
-  impact_score?: string | number | null;
+  impact_score?: number | null;
   birth_date: string | null;
   birth_location?: string | null;
   astro_influence_score?: number | null;
-  league?: 'NBA' | string; // Only NBA supported now
-  // Map database fields to component props for backward compatibility
+  league?: 'NBA' | string;
   astro_influence?: number | null;
-  // Add all the missing fields from the original Player type
-  [key: string]: any; // Temporary solution for missing fields
+  
+  // NBA Stats
+  stats_points_per_game?: number | null;
+  stats_rebounds_per_game?: number | null;
+  stats_assists_per_game?: number | null;
+  stats_steals_per_game?: number | null;
+  stats_blocks_per_game?: number | null;
+  stats_field_goal_pct?: number | string | null;
+  stats_three_point_pct?: number | string | null;
+  stats_free_throw_pct?: number | string | null;
+  stats_minutes_per_game?: number | string | null;
+  stats_games_played?: number | null;
+  stats_plus_minus?: number | string | null;
+  
+  // Additional NBA specific fields
+  stats_offensive_rebounds_per_game?: number | null;
+  stats_defensive_rebounds_per_game?: number | null;
+  stats_turnovers_per_game?: number | null;
+  stats_minutes_played?: number | null;
+  stats_double_doubles?: number | null;
+  stats_triple_doubles?: number | null;
+  
+  // For type safety
+  [key: string]: any;
 }
 
 interface ElementComposition {
@@ -222,41 +243,101 @@ const PlayerDetailPage: React.FC = () => {
           const nbaPlayer = fetchedPlayer as any;
           console.log('NBA Player Data:', nbaPlayer);
           console.log('Impact Score Raw:', nbaPlayer.impact_score, 'Type:', typeof nbaPlayer.impact_score);
+          console.log('Player Stats:', {
+            points_per_game: nbaPlayer.points_per_game,
+            rebounds_per_game: nbaPlayer.rebounds_per_game,
+            assists_per_game: nbaPlayer.assists_per_game,
+            stats_points_per_game: nbaPlayer.stats_points_per_game,
+            stats_rebounds_per_game: nbaPlayer.stats_rebounds_per_game,
+            stats_assists_per_game: nbaPlayer.stats_assists_per_game
+          });
+          // Helper function to safely parse and convert values
+          const safeParseFloat = (value: string | number | null | undefined, fallback: number | null = null): number | null => {
+            if (value === null || value === undefined) return fallback;
+            const num = typeof value === 'string' ? parseFloat(value) : Number(value);
+            return isNaN(num) ? fallback : num;
+          };
+
+          // Helper function to calculate per game stats
+          const getPerGameStat = (total: string | number | null | undefined, 
+                                games: string | number | null | undefined, 
+                                fallback: number | null = null): number | null => {
+            const totalNum = safeParseFloat(total, null);
+            const gamesNum = safeParseFloat(games, 1);
+            if (totalNum === null || gamesNum === null || gamesNum === 0) return fallback;
+            return totalNum / gamesNum;
+          };
+
+          // Helper function to calculate percentage
+          const getPercentage = (made: string | number | null | undefined, 
+                              attempted: string | number | null | undefined, 
+                              fallback: number | null = null): number | null => {
+            const madeNum = safeParseFloat(made, 0);
+            const attemptedNum = safeParseFloat(attempted, 0);
+            if (attemptedNum === 0) return fallback;
+            return madeNum / attemptedNum;
+          };
+
+          // Map the player data to the formatted player object
           const formattedPlayer: Player = {
             id: nbaPlayer.id?.toString() || '',
             player_id: nbaPlayer.external_player_id || nbaPlayer.id?.toString() || '',
             full_name: `${nbaPlayer.first_name || ''} ${nbaPlayer.last_name || ''}`.trim(),
             position: nbaPlayer.primary_position || 'N/A',
-            headshot_url: nbaPlayer.photo_url || undefined,
-            birth_date: nbaPlayer.birth_date || undefined,
-
-            number: nbaPlayer.jersey_number ? String(nbaPlayer.jersey_number) : undefined,
-            team_name: nbaPlayer.team_abbreviation || undefined,
-            birth_location: nbaPlayer.birth_city ? `${nbaPlayer.birth_city}${nbaPlayer.birth_country ? `, ${nbaPlayer.birth_country}` : ''}` : undefined,
-            impact_score: nbaPlayer.impact_score !== null && nbaPlayer.impact_score !== undefined
-              ? (typeof nbaPlayer.impact_score === 'string'
-                  ? parseFloat(nbaPlayer.impact_score)
-                  : nbaPlayer.impact_score)
-              : (nbaPlayer.astro_influence_score !== null && nbaPlayer.astro_influence_score !== undefined
-                  ? (typeof nbaPlayer.astro_influence_score === 'string'
-                      ? parseFloat(nbaPlayer.astro_influence_score)
-                      : nbaPlayer.astro_influence_score)
-                  : undefined),
-            astro_influence_score: nbaPlayer.astro_influence ?? undefined,
-            astro_influence: nbaPlayer.astro_influence ?? undefined,
-
-            stats_points_per_game: nbaPlayer.stats_points_per_game ?? undefined,
-            stats_rebounds_per_game: nbaPlayer.stats_rebounds_per_game ?? undefined,
-            stats_assists_per_game: nbaPlayer.stats_assists_per_game ?? undefined,
-            stats_steals_per_game: nbaPlayer.stats_steals_per_game ?? undefined,
-            stats_blocks_per_game: nbaPlayer.stats_blocks_per_game ?? undefined,
-            stats_field_goal_pct: nbaPlayer.stats_field_goal_pct ?? undefined,
-            stats_three_point_pct: nbaPlayer.stats_three_point_pct ?? undefined,
-            stats_free_throw_pct: nbaPlayer.stats_free_throw_pct ?? undefined,
-            stats_minutes_per_game: nbaPlayer.stats_minutes_per_game ?? undefined,
-            stats_games_played: nbaPlayer.stats_games_played ?? undefined,
-            stats_plus_minus: nbaPlayer.stats_plus_minus ?? undefined,
+            headshot_url: nbaPlayer.photo_url || nbaPlayer.player_official_image_src || undefined,
+            birth_date: nbaPlayer.birth_date || nbaPlayer.player_birth_date || undefined,
+            number: nbaPlayer.jersey_number || nbaPlayer.player_jersey_number || undefined,
+            team_name: nbaPlayer.team_abbreviation || nbaPlayer.player_current_team_abbreviation || undefined,
+            birth_location: nbaPlayer.birth_city || nbaPlayer.player_birth_city 
+              ? `${nbaPlayer.birth_city || nbaPlayer.player_birth_city}${nbaPlayer.birth_country || nbaPlayer.player_birth_country ? `, ${nbaPlayer.birth_country || nbaPlayer.player_birth_country}` : ''}`
+              : undefined,
             league: 'NBA',
+            
+            // Impact score and astro influence
+            impact_score: safeParseFloat(nbaPlayer.impact_score, safeParseFloat(nbaPlayer.astro_influence_score, null)),
+            astro_influence_score: safeParseFloat(nbaPlayer.astro_influence_score, null),
+            astro_influence: safeParseFloat(nbaPlayer.astro_influence, null),
+
+            // Basic stats - try per_game first, then calculate from totals if needed
+            stats_games_played: safeParseFloat(nbaPlayer.games_played, safeParseFloat(nbaPlayer.games_started, null)),
+            stats_minutes_per_game: safeParseFloat(nbaPlayer.minutes_per_game) || 
+                                  getPerGameStat(nbaPlayer.minutes_played, nbaPlayer.games_played, null),
+            
+            // Scoring stats
+            stats_points_per_game: safeParseFloat(nbaPlayer.points_per_game) || 
+                                 getPerGameStat(nbaPlayer.points, nbaPlayer.games_played, null),
+            
+            // Rebounding stats
+            stats_rebounds_per_game: safeParseFloat(nbaPlayer.rebounds_per_game) ||
+                                   getPerGameStat(nbaPlayer.rebounds, nbaPlayer.games_played, null),
+            stats_offensive_rebounds_per_game: safeParseFloat(nbaPlayer.offensive_rebounds_per_game) ||
+                                            getPerGameStat(nbaPlayer.offensive_rebounds, nbaPlayer.games_played, null),
+            stats_defensive_rebounds_per_game: safeParseFloat(nbaPlayer.defensive_rebounds_per_game) ||
+                                            getPerGameStat(nbaPlayer.defensive_rebounds, nbaPlayer.games_played, null),
+            
+            // Other stats
+            stats_assists_per_game: safeParseFloat(nbaPlayer.assists_per_game) ||
+                                  getPerGameStat(nbaPlayer.assists, nbaPlayer.games_played, null),
+            stats_steals_per_game: safeParseFloat(nbaPlayer.steals_per_game) ||
+                                 getPerGameStat(nbaPlayer.steals, nbaPlayer.games_played, null),
+            stats_blocks_per_game: safeParseFloat(nbaPlayer.blocks_per_game) ||
+                                 getPerGameStat(nbaPlayer.blocks, nbaPlayer.games_played, null),
+            stats_turnovers_per_game: safeParseFloat(nbaPlayer.turnovers_per_game) ||
+                                    getPerGameStat(nbaPlayer.turnovers, nbaPlayer.games_played, null),
+            
+            // Shooting percentages
+            stats_field_goal_pct: safeParseFloat(nbaPlayer.field_goal_pct) ||
+                                getPercentage(nbaPlayer.field_goals_made, nbaPlayer.field_goals_attempted, null),
+            stats_three_point_pct: safeParseFloat(nbaPlayer.three_point_pct) ||
+                                 getPercentage(nbaPlayer.three_point_made, nbaPlayer.three_point_attempted, null),
+            stats_free_throw_pct: safeParseFloat(nbaPlayer.free_throw_pct) ||
+                                getPercentage(nbaPlayer.free_throws_made, nbaPlayer.free_throws_attempted, null),
+            
+            // Advanced stats
+            stats_plus_minus: safeParseFloat(nbaPlayer.plus_minus, null),
+            stats_double_doubles: safeParseFloat(nbaPlayer.double_doubles, null),
+            stats_triple_doubles: safeParseFloat(nbaPlayer.triple_doubles, null),
+            stats_minutes_played: safeParseFloat(nbaPlayer.minutes_played, null)
           };
           setPlayer(formattedPlayer);
 
@@ -343,14 +424,23 @@ const PlayerDetailPage: React.FC = () => {
     error: error
   });
 
+  // Return early if player data is not available yet
+  if (!player) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <span className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" aria-label="Loading player data"></span>
+      </div>
+    );
+  }
+
   // Map player stats to BattingStats interface
   const battingStats: BattingStats = {
     // Basic Stats
-    atBats: player.stats_batting_at_bats || 0,
-    runs: player.stats_batting_runs || 0,
-    hits: player.stats_batting_hits || 0,
-    runsBattedIn: player.stats_batting_rbi || 0,
-    homeruns: player.stats_batting_home_runs || 0,
+    atBats: player.stats_batting_at_bats ? Number(player.stats_batting_at_bats) : 0,
+    runs: player.stats_batting_runs ? Number(player.stats_batting_runs) : 0,
+    hits: player.stats_batting_hits ? Number(player.stats_batting_hits) : 0,
+    runsBattedIn: player.stats_batting_rbi ? Number(player.stats_batting_rbi) : 0,
+    homeruns: player.stats_batting_home_runs ? Number(player.stats_batting_home_runs) : 0,
     
     // Averages
     battingAvg: typeof player.stats_batting_avg === 'string' 
@@ -738,30 +828,131 @@ const PlayerDetailPage: React.FC = () => {
               <table className="min-w-full text-sm border border-gray-200">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="px-3 py-2">GP</th>
-                    <th className="px-3 py-2">MIN</th>
-                    <th className="px-3 py-2">PTS</th>
-                    <th className="px-3 py-2">REB</th>
-                    <th className="px-3 py-2">AST</th>
-                    <th className="px-3 py-2">STL</th>
-                    <th className="px-3 py-2">BLK</th>
-                    <th className="px-3 py-2">FG%</th>
-                    <th className="px-3 py-2">3P%</th>
-                    <th className="px-3 py-2">FT%</th>
+                    {['GP', 'MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%'].map((header) => (
+                      <th key={header} className="px-3 py-2">
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="px-3 py-2">{player.stats_games_played ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_minutes_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_points_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_rebounds_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_assists_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_steals_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_blocks_per_game ?? 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_field_goal_pct !== undefined ? (parseFloat(player.stats_field_goal_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_three_point_pct !== undefined ? (parseFloat(player.stats_three_point_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
-                    <td className="px-3 py-2">{player.stats_free_throw_pct !== undefined ? (parseFloat(player.stats_free_throw_pct) * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td className="px-3 py-2">
+                      {player.stats_games_played != null 
+                        ? (() => {
+                            const value = player.stats_games_played;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toLocaleString() : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_minutes_per_game !== null && player.stats_minutes_per_game !== undefined 
+                        ? (() => {
+                            const value = player.stats_minutes_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })() 
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_points_per_game != null 
+                        ? (() => {
+                            const value = player.stats_points_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_rebounds_per_game != null 
+                        ? (() => {
+                            const value = player.stats_rebounds_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_assists_per_game !== null && player.stats_assists_per_game !== undefined 
+                        ? (() => {
+                            const value = player.stats_assists_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_steals_per_game !== null && player.stats_steals_per_game !== undefined 
+                        ? (() => {
+                            const value = player.stats_steals_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_blocks_per_game !== null && player.stats_blocks_per_game !== undefined 
+                        ? (() => {
+                            const value = player.stats_blocks_per_game;
+                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
+                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_field_goal_pct !== null && player.stats_field_goal_pct !== undefined 
+                        ? (() => {
+                            let value = player.stats_field_goal_pct;
+                            if (value === null || value === undefined) return 'N/A';
+                            
+                            let num = typeof value === 'number' ? value : parseFloat(String(value));
+                            if (isNaN(num)) return 'N/A';
+                            
+                            // If the number is between 0 and 1, assume it's a decimal and convert to percentage
+                            if (num > 0 && num < 1) num *= 100;
+                            // If the number is between 0 and 100, use as is
+                            else if (num < 0 || num > 100) return 'N/A';
+                            
+                            return num.toFixed(1) + '%';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_three_point_pct !== null && player.stats_three_point_pct !== undefined 
+                        ? (() => {
+                            let value = player.stats_three_point_pct;
+                            if (value === null || value === undefined) return 'N/A';
+                            
+                            let num = typeof value === 'number' ? value : parseFloat(String(value));
+                            if (isNaN(num)) return 'N/A';
+                            
+                            // If the number is between 0 and 1, assume it's a decimal and convert to percentage
+                            if (num > 0 && num < 1) num *= 100;
+                            // If the number is between 0 and 100, use as is
+                            else if (num < 0 || num > 100) return 'N/A';
+                            
+                            return num.toFixed(1) + '%';
+                          })()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {player.stats_free_throw_pct !== null && player.stats_free_throw_pct !== undefined 
+                        ? (() => {
+                            const value = player.stats_free_throw_pct;
+                            let numValue: number;
+                            if (typeof value === 'number') {
+                              numValue = value;
+                            } else if (typeof value === 'string') {
+                              numValue = parseFloat(value);
+                              if (isNaN(numValue)) return 'N/A';
+                            } else {
+                              return 'N/A';
+                            }
+                            return (numValue * 100).toFixed(1) + '%';
+                          })()
+                        : 'N/A'}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -775,20 +966,42 @@ const PlayerDetailPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-orange-50 p-4 rounded-lg text-center border border-orange-100">
                 <p className="text-sm text-orange-600 font-medium">PPG</p>
-                <p className="text-2xl font-bold text-gray-800">{player.stats_points_per_game || '0.0'}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {player.stats_points_per_game !== null && player.stats_points_per_game !== undefined 
+                    ? (typeof player.stats_points_per_game === 'number' 
+                        ? player.stats_points_per_game.toFixed(1)
+                        : parseFloat(String(player.stats_points_per_game)).toFixed(1))
+                    : '0.0'}
+                </p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-100">
                 <p className="text-sm text-blue-600 font-medium">RPG</p>
-                <p className="text-2xl font-bold text-gray-800">{player.stats_rebounds_per_game || '0.0'}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {player.stats_rebounds_per_game !== null && player.stats_rebounds_per_game !== undefined 
+                    ? (typeof player.stats_rebounds_per_game === 'number' 
+                        ? player.stats_rebounds_per_game.toFixed(1)
+                        : parseFloat(String(player.stats_rebounds_per_game)).toFixed(1))
+                    : '0.0'}
+                </p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100">
                 <p className="text-sm text-green-600 font-medium">APG</p>
-                <p className="text-2xl font-bold text-gray-800">{player.stats_assists_per_game || '0.0'}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {player.stats_assists_per_game !== null && player.stats_assists_per_game !== undefined 
+                    ? (typeof player.stats_assists_per_game === 'number' 
+                        ? player.stats_assists_per_game.toFixed(1)
+                        : parseFloat(String(player.stats_assists_per_game)).toFixed(1))
+                    : '0.0'}
+                </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-100">
                 <p className="text-sm text-purple-600 font-medium">FG%</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {player.stats_field_goal_pct ? (parseFloat(player.stats_field_goal_pct) * 100).toFixed(1) + '%' : '0.0%'}
+                  {player.stats_field_goal_pct !== null && player.stats_field_goal_pct !== undefined 
+                    ? (typeof player.stats_field_goal_pct === 'number' 
+                        ? (player.stats_field_goal_pct * 100).toFixed(1)
+                        : (parseFloat(String(player.stats_field_goal_pct)) * 100).toFixed(1)) + '%' 
+                    : '0.0%'}
                 </p>
               </div>
             </div>

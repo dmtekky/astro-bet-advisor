@@ -80,7 +80,7 @@ interface ElementsDistribution {
 import { Sport } from '@/types';
 
 const MLB_LEAGUE_KEY: Sport = 'mlb';
-const DEFAULT_LOGO = '/images/default-team-logo.png';
+const DEFAULT_LOGO = '/images/default-team-logo.svg';
 
 import AstroDisclosure from '@/components/AstroDisclosure';
 
