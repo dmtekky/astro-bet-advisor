@@ -8,189 +8,22 @@ import PlayerInfluenceCard from '../../components/players/PlayerInfluenceCard';
 import AstroProfile from '../../components/players/AstroProfile';
 import PerformancePrediction from '../../components/players/PerformancePrediction';
 import PlayerStatsTable from '../../components/players/PlayerStatsTable';
-import { AstroData, AstroSignInfo, ZodiacSign, FieldingStats, Player as BasePlayer, BattingStats } from '../../types/app.types';
+import { AstroData, AstroSignInfo, ZodiacSign } from '../../types/app.types';
+import { Player } from '../../types/nba.types';
+import { 
+  getElementalInfluences,
+  ElementInfluence,
+  getElementColor,
+  getElementColorClass,
+  getElementEmoji
+} from '../../utils/elementUtils';
 import { getZodiacIllustration } from '../../utils/zodiacIllustrations';
-import BattingStatsComponent from '../../components/BattingStats';
+
 import CircularProgress from '../../components/CircularProgress';
 import AstroPeakDay from '../AstroPeakDay';
 import BigThreeAstroCards from '../BigThreeAstroCards';
 
-// Extend the base Player type with NBA-specific fields
-interface Player extends Omit<BasePlayer, 'id'> {
-  id: string;
-  player_id: string;
-  full_name: string | null;
-  position: string | null;
-  number?: string | number | null;
-  headshot_url: string | null;
-  team_name?: string | null;
-  impact_score?: number | null;
-  birth_date: string | null;
-  birth_location?: string | null;
-  astro_influence_score?: number | null;
-  league?: 'NBA' | string;
-  astro_influence?: number | null;
-  
-  // NBA Stats
-  stats_points_per_game?: number | null;
-  stats_rebounds_per_game?: number | null;
-  stats_assists_per_game?: number | null;
-  stats_steals_per_game?: number | null;
-  stats_blocks_per_game?: number | null;
-  stats_field_goal_pct?: number | string | null;
-  stats_three_point_pct?: number | string | null;
-  stats_free_throw_pct?: number | string | null;
-  stats_minutes_per_game?: number | string | null;
-  stats_games_played?: number | null;
-  stats_plus_minus?: number | string | null;
-  
-  // Additional NBA specific fields
-  stats_offensive_rebounds_per_game?: number | null;
-  stats_defensive_rebounds_per_game?: number | null;
-  stats_turnovers_per_game?: number | null;
-  stats_minutes_played?: number | null;
-  stats_double_doubles?: number | null;
-  stats_triple_doubles?: number | null;
-  
-  // For type safety
-  [key: string]: any;
-}
 
-interface ElementComposition {
-  name: string;
-  percentage: number;
-}
-
-interface ElementInfluence {
-  element: string;
-  percentage: number;
-  strength: string;
-  description: string;
-}
-
-const getElementForSign = (sign: string): string => {
-  const elementMap: Record<string, string> = {
-    'Aries': 'Fire',
-    'Taurus': 'Earth',
-    'Gemini': 'Air',
-    'Cancer': 'Water',
-    'Leo': 'Fire',
-    'Virgo': 'Earth',
-    'Libra': 'Air',
-    'Scorpio': 'Water',
-    'Sagittarius': 'Fire',
-    'Capricorn': 'Earth',
-    'Aquarius': 'Air',
-    'Pisces': 'Water'
-  };
-  return elementMap[sign] || 'Earth'; // Default to Earth if sign not found
-};
-
-const calculateElementalComposition = (astro: AstroData): ElementComposition[] => {
-  const elements = ['Fire', 'Earth', 'Air', 'Water'];
-  const elementCounts: Record<string, number> = {
-    'Fire': 0,
-    'Earth': 0,
-    'Air': 0,
-    'Water': 0
-  };
-
-  // Count elements from sun, moon, and ascendant signs
-  elementCounts[getElementForSign(astro.sunSign.sign)] += 1.5; // Sun has more weight
-  elementCounts[getElementForSign(astro.moonSign.sign)] += 1.2; // Moon has medium weight
-  elementCounts[getElementForSign(astro.ascendant.sign)] += 1.0; // Ascendant has base weight
-
-  // Calculate percentages
-  const total = Object.values(elementCounts).reduce((sum, count) => sum + count, 0);
-  
-  return elements.map(element => ({
-    name: element,
-    percentage: Math.round((elementCounts[element] / total) * 100)
-  }));
-};
-
-const getElementColor = (element: string): string => {
-  const colors: Record<string, string> = {
-    'Fire': '#ef4444',    // Red
-    'Earth': '#22c55e',   // Green
-    'Air': '#3b82f6',     // Blue
-    'Water': '#8b5cf6'    // Purple
-  };
-  return colors[element] || '#6b7280'; // Default to gray
-};
-
-const getElementColorClass = (element: string): string => {
-  const classes: Record<string, string> = {
-    'Fire': 'bg-red-500',
-    'Earth': 'bg-green-500',
-    'Air': 'bg-blue-500',
-    'Water': 'bg-purple-500'
-  };
-  return classes[element] || 'bg-gray-400';
-};
-
-const getElementEmoji = (element: string): string => {
-  const emojis: Record<string, string> = {
-    'Fire': '🔥',
-    'Earth': '🌍',
-    'Air': '💨',
-    'Water': '💧'
-  };
-  return emojis[element] || '✨';
-};
-
-const getElementStrength = (percentage: number): string => {
-  if (percentage >= 35) return 'Strong Influence';
-  if (percentage >= 20) return 'Moderate Influence';
-  return 'Minimal Influence';
-};
-
-const getElementDescription = (element: string, percentage: number, playerName: string): string => {
-  const descriptions: Record<string, Record<string, string>> = {
-    'Fire': {
-      strong: `${playerName} has a powerful Fire presence (${percentage}%), bringing intense energy, passion, and competitive drive to the game. This makes ${playerName} a natural leader with a strong will to win.`,
-      moderate: `A balanced Fire presence (${percentage}%) gives ${playerName} good energy and motivation, though they may need to be mindful of maintaining consistency.`,
-      minimal: `With minimal Fire (${percentage}%), ${playerName} may need to work on bringing more energy and assertiveness to their game.`
-    },
-    'Earth': {
-      strong: `A strong Earth presence (${percentage}%) gives ${playerName} exceptional reliability, consistency, and practical skills. They're the rock of the team, always delivering solid performances.`,
-      moderate: `A balanced Earth presence (${percentage}%) helps ${playerName} stay grounded and focused, though they may need to work on being more adaptable.`,
-      minimal: `With minimal Earth (${percentage}%), ${playerName} may need to focus on developing more consistency and reliability in their performance.`
-    },
-    'Air': {
-      strong: `A dominant Air presence (${percentage}%) gives ${playerName} excellent mental agility, communication skills, and the ability to understand complex plays and strategies.`,
-      moderate: `A good balance of Air (${percentage}%) gives ${playerName} solid mental agility and the ability to understand complex plays.`,
-      minimal: `With minimal Air (${percentage}%), ${playerName} may need to work on their strategic thinking and communication on the field.`
-    },
-    'Water': {
-      strong: `A strong Water presence (${percentage}%) gives ${playerName} exceptional emotional intelligence, intuition, and team chemistry. They're able to read the game and their teammates with ease.`,
-      moderate: `A balanced Water presence (${percentage}%) helps ${playerName} connect with teammates and understand the flow of the game.`,
-      minimal: `Minimal Water (${percentage}%) suggests ${playerName} may need to work on emotional awareness and team chemistry.`
-    }
-  };
-
-  const strength = percentage >= 35 ? 'strong' : percentage >= 20 ? 'moderate' : 'minimal';
-  return descriptions[element]?.[strength] || `${playerName}'s ${element} influence is ${strength}.`;
-};
-
-const getInfluenceStrength = (score: number): string => {
-  if (score >= 90) return 'exceptionally influenced';
-  if (score >= 70) return 'strongly influenced';
-  if (score >= 50) return 'moderately influenced';
-  if (score >= 30) return 'slightly influenced';
-  return 'minimally influenced';
-};
-
-const getElementalInfluences = (astro: AstroData, playerName: string): ElementInfluence[] => {
-  const elements = calculateElementalComposition(astro);
-  
-  return elements.map(element => ({
-    element: element.name,
-    percentage: element.percentage,
-    strength: getElementStrength(element.percentage),
-    description: getElementDescription(element.name, element.percentage, playerName)
-  }));
-};
 
 // Helper to get detailed sign information (element, modality, keywords)
 // This is a simplified version. In a real app, this might come from a more robust service or data source.
@@ -438,60 +271,7 @@ const PlayerDetailPage: React.FC = () => {
     );
   }
 
-  // Map player stats to BattingStats interface
-  const battingStats: BattingStats = {
-    // Basic Stats
-    atBats: player.stats_batting_at_bats ? Number(player.stats_batting_at_bats) : 0,
-    runs: player.stats_batting_runs ? Number(player.stats_batting_runs) : 0,
-    hits: player.stats_batting_hits ? Number(player.stats_batting_hits) : 0,
-    runsBattedIn: player.stats_batting_rbi ? Number(player.stats_batting_rbi) : 0,
-    homeruns: player.stats_batting_home_runs ? Number(player.stats_batting_home_runs) : 0,
-    
-    // Averages
-    battingAvg: typeof player.stats_batting_avg === 'string' 
-      ? parseFloat(player.stats_batting_avg) 
-      : player.stats_batting_avg || 0,
-    batterOnBasePct: typeof player.stats_batting_obp === 'string' 
-      ? parseFloat(player.stats_batting_obp) 
-      : player.stats_batting_obp || 0,
-    batterSluggingPct: typeof player.stats_batting_slg === 'string' 
-      ? parseFloat(player.stats_batting_slg) 
-      : player.stats_batting_slg || 0,
-    batterOnBasePlusSluggingPct: typeof player.stats_batting_ops === 'string' 
-      ? parseFloat(player.stats_batting_ops) 
-      : player.stats_batting_ops || 0,
-    
-    // Legacy fields for backward compatibility
-    at_bats: player.stats_batting_at_bats,
-    rbi: player.stats_batting_rbi,
-    home_runs: player.stats_batting_home_runs,
-    strikeouts: player.stats_batting_strikeouts,
-    walks: player.stats_batting_walks,
-    avg: player.stats_batting_avg,
-    obp: player.stats_batting_obp,
-    slg: player.stats_batting_slg,
-    ops: player.stats_batting_ops,
-  };
-
-  const fieldingStats: FieldingStats = {
-    inningsPlayed: player.stats_fielding_innings_played,
-    totalChances: player.stats_fielding_total_chances,
-    fielderTagOuts: player.stats_fielding_fielder_tag_outs,
-    fielderForceOuts: player.stats_fielding_fielder_force_outs,
-    fielderPutOuts: player.stats_fielding_fielder_put_outs,
-    outsFaced: player.stats_fielding_outs_faced,
-    assists: player.stats_fielding_assists,
-    errors: player.stats_fielding_errors,
-    fielderDoublePlays: player.stats_fielding_fielder_double_plays,
-    fielderTriplePlays: player.stats_fielding_fielder_triple_plays,
-    fielderStolenBasesAllowed: player.stats_fielding_fielder_stolen_bases_allowed,
-    fielderCaughtStealing: player.stats_fielding_fielder_caught_stealing,
-    fielderStolenBasePct: player.stats_fielding_fielder_stolen_base_pct,
-    passedBalls: player.stats_fielding_passed_balls,
-    fielderWildPitches: player.stats_fielding_fielder_wild_pitches,
-    fieldingPct: player.stats_fielding_fielding_pct,
-    rangeFactor: player.stats_fielding_range_factor
-  };
+  // Basketball specific stats are used directly in the JSX
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">

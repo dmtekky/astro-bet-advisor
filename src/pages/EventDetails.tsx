@@ -257,39 +257,41 @@ function findBestTeamMatch(teamName: string, teams: any[]): any | null {
 }
 
 /**
- * Fetches the latest astrological data from Supabase
+ * Fetches the latest astrological data using playerAstroService
  */
 async function fetchLatestAstrologicalData() {
   try {
-    // Fetch the latest astrological data from the database
-    const { data, error } = await supabase
-      .from('astrological_data')
-      .select('*')
-      .order('date', { ascending: false })
-      .limit(1)
-      .single();
+    // Import the playerAstroService
+    const { generatePlayerAstroData } = await import('@/lib/playerAstroService');
     
-    if (error) {
-      console.error('Error fetching astrological data:', error);
-      // Fallback to default values if there's an error
-      return {
-        moon_phase: 0.5,
-        moon_sign: 'Aries',
-        mercury_sign: 'Taurus',
-        venus_sign: 'Gemini',
-        mars_sign: 'Cancer',
-        jupiter_sign: 'Leo',
-        mercury_retrograde: false,
-        sun_mars_transit: 'conjunction',
-        sun_saturn_transit: 'trine',
-        sun_jupiter_transit: 'sextile'
-      };
-    }
+    // Use current date for the astrological data
+    const currentDate = new Date().toISOString().split('T')[0];
     
-    return data;
+    // Generate the data using playerAstroService
+    const astroData = await generatePlayerAstroData(currentDate);
+    
+    // Return the data in the expected format
+    return {
+      moon_phase: astroData.moon.phase,
+      moon_sign: astroData.moon.sign,
+      mercury_sign: astroData.planets.mercury.sign,
+      venus_sign: astroData.planets.venus.sign,
+      mars_sign: astroData.planets.mars.sign,
+      jupiter_sign: astroData.planets.jupiter.sign,
+      saturn_sign: astroData.planets.saturn.sign,
+      uranus_sign: astroData.planets.uranus.sign,
+      neptune_sign: astroData.planets.neptune.sign,
+      pluto_sign: astroData.planets.pluto.sign,
+      sun_moon_aspect: astroData.aspects.sun_moon,
+      sun_mars_aspect: astroData.aspects.sun_mars,
+      sun_jupiter_aspect: astroData.aspects.sun_jupiter,
+      sun_saturn_aspect: astroData.aspects.sun_saturn,
+      moon_venus_aspect: astroData.aspects.moon_venus,
+      moon_mars_aspect: astroData.aspects.moon_mars,
+    };
   } catch (error) {
-    console.error('Error in fetchLatestAstrologicalData:', error);
-    // Fallback to default values if there's an exception
+    console.error('Error generating astrological data:', error);
+    // Fallback to default values if there's an error
     return {
       moon_phase: 0.5,
       moon_sign: 'Aries',
@@ -297,10 +299,16 @@ async function fetchLatestAstrologicalData() {
       venus_sign: 'Gemini',
       mars_sign: 'Cancer',
       jupiter_sign: 'Leo',
-      mercury_retrograde: false,
-      sun_mars_transit: 'conjunction',
-      sun_saturn_transit: 'trine',
-      sun_jupiter_transit: 'sextile'
+      saturn_sign: 'Virgo',
+      uranus_sign: 'Libra',
+      neptune_sign: 'Scorpio',
+      pluto_sign: 'Sagittarius',
+      sun_moon_aspect: 'conjunction',
+      sun_mars_aspect: 'sextile',
+      sun_jupiter_aspect: 'trine',
+      sun_saturn_aspect: 'square',
+      moon_venus_aspect: 'sextile',
+      moon_mars_aspect: 'trine',
     };
   }
 }
@@ -658,11 +666,9 @@ const EventDetails = () => {
               jupiter_sign: astroRaw.jupiter_sign || 'unknown',
               saturn_sign: astroRaw.saturn_sign || '',
               mercury_retrograde: astroRaw.mercury_retrograde || false,
-              aspects: {
-                sun_mars: astroRaw.sun_mars_transit || null,
-                sun_saturn: astroRaw.sun_saturn_transit || null,
-                sun_jupiter: astroRaw.sun_jupiter_transit || null,
-              }
+              sun_mars_transit: astroRaw.sun_mars_transit || null,
+              sun_saturn_transit: astroRaw.sun_saturn_transit || null,
+              sun_jupiter_transit: astroRaw.sun_jupiter_transit || null,
             };
           }
         } catch (astroError) {
@@ -682,11 +688,9 @@ const EventDetails = () => {
             saturn_sign: '',
             sun_sign: '',
             mercury_retrograde: false,
-            aspects: {
-              sun_mars: null,
-              sun_saturn: null,
-              sun_jupiter: null
-            }
+            sun_mars_transit: 'conjunction',
+            sun_saturn_transit: 'trine',
+            sun_jupiter_transit: 'sextile'
           };
         }
         

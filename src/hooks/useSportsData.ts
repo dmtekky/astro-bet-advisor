@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase, fetchFromSupabase } from '@/lib/supabase';
 import { Player, Team, BettingOdds, Sport, AstrologicalData } from '@/types';
@@ -66,22 +65,52 @@ export const useBettingOdds = (id: string, isTeam: boolean = false) => {
 };
 
 // Fetch astrological data for a player
-export const useAstrologicalData = (playerId: string) => {
+export function useAstrologicalData(playerId: string) {
   return useQuery({
     queryKey: ['astrology', playerId],
     queryFn: async () => {
-      const data = await fetchFromSupabase<AstrologicalData>(
-        'astrological_data',
-        supabase
-          .from('astrological_data')
-          .select('*')
-          .eq('player_id', playerId)
-          .order('timestamp', { ascending: false })
-          .limit(1),
-        'Failed to fetch astrological data'
-      );
+      // Import the playerAstroService
+      const { generatePlayerAstroData } = await import('@/lib/playerAstroService');
       
-      return data[0] || null;
+      try {
+        // Generate the data using playerAstroService with current date
+        const currentDate = new Date().toISOString().split('T')[0];
+        const astroData = await generatePlayerAstroData(currentDate);
+        
+        // Map the data to the expected format
+        return {
+          id: `generated-${playerId}-${Date.now()}`,
+          player_id: playerId,
+          timestamp: new Date().toISOString(),
+          moon_phase: astroData.moon.phase,
+          moon_sign: astroData.moon.sign,
+          planetary_signs: {
+            mercury: astroData.planets.mercury.sign,
+            venus: astroData.planets.venus.sign,
+            mars: astroData.planets.mars.sign,
+            jupiter: astroData.planets.jupiter.sign,
+            saturn: astroData.planets.saturn.sign,
+            uranus: astroData.planets.uranus.sign,
+            neptune: astroData.planets.neptune.sign,
+            pluto: astroData.planets.pluto.sign,
+          },
+          aspects: {
+            sun_moon: astroData.aspects.sun_moon,
+            sun_mars: astroData.aspects.sun_mars,
+            sun_jupiter: astroData.aspects.sun_jupiter,
+            sun_saturn: astroData.aspects.sun_saturn,
+            moon_venus: astroData.aspects.moon_venus,
+            moon_mars: astroData.aspects.moon_mars,
+          },
+          // Add any additional fields that might be expected by the application
+          mercury_retrograde: false, // You might want to calculate this based on the current date
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error('Error generating astrological data:', error);
+        throw new Error('Failed to generate astrological data');
+      }
     },
     enabled: !!playerId,
     staleTime: 12 * 60 * 60 * 1000, // 12 hours - astrological data doesn't change frequently
