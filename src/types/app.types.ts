@@ -132,6 +132,25 @@ export interface Player {
   stats_fielding_putouts?: number | null;
   stats_fielding_pct?: number | string | null;
 
+  // Basketball Stats (prefix with stats_)
+  stats_games_played?: number | null;
+  stats_minutes_per_game?: number | string | null;
+  stats_points_per_game?: number | null;
+  stats_rebounds_per_game?: number | null;
+  stats_assists_per_game?: number | null;
+  stats_steals_per_game?: number | null;
+  stats_blocks_per_game?: number | null;
+  stats_field_goal_pct?: number | string | null;
+  stats_three_point_pct?: number | string | null;
+  stats_free_throw_pct?: number | string | null;
+  stats_offensive_rebounds_per_game?: number | null;
+  stats_defensive_rebounds_per_game?: number | null;
+  stats_turnovers_per_game?: number | null;
+  stats_minutes_played?: number | null;
+  stats_double_doubles?: number | null;
+  stats_triple_doubles?: number | null;
+  stats_plus_minus?: number | string | null;
+
   // Other potential fields from database.types.ts if needed
   // For example, from players_old table:
   // first_name?: string | null;

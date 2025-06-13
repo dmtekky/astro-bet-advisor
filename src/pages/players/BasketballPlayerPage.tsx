@@ -6,6 +6,8 @@ import { generatePlayerAstroData as getAstroData, BirthLocation } from '../../li
 import PlayerHeader from '../../components/players/PlayerHeader';
 import PlayerInfluenceCard from '../../components/players/PlayerInfluenceCard';
 import AstroProfile from '../../components/players/AstroProfile';
+import PerformancePrediction from '../../components/players/PerformancePrediction';
+import PlayerStatsTable from '../../components/players/PlayerStatsTable';
 import { AstroData, AstroSignInfo, ZodiacSign, FieldingStats, Player as BasePlayer, BattingStats } from '../../types/app.types';
 import { getZodiacIllustration } from '../../utils/zodiacIllustrations';
 import BattingStatsComponent from '../../components/BattingStats';
@@ -500,148 +502,16 @@ const PlayerDetailPage: React.FC = () => {
         {/* Player Influence and Impact Card */}
         <PlayerInfluenceCard player={player} astro={astro} />
 
+        {/* Performance Prediction */}
+        {astro && <PerformancePrediction player={player} astro={astro} />}
+
         {/* Astrological Profile */}
         {astro && <AstroProfile player={player} astro={astro} />}
 
+        {/* Player Statistics Table */}
+        <PlayerStatsTable player={player} league={player.league} />
 
-        {player.league === 'NBA' ? (
-          <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Basketball Statistics</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-100">
-                    {['GP', 'MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%'].map((header) => (
-                      <th key={header} className="px-3 py-2">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="px-3 py-2">
-                      {player.stats_games_played != null 
-                        ? (() => {
-                            const value = player.stats_games_played;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toLocaleString() : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_minutes_per_game !== null && player.stats_minutes_per_game !== undefined 
-                        ? (() => {
-                            const value = player.stats_minutes_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })() 
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_points_per_game != null 
-                        ? (() => {
-                            const value = player.stats_points_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_rebounds_per_game != null 
-                        ? (() => {
-                            const value = player.stats_rebounds_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_assists_per_game !== null && player.stats_assists_per_game !== undefined 
-                        ? (() => {
-                            const value = player.stats_assists_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_steals_per_game !== null && player.stats_steals_per_game !== undefined 
-                        ? (() => {
-                            const value = player.stats_steals_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_blocks_per_game !== null && player.stats_blocks_per_game !== undefined 
-                        ? (() => {
-                            const value = player.stats_blocks_per_game;
-                            const num = typeof value === 'number' ? value : (value ? parseFloat(String(value)) : NaN);
-                            return !isNaN(num) ? num.toFixed(1) : 'N/A';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_field_goal_pct !== null && player.stats_field_goal_pct !== undefined 
-                        ? (() => {
-                            let value = player.stats_field_goal_pct;
-                            if (value === null || value === undefined) return 'N/A';
-                            
-                            let num = typeof value === 'number' ? value : parseFloat(String(value));
-                            if (isNaN(num)) return 'N/A';
-                            
-                            // If the number is between 0 and 1, assume it's a decimal and convert to percentage
-                            if (num > 0 && num < 1) num *= 100;
-                            // If the number is between 0 and 100, use as is
-                            else if (num < 0 || num > 100) return 'N/A';
-                            
-                            return num.toFixed(1) + '%';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_three_point_pct !== null && player.stats_three_point_pct !== undefined 
-                        ? (() => {
-                            let value = player.stats_three_point_pct;
-                            if (value === null || value === undefined) return 'N/A';
-                            
-                            let num = typeof value === 'number' ? value : parseFloat(String(value));
-                            if (isNaN(num)) return 'N/A';
-                            
-                            // If the number is between 0 and 1, assume it's a decimal and convert to percentage
-                            if (num > 0 && num < 1) num *= 100;
-                            // If the number is between 0 and 100, use as is
-                            else if (num < 0 || num > 100) return 'N/A';
-                            
-                            return num.toFixed(1) + '%';
-                          })()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {player.stats_free_throw_pct !== null && player.stats_free_throw_pct !== undefined 
-                        ? (() => {
-                            const value = player.stats_free_throw_pct;
-                            let numValue: number;
-                            if (typeof value === 'number') {
-                              numValue = value;
-                            } else if (typeof value === 'string') {
-                              numValue = parseFloat(value);
-                              if (isNaN(numValue)) return 'N/A';
-                            } else {
-                              return 'N/A';
-                            }
-                            return (numValue * 100).toFixed(1) + '%';
-                          })()
-                        : 'N/A'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ) : (
+        {player.league !== 'NBA' && (
           <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 border-b pb-3">Basketball Statistics</h2>
             
