@@ -307,32 +307,33 @@ function getZodiacSign(longitude) {
  * @returns {Date} The date of the next full moon
  */
 function getNextFullMoon(fromDate = new Date()) {
-  const { SYNODIC_MONTH, KNOWN_NEW_MOON_DATE } = ASTRONOMICAL_CONSTANTS;
+  const { SYNODIC_MONTH } = ASTRONOMICAL_CONSTANTS;
   
-  // Known full moon after the reference new moon (14.77 days after new moon)
-  const knownFullMoon = new Date(KNOWN_NEW_MOON_DATE);
-  knownFullMoon.setDate(knownFullMoon.getDate() + 14.77);
-  
+  // Use a known full moon date from 2025 (May 12, 2025 16:55 UTC)
+  const knownFullMoon = new Date('2025-05-12T16:55:00Z');
   const targetTime = fromDate.getTime();
   const knownFullMoonTime = knownFullMoon.getTime();
   
-  // Calculate days since known full moon
-  const daysSinceFullMoon = (targetTime - knownFullMoonTime) / MS_PER_DAY;
+  // If the known full moon is in the past, find the next one after it
+  if (knownFullMoonTime < targetTime) {
+    // Calculate how many full moons have passed since the known date
+    const daysSinceKnownFullMoon = (targetTime - knownFullMoonTime) / MS_PER_DAY;
+    const fullMoonsSince = Math.floor(daysSinceKnownFullMoon / SYNODIC_MONTH);
+    
+    // Calculate the next full moon after the last known one
+    const nextFullMoon = new Date(knownFullMoon);
+    nextFullMoon.setDate(nextFullMoon.getDate() + (fullMoonsSince + 1) * SYNODIC_MONTH);
+    
+    // Make sure we didn't overshoot (shouldn't happen with floor, but just in case)
+    while (nextFullMoon.getTime() <= targetTime) {
+      nextFullMoon.setDate(nextFullMoon.getDate() + SYNODIC_MONTH);
+    }
+    
+    return nextFullMoon;
+  }
   
-  // Calculate days until next full moon
-  const daysInCurrentCycle = daysSinceFullMoon % SYNODIC_MONTH;
-  const daysUntilNextFullMoon = daysInCurrentCycle > 0 
-    ? SYNODIC_MONTH - daysInCurrentCycle 
-    : -daysInCurrentCycle;
-  
-  // Return the date of the next full moon
-  const nextFullMoon = new Date(targetTime);
-  nextFullMoon.setDate(nextFullMoon.getDate() + Math.ceil(daysUntilNextFullMoon));
-  
-  // Set to noon UTC for consistency
-  nextFullMoon.setUTCHours(12, 0, 0, 0);
-  
-  return nextFullMoon;
+  // If we're here, the known full moon is in the future (shouldn't happen with current date)
+  return knownFullMoon;
 }
 
 // Export all functions
