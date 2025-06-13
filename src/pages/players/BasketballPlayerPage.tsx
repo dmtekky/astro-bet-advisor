@@ -4,6 +4,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { getPlayerByApiId } from '../../lib/supabase';
 import { generatePlayerAstroData as getAstroData, BirthLocation } from '../../lib/playerAstroService';
 import PlayerHeader from '../../components/players/PlayerHeader';
+import PlayerInfluenceCard from '../../components/players/PlayerInfluenceCard';
 import { AstroData, AstroSignInfo, ZodiacSign, FieldingStats, Player as BasePlayer, BattingStats } from '../../types/app.types';
 import { getZodiacIllustration } from '../../utils/zodiacIllustrations';
 import BattingStatsComponent from '../../components/BattingStats';
@@ -495,115 +496,8 @@ const PlayerDetailPage: React.FC = () => {
         {/* Header Section */}
         <PlayerHeader player={player} />
 
-        {/* Influence and Impact Scores */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">Astrological Influence</h2>
-            <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center">
-              {player.astro_influence !== undefined && player.astro_influence !== null ? (
-                <>
-                  <CircularProgress 
-                    value={player.astro_influence} 
-                    size={160}
-                    strokeWidth={12}
-                    showDescription={true}
-                  >
-                    <span className="text-3xl font-bold">
-                      {Math.round(player.astro_influence)}%
-                    </span>
-                    <span className="text-sm text-gray-500 mt-1">Astro Influence</span>
-                  </CircularProgress>
-                  <p className="mt-2 text-sm text-gray-600 max-w-xs text-center">
-                    {player.full_name?.split(' ')[0]}'s performance may be {getInfluenceStrength(player.astro_influence)} by today's celestial alignments.
-                  </p>
-                </>
-              ) : (
-                <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <p className="text-yellow-700">Astrological influence data not available</p>
-                </div>
-              )}
-            </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-            <h2 className="text-2xl font-semibold mb-3 text-gray-800">Player Impact</h2>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between">
-                <p className="text-lg">Overall Impact:</p>
-                {player.impact_score !== undefined && player.impact_score !== null ? (
-                  <span className="font-bold text-blue-600 text-xl">
-                    {typeof player.impact_score === 'number' ? player.impact_score.toFixed(1) : player.impact_score}
-                  </span>
-                ) : (
-                  <span className="text-gray-500">N/A</span>
-                )}
-              </div>
-              {player.impact_score !== undefined && player.impact_score !== null && (
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full" 
-                    style={{ 
-                      width: `${Math.min(
-                        (typeof player.impact_score === 'number' 
-                          ? player.impact_score 
-                          : parseFloat(player.impact_score) || 0) * 10, 
-                        100
-                      )}%` 
-                    }}
-                  ></div>
-                </div>
-              )}
-              <p className="mt-4 text-sm text-gray-600">
-                Impact score represents the player's overall contribution based on statistical performance and astrological alignment.
-              </p>
-
-              {/* Elemental Composition Section */}
-              {astro && (
-                <div className="mt-8 pt-6 border-t border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Elemental Composition</h3>
-                  <div className="relative h-6 rounded-full bg-gray-100 shadow-inner overflow-hidden">
-                    <div className="absolute inset-0 flex">
-                      {calculateElementalComposition(astro).map((element, index, array) => (
-                        <div 
-                          key={element.name}
-                          className={`h-full relative ${getElementColorClass(element.name)}`}
-                          style={{
-                            width: `${element.percentage}%`,
-                            marginLeft: index === 0 ? '0' : '-1px',
-                            zIndex: array.length - index
-                          }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
-                          {element.percentage > 12 && (
-                            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white mix-blend-overlay">
-                              {element.percentage}% {element.name}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Legend */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                    {calculateElementalComposition(astro).map(element => (
-                      <div key={element.name} className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-sm mr-2 shadow-sm"
-                          style={{ backgroundColor: getElementColor(element.name) }}
-                        />
-                        <span className="text-xs font-medium text-gray-700">
-                          {element.name} <span className="text-gray-500">{element.percentage}%</span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+        {/* Player Influence and Impact Card */}
+        <PlayerInfluenceCard player={player} astro={astro} />
 
         {/* Performance Prediction Card */}
         {astro && (() => {
