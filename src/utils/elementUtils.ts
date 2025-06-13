@@ -46,12 +46,41 @@ export const calculateElementalComposition = (astro: AstroData): ElementComposit
   elementCounts[getElementForSign(astro.moonSign.sign)] += 1.2; // Moon has medium weight
   elementCounts[getElementForSign(astro.ascendant.sign)] += 1.0; // Ascendant has base weight
 
-  // Calculate percentages
+  // Calculate raw percentages
   const total = Object.values(elementCounts).reduce((sum, count) => sum + count, 0);
   
-  return elements.map(element => ({
-    name: element,
-    percentage: Math.round((elementCounts[element] / total) * 100)
+  // Calculate raw percentages and keep track of the sum for adjustment
+  let sum = 0;
+  const rawPercentages = elements.map(element => {
+    const percentage = (elementCounts[element] / total) * 100;
+    sum += percentage;
+    return { name: element, raw: percentage };
+  });
+
+  // Calculate rounded values and track the difference
+  const rounded = rawPercentages.map(item => ({
+    name: item.name,
+    value: Math.round(item.raw),
+    diff: Math.round(item.raw) - item.raw
+  }));
+
+  // Sort by the difference to distribute rounding errors fairly
+  rounded.sort((a, b) => a.diff - b.diff);
+  
+  // Calculate the total of rounded values
+  const totalRounded = rounded.reduce((sum, item) => sum + item.value, 0);
+  
+  // Distribute the rounding error (100 - totalRounded) to the elements with the largest differences
+  const error = 100 - totalRounded;
+  for (let i = 0; i < Math.abs(error); i++) {
+    const index = error > 0 ? i : rounded.length - 1 - i;
+    rounded[index].value += error > 0 ? 1 : -1;
+  }
+  
+  // Return the final percentages
+  return rounded.map(item => ({
+    name: item.name,
+    percentage: item.value
   }));
 };
 

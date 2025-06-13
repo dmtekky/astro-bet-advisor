@@ -1,8 +1,9 @@
 import React from 'react';
 import CircularProgress from '../CircularProgress';
 
-// Import types
+// Import types and utilities
 import { AstroData } from '../../types/app.types';
+import { calculateElementalComposition } from '../../utils/elementUtils';
 
 // Define interfaces for the component props
 interface PlayerInfluenceCardProps {
@@ -22,20 +23,6 @@ const getInfluenceStrength = (score: number): string => {
   if (score >= 40) return 'moderately affected';
   if (score >= 20) return 'slightly influenced';
   return 'minimally affected';
-};
-
-// Helper function to calculate elemental composition
-interface ElementComposition {
-  name: string;
-  percentage: number;
-}
-
-const calculateElementalComposition = (astro: AstroData): ElementComposition[] => {
-  const elements = ['Fire', 'Earth', 'Air', 'Water'] as const;
-  return elements.map(element => ({
-    name: element,
-    percentage: Math.round(Math.random() * 30 + 10) // Replace with actual calculation
-  }));
 };
 
 // Helper function to get element color class
@@ -61,6 +48,8 @@ const getElementColor = (element: string): string => {
 };
 
 const PlayerInfluenceCard: React.FC<PlayerInfluenceCardProps> = ({ player, astro }) => {
+  // Calculate elemental composition using the utility function
+  const elementalComposition = astro ? calculateElementalComposition(astro) : [];
   return (
     <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Astrological Influence Card */}
@@ -126,12 +115,12 @@ const PlayerInfluenceCard: React.FC<PlayerInfluenceCardProps> = ({ player, astro
           </p>
 
           {/* Elemental Composition Section */}
-          {astro && (
+          {elementalComposition.length > 0 && (
             <div className="mt-8 pt-6 border-t border-gray-100">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Elemental Composition</h3>
               <div className="relative h-6 rounded-full bg-gray-100 shadow-inner overflow-hidden">
                 <div className="absolute inset-0 flex">
-                  {calculateElementalComposition(astro).map((element, index, array) => (
+                  {elementalComposition.map((element, index, array) => (
                     <div 
                       key={element.name}
                       className={`h-full relative ${getElementColorClass(element.name)}`}
@@ -154,7 +143,7 @@ const PlayerInfluenceCard: React.FC<PlayerInfluenceCardProps> = ({ player, astro
 
               {/* Legend */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                {calculateElementalComposition(astro).map(element => (
+                {elementalComposition.map(element => (
                   <div key={element.name} className="flex items-center">
                     <div 
                       className="w-3 h-3 rounded-sm mr-2 shadow-sm"
