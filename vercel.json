@@ -23,6 +23,10 @@
     { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
     { "source": "/api/test-update", "destination": "/api/test-update.ts" },
     { "source": "/api/health-check", "destination": "/api/health-check.ts" },
+    { "source": "/api/teams", "destination": "/api/teams.js" },
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/ads.txt", "destination": "/ads.txt" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
