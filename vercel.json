@@ -4,8 +4,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install && npm uninstall swisseph",
   "outputDirectory": "dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "functions": {
     "api/*.js": {
       "memory": 1024,
@@ -18,21 +16,14 @@
       "schedule": "0 3 * * *"
     }
   ],
-  "routes": [
-    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
-    { "src": "/robots.txt", "dest": "/robots.txt" },
-    { "src": "/ads.txt", "dest": "/ads.txt" },
-    { "src": "/_next/static/(.*)", "dest": "/_next/static/$1" },
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/api/astro", "dest": "/api/astro.js" },
-    { "src": "/api/astro-enhanced", "dest": "/api/astro-enhanced.js" },
-    { "src": "/api/unified-astro", "dest": "/api/unified-astro.fixed.js" },
-    { "src": "/api/update-scores", "dest": "/api/update-scores.js" },
-    { "src": "/api/test-update", "dest": "/api/test-update.ts" },
-    { "src": "/api/health-check", "dest": "/api/health-check.ts" },
-    { "src": "/api/teams", "dest": "/api/teams" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/astro", "destination": "/api/astro.js" },
+    { "source": "/api/astro-enhanced", "destination": "/api/astro-enhanced.js" },
+    { "source": "/api/unified-astro", "destination": "/api/unified-astro.fixed.js" },
+    { "source": "/api/update-scores", "destination": "/api/update-scores.js" },
+    { "source": "/api/test-update", "destination": "/api/test-update.ts" },
+    { "source": "/api/health-check", "destination": "/api/health-check.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -42,12 +33,6 @@
         { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,POST,PUT,DELETE" },
         { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Authorization" },
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/(.*\\.(?:xml|txt|ico|json|webmanifest|css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
