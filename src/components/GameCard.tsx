@@ -1,190 +1,182 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import type { Game } from '@/types';
-import type { Team } from '@/types';
+import type { Game, Team } from '@/types';
+
+// Type definitions for color handling
+type ColorValue = string | { hex?: string; r?: number; g?: number; b?: number } | undefined;
+type RGB = { r: number; g: number; b: number };
+
+// Extended Team type with required properties for GameCard
+interface GameTeam extends Omit<Team, 'abbreviation' | 'sport'> {
+  primary_color?: string;
+  secondary_color?: string;
+  logo_url?: string;
+  logo?: string;
+  city?: string;
+  name: string;
+  record?: string;
+  // These are required in the base Team interface but we make them optional here
+  // to avoid conflicts with DEFAULT_TEAM
+  abbreviation: string;
+  sport: string;
+}
 
 interface GameCardProps {
-  game: Game;
-  homeTeam: Team & { primary_color?: string; secondary_color?: string };
-  awayTeam: Team & { primary_color?: string; secondary_color?: string };
+  game: Partial<Game> & { id: string; start_time?: string };
+  homeTeam?: Partial<GameTeam>;
+  awayTeam?: Partial<GameTeam>;
   defaultLogo?: string;
 }
 
+// Default team data when team is not provided
+const DEFAULT_TEAM: GameTeam = {
+  id: 'unknown',
+  name: 'Team',
+  abbreviation: 'TBD',
+  sport: 'basketball_nba',
+  record: '0-0',
+  primary_color: '#1E40AF',
+  secondary_color: '#FFFFFF',
+  logo_url: '',
+};
+
+// Converts various color formats to RGB
+const parseColor = (color: ColorValue): RGB | null => {
+  if (!color) return null;
+
+  // Handle hex colors (string starting with #)
+  if (typeof color === 'string' && color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    const bigint = parseInt(hex, 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255
+    };
+  }
+
+  // Handle RGB object
+  if (typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+    return {
+      r: color.r ?? 0,
+      g: color.g ?? 0,
+      b: color.b ?? 0
+    };
+  }
+
+  // Handle hex in object
+  if (typeof color === 'object' && 'hex' in color && color.hex) {
+    return parseColor(color.hex);
+  }
+
+  return null;
+};
+
+// Calculates brightness of a color (0-255)
+const getBrightness = (r: number, g: number, b: number): number => {
+  return (r * 299 + g * 587 + b * 114) / 1000;
+};
+
+// Determines if text should be light or dark based on background color
+const getTextColor = (bgColor: ColorValue): string => {
+  const rgb = parseColor(bgColor);
+  if (!rgb) return '#FFFFFF';
+  
+  const brightness = getBrightness(rgb.r, rgb.g, rgb.b);
+  return brightness > 128 ? '#000000' : '#FFFFFF';
+};
+
+// Generates a box shadow based on team color
+const getBoxShadow = (color: ColorValue): string => {
+  const defaultShadow = '0 4px 12px -2px rgba(30, 64, 175, 0.2)';
+  const rgb = parseColor(color);
+  
+  if (!rgb) return defaultShadow;
+  
+  return `0 4px 12px -2px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
+};
+
 // Helper function to format game time
-const formatGameTime = (dateString: string): string => {
+const formatGameTime = (dateString?: string): string => {
   try {
+    if (!dateString) return 'TBD';
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'UTC' 
+    });
   } catch (e) {
     console.error('Error formatting date:', e);
     return 'TBD';
   }
 };
 
-const GameCard: React.FC<GameCardProps> = ({ 
-  game, 
-  homeTeam, 
-  awayTeam, 
-  defaultLogo = '' 
+const GameCard: React.FC<GameCardProps> = ({
+  game,
+  homeTeam: propHomeTeam = {},
+  awayTeam: propAwayTeam = {},
+  defaultLogo = ''
 }) => {
-  const getBoxShadow = (color: any) => {
-    // Default shadow (blue)
-    const defaultShadow = '0 4px 12px -2px rgba(30, 64, 175, 0.2)';
-    
-    // If color is null/undefined, return default
-    if (!color) {
-      return defaultShadow;
-    }
-    
-    // If color is an object, try to get the hex value
-    let hexColor;
-    if (typeof color === 'object') {
-      // If it has a hex property
-      if (color.hex) {
-        hexColor = color.hex;
-      } 
-      // If it has rgb properties
-      else if (color.r !== undefined && color.g !== undefined && color.b !== undefined) {
-        return `0 4px 12px -2px rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`;
-      }
-      // If it's an object but we don't know how to handle it
-      else {
-        return defaultShadow;
-      }
-    } 
-    // If it's already a string
-    else if (typeof color === 'string') {
-      // If it's a hex color
-      if (color.startsWith('#')) {
-        hexColor = color;
-      } 
-      // If it's an rgb/rgba string
-      else if (color.startsWith('rgb')) {
-        const rgbValues = color.match(/\d+/g);
-        if (rgbValues && rgbValues.length >= 3) {
-          return `0 4px 12px -2px rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, 0.2)`;
-        }
-      }
-      // If it's some other string we don't recognize
-      return defaultShadow;
-    }
-    
-    // If we have a hex color, parse it
-    if (hexColor) {
-      try {
-        // Remove # if present
-        const hex = hexColor.replace('#', '');
-        // Parse the hex color (supports both 3 and 6 digit hex)
-        const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
-        const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
-        const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
-        
-        if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
-          return `0 4px 12px -2px rgba(${r}, ${g}, ${b}, 0.2)`;
-        }
-      } catch (e) {
-        console.error('Error parsing color:', color, e);
-      }
-    }
-    
-    // Fallback to default if anything goes wrong
-    return defaultShadow;
-  };
+  // Ensure we have valid team objects with defaults
+  const homeTeam: GameTeam = { ...DEFAULT_TEAM, ...propHomeTeam };
+  const awayTeam: GameTeam = { ...DEFAULT_TEAM, ...propAwayTeam };
+  
+  // Set default logo if not provided
+  if (!homeTeam.logo_url && !homeTeam.logo) homeTeam.logo_url = defaultLogo;
+  if (!awayTeam.logo_url && !awayTeam.logo) awayTeam.logo_url = defaultLogo;
+
   // Create display names with fallbacks
-  const homeTeamName = homeTeam?.city 
-    ? `${homeTeam.city} ${homeTeam.name || ''}`.trim()
-    : homeTeam?.name || 'Home Team';
+  const homeTeamName = homeTeam.city 
+    ? `${homeTeam.city} ${homeTeam.name}`.trim()
+    : homeTeam.name;
     
-  const awayTeamName = awayTeam?.city 
-    ? `${awayTeam.city} ${awayTeam.name || ''}`.trim()
-    : awayTeam?.name || 'Away Team';
+  const awayTeamName = awayTeam.city 
+    ? `${awayTeam.city} ${awayTeam.name}`.trim()
+    : awayTeam.name;
     
-  // Create safe team objects with defaults
-  const safeHomeTeam = homeTeam || {
-    name: 'Home Team',
-    logo_url: defaultLogo,
-    record: '0-0',
-    primary_color: undefined,
-    secondary_color: undefined
-  };
-  
-  const safeAwayTeam = awayTeam || {
-    name: 'Away Team',
-    logo_url: defaultLogo,
-    record: '0-0',
-    primary_color: undefined,
-    secondary_color: undefined
-  };
-
   // Get box shadow colors with fallbacks
-  const homeBoxShadow = getBoxShadow(safeHomeTeam.primary_color);
-  const awayBoxShadow = getBoxShadow(safeAwayTeam.primary_color);
+  const homeBoxShadow = getBoxShadow(homeTeam.primary_color);
+  const awayBoxShadow = getBoxShadow(awayTeam.primary_color);
 
-  // Get game time
-  const gameTime = React.useMemo(() => {
-    try {
-      if (!game.start_time) return 'TBD';
-      const date = new Date(game.start_time);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      console.error('Error formatting game time:', e);
-      return 'TBD';
-    }
-  }, [game.start_time]);
-
-  // Calculate text color based on background brightness
-  const getTextColor = (bgColor: string | undefined) => {
-    // Default to white text
-    if (!bgColor) return '#FFFFFF';
-    
-    try {
-      // Convert hex to RGB
-      const hex = bgColor.replace('#', '');
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      
-      // Calculate brightness (perceived luminance)
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      return brightness > 128 ? '#000000' : '#FFFFFF';
-    } catch (e) {
-      console.error('Error calculating text color:', e);
-      return '#FFFFFF';
-    }
-  };
-  
   // Get team colors with fallbacks
-  const homeTeamColor = homeTeam?.primary_color || '#1E40AF';
-  const awayTeamColor = awayTeam?.primary_color || '#1E40AF';
+  const homeTeamColor = homeTeam.primary_color || DEFAULT_TEAM.primary_color!;
+  const awayTeamColor = awayTeam.primary_color || DEFAULT_TEAM.primary_color!;
   const homeTextColor = getTextColor(homeTeamColor);
   const awayTextColor = getTextColor(awayTeamColor);
   
-  // Debug log for team data
-  console.log('GameCard rendering:', {
-    gameId: game.id,
-    homeTeam: {
-      id: homeTeam?.id,
-      name: homeTeam?.name,
-      logo: homeTeam?.logo_url || homeTeam?.logo,
-      colors: {
-        primary: homeTeam?.primary_color,
-        secondary: homeTeam?.secondary_color,
-        text: homeTextColor
-      }
-    },
-    awayTeam: {
-      id: awayTeam?.id,
-      name: awayTeam?.name,
-      logo: awayTeam?.logo_url || awayTeam?.logo,
-      colors: {
-        primary: awayTeam?.primary_color,
-        secondary: awayTeam?.secondary_color,
-        text: awayTextColor
-      }
-    },
-    gameTime: game.start_time ? new Date(game.start_time).toLocaleString() : 'TBD'
-  });
+  // Format game time
+  const gameTime = formatGameTime(game.start_time);
+  
+  // Debug log for team data (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('GameCard rendering:', {
+      gameId: game?.id || 'unknown',
+      homeTeam: {
+        id: homeTeam.id,
+        name: homeTeam.name,
+        logo: homeTeam.logo_url || homeTeam.logo,
+        colors: {
+          primary: homeTeam.primary_color,
+          secondary: homeTeam.secondary_color,
+          text: homeTextColor
+        }
+      },
+      awayTeam: {
+        id: awayTeam.id,
+        name: awayTeam.name,
+        logo: awayTeam.logo_url || awayTeam.logo,
+        colors: {
+          primary: awayTeam.primary_color,
+          secondary: awayTeam.secondary_color,
+          text: awayTextColor
+        }
+      },
+      gameTime: game?.start_time ? new Date(game.start_time).toISOString() : 'TBD'
+    });
+  }
 
   return (
     <Link to={`/game/${game.id}`} className="block">
@@ -315,4 +307,52 @@ const GameCard: React.FC<GameCardProps> = ({
   );
 };
 
-export default GameCard;
+// Prop type validation - using any type for game prop to avoid TypeScript conflicts
+// with the complex Game type from @/types
+GameCard.propTypes = {
+  game: PropTypes.any.isRequired, // eslint-disable-line @typescript-eslint/no-explicit-any
+  homeTeam: PropTypes.shape({
+    id: PropTypes.string,
+    name: PropTypes.string,
+    city: PropTypes.string,
+    logo_url: PropTypes.string,
+    logo: PropTypes.string,
+    primary_color: PropTypes.string,
+    secondary_color: PropTypes.string,
+    record: PropTypes.string,
+    abbreviation: PropTypes.string,
+    sport: PropTypes.string,
+  }),
+  awayTeam: PropTypes.shape({
+    id: PropTypes.string,
+    name: PropTypes.string,
+    city: PropTypes.string,
+    logo_url: PropTypes.string,
+    logo: PropTypes.string,
+    primary_color: PropTypes.string,
+    secondary_color: PropTypes.string,
+    record: PropTypes.string,
+    abbreviation: PropTypes.string,
+    sport: PropTypes.string,
+  }),
+  defaultLogo: PropTypes.string,
+};
+
+// Default props
+GameCard.defaultProps = {
+  defaultLogo: '',
+  homeTeam: {
+    abbreviation: 'TBD',
+    sport: 'basketball_nba',
+    name: 'Team',
+    id: 'unknown',
+  },
+  awayTeam: {
+    abbreviation: 'TBD',
+    sport: 'basketball_nba',
+    name: 'Team',
+    id: 'unknown',
+  },
+};
+
+export default React.memo(GameCard);
