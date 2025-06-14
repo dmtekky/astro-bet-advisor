@@ -209,30 +209,57 @@ export async function fetchLatestAstrologicalData(): Promise<AstrologicalData | 
       module.generatePlayerAstroData(currentDate)
     );
     
-    // Map the generated data to the expected format
-    return {
+    // Create a base result object with required fields
+    const result: AstrologicalData = {
       date: currentDate,
-      moon_phase: astroData.moon.phase,
-      moon_sign: astroData.moon.sign,
-      planetary_signs: {
-        mercury_sign: astroData.planets.mercury.sign,
-        venus_sign: astroData.planets.venus.sign,
-        mars_sign: astroData.planets.mars.sign,
-        jupiter_sign: astroData.planets.jupiter.sign,
-        saturn_sign: astroData.planets.saturn.sign,
-        uranus_sign: astroData.planets.uranus.sign,
-        neptune_sign: astroData.planets.neptune.sign,
-        pluto_sign: astroData.planets.pluto.sign,
-      },
-      transits: {
-        sun_moon_aspect: astroData.aspects.sun_moon,
-        sun_mars_aspect: astroData.aspects.sun_mars,
-        sun_jupiter_aspect: astroData.aspects.sun_jupiter,
-        sun_saturn_aspect: astroData.aspects.sun_saturn,
-        moon_venus_aspect: astroData.aspects.moon_venus,
-        moon_mars_aspect: astroData.aspects.moon_mars,
-      }
+      moon_phase: astroData.moonPhase?.name || null,
+      moon_sign: astroData.moonSign || null,
+      planetary_signs: {},
+      transits: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
+
+    // Safely add planetary signs if they exist
+    if (astroData.planets) {
+      const planetarySigns: Record<string, string | undefined> = {};
+      
+      // Only add planets that exist in the astroData.planets object
+      const planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'] as const;
+      planets.forEach(planet => {
+        if (astroData.planets[planet]?.sign) {
+          planetarySigns[`${planet}_sign`] = astroData.planets[planet]?.sign;
+        }
+      });
+      
+      result.planetary_signs = planetarySigns as any;
+    }
+
+    // Safely add aspects if they exist
+    if (Array.isArray(astroData.aspects)) {
+      const aspectMap: Record<string, string | undefined> = {};
+      
+      // Map aspect pairs to their expected keys
+      const aspectPairs = [
+        { pair: 'Sun-Moon', key: 'sun_moon_aspect' },
+        { pair: 'Sun-Mars', key: 'sun_mars_aspect' },
+        { pair: 'Sun-Jupiter', key: 'sun_jupiter_aspect' },
+        { pair: 'Sun-Saturn', key: 'sun_saturn_aspect' },
+        { pair: 'Moon-Venus', key: 'moon_venus_aspect' },
+        { pair: 'Moon-Mars', key: 'moon_mars_aspect' },
+      ];
+      
+      aspectPairs.forEach(({ pair, key }) => {
+        const aspect = astroData.aspects.find((a: any) => a.pair === pair);
+        if (aspect?.type) {
+          aspectMap[key] = aspect.type;
+        }
+      });
+      
+      result.transits = aspectMap as any;
+    }
+
+    return result;
   } catch (error) {
     console.error('Error generating astrological data:', error);
     return null;

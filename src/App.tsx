@@ -31,9 +31,6 @@ import NbaPlayersPage from "./pages/NbaPlayersPage";
 import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
 
 
-// Create a client
-const queryClient = new QueryClient();
-
 function AppContent() {
   const location = useLocation();
   
@@ -89,6 +86,17 @@ function AppContent() {
     </div>
   );
 }
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
