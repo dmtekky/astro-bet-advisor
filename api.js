@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import { getMoonPhase, getPlanetPositions, getZodiacSign } from './src/lib/astroCalculations.js';
 import unifiedAstroHandler from './api/unified-astro.js';
 import fs from 'fs/promises';
@@ -14,6 +15,105 @@ const NEWS_DATA_DIR = path.join(__dirname, 'public/news/data');
 
 const app = express();
 const port = 3001; // Changed to match Vite proxy configuration
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Log request start
+  debug(req, 'Request started');
+  
+  // Log response headers before they're sent
+  const originalSend = res.send;
+  res.send = function(body) {
+    debug(req, `Response (${res.statusCode})`);
+    console.log('  Response Headers:', res.getHeaders());
+    console.log('  Response Body Length:', body ? body.length : 0);
+    return originalSend.call(this, body);
+  };
+  
+  // Log when response is finished
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    debug(req, `Request completed in ${duration}ms`);
+  });
+  
+  next();
+});
+
+// First, apply security middleware before any routes
+app.disable('x-powered-by'); // Remove X-Powered-By header
+
+// Log middleware execution
+console.log('Applying security middleware...');
+
+// Security headers middleware with explicit middleware functions
+console.log('Applying helmet middleware...');
+app.use((req, res, next) => {
+  console.log('Helmet middleware executing for:', req.path);
+  next();
+});
+
+app.use(helmet());
+
+// Configure security headers with more explicit settings
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'"],
+    imgSrc: ["'self'"],
+    connectSrc: ["'self'"],
+    fontSrc: ["'self'"],
+    objectSrc: ["'none'"],
+    frameAncestors: ["'none'"],
+    formAction: ["'self'"],
+    baseUri: ["'self'"],
+    blockAllMixedContent: []
+  }
+}));
+
+// HSTS
+app.use(helmet.hsts({
+  maxAge: 63072000, // 2 years in seconds
+  includeSubDomains: true,
+  preload: true
+}));
+
+// Other security headers
+app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
+app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.noSniff());
+app.use(helmet.xssFilter());
+app.use(helmet.hidePoweredBy());
+app.use(helmet.ieNoOpen());
+app.use(helmet.dnsPrefetchControl({ allow: true }));
+
+// Additional security headers
+app.use((req, res, next) => {
+  // X-Content-Type-Options
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  // X-XSS-Protection (legacy browsers)
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // X-Permitted-Cross-Domain-Policies
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  
+  // X-Download-Options
+  res.setHeader('X-Download-Options', 'noopen');
+  
+  // X-DNS-Prefetch-Control
+  res.setHeader('X-DNS-Prefetch-Control', 'on');
+  
+  // Feature Policy
+  res.setHeader(
+    'Permissions-Policy',
+    'accelerometer=(),ambient-light-sensor=(),autoplay=(),camera=(),display-capture=(),document-domain=(),encrypted-media=(),fullscreen=(),geolocation=(),gyroscope=(),magnetometer=(),microphone=(),midi=(),payment=(),picture-in-picture=(),speaker=(),sync-xhr=(),usb=(),vr=(),xr-spatial-tracking=()'
+  );
+  
+  next();
+});
 
 // DEPRECATED: /astro-date endpoint removed. Use /api/astro/:date instead.
 /*
@@ -41,16 +141,48 @@ app.get('/astro-date', (req, res) => {
 });
 */
 
+// Test endpoint to verify headers
+app.get('/test-headers', (req, res) => {
+  console.log('Test headers endpoint hit');
+  res.setHeader('X-Test-Header', 'test-value');
+  res.send('Test headers endpoint');
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
+  // Set additional headers for the root endpoint
+  res.setHeader('Cache-Control', 'no-store');
   res.send('Full Moon Odds API is running');
 });
 
-// Add CORS headers to all responses
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://fullmoonodds.com', 'https://www.fullmoonodds.com']
+    : ['http://localhost:8080', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+// Enable CORS with options
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  const origin = req.headers.origin;
+  
+  // Check if the origin is allowed
+  if (corsOptions.origin.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(','));
+    res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
+    res.setHeader('Access-Control-Allow-Credentials', corsOptions.credentials.toString());
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(corsOptions.optionsSuccessStatus).end();
+    }
+  }
+  
   next();
 });
 

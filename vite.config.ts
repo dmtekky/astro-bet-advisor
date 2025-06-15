@@ -31,22 +31,70 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
       headers: {
+        // Prevent MIME type sniffing
         'X-Content-Type-Options': 'nosniff',
+        
+        // Prevent clickjacking
         'X-Frame-Options': 'DENY',
+        
+        // XSS Protection (legacy browsers)
         'X-XSS-Protection': '1; mode=block',
+        
+        // Referrer Policy
         'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        
+        // Permissions Policy (formerly Feature Policy)
+        'Permissions-Policy': [
+          'accelerometer=()',
+          'ambient-light-sensor=()',
+          'autoplay=()',
+          'camera=()',
+          'display-capture=()',
+          'document-domain=()',
+          'encrypted-media=()',
+          'fullscreen=()',
+          'geolocation=()',
+          'gyroscope=()',
+          'magnetometer=()',
+          'microphone=()',
+          'midi=()',
+          'payment=()',
+          'picture-in-picture=()',
+          'speaker=()',
+          'sync-xhr=()',
+          'usb=()',
+          'vr=()',
+          'xr-spatial-tracking=()'
+        ].join(', '),
+        
+        // Content Security Policy
         'Content-Security-Policy': [
           "default-src 'self';",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://vercel.live/ https://vercel.com https://vercel.com/ https://va.vercel-scripts.com;",
           "style-src 'self' 'unsafe-inline' https:;",
-          "img-src 'self' data: https:;",
+          "img-src 'self' data: https: blob:;",
           "font-src 'self' data: https:;",
-          "connect-src 'self' https:;",
-          "frame-src 'self';",
-          "media-src 'self' https:;"
+          "connect-src 'self' https: wss:;",
+          "frame-src 'self' https://vercel.live https://vercel.com;",
+          "media-src 'self' https:;",
+          "object-src 'none';",
+          "base-uri 'self';",
+          "form-action 'self';",
+          "frame-ancestors 'none';",
+          "block-all-mixed-content;"
         ].join(' '),
+        
+        // HTTP Strict Transport Security
         'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+        
+        // X-Permitted-Cross-Domain-Policies
+        'X-Permitted-Cross-Domain-Policies': 'none',
+        
+        // X-Download-Options
+        'X-Download-Options': 'noopen',
+        
+        // X-DNS-Prefetch-Control
+        'X-DNS-Prefetch-Control': 'on'
       },
       proxy: {
         // Proxy API requests to our API server running on port 3001

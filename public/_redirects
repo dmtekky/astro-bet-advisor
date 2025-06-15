@@ -1,4 +1,49 @@
 # Force HTTPS and non-www
-https://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
-http://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
-http://fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
+https://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301
+http://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301
+http://fullmoonodds.com/* https://fullmoonodds.com/:splat 301
+
+# Security headers for all responses
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(),ambient-light-sensor=(),autoplay=(),camera=(),display-capture=(),document-domain=(),encrypted-media=(),fullscreen=(),geolocation=(),gyroscope=(),magnetometer=(),microphone=(),midi=(),payment=(),picture-in-picture=(),speaker=(),sync-xhr=(),usb=(),vr=(),xr-spatial-tracking=()
+  X-Permitted-Cross-Domain-Policies: none
+  X-Download-Options: noopen
+  X-DNS-Prefetch-Control: on
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cache-Control: public, max-age=0, must-revalidate
+200
+
+# SPA fallback - must come after more specific rules
+/* /index.html 200
+
+# Cache static assets for 1 year (31536000 seconds)
+/_next/static/* /_next/static/:splat 200
+  Cache-Control: public, max-age=31536000, immutable
+
+/_next/image/* /_next/image/:splat 200
+  Cache-Control: public, max-age=31536000, immutable
+
+/public/* /public/:splat 200
+  Cache-Control: public, max-age=31536000, immutable
+
+# API routes - no caching by default
+/api/* /api/:splat 200
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Error pages
+/404 /404.html 404
+  Cache-Control: public, max-age=0, must-revalidate
+
+/500 /500.html 500
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Redirect old URLs with proper caching
+/blog/* /news/:splat 301
+  Cache-Control: public, max-age=31536000
+
+/articles/* /news/:splat 301
+  Cache-Control: public, max-age=31536000
