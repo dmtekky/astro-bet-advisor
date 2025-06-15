@@ -1,4 +1,4 @@
-# Full Moon Odds
+# Full Moon Odds (Latest Deployment Test)
 
 A web-based tool that helps users make informed sports betting decisions by analyzing odds data, astrological factors, and comprehensive sports statistics.
 
