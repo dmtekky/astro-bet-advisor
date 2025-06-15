@@ -504,7 +504,7 @@ const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
       // Compose final AstroData
       const result: AstroData = {
         date,
-        queryTime: query_time,
+        queryTime: query_time || new Date().toISOString(), // Ensure queryTime is always a string
         sidereal,
         ayanamsa,
         observer,
@@ -541,5 +541,8 @@ const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
     refreshData
   };
 };
+
+// Export the AstroData type for use in other files
+export type { AstroData };
 
 export default useAstroData;

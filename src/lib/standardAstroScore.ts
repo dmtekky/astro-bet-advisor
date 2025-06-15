@@ -60,6 +60,8 @@ interface Elements {
 interface Modality {
   percentage?: number;
   value?: number;
+  score?: number;
+  planets?: string[];
 }
 
 interface Modalities {
@@ -243,7 +245,9 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
     
     // Calculate moon phase score
     // Assumption: moonPhase is a value between 0 and 1
-    }
+    let moonPhaseValue = 0;
+    let moonPhaseAdjusted = 0;
+    
     // Defensive fallback if not available
     if (isNaN(moonPhaseValue)) moonPhaseValue = 0;
     if (isNaN(moonPhaseAdjusted)) moonPhaseAdjusted = 0;
@@ -251,8 +255,8 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
     // Calculate elemental score
     let elementalScore = 0;
     
-    // Defensive extraction for elemental balance
-    const elements = (astroData.elements && typeof astroData.elements === 'object') ? astroData.elements : {};
+    // Defensive extraction for elemental balance with proper typing
+    const elements: Elements = (astroData.elements && typeof astroData.elements === 'object') ? astroData.elements : {} as Elements;
     const fireValue = (typeof elements.fire === 'object' && elements.fire && typeof elements.fire.percentage === 'number') ? elements.fire.percentage : 0;
     const earthValue = (typeof elements.earth === 'object' && elements.earth && typeof elements.earth.percentage === 'number') ? elements.earth.percentage : 0;
     const airValue = (typeof elements.air === 'object' && elements.air && typeof elements.air.percentage === 'number') ? elements.air.percentage : 0;
@@ -287,17 +291,18 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
           // Fallback if no dominant element
           elementalScore = Math.max(...elementalScores.map(e => (e.value / 100) * e.power));
         }
-      }
-    }
     
     // Calculate modal score
     let modalScore = 0;
     if (astroData.modalities && typeof astroData.modalities === 'object') {
-      const modalities = astroData.modalities;
+      const modalities: Modalities = astroData.modalities;
       // Defensive extraction for modalities
-      const cardinalValue = (typeof modalities.cardinal === 'object' && modalities.cardinal && typeof modalities.cardinal.percentage === 'number') ? modalities.cardinal.percentage : 0;
-      const fixedValue = (typeof modalities.fixed === 'object' && modalities.fixed && typeof modalities.fixed.percentage === 'number') ? modalities.fixed.percentage : 0;
-      const mutableValue = (typeof modalities.mutable === 'object' && modalities.mutable && typeof modalities.mutable.percentage === 'number') ? modalities.mutable.percentage : 0;
+      const cardinalValue = (typeof modalities.cardinal === 'object' && modalities.cardinal) ? 
+  (modalities.cardinal.percentage || modalities.cardinal.score || 0) : 0;
+      const fixedValue = (typeof modalities.fixed === 'object' && modalities.fixed) ? 
+  (modalities.fixed.percentage || modalities.fixed.score || 0) : 0;
+      const mutableValue = (typeof modalities.mutable === 'object' && modalities.mutable) ? 
+  (modalities.mutable.percentage || modalities.mutable.score || 0) : 0;
       // Modality scores with seasonal weights
       modalScore = Math.max(
         (cardinalValue / 100) * seasonalWeights.modalities.cardinal,
@@ -364,14 +369,17 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
         if (!aspect?.type) return total;
         const baseScore = ASPECT_SCORES[aspect.type.toLowerCase()] || 1;
         
-        // Safely handle orb value
+        // Safely handle orb value - check both 'orb' and 'orbValue' properties
         let orbValue = 0;
-        if (aspect.orb !== undefined) {
-          // Direct orb value
-          orbValue = typeof aspect.orb === 'number' ? aspect.orb : 0;
-        } else if (typeof aspect === 'object') {
-          // Try to find orb in the aspect object
-          orbValue = (aspect as any).orbValue || 0;
+        const aspectWithOrb = aspect as { orb?: number | string; orbValue?: number };
+        
+        if (aspectWithOrb.orb !== undefined) {
+          // Handle case where orb is a number or string that can be converted to number
+          orbValue = typeof aspectWithOrb.orb === 'number' 
+            ? aspectWithOrb.orb 
+            : parseFloat(aspectWithOrb.orb as string) || 0;
+        } else if (aspectWithOrb.orbValue !== undefined) {
+          orbValue = aspectWithOrb.orbValue;
         }
         
         // Apply orb penalty (closer to exact = stronger)

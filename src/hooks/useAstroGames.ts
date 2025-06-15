@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGames } from './useGames';
-import { useAstroData, type AstroData } from './useAstroData';
+import useAstroData, { type AstroData } from './useAstroData';
 import { Game, GameWithTeams } from '@/types/dashboard';
 
 // Utility functions for astrological calculations
@@ -20,10 +20,11 @@ const calculateAstroEdge = (game: Game, astroData: any): number => {
   }
   
   // Team name influence (pseudo-astrological randomness)
-  const homeTeamName = game.home_team || '';
-  const awayTeamName = game.away_team || '';
-  const homeTeamHash = homeTeamName.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const awayTeamHash = awayTeamName.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  // Get team names from the game object or use team IDs as fallback
+  const homeTeamName = (game as any).home_team_data?.name || `Team-${game.home_team_id || 'home'}`;
+  const awayTeamName = (game as any).away_team_data?.name || `Team-${game.away_team_id || 'away'}`;
+  const homeTeamHash = homeTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const awayTeamHash = awayTeamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   
   // Add some "astrological" randomness based on team names
   score += (homeTeamHash - awayTeamHash) % 21;
