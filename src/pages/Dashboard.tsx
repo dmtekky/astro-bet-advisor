@@ -37,6 +37,7 @@ import { useAstroData } from '@/hooks/useAstroData';
 import type { Team } from '@/types';
 import type { Game } from '@/types';
 import ArticleSection from '@/features/dashboard/components/ArticleSection';
+import UpcomingGames from '@/features/dashboard/components/UpcomingGames';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
 import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhaseInfo, CelestialBody, Aspect } from '@/types/astrology';
 import type { GamePredictionData } from '@/types/gamePredictions';
@@ -1002,155 +1003,15 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 gap-8">
               {/* Upcoming Games Section (Full width) */}
               <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
-                {(gamesLoading && (!games || games.length === 0)) ? (
-                  // Skeletons for Games section
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <Skeleton className="h-8 w-48" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton key={`game-skel-${i}`} className="h-64 rounded-xl" />
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : games && games.length > 0 ? (
-                  // Actual Games content
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl font-semibold text-slate-800">Upcoming Games</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {groupedGames.map((group) => (
-                        <div key={group.date.toString()} className="mb-6">
-                          <h3 className="text-lg font-semibold text-slate-700 mb-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
-                            {format(group.date, 'EEEE, MMMM d')}
-                          </h3>
-                          <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
-                            {group.games.map((game) => {
-                              // const homeTeam = findTeam(String(game.home_team_id)); // Replaced by game.home_team
-                              // const awayTeam = findTeam(String(game.away_team_id)); // Replaced by game.away_team
-                              // Log the raw game data for debugging
-                              console.log('Raw game data:', {
-                                gameId: game.id,
-                                home_team: game.home_team,
-                                away_team: game.away_team,
-                                home_team_id: game.home_team_id,
-                                away_team_id: game.away_team_id,
-                                home_team_logo: game.home_team?.logo_url || game.home_team?.logo,
-                                away_team_logo: game.away_team?.logo_url || game.away_team?.logo
-                              });
-
-                              // Get team data with proper fallbacks
-                              const homeTeam = typeof game.home_team === 'string' 
-                                ? { id: game.home_team_id, name: 'Home Team' } 
-                                : game.home_team || { id: game.home_team_id, name: 'Home Team' };
-                              
-                              const awayTeam = typeof game.away_team === 'string'
-                                ? { id: game.away_team_id, name: 'Away Team' }
-                                : game.away_team || { id: game.away_team_id, name: 'Away Team' };
-                              
-                              console.log('Processed team data:', { homeTeam, awayTeam });
-
-                              const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
-                              
-                              // Transform astroData from the hook for the GameCard prop
-                              const gameCardAstroData: GamePredictionData | null = astroData
-                                ? transformHookDataToGamePredictionData(astroData as HookAstroData)
-                                : null;
-
-                              // Merge game data with its prediction and team data for the GameCard
-                              const gameWithTeams = {
-                                ...game,
-                                prediction: gamePrediction ?? undefined, // Ensure undefined if null for type compatibility
-                              };
-
-                              // Log the raw team data for debugging
-                              console.log('Raw home team data:', homeTeam);
-                              console.log('Raw away team data:', awayTeam);
-
-                              // Ensure we have proper team objects with required properties
-                              const homeTeamData = {
-                                ...(typeof homeTeam === 'string' ? {} : homeTeam || {}),
-                                id: game.home_team_id,
-                                name: typeof homeTeam === 'string' ? homeTeam : homeTeam?.name || 'Home Team',
-                                // Try logo_url first, then logo, then empty string
-                                logo_url: typeof homeTeam === 'string' 
-                                  ? '' 
-                                  : (homeTeam?.logo_url || homeTeam?.logo || ''),
-                                // Also include the logo property for backward compatibility
-                                logo: typeof homeTeam === 'string'
-                                  ? ''
-                                  : (homeTeam?.logo || homeTeam?.logo_url || ''),
-                                record: typeof homeTeam === 'string' ? '0-0' : homeTeam?.record || '0-0',
-                              };
-
-                              const awayTeamData = {
-                                ...(typeof awayTeam === 'string' ? {} : awayTeam || {}),
-                                id: game.away_team_id,
-                                name: typeof awayTeam === 'string' ? awayTeam : awayTeam?.name || 'Away Team',
-                                // Try logo_url first, then logo, then empty string
-                                logo_url: typeof awayTeam === 'string'
-                                  ? ''
-                                  : (awayTeam?.logo_url || awayTeam?.logo || ''),
-                                // Also include the logo property for backward compatibility
-                                logo: typeof awayTeam === 'string'
-                                  ? ''
-                                  : (awayTeam?.logo || awayTeam?.logo_url || ''),
-                                record: typeof awayTeam === 'string' ? '0-0' : awayTeam?.record || '0-0',
-                              };
-
-                              console.log('Processed home team data:', homeTeamData);
-                              console.log('Processed away team data:', awayTeamData);
-
-                              return (
-                                <GameCard
-                                  key={game.id}
-                                  game={game}
-                                  homeTeam={homeTeamData}
-                                  awayTeam={awayTeamData}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                      {games.length === 0 && !gamesLoading ? (
-                        <p className="text-center text-slate-500 py-8">No upcoming games scheduled for this league.</p>
-                      ) : (
-                        <div className="mt-8 mb-2 flex justify-center">
-                          <Button 
-                            variant="outline" 
-                            className="group relative inline-flex items-center justify-center px-6 py-3 overflow-hidden font-medium text-indigo-600 transition duration-300 ease-out border-2 border-indigo-500 rounded-full shadow-md group"
-                            onClick={handleSeeMoreGames}
-                          >
-                            <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-indigo-500 group-hover:translate-x-0 ease">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                              </svg>
-                            </span>
-                            <span className="absolute flex items-center justify-center w-full h-full text-indigo-500 transition-all duration-300 transform group-hover:translate-x-full ease">
-                              View All Games
-                            </span>
-                            <span className="relative invisible">View All Games</span>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (!gamesLoading && (!games || games.length === 0)) ? (
-                  // No games found message
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>Upcoming Games</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-center text-slate-500 py-8">No upcoming games found.</p>
-                    </CardContent>
-                  </Card>
-                ) : null}
+                <UpcomingGames 
+                  gameGroups={groupedGames}
+                  isLoading={gamesLoading}
+                  onViewAllGames={handleSeeMoreGames}
+                  findTeam={findTeam}
+                  getGamePrediction={getGamePrediction}
+                  transformHookDataToGamePredictionData={transformHookDataToGamePredictionData}
+                  astroData={astroData}
+                />
               </motion.div>
 
               {/* Astrological Insights Section */}
