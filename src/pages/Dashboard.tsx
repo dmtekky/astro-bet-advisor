@@ -142,14 +142,14 @@ const Dashboard: React.FC = () => {
   
   // Get game predictions using the new hook
   const { 
-    transformedData, 
-    sportsPredictions, 
+    transformedData = null, 
+    sportsPredictions = null, 
     getGamePrediction,
-    isLoading: predictionsLoading
-  } = useGamePredictions(astroData);
+    isLoading: predictionsLoading = true
+  } = useGamePredictions(astroData) || {};
   
-  // Alias for backward compatibility
-  const predictionData = transformedData;
+  // Alias for backward compatibility with proper null check
+  const predictionData = transformedData || null;
 
   // Add this useEffect to log the astroData when it changes
   useEffect(() => {
@@ -192,98 +192,57 @@ const Dashboard: React.FC = () => {
   }, [astroData]);
 
   // Get the current moon phase data from the transformed data
-  const currentMoonPhase = useMemo(() => {
-    if (!transformedData) return {
-      phase: 'New Moon',
-      illumination: 0,
-      ageInDays: 0,
-      nextFullMoon: new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000),
-      phaseType: 'new'
-    };
-    
-    return {
-      phase: transformedData.moonPhase?.name || 'New Moon',
-      illumination: transformedData.moonPhase?.illumination || 0,
-      ageInDays: transformedData.moonPhase?.ageInDays || 0,
-      nextFullMoon: transformedData.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000),
-      phaseType: transformedData.moonPhase?.phaseType || 'new'
-    };
-  }, [transformedData]);
+  const currentMoonPhase = useMemo(() => ({
+    phase: transformedData?.moonPhase?.name || 'New Moon',
+    illumination: transformedData?.moonPhase?.illumination ?? 0,
+    ageInDays: transformedData?.moonPhase?.ageInDays ?? 0,
+    nextFullMoon: transformedData?.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000),
+    phaseType: transformedData?.moonPhase?.phaseType || 'new'
+  }), [transformedData]);
 
   // State for astrological influences
   const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
-  // Helper function to calculate elemental distribution from astroData
-  function getElementsDistribution(data: any): ElementsDistribution {
-    if (!data || !data.planets) {
-      // Return a default balanced distribution if no data, or handle as preferred
-      return { fire: 25, earth: 25, water: 25, air: 25 };
-    }
-
-    const signToElement: { [key: string]: keyof ElementsDistribution } = {
-      'Aries': 'fire', 'Leo': 'fire', 'Sagittarius': 'fire',
-      'Taurus': 'earth', 'Virgo': 'earth', 'Capricorn': 'earth',
-      'Gemini': 'air', 'Libra': 'air', 'Aquarius': 'air',
-      'Cancer': 'water', 'Scorpio': 'water', 'Pisces': 'water',
-    };
-
-    let totalPoints = 0;
-    for (const planetKey in data.planets) {
-      const planet = data.planets[planetKey];
-      if (planet && planet.sign) {
-        const element = signToElement[planet.sign];
-        if (element) {
-          distribution[element]++;
-          totalPoints++;
-        }
-      }
-    }
-
-    if (totalPoints === 0) {
-      return { fire: 25, earth: 25, water: 25, air: 25 }; // Default if no planets contributed
-    }
-
-    // Calculate percentages and round them
-    let firePct = Math.round((distribution.fire / totalPoints) * 100);
-    let earthPct = Math.round((distribution.earth / totalPoints) * 100);
-    let waterPct = Math.round((distribution.water / totalPoints) * 100);
-    let airPct = Math.round((distribution.air / totalPoints) * 100);
-
-    // Adjust to ensure sum is 100 due to rounding
-    let sumPct = firePct + earthPct + waterPct + airPct;
-    if (sumPct !== 100) {
-      const diff = 100 - sumPct;
-      // A simple way to adjust: add/subtract difference to/from the largest percentage
-      const percentages = [{name: 'fire', value: firePct}, {name: 'earth', value: earthPct}, {name: 'water', value: waterPct}, {name: 'air', value: airPct}];
-      percentages.sort((a,b) => b.value - a.value);
-      if (percentages[0].name === 'fire') firePct += diff;
-      else if (percentages[0].name === 'earth') earthPct += diff;
-      else if (percentages[0].name === 'water') waterPct += diff;
-      else airPct += diff;
-    }
-
-    return {
-      fire: firePct,
-      earth: earthPct,
-      water: waterPct,
-      air: airPct,
-    };
-  }
-
-  // Get element distribution from transformed data
+  
+  // Get element distribution from transformed data with safe defaults
   const elementsDistribution = useMemo(() => {
-    if (!transformedData) return {
-      fire: 25,
-      earth: 25,
-      water: 25,
-      air: 25
+    // Default distribution if no data is available
+    const defaultDistribution = { fire: 25, earth: 25, water: 25, air: 25 };
+    
+    // If no transformed data, return defaults
+    if (!transformedData) {
+      console.log('No transformedData available, using default distribution');
+      return defaultDistribution;
+    }
+    
+    // Log the available data for debugging
+    console.log('Transformed data elements:', {
+      hasElements: !!transformedData.elements,
+      elementKeys: transformedData.elements ? Object.keys(transformedData.elements) : 'none',
+      elements: transformedData.elements ? {
+        fire: transformedData.elements.fire,
+        earth: transformedData.elements.earth,
+        water: transformedData.elements.water,
+        air: transformedData.elements.air
+      } : 'no elements'
+    });
+    
+    // Safely get percentage values with defaults
+    const getElementPercentage = (element: string) => {
+      const value = transformedData?.elements?.[element as keyof typeof transformedData.elements]?.percentage;
+      return typeof value === 'number' ? value : 25; // Default to 25 if not a number
     };
     
-    return {
-      fire: transformedData.elements?.fire.percentage || 25,
-      earth: transformedData.elements?.earth.percentage || 25,
-      water: transformedData.elements?.water.percentage || 25,
-      air: transformedData.elements?.air.percentage || 25,
+    // Calculate distribution
+    const dist = {
+      fire: getElementPercentage('fire'),
+      earth: getElementPercentage('earth'),
+      water: getElementPercentage('water'),
+      air: getElementPercentage('air')
     };
+    
+    // Log final distribution for debugging
+    console.log('Final elementsDistribution:', dist);
+    return dist;
   }, [transformedData]);
 
   // Get elemental interpretation from sports predictions if available
@@ -341,6 +300,8 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (transformedData) {
       console.log('Transformed astro data:', transformedData);
+    } else {
+      console.log('No transformed data available');
     }
   }, [transformedData]);
 
@@ -374,12 +335,12 @@ const Dashboard: React.FC = () => {
     if (astroData && !astroLoading && transformedData) {
       console.log('AstroData received:', astroData);
       
-      // Use element scores from transformed data if available
-      const elementScores = transformedData.elements || {
-        fire: { score: 0, planets: [], percentage: 0 },
-        earth: { score: 0, planets: [], percentage: 0 },
-        water: { score: 0, planets: [], percentage: 0 },
-        air: { score: 0, planets: [], percentage: 0 },
+      // Initialize with empty elements object if not present
+      const elementScores = {
+        fire: { score: 0, percentage: transformedData.elements?.fire?.percentage ?? 25 },
+        earth: { score: 0, percentage: transformedData.elements?.earth?.percentage ?? 25 },
+        water: { score: 0, percentage: transformedData.elements?.water?.percentage ?? 25 },
+        air: { score: 0, percentage: transformedData.elements?.air?.percentage ?? 25 }
       };
       
       const fireScore = elementScores.fire.score || 0;

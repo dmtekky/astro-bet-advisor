@@ -129,6 +129,95 @@ export const transformAstroData = (hookData: HookAstroData): GamePredictionData 
     };
   }).filter(aspect => validAspectTypes.includes(aspect.type));
   
+  // Calculate element percentages based on the simplified elements format
+  const calculateElementPercentages = (elements: any) => {
+    // Handle case where elements is already in the correct format with percentages
+    if (elements?.fire?.percentage !== undefined) {
+      return elements;
+    }
+
+    // Handle case where elements is a simple object with direct percentage values
+    if (elements && typeof elements.fire === 'number') {
+      console.log('Processing simplified elements format:', elements);
+      return {
+        fire: { score: elements.fire, planets: [], percentage: Math.round(elements.fire) },
+        earth: { score: elements.earth, planets: [], percentage: Math.round(elements.earth) },
+        water: { score: elements.water, planets: [], percentage: Math.round(elements.water) },
+        air: { score: elements.air, planets: [], percentage: Math.round(elements.air) },
+      };
+    }
+
+    // Handle case where elements has score and planets
+    if (elements?.fire?.score !== undefined) {
+      const elementScores = {
+        fire: elements.fire?.score || 0,
+        earth: elements.earth?.score || 0,
+        water: elements.water?.score || 0,
+        air: elements.air?.score || 0,
+      };
+
+      const totalScore = Object.values(elementScores).reduce((sum, score) => sum + score, 0);
+      
+      if (totalScore === 0) {
+        return {
+          fire: { ...elements.fire || {}, percentage: 25 },
+          earth: { ...elements.earth || {}, percentage: 25 },
+          water: { ...elements.water || {}, percentage: 25 },
+          air: { ...elements.air || {}, percentage: 25 },
+        };
+      }
+
+      return {
+        fire: { 
+          ...elements.fire || { score: 0, planets: [] },
+          percentage: Math.round((elementScores.fire / totalScore) * 100)
+        },
+        earth: { 
+          ...elements.earth || { score: 0, planets: [] },
+          percentage: Math.round((elementScores.earth / totalScore) * 100)
+        },
+        water: { 
+          ...elements.water || { score: 0, planets: [] },
+          percentage: Math.round((elementScores.water / totalScore) * 100)
+        },
+        air: { 
+          ...elements.air || { score: 0, planets: [] },
+          percentage: Math.round((elementScores.air / totalScore) * 100)
+        },
+      };
+    }
+
+    // Default fallback
+    console.log('Using default element distribution');
+    return {
+      fire: { score: 0, planets: [], percentage: 25 },
+      earth: { score: 0, planets: [], percentage: 25 },
+      water: { score: 0, planets: [], percentage: 25 },
+      air: { score: 0, planets: [], percentage: 25 },
+    };
+  };
+
+  // Log the raw elements data from hookData
+  console.group('Raw elements data in transformAstroData:');
+  console.log('hookData.elements:', hookData.elements);
+  if (hookData.elements) {
+    console.log('fire:', hookData.elements.fire);
+    console.log('earth:', hookData.elements.earth);
+    console.log('water:', hookData.elements.water);
+    console.log('air:', hookData.elements.air);
+  }
+  console.groupEnd();
+
+  const elementsWithPercentages = calculateElementPercentages(hookData.elements);
+
+  // Log the calculated percentages
+  console.group('Calculated element percentages:');
+  console.log('fire:', elementsWithPercentages.fire.percentage);
+  console.log('earth:', elementsWithPercentages.earth.percentage);
+  console.log('water:', elementsWithPercentages.water.percentage);
+  console.log('air:', elementsWithPercentages.air.percentage);
+  console.groupEnd();
+
   return {
     date: hookData.date,
     queryTime: hookData.queryTime || new Date().toISOString(),
@@ -143,12 +232,7 @@ export const transformAstroData = (hookData: HookAstroData): GamePredictionData 
     planets: planetsData,
     aspects: aspectsData,
     moonPhase: moonPhaseData,
-    elements: hookData.elements || {
-      fire: { score: 0, planets: [], percentage: 0 },
-      earth: { score: 0, planets: [], percentage: 0 },
-      water: { score: 0, planets: [], percentage: 0 },
-      air: { score: 0, planets: [], percentage: 0 },
-    },
+    elements: elementsWithPercentages,
     modalities: hookData.modalities as any, 
     houses: hookData.houses as any,
     patterns: hookData.patterns as any,

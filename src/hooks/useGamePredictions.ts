@@ -13,8 +13,54 @@ import type { Game, Team } from '@/types';
 export const useGamePredictions = (astroData: AstroData | null) => {
   // Transform the raw astro data into the format expected by the prediction functions
   const transformedData = useMemo(() => {
-    if (!astroData) return null;
-    return transformAstroData(astroData);
+    if (!astroData) {
+      console.log('useGamePredictions: No astroData available');
+      return null;
+    }
+    
+    // Log the raw astroData elements structure
+    console.group('Raw astroData elements:');
+    console.log('hasElements:', !!astroData.elements);
+    if (astroData.elements) {
+      console.log('element keys:', Object.keys(astroData.elements));
+      console.log('fire:', astroData.elements.fire);
+      console.log('earth:', astroData.elements.earth);
+      console.log('water:', astroData.elements.water);
+      console.log('air:', astroData.elements.air);
+    }
+    console.groupEnd();
+    
+    const result = transformAstroData(astroData);
+    
+    // Log the transformed elements structure
+    console.group('Transformed elements:');
+    if (result?.elements) {
+      console.log('fire:', {
+        score: result.elements.fire?.score,
+        planets: result.elements.fire?.planets,
+        percentage: result.elements.fire?.percentage
+      });
+      console.log('earth:', {
+        score: result.elements.earth?.score,
+        planets: result.elements.earth?.planets,
+        percentage: result.elements.earth?.percentage
+      });
+      console.log('water:', {
+        score: result.elements.water?.score,
+        planets: result.elements.water?.planets,
+        percentage: result.elements.water?.percentage
+      });
+      console.log('air:', {
+        score: result.elements.air?.score,
+        planets: result.elements.air?.planets,
+        percentage: result.elements.air?.percentage
+      });
+    } else {
+      console.log('No elements in transformed data');
+    }
+    console.groupEnd();
+    
+    return result;
   }, [astroData]);
 
   // Calculate general sports predictions based on the astro data
