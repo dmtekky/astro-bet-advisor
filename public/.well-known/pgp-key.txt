@@ -1,0 +1,11 @@
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+[Placeholder for PGP Public Key]
+
+# To set up PGP for security reporting:
+# 1. Generate a PGP key: gpg --full-generate-key
+# 2. Export the public key: gpg --armor --export security@fullmoonodds.com > public-key.asc
+# 3. Replace this file's contents with the exported key
+
+# For now, please use security@fullmoonodds.com for security reports
+-----END PGP PUBLIC KEY BLOCK-----

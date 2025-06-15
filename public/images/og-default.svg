@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#background-gradient)"/>
+  
+  <!-- Background pattern (subtle) -->
+  <path d="M1200 0H0V630H1200V0Z" fill="url(#pattern0)" fill-opacity="0.03"/>
+  
+  <!-- Content container -->
+  <rect x="60" y="60" width="1080" height="510" rx="12" fill="white" fill-opacity="0.9"/>
+  
+  <!-- Logo/Icon area (left) -->
+  <circle cx="150" cy="315" r="100" fill="#4F46E5"/>
+  <path d="M120 315C120 289.1 141.1 268 167 268C192.9 268 214 289.1 214 315C214 340.9 192.9 362 167 362C141.1 362 120 340.9 120 315Z" fill="white"/>
+  <path d="M167 290C156.5 290 148 298.5 148 309V315H154V309C154 301.8 159.8 296 167 296C174.2 296 180 301.8 180 309C180 316.2 174.2 322 167 322H161V328H167C177.5 328 186 319.5 186 309C186 298.5 177.5 290 167 290Z" fill="#4F46E5"/>
+  
+  <!-- Text content (right) -->
+  <rect x="300" y="180" width="800" height="30" rx="4" fill="#E5E7EB"/>
+  <rect x="300" y="240" width="700" height="24" rx="4" fill="#E5E7EB"/>
+  <rect x="300" y="280" width="600" height="24" rx="4" fill="#E5E7EB"/>
+  <rect x="300" y="320" width="650" height="24" rx="4" fill="#E5E7EB"/>
+  
+  <!-- Bottom text -->
+  <rect x="300" y="400" width="200" height="20" rx="4" fill="#4F46E5" fill-opacity="0.5"/>
+  <text x="400" y="415" font-family="Arial" font-size="16" text-anchor="middle" fill="white">fullmoonodds.com</text>
+  
+  <!-- Background gradient definition -->
+  <defs>
+    <linearGradient id="background-gradient" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    
+    <!-- Pattern definition -->
+    <pattern id="pattern0" patternContentUnits="objectBoundingBox" width="0.1" height="0.1">
+      <use xlink:href="#image0" transform="scale(0.01)"/>
+    </pattern>
+    
+    <!-- Simple pattern for the background -->
+    <image id="image0" width="100" height="100" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPScjZmZmJy8+CiAgPHBhdGggZD0nTS0xLDFsLTIsM2wzLDBsLTIsMycgc3Ryb2tlPScjMDAwJyBzdHJva2Utb3BhY2l0eT0nMC4xJyBzdHJva2Utd2lkdGg9JzAuNScvPgo8L3N2Zz4=" />
+  </defs>
+</svg>

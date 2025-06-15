@@ -1,0 +1,14 @@
+# Security Policy and Contact Information
+# See: https://securitytxt.org/
+
+Contact: mailto:security@fullmoonodds.com
+Encryption: https://fullmoonodds.com/.well-known/pgp-key.txt
+Acknowledgments: https://fullmoonodds.com/security-hall-of-fame
+Policy: https://fullmoonodds.com/security-policy
+Hiring: https://fullmoonodds.com/careers
+
+# Our security team acknowledges all reports
+Preferred-Languages: en
+
+# Our security team works business hours in EST/EDT
+Expires: 2025-12-31T23:00:00.000Z
