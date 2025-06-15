@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchProvider } from './context/SearchContext';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import SeoMetaTags from './components/SeoMetaTags';
 import { PageViewProvider } from './contexts/PageViewContext';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -39,6 +40,7 @@ function AppContent() {
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SeoMetaTags />
       <Header />
       <FloatingBackButton />
       <main className="flex-grow pt-16 md:pt-20">
