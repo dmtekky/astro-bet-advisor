@@ -90,6 +90,8 @@ interface AstrologyInfluence {
   impact: number;
   description: string;
   icon?: React.ReactNode;
+  type?: string;
+  timeWindow?: string;
 }
 
 interface ElementsDistribution {
@@ -145,7 +147,7 @@ const Dashboard: React.FC = () => {
   const { 
     transformedData = null, 
     sportsPredictions = null, 
-    getGamePrediction,
+    getGamePrediction = () => null, 
     isLoading: predictionsLoading = true
   } = useGamePredictions(astroData) || {};
   
@@ -191,6 +193,13 @@ const Dashboard: React.FC = () => {
       }, null, 2));
     }
   }, [astroData]);
+
+  // Add debug logging
+  useEffect(() => {
+    console.log('Dashboard - astroData:', astroData);
+    console.log('Dashboard - transformedData:', transformedData);
+    console.log('Dashboard - getGamePrediction function:', getGamePrediction);
+  }, [astroData, transformedData, getGamePrediction]);
 
   // Get the current moon phase data from the transformed data
   const currentMoonPhase = useMemo(() => ({
@@ -333,103 +342,203 @@ const Dashboard: React.FC = () => {
 
   // Process astrological data when it's available
   useEffect(() => {
-    if (astroData && !astroLoading && transformedData) {
-      console.log('AstroData received:', astroData);
-      
-      // Initialize with empty elements object if not present
-      const elementScores = {
-        fire: { score: 0, percentage: transformedData.elements?.fire?.percentage ?? 25 },
-        earth: { score: 0, percentage: transformedData.elements?.earth?.percentage ?? 25 },
-        water: { score: 0, percentage: transformedData.elements?.water?.percentage ?? 25 },
-        air: { score: 0, percentage: transformedData.elements?.air?.percentage ?? 25 }
-      };
-      
-      const fireScore = elementScores.fire.score || 0;
-      const earthScore = elementScores.earth.score || 0;
-      const waterScore = elementScores.water.score || 0;
-      const airScore = elementScores.air.score || 0;
-      
-      const totalElements = fireScore + earthScore + waterScore + airScore || 1;
+    console.log('Running astro influences effect', { 
+      hasAstroData: !!astroData, 
+      isLoading: astroLoading, 
+      hasTransformedData: !!transformedData 
+    });
 
-      // Format astrological influences
+    // Default influences to show when no data is available
+    const defaultInfluences: AstrologyInfluence[] = [
+      {
+        name: 'Analyzing Celestial Patterns',
+        impact: 0.8,
+        description: 'Calculating significant astrological influences for today\'s games...',
+        icon: <Activity className="h-5 w-5 text-blue-500" />,
+        type: 'dominant'
+      }
+    ];
+
+    if (!astroData || !transformedData) {
+      console.log('Setting default influences - missing data');
+      setAstroInfluences(defaultInfluences);
+      return;
+    }
+
+    console.log('Processing astro data for influences');
+    
+    try {
       const influences: AstrologyInfluence[] = [];
+      const now = new Date();
       
-      // Always use the API's sign property for the Sun in sidereal mode
-      let sunSign = '';
-      let isSidereal = false;
-      
-      if (astroData.planets?.sun?.sign) {
-        sunSign = astroData.planets.sun.sign;
-        isSidereal = Boolean(astroData.sidereal);
-      }
-      // Fallback to positions array if planets.sun is missing
-      else if (astroData.positions) {
-        const sunPosition = astroData.positions.find((p: any) => p.planet?.toLowerCase() === 'sun');
-        if (sunPosition) {
-          sunSign = sunPosition.sign;
-          isSidereal = true;
-        }
-      }
-      // Fallback to sun object
-      else if (astroData.sun?.sign) {
-        sunSign = astroData.sun.sign;
-        isSidereal = Boolean(astroData.sidereal);
-      }
-      
-      console.log('UI Sun sign:', sunSign, 'astroData.planets.sun:', astroData.planets?.sun);
-      
-      // Sun Position is now handled in a dedicated, visually distinct panel below the Moon & Void Status panel. Remove from influences.
-      
-      // Add moon phase influence if available
-      const moonPhase = astroData.moon?.phase_name || (astroData.planets?.moon as any)?.phase_name;
-      if (moonPhase) {
+      // 1. Add significant aspects (excluding sun/moon aspects shown elsewhere)
+      const significantAspects = astroData.aspects?.filter(aspect => {
+        // Only include aspects involving outer planets or major configurations
+        const outerPlanets = ['mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+        const isOuterPlanetAspect = 
+          outerPlanets.includes(aspect.planet1.toLowerCase()) || 
+          outerPlanets.includes(aspect.planet2?.toLowerCase() || '');
+          
+        // Only include major aspects (conjunction, square, opposition, trine)
+        const isMajorAspect = ['conjunction', 'square', 'opposition', 'trine'].includes(
+          aspect.aspectType?.toLowerCase()
+        );
+        
+        return isOuterPlanetAspect && isMajorAspect && aspect.orb && Math.abs(aspect.orb) < 5;
+      }) || [];
+
+      // Add significant aspects to influences
+      significantAspects.forEach(aspect => {
+        const planet1 = aspect.planet1.charAt(0).toUpperCase() + aspect.planet1.slice(1);
+        const planet2 = aspect.planet2 ? aspect.planet2.charAt(0).toUpperCase() + aspect.planet2.slice(1) : '';
+        const aspectType = aspect.aspectType?.toLowerCase() || 'aspect';
+        
+        let impact = 0.6; // Default impact
+        if (aspectType === 'conjunction' || aspectType === 'opposition') impact = 0.8;
+        if (aspectType === 'square') impact = 0.7;
+        
         influences.push({
-          name: 'Lunar Influence',
-          impact: 0.7,
-          description: `${moonPhase} Moon ${getMoonPhaseImpact(moonPhase)}`,
-          icon: <Moon className="h-5 w-5 text-slate-400" />
+          name: `${planet1} ${aspectType} ${planet2}`,
+          impact,
+          description: `This ${aspectType} between ${planet1} and ${planet2} may influence ${getAspectInfluence(aspect.planet1, aspect.planet2, aspectType)}`,
+          type: 'aspect',
+          timeWindow: aspect.timeWindow || 'Today'
         });
-      }
-      
-      // Add retrograde planets if any
+      });
+
+      // 2. Add retrograde planets (excluding Mercury/Venus which have their own section)
+      const outerRetrogradePlanets = [];
       const retrogradePlanets = [];
+      
       if (astroData.planets) {
         Object.entries(astroData.planets).forEach(([planet, data]: [string, any]) => {
           if (data?.retrograde) {
-            retrogradePlanets.push(planet);
+            if (['mercury', 'venus'].includes(planet.toLowerCase())) {
+              retrogradePlanets.push(planet);
+            } else {
+              outerRetrogradePlanets.push(planet);
+            }
           }
         });
       }
       
-      if (retrogradePlanets.length > 0) {
-        const planetNames = retrogradePlanets.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
+      if (outerRetrogradePlanets.length > 0) {
+        const planetNames = outerRetrogradePlanets.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
         influences.push({
-          name: 'Retrograde Planets',
-          impact: 0.6,
-          description: `${planetNames} ${retrogradePlanets.length > 1 ? 'are' : 'is'} retrograde, which may affect ${retrogradePlanets.length > 1 ? 'their' : 'its'} related aspects of the game`,
-          icon: <Info className="h-5 w-5 text-orange-500" />
+          name: 'Outer Planet Retrograde',
+          impact: 0.7,
+          description: `${planetNames} ${outerRetrogradePlanets.length > 1 ? 'are' : 'is'} retrograde, influencing ${getRetrogradeInfluence(outerRetrogradePlanets)}`,
+          type: 'retrograde',
+          timeWindow: 'Ongoing'
         });
       }
+
+      // 3. Add significant ingresses (planet sign changes)
+      const today = format(now, 'yyyy-MM-dd');
+      const tomorrow = format(addDays(now, 1), 'yyyy-MM-dd');
       
-      // Add dominant element influence if we have element data
-      if (totalElements > 0) {
-        const elementScores = { fire: fireScore, earth: earthScore, air: airScore, water: waterScore };
-        const dominantEntry = Object.entries(elementScores).sort((a, b) => b[1] - a[1])[0];
-        
-        if (dominantEntry && dominantEntry[1] > 0) {
-          const [dominantElement, score] = dominantEntry as [keyof ElementsDistribution, number];
+      const todaysIngresses = astroData.ingresses?.filter(ingress => {
+        const ingressDate = ingress.date ? format(new Date(ingress.date), 'yyyy-MM-dd') : '';
+        return ingressDate === today || ingressDate === tomorrow;
+      }) || [];
+      
+      todaysIngresses.forEach(ingress => {
+        if (ingress.planet && ingress.toSign) {
           influences.push({
-            name: 'Dominant Element',
-            impact: Math.min(0.9, 0.5 + (score / totalElements)),
-            description: `Strong ${dominantElement} influence (${Math.round((score / totalElements) * 100)}%) affects player ${getElementImpact(dominantElement)}`,
-            icon: <Activity className="h-5 w-5 text-indigo-500" />
+            name: `${ingress.planet.charAt(0).toUpperCase() + ingress.planet.slice(1)} enters ${ingress.toSign}`,
+            impact: 0.65,
+            description: `This sign change may bring ${getIngressInfluence(ingress.planet, ingress.toSign)}`,
+            type: 'ingress',
+            timeWindow: ingress.date ? format(new Date(ingress.date), 'MMM d, h:mma') : 'Today'
           });
         }
+      });
+
+      // 4. Add any dominant elements or modalities not shown elsewhere
+      if (transformedData?.elements) {
+        const elements = Object.entries(transformedData.elements)
+          .filter(([_, value]) => value.percentage > 30) // Only show if significantly dominant
+          .sort((a, b) => (b[1].percentage || 0) - (a[1].percentage || 0));
+          
+        if (elements.length > 0) {
+          const [dominantElement, score] = elements[0] as [keyof ElementsDistribution, { percentage: number }];
+          if (score.percentage > 40) { // Only show if strongly dominant
+            influences.push({
+              name: 'Dominant Element',
+              impact: 0.6,
+              description: `Strong ${dominantElement} influence (${Math.round(score.percentage)}%) may affect gameplay ${getElementImpact(dominantElement)}`,
+              type: 'dominant',
+              timeWindow: 'Today'
+            });
+          }
+        }
       }
+
+      // If no significant influences found, add a friendly message
+      if (influences.length === 0) {
+        influences.push({
+          name: 'Harmonious Celestial Weather',
+          impact: 0.5,
+          description: 'No major astrological disturbances detected. Conditions are relatively neutral for today\'s games.',
+          type: 'dominant',
+          timeWindow: 'Today'
+        });
+      }
+
+      // Sort by impact and take top 3 most significant influences
+      const topInfluences = influences
+        .sort((a, b) => b.impact - a.impact)
+        .slice(0, 3);
+
+      console.log('Setting astro influences:', topInfluences);
+      setAstroInfluences(topInfluences);
       
-      setAstroInfluences(influences);
+    } catch (error) {
+      console.error('Error processing astro influences:', error);
+      setAstroInfluences(defaultInfluences);
     }
-  }, [astroData]);
+  }, [astroData, astroLoading, transformedData]);
+
+  // Helper function to get aspect influence description
+  function getAspectInfluence(planet1: string, planet2: string, aspectType: string): string {
+    // Simplified for brevity - expand with more detailed interpretations
+    const influences = {
+      conjunction: 'intensified energy and focus',
+      opposition: 'heightened tension and competition',
+      square: 'challenges requiring adaptation',
+      trine: 'harmonious flow of energy',
+      sextile: 'opportunities for positive development'
+    };
+    
+    return influences[aspectType as keyof typeof influences] || 'the game dynamics';
+  }
+
+  // Helper function to get retrograde influence description
+  function getRetrogradeInfluence(planets: string[]): string {
+    if (planets.includes('mars')) return 'energy levels and aggression';
+    if (planets.includes('jupiter')) return 'luck and expansion opportunities';
+    if (planets.includes('saturn')) return 'discipline and structure';
+    if (planets.includes('uranus')) return 'unexpected developments';
+    if (planets.includes('neptune')) return 'intuition and confusion';
+    if (planets.includes('pluto')) return 'transformation and power dynamics';
+    return 'various aspects of the game';
+  }
+
+  // Helper function to get ingress influence description
+  function getIngressInfluence(planet: string, sign: string): string {
+    // Simplified for brevity - expand with more detailed interpretations
+    const planetInfluences = {
+      mars: 'energy and aggression',
+      venus: 'harmony and aesthetics',
+      jupiter: 'luck and expansion',
+      saturn: 'discipline and restrictions',
+      uranus: 'unexpected changes',
+      neptune: 'intuition and confusion',
+      pluto: 'transformation and power'
+    };
+    
+    return planetInfluences[planet.toLowerCase() as keyof typeof planetInfluences] || 'various influences';
+  }
 
   // Helper functions for astrological descriptions
   function getSunSignImpact(sign: string): string {
@@ -942,14 +1051,12 @@ const Dashboard: React.FC = () => {
                               
                               <div className="grid grid-cols-3 gap-2 mb-4">
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Moon Sign</div>
-                                  <div className="font-semibold text-indigo-700 text-sm truncate">
-                                    {astroData.planets?.moon?.sign || 'Unknown'}
-                                  </div>
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5 truncate">Moon Sign</div>
+                                  <div className="font-semibold text-indigo-700">{astroData.planets?.moon?.sign || 'Unknown'}</div>
                                 </div>
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Next Full Moon</div>
-                                  <div className="font-semibold text-indigo-700 text-sm">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5 truncate">Next Full Moon</div>
+                                  <div className="font-semibold text-indigo-700">
                                     {astroData.moonPhase?.nextFullMoon 
                                       ? new Date(astroData.moonPhase.nextFullMoon).toLocaleDateString('en-US', { 
                                           month: 'short', 
@@ -960,8 +1067,8 @@ const Dashboard: React.FC = () => {
                                   </div>
                                 </div>
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Zodiac Degree</div>
-                                  <div className="font-semibold text-indigo-700 text-sm">
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5 truncate">Zodiac Degree</div>
+                                  <div className="font-semibold text-indigo-700">
                                     {astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
                                   </div>
                                 </div>
