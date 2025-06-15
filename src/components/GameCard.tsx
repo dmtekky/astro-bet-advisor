@@ -116,8 +116,18 @@ const formatGameTime = (dateString?: string): string => {
 
 const GameCard: React.FC<GameCardProps> = ({
   game,
-  homeTeam: propHomeTeam = {},
-  awayTeam: propAwayTeam = {},
+  homeTeam: propHomeTeam = {
+    abbreviation: 'TBD',
+    sport: 'basketball_nba',
+    name: 'Team',
+    id: 'unknown',
+  },
+  awayTeam: propAwayTeam = {
+    abbreviation: 'TBD',
+    sport: 'basketball_nba',
+    name: 'Team',
+    id: 'unknown',
+  },
   defaultLogo = ''
 }) => {
   // Ensure we have valid team objects with defaults
@@ -336,23 +346,6 @@ GameCard.propTypes = {
     sport: PropTypes.string,
   }),
   defaultLogo: PropTypes.string,
-};
-
-// Default props
-GameCard.defaultProps = {
-  defaultLogo: '',
-  homeTeam: {
-    abbreviation: 'TBD',
-    sport: 'basketball_nba',
-    name: 'Team',
-    id: 'unknown',
-  },
-  awayTeam: {
-    abbreviation: 'TBD',
-    sport: 'basketball_nba',
-    name: 'Team',
-    id: 'unknown',
-  },
 };
 
 export default React.memo(GameCard);

@@ -10,6 +10,7 @@ import { useAstroData } from '@/hooks/useAstroData';
 import { useTeams } from '@/hooks/useTeams';
 import { useUpcomingGames } from '@/hooks/useUpcomingGames';
 import { useFeaturedArticle } from '@/hooks/useFeaturedArticle';
+import { useGamePredictions } from '@/hooks/useGamePredictions';
 import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
 import { getElementsDistribution, getElementalInterpretation } from '@/utils/elementsAnalysis';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -136,12 +137,19 @@ const Dashboard: React.FC = () => {
     disabled: MLB_LEAGUE_KEY && !isMlbLeagueResolutionComplete 
   });
 
-  // Fetch astrological data
+  // Get astro data
+  const { astroData, isLoading: astroLoading, error: astroError } = useAstroData(selectedDate);
+  
+  // Get game predictions using the new hook
   const { 
-    astroData, 
-    loading: astroLoading, 
-    error: astroError 
-  } = useAstroData(selectedDate);
+    transformedData, 
+    sportsPredictions, 
+    getGamePrediction,
+    isLoading: predictionsLoading
+  } = useGamePredictions(astroData);
+  
+  // Alias for backward compatibility
+  const predictionData = transformedData;
 
   // Add this useEffect to log the astroData when it changes
   useEffect(() => {
@@ -183,11 +191,29 @@ const Dashboard: React.FC = () => {
     }
   }, [astroData]);
 
+  // Get the current moon phase data from the transformed data
+  const currentMoonPhase = useMemo(() => {
+    if (!transformedData) return {
+      phase: 'New Moon',
+      illumination: 0,
+      ageInDays: 0,
+      nextFullMoon: new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000),
+      phaseType: 'new'
+    };
+    
+    return {
+      phase: transformedData.moonPhase?.name || 'New Moon',
+      illumination: transformedData.moonPhase?.illumination || 0,
+      ageInDays: transformedData.moonPhase?.ageInDays || 0,
+      nextFullMoon: transformedData.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000),
+      phaseType: transformedData.moonPhase?.phaseType || 'new'
+    };
+  }, [transformedData]);
+
   // State for astrological influences
   const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
   // Helper function to calculate elemental distribution from astroData
   function getElementsDistribution(data: any): ElementsDistribution {
-    const distribution: ElementsDistribution = { fire: 0, earth: 0, water: 0, air: 0 };
     if (!data || !data.planets) {
       // Return a default balanced distribution if no data, or handle as preferred
       return { fire: 25, earth: 25, water: 25, air: 25 };
@@ -243,12 +269,32 @@ const Dashboard: React.FC = () => {
     };
   }
 
-  // Get elements distribution and interpretation using utility functions
-  const elementsDistribution = useMemo(() => getElementsDistribution(astroData), [astroData]);
-  const elementalInterpretation = useMemo(() => 
-    getElementalInterpretation(elementsDistribution), 
-    [elementsDistribution]
-  );
+  // Get element distribution from transformed data
+  const elementsDistribution = useMemo(() => {
+    if (!transformedData) return {
+      fire: 25,
+      earth: 25,
+      water: 25,
+      air: 25
+    };
+    
+    return {
+      fire: transformedData.elements?.fire.percentage || 25,
+      earth: transformedData.elements?.earth.percentage || 25,
+      water: transformedData.elements?.water.percentage || 25,
+      air: transformedData.elements?.air.percentage || 25,
+    };
+  }, [transformedData]);
+
+  // Get elemental interpretation from sports predictions if available
+  const elementalInterpretation = useMemo(() => {
+    if (sportsPredictions?.prediction) {
+      return sportsPredictions.prediction;
+    }
+    
+    if (!elementsDistribution) return 'No elemental analysis available';
+    return getElementalInterpretation(elementsDistribution);
+  }, [elementsDistribution, sportsPredictions]);
 
   // Navigation
   const navigate = useNavigate();
@@ -259,7 +305,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Calculate loading and error states
-  const isLoading = astroLoading || gamesLoading || teamsLoading;
+  const isLoading = astroLoading || gamesLoading || teamsLoading || predictionsLoading;
   const error = astroError || gamesError || teamsError;
 
   // Extract sun sign data for easy access
@@ -279,36 +325,24 @@ const Dashboard: React.FC = () => {
     month: 'long',
     day: 'numeric',
   });
-
-  // Use the imported transformAstroData utility function
-  const transformHookDataToGamePredictionData = transformAstroData;
-
-  // Get sports predictions from astrological data
-  const sportsPredictions = useMemo(() => {
-    if (!astroData) return null;
-    const transformedData: GamePredictionData | null = transformHookDataToGamePredictionData(astroData);
-    return calculateSportsPredictions(transformedData);
-  }, [astroData, transformHookDataToGamePredictionData]);
-
-  // Create a memoized function to get game-specific predictions
-  const getGamePrediction = useCallback(
-    (game: Game, homeTeam?: Team, awayTeam?: Team) => {
-      console.log('%%%%% CHECKING ASTRODATA IN getGamePrediction:', astroData);
-      const rawAstro = astroData;
-      if (!rawAstro) {
-        console.warn(`No astro data for game ${game.id} in getGamePrediction`);
-        return null;
-      }
-      // Ensure rawAstro is treated as HookAstroData, which might be AstroData | null | undefined
-      const transformedAstro = transformHookDataToGamePredictionData(rawAstro as HookAstroData);
-      if (!transformedAstro) {
-        console.warn(`Failed to transform astro data for game ${game.id}`);
-        return null;
-      }
-      return predictGameOutcome(game, homeTeam, awayTeam, transformedAstro);
-    },
-    [astroData, transformHookDataToGamePredictionData]
-  );
+  
+  // Transform astro data for predictions (keeping this for backward compatibility)
+  const transformHookDataToGamePredictionData = useCallback((hookData: any) => {
+    if (!hookData) return null;
+    try {
+      return transformAstroData(hookData);
+    } catch (error) {
+      console.error('Error transforming astro data:', error);
+      return null;
+    }
+  }, []);
+  
+  // Log transformed data for debugging
+  useEffect(() => {
+    if (transformedData) {
+      console.log('Transformed astro data:', transformedData);
+    }
+  }, [transformedData]);
 
   // Helper function to find a team with proper type casting
   const findTeam = (teamId: string): Team | undefined => {
@@ -337,32 +371,23 @@ const Dashboard: React.FC = () => {
 
   // Process astrological data when it's available
   useEffect(() => {
-    if (astroData && !astroLoading) {
+    if (astroData && !astroLoading && transformedData) {
       console.log('AstroData received:', astroData);
       
-      // Initialize element scores
-      let fireScore = 0;
-      let earthScore = 0;
-      let waterScore = 0;
-      let airScore = 0;
+      // Use element scores from transformed data if available
+      const elementScores = transformedData.elements || {
+        fire: { score: 0, planets: [], percentage: 0 },
+        earth: { score: 0, planets: [], percentage: 0 },
+        water: { score: 0, planets: [], percentage: 0 },
+        air: { score: 0, planets: [], percentage: 0 },
+      };
       
-      // Process elements from astroData
-      if (astroData.elements) {
-        const elements = astroData.elements as any;
-        if (typeof elements.fire === 'number') {
-          fireScore = elements.fire || 0;
-          earthScore = elements.earth || 0;
-          waterScore = elements.water || 0;
-          airScore = elements.air || 0;
-        } else if (elements.fire && typeof elements.fire === 'object') {
-          fireScore = elements.fire.score || 0;
-          earthScore = elements.earth?.score || 0;
-          waterScore = elements.water?.score || 0;
-          airScore = elements.air?.score || 0;
-        }
-      } // Closes if (astroData.elements)
-
-      const totalElements = fireScore + earthScore + waterScore + airScore;
+      const fireScore = elementScores.fire.score || 0;
+      const earthScore = elementScores.earth.score || 0;
+      const waterScore = elementScores.water.score || 0;
+      const airScore = elementScores.air.score || 0;
+      
+      const totalElements = fireScore + earthScore + waterScore + airScore || 1;
 
       // Format astrological influences
       const influences: AstrologyInfluence[] = [];

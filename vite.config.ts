@@ -30,6 +30,12 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      // Enable HMR with proper WebSocket connection
+      hmr: {
+        protocol: 'ws',
+        host: 'localhost',
+        port: 8080
+      },
       proxy: {
         // Proxy API requests to our API server running on port 3001
         '/api': {
@@ -37,23 +43,33 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+      // Ensure proper CORS headers for development
+      cors: true,
+      // Enable source maps in development
+      sourcemap: true,
     },
     
     build: {
       sourcemap: true,
+      // Ensure chunks are properly split and hashed
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
         output: {
-          // Ensure consistent hashing of asset names
-          assetFileNames: 'assets/[name]-[hash][extname]',
-          chunkFileNames: 'assets/[name]-[hash].js',
+          // Consistent hashing for better caching
           entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]',
+          // Ensure proper module resolution
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          },
         },
       },
-      // Increase chunk size warning limit
-      chunkSizeWarningLimit: 1000,
     },
     
     plugins: [
