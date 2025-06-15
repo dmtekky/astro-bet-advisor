@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGames } from './useGames';
-import { useAstroData } from './useAstroData';
+import { useAstroData, type AstroData } from './useAstroData';
 import { Game, GameWithTeams } from '@/types/dashboard';
 
 // Utility functions for astrological calculations

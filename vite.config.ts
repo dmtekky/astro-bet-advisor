@@ -92,21 +92,17 @@ export default defineConfig(({ mode }) => {
         
         // X-Download-Options
         'X-Download-Options': 'noopen',
-        
-        // X-DNS-Prefetch-Control
-        'X-DNS-Prefetch-Control': 'on'
       },
       proxy: {
         // Proxy API requests to our API server running on port 3001
-        '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          headers: {
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': 'DENY',
-            'X-XSS-Protection': '1; mode=block',
+        // Disabled in production to use Vercel serverless functions
+        ...(process.env.NODE_ENV !== 'production' ? {
+          '/api': {
+            target: 'http://localhost:3001',
+            changeOrigin: true,
+            secure: false,
           },
-        },
+        } : {})
       },
     },
     

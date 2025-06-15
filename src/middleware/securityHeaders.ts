@@ -102,7 +102,7 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Apply security headers to all routes, including API routes
+// Apply security headers to all routes except static assets and Vercel-specific routes
 export const config = {
   matcher: [
     /*
@@ -112,9 +112,10 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder (static assets)
      * - api/auth (NextAuth.js routes)
+     * - _vercel (Vercel internal routes)
+     * - vercel.live (Vercel preview)
+     * - va.vercel-scripts.com (Vercel analytics)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/auth).*)',
-    // Explicitly include API routes
-    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|public/|api/auth|_vercel|vercel.live|va.vercel-scripts.com).*)',
   ],
 };

@@ -1,15 +1,18 @@
 {
   "compilerOptions": {
+    /* Base Options */
     "target": "es2020",
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
     "downlevelIteration": true,
+    
+    /* Paths */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -18,26 +21,46 @@
       "@hooks/*": ["./src/hooks/*"],
       "@types/*": ["./src/types/*"]
     },
+    
+    /* Type Checking */
     "strict": true,
     "noImplicitAny": false,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    
+    /* Module Resolution */
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "allowJs": true,
     "types": ["vite/client", "node"],
-    "noEmit": true
+    "noEmit": true,
+    
+    /* Output */
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "inlineSources": false,
+    "outDir": "./dist",
+    "removeComments": true
   },
   "include": [
     "src",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "vite.config.ts"
   ],
-  "exclude": ["node_modules"],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.stories.tsx"
   ]
 }
