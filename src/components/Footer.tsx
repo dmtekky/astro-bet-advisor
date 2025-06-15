@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
     { 
       name: 'Instagram', 
       icon: <Instagram className="w-5 h-5" />, 
-      url: 'https://www.instagram.com/' 
+      url: 'https://www.instagram.com/fullmoonodds' 
     },
     { 
       name: 'Facebook', 
@@ -128,15 +128,7 @@ const Footer: React.FC = () => {
                   info@fullmoonodds.com
                 </a>
               </li>
-              <li>
-                <a 
-                  href="tel:+1234567890" 
-                  className="text-gray-400 hover:text-yellow-400 flex items-center transition-colors"
-                >
-                  <span className="mr-2">📞</span>
-                  (123) 456-7890
-                </a>
-              </li>
+
             </ul>
           </div>
 
