@@ -1,5 +1,5 @@
 /**
- * Advanced astrology data types for the Astro Bet Advisor app
+ * Advanced astrology data types for the Full Moon Odds app
  */
 
 export type ZodiacSign = 

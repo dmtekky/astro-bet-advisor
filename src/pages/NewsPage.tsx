@@ -26,7 +26,7 @@ const NewsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "News | Astro Bet Advisor";
+    document.title = "News | Full Moon Odds";
     
     const fetchArticles = async () => {
       try {

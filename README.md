@@ -1,4 +1,4 @@
-# Astro Bet Advisor
+# Full Moon Odds
 
 A web-based tool that helps users make informed sports betting decisions by analyzing odds data, astrological factors, and comprehensive sports statistics.
 
@@ -213,7 +213,7 @@ chmod +x /usr/local/bin/update-baseball-scores.sh
 3. Create a systemd service file at `/etc/systemd/system/baseball-update.service`:
 ```ini
 [Unit]
-Description=Astro Bet Advisor Baseball Score Updates
+Description=Full Moon Odds Baseball Score Updates
 After=network.target
 
 [Service]
@@ -717,7 +717,7 @@ Database --(Team/Player Data)--> /                                       |
 
 ## Team Chemistry Implementation
 
-The Astro Bet Advisor includes a robust team chemistry system that analyzes the elemental balance of teams to provide insights into their performance. Here's how it works:
+The Full Moon Odds includes a robust team chemistry system that analyzes the elemental balance of teams to provide insights into their performance. Here's how it works:
 
 ### Key Features
 
@@ -786,7 +786,7 @@ console.log('[fetchTeamChemistry] Team data:', {
 
 ## Database Schema Overview
 
-This section outlines the structure and relationships of the core database tables used in the Astro Bet Advisor application.
+This section outlines the structure and relationships of the core database tables used in the Full Moon Odds application.
 
 ### Core Entities and Their Relationships:
 

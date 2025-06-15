@@ -43,7 +43,7 @@ app.get('/astro-date', (req, res) => {
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.send('Astro Bet Advisor API is running');
+  res.send('Full Moon Odds API is running');
 });
 
 // Add CORS headers to all responses

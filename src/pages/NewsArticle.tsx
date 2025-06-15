@@ -108,7 +108,7 @@ const NewsArticle: React.FC = () => {
         };
         
         setArticle(fullArticle);
-        document.title = `${fullArticle.title} | Astro Bet Advisor`;
+        document.title = `${fullArticle.title} | Full Moon Odds`;
         
         // Extract player names from article content
         extractAndFetchPlayers(fullArticle.content);

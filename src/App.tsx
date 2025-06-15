@@ -29,6 +29,8 @@ import NbaTeamsPage from "./pages/NbaTeamsPage";
 import NbaTeamDetailPage from "./pages/NbaTeamDetailPage";
 import NbaPlayersPage from "./pages/NbaPlayersPage";
 import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 
 function AppContent() {
@@ -48,6 +50,10 @@ function AppContent() {
           <Route path="/event/:id" element={<EventDetails />} />
           {/* NBA-specific routes */}
           <Route path="/nba/teams" element={<NbaTeamsPage />} />
+          
+          {/* Legal Pages */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
           <Route path="/nba/players" element={<NbaPlayersPage />} />
           <Route path="/nba/players/:playerId" element={<BasketballPlayerPage />} />

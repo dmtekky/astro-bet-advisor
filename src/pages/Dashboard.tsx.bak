@@ -144,7 +144,7 @@ const Dashboard: React.FC = () => {
               <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col space-y-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Astro Bet Advisor</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Full Moon Odds</h1>
                   <p className="text-sm text-gray-500">{formattedDate}</p>
           </div>
           

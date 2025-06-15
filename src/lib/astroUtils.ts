@@ -1,5 +1,5 @@
 /**
- * Advanced astronomical utilities for the Astro Bet Advisor app
+ * Advanced astronomical utilities for the Full Moon Odds app
  */
 import * as Astronomy from 'astronomy-engine';
 import { 

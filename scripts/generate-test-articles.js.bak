@@ -1391,7 +1391,7 @@ async function saveArticle(gameId, article, metadata) {
       author: 'Astro Bet Advisor',
       featuredPlayers: [],
       meta: {
-        title: `${metadata.away.name} vs ${metadata.home.name} Game Recap | Astro Bet Advisor`,
+        title: `${metadata.away.name} vs ${metadata.home.name} Game Recap | Full Moon Odds`,
         description: `Recap of the MLB game between ${metadata.away.name} and ${metadata.home.name} on ${metadata.date.replace(/-/g, '/')}`,
         image: metadata.featuredImage || ''
       }
@@ -1734,9 +1734,9 @@ async function generateTestArticle(gameId, date) {
         date: date,
         status: 'published',
         tags: ['mlb', 'game-recap', 'baseball'],
-        author: 'Astro Bet Advisor',
+        author: 'Full Moon Odds',
         meta: {
-          title: `${game.away.name} vs ${game.home.name} Game Recap | Astro Bet Advisor`,
+          title: `${game.away.name} vs ${game.home.name} Game Recap | Full Moon Odds`,
           description: `Recap of the MLB game between ${game.away.name} and ${game.home.name} on ${date.replace(/-/g, '/')}`,
           image: images.featuredImage || ''
         }
