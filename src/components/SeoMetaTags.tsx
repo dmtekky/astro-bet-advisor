@@ -15,8 +15,8 @@ interface SeoMetaTagsProps {
   noFollow?: boolean;
 }
 
-const DEFAULT_TITLE = 'Full Moon Odds - Astrological Sports Betting Insights';
-const DEFAULT_DESCRIPTION = 'Get data-driven sports betting insights powered by astrological analysis and team chemistry metrics.';
+const DEFAULT_TITLE = 'Full Moon Odds - Astrological Sports Insights';
+const DEFAULT_DESCRIPTION = 'Get data-driven sports insights powered by astrological analysis and team chemistry metrics.';
 const DEFAULT_IMAGE = '/images/og-default.jpg';
 const DEFAULT_URL = 'https://fullmoonodds.com';
 

@@ -35,7 +35,7 @@ context.fillText('Full Moon Odds', width / 2, height / 2 - 50);
 
 // Subtitle
 context.font = '32px Arial';
-context.fillText('Astrological Sports Betting Insights', width / 2, height / 2 + 50);
+context.fillText('Astrological Sports Insights', width / 2, height / 2 + 50);
 
 // Add a moon icon (simple circle)
 context.beginPath();
