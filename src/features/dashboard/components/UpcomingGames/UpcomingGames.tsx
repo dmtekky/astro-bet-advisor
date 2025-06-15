@@ -5,18 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import GameCard from '@/components/GameCard';
-import { GameGroup, UpcomingGamesProps } from './types';
-import { Team } from '@/types';
+import { Game } from '@/types';
 import { ExtendedTeam } from '@/features/dashboard/types';
 
-// Type for teams as expected by GameCard
-type GameTeam = Team & {
-  primary_color?: string;
-  secondary_color?: string;
-  logo_url?: string;
-  logo?: string;
-  record?: string;
-};
+interface GameGroup {
+  date: Date;
+  games: Game[];
+}
+
+interface UpcomingGamesProps {
+  gameGroups: GameGroup[];
+  isLoading: boolean;
+  onViewAllGames: () => void;
+  findTeam: (id: string) => ExtendedTeam | undefined;
+  renderGamePrediction: (game: Game) => React.ReactNode;
+}
+
+type Team = ExtendedTeam;
+
+// Extended Team type with all required properties for GameCard
+interface GameTeam {
+  id: string;
+  name: string;
+  abbreviation: string;
+  sport: string;
+  primary_color: string;
+  secondary_color: string;
+  logo_url: string;
+  logo: string;
+  record: string;
+  external_id?: string | number;
+  city?: string;
+}
 
 // Helper to create a default team with required properties
 const createDefaultTeam = (id: string, name: string): GameTeam => {
@@ -56,9 +76,7 @@ const UpcomingGames: React.FC<UpcomingGamesProps> = ({
   isLoading,
   onViewAllGames,
   findTeam,
-  getGamePrediction,
-  transformHookDataToGamePredictionData,
-  astroData,
+  renderGamePrediction,
 }) => {
   if (isLoading && (!gameGroups || gameGroups.length === 0)) {
     return (
@@ -95,43 +113,34 @@ const UpcomingGames: React.FC<UpcomingGamesProps> = ({
                   const foundHomeTeam = findTeam(String(game.home_team_id));
                   const foundAwayTeam = findTeam(String(game.away_team_id));
   
-                  // Ensure we have valid team objects with all required properties
+                  // Create team objects with all required properties
                   const homeTeam: GameTeam = foundHomeTeam ? {
-                    ...foundHomeTeam,
+                    id: foundHomeTeam.id,
+                    name: foundHomeTeam.name || 'Home Team',
                     abbreviation: foundHomeTeam.abbreviation || foundHomeTeam.name.split(' ').map(word => word[0]).join('').slice(0, 3).toUpperCase(),
                     sport: foundHomeTeam.sport || 'mlb',
-                    external_id: String(foundHomeTeam.external_id || foundHomeTeam.id),
+                    primary_color: foundHomeTeam.primary_color || '#1E40AF',
+                    secondary_color: foundHomeTeam.secondary_color || '#FFFFFF',
                     logo_url: foundHomeTeam.logo_url || foundHomeTeam.logo || '',
                     logo: foundHomeTeam.logo || foundHomeTeam.logo_url || '',
                     record: foundHomeTeam.record || '0-0',
-                    primary_color: foundHomeTeam.primary_color || '#000000',
-                    secondary_color: foundHomeTeam.secondary_color || '#ffffff',
-                  } : createDefaultTeam(
-                    String(game.home_team_id), 
-                    'Home Team'
-                  );
-  
+                    external_id: foundHomeTeam.external_id,
+                    city: foundHomeTeam.city
+                  } : createDefaultTeam(String(game.home_team_id), 'Home Team');
+
                   const awayTeam: GameTeam = foundAwayTeam ? {
-                    ...foundAwayTeam,
+                    id: foundAwayTeam.id,
+                    name: foundAwayTeam.name || 'Away Team',
                     abbreviation: foundAwayTeam.abbreviation || foundAwayTeam.name.split(' ').map(word => word[0]).join('').slice(0, 3).toUpperCase(),
                     sport: foundAwayTeam.sport || 'mlb',
-                    external_id: String(foundAwayTeam.external_id || foundAwayTeam.id),
+                    primary_color: foundAwayTeam.primary_color || '#1E40AF',
+                    secondary_color: foundAwayTeam.secondary_color || '#FFFFFF',
                     logo_url: foundAwayTeam.logo_url || foundAwayTeam.logo || '',
                     logo: foundAwayTeam.logo || foundAwayTeam.logo_url || '',
                     record: foundAwayTeam.record || '0-0',
-                    primary_color: foundAwayTeam.primary_color || '#000000',
-                    secondary_color: foundAwayTeam.secondary_color || '#ffffff',
-                  } : createDefaultTeam(
-                    String(game.away_team_id), 
-                    'Away Team'
-                  );
-
-                  const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
-                  
-                  // Transform astroData for the GameCard prop if needed
-                  const gameCardAstroData = astroData
-                    ? transformHookDataToGamePredictionData(astroData)
-                    : null;
+                    external_id: foundAwayTeam.external_id,
+                    city: foundAwayTeam.city
+                  } : createDefaultTeam(String(game.away_team_id), 'Away Team');
 
                   return (
                     <GameCard
@@ -139,7 +148,11 @@ const UpcomingGames: React.FC<UpcomingGamesProps> = ({
                       game={game}
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
-                    />
+                    >
+                      <div className="mt-3">
+                        {renderGamePrediction(game)}
+                      </div>
+                    </GameCard>
                   );
                 })}
               </div>

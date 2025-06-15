@@ -9,18 +9,18 @@ type ColorValue = string | { hex?: string; r?: number; g?: number; b?: number } 
 type RGB = { r: number; g: number; b: number };
 
 // Extended Team type with required properties for GameCard
-interface GameTeam extends Omit<Team, 'abbreviation' | 'sport'> {
-  primary_color?: string;
-  secondary_color?: string;
-  logo_url?: string;
-  logo?: string;
-  city?: string;
+interface GameTeam {
+  id: string;
   name: string;
-  record?: string;
-  // These are required in the base Team interface but we make them optional here
-  // to avoid conflicts with DEFAULT_TEAM
   abbreviation: string;
   sport: string;
+  primary_color: string;
+  secondary_color: string;
+  logo_url: string;
+  logo: string;
+  record: string;
+  external_id?: string | number;
+  city?: string;
 }
 
 interface GameCardProps {
@@ -28,6 +28,7 @@ interface GameCardProps {
   homeTeam?: Partial<GameTeam>;
   awayTeam?: Partial<GameTeam>;
   defaultLogo?: string;
+  children?: React.ReactNode;
 }
 
 // Default team data when team is not provided
@@ -35,11 +36,12 @@ const DEFAULT_TEAM: GameTeam = {
   id: 'unknown',
   name: 'Team',
   abbreviation: 'TBD',
-  sport: 'basketball_nba',
+  sport: 'mlb',
   record: '0-0',
   primary_color: '#1E40AF',
   secondary_color: '#FFFFFF',
   logo_url: '',
+  logo: '',
 };
 
 // Converts various color formats to RGB
@@ -128,7 +130,8 @@ const GameCard: React.FC<GameCardProps> = ({
     name: 'Team',
     id: 'unknown',
   },
-  defaultLogo = ''
+  defaultLogo = '',
+  children
 }) => {
   // Ensure we have valid team objects with defaults
   const homeTeam: GameTeam = { ...DEFAULT_TEAM, ...propHomeTeam };
@@ -189,10 +192,10 @@ const GameCard: React.FC<GameCardProps> = ({
   }
 
   return (
-    <Link to={`/game/${game.id}`} className="block">
-      <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/30 h-full flex flex-col">
-        <CardContent className="p-0 flex-1 flex flex-col">
-          <div className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600 h-full flex flex-col">
+      <Link to={`/game/${game.id}`} className="block h-full">
+        <CardContent className="p-4 h-full flex flex-col">
+          <div className="flex-1">
             {/* Home Team */}
             {homeTeam ? (
               <div 
@@ -311,9 +314,10 @@ const GameCard: React.FC<GameCardProps> = ({
               </div>
             </div>
           </div>
+          {children}
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 };
 

@@ -11,6 +11,7 @@ import { useTeams } from '@/hooks/useTeams';
 import { useUpcomingGames } from '@/hooks/useUpcomingGames';
 import { useFeaturedArticle } from '@/hooks/useFeaturedArticle';
 import { useGamePredictions } from '@/hooks/useGamePredictions';
+import { GamePredictions } from '@/features/dashboard/components/GamePredictions/GamePredictions';
 import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
 import { getElementsDistribution, getElementalInterpretation } from '@/utils/elementsAnalysis';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -750,9 +751,14 @@ const Dashboard: React.FC = () => {
                   isLoading={gamesLoading}
                   onViewAllGames={handleSeeMoreGames}
                   findTeam={findTeam}
-                  getGamePrediction={getGamePrediction}
-                  transformHookDataToGamePredictionData={transformHookDataToGamePredictionData}
-                  astroData={astroData}
+                  renderGamePrediction={(game) => (
+                    <GamePredictions 
+                      game={game}
+                      astroData={astroData}
+                      getGamePrediction={getGamePrediction}
+                      transformHookDataToGamePredictionData={transformHookDataToGamePredictionData}
+                    />
+                  )}
                 />
               </motion.div>
 
