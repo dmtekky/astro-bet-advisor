@@ -3,43 +3,59 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import GameCard from '@/components/GameCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
-import { useTeams } from '@/hooks/useTeams';
-import { useUpcomingGames } from '@/hooks/useUpcomingGames';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles,
-  Newspaper,
-  ArrowRight,
-  Star,
-  Calendar,
-  Sun,
-  Moon,
-  Info,
-  Activity,
-  Zap,
-  BarChart,
-  BarChart2,
-  Lightbulb,
-  AlertTriangle,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp
-} from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAstroData } from '@/hooks/useAstroData';
-import type { Team } from '@/types';
-import type { Game } from '@/types';
+import { useTeams } from '@/hooks/useTeams';
+import { useUpcomingGames } from '@/hooks/useUpcomingGames';
+import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Calendar, 
+  Sun, 
+  Moon, 
+  Info, 
+  Activity, 
+  Zap, 
+  BarChart, 
+  BarChart2, 
+  Lightbulb, 
+  AlertTriangle, 
+  CheckCircle, 
+  AlertCircle, 
+  TrendingUp, 
+  Sparkles, 
+  Newspaper, 
+  ArrowRight, 
+  Star 
+} from 'lucide-react';
+import { 
+  MoonPhaseInfoCard, 
+  VoidMoonStatus, 
+  LunarTechnicalAnalysis, 
+  PlanetaryInfluences, 
+  DailyAstroTip 
+} from '@/features/dashboard/components/astro';
 import ArticleSection from '@/features/dashboard/components/ArticleSection';
 import UpcomingGames from '@/features/dashboard/components/UpcomingGames';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
-import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhaseInfo, CelestialBody, Aspect } from '@/types/astrology';
+import type { Team } from '@/types';
+import type { Game } from '@/types';
+import type { 
+  ModalBalance, 
+  ElementalBalance, 
+  ZodiacSign, 
+  AspectType, 
+  MoonPhaseInfo, 
+  CelestialBody, 
+  Aspect 
+} from '@/types/astrology';
 import type { GamePredictionData } from '@/types/gamePredictions';
 import type { Article } from '../types/news';
 import { createDefaultCelestialBody } from '@/types/gamePredictions';
@@ -514,10 +530,10 @@ const Dashboard: React.FC = () => {
       aspects: aspectsData,
       moonPhase: moonPhaseData,
       elements: hookData.elements || {
-        fire: { score: 0, planets: [] },
-        earth: { score: 0, planets: [] },
-        water: { score: 0, planets: [] },
-        air: { score: 0, planets: [] },
+        fire: { score: 0, planets: [], percentage: 0 },
+        earth: { score: 0, planets: [], percentage: 0 },
+        water: { score: 0, planets: [], percentage: 0 },
+        air: { score: 0, planets: [], percentage: 0 },
       },
       modalities: hookData.modalities as ModalBalance | undefined,
       houses: hookData.houses as any, 

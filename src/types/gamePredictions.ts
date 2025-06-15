@@ -1,4 +1,4 @@
-import { AstroData, CelestialBody, Aspect } from './astrology';
+import { AstroData, CelestialBody, Aspect, MoonPhaseInfo } from './astrology';
 
 export interface GamePredictionData extends Omit<AstroData, 'latitude' | 'longitude' | 'altitude' | 'timezone'> {
   observer: {
@@ -11,16 +11,12 @@ export interface GamePredictionData extends Omit<AstroData, 'latitude' | 'longit
   moon: CelestialBody;
   planets: Record<string, CelestialBody>;
   aspects: Aspect[];
-  moonPhase: {
-    name: string;
-    value: number;
-    illumination: number;
-  };
+  moonPhase: MoonPhaseInfo;
   elements: {
-    fire: { score: number; planets: string[] };
-    earth: { score: number; planets: string[] };
-    water: { score: number; planets: string[] };
-    air: { score: number; planets: string[] };
+    fire: { score: number; planets: string[]; percentage: number };
+    earth: { score: number; planets: string[]; percentage: number };
+    water: { score: number; planets: string[]; percentage: number };
+    air: { score: number; planets: string[]; percentage: number };
   };
 }
 
@@ -87,11 +83,14 @@ export const createDefaultPredictionData = (): GamePredictionData => ({
     name: 'New Moon',
     value: 0,
     illumination: 0,
+    nextFullMoon: new Date(),
+    ageInDays: 0,
+    phaseType: 'new'
   },
   elements: {
-    fire: { score: 0, planets: [] },
-    earth: { score: 0, planets: [] },
-    water: { score: 0, planets: [] },
-    air: { score: 0, planets: [] },
+    fire: { score: 0, planets: [], percentage: 0 },
+    earth: { score: 0, planets: [], percentage: 0 },
+    water: { score: 0, planets: [], percentage: 0 },
+    air: { score: 0, planets: [], percentage: 0 },
   },
 });
