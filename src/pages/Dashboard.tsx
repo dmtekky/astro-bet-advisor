@@ -9,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAstroData } from '@/hooks/useAstroData';
 import { useTeams } from '@/hooks/useTeams';
 import { useUpcomingGames } from '@/hooks/useUpcomingGames';
+import { useFeaturedArticle } from '@/hooks/useFeaturedArticle';
 import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
@@ -56,6 +57,7 @@ import type {
   CelestialBody, 
   Aspect 
 } from '@/types/astrology';
+import { transformAstroData } from '@/utils/astroTransform';
 import type { GamePredictionData } from '@/types/gamePredictions';
 import type { Article } from '../types/news';
 import { createDefaultCelestialBody } from '@/types/gamePredictions';
@@ -103,60 +105,8 @@ const DEFAULT_LOGO = '/images/default-team-logo.svg';
 import AstroDisclosure from '@/components/AstroDisclosure';
 
 const Dashboard: React.FC = () => {
-  const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null);
-  const [isLoadingArticle, setIsLoadingArticle] = useState(true);
-  const [articleError, setArticleError] = useState<string | null>(null);
-  
-  // Fetch the featured article from the news API
-  useEffect(() => {
-    const fetchFeaturedArticle = async () => {
-      try {
-        setIsLoadingArticle(true);
-        const response = await fetch('/news/index.json');
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch articles: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        const articles = Array.isArray(data) ? data : (data.articles || []);
-        
-        if (articles.length > 0) {
-          const latestArticle = articles[0];
-          // Map the article to match our Article interface
-          const mappedArticle: Article = {
-            slug: latestArticle.slug || `article-${Date.now()}`,
-            title: latestArticle.title || 'Latest News',
-            subheading: latestArticle.description || '',
-            contentHtml: latestArticle.content || `<p>${latestArticle.description || ''}</p>`,
-            featureImageUrl: latestArticle.image || '',
-            publishedAt: latestArticle.publishedAt || new Date().toISOString(),
-            author: latestArticle.author || 'AI Insights',
-            tags: latestArticle.tags || ['MLB', 'News'],
-          };
-          setFeaturedArticle(mappedArticle);
-        }
-      } catch (err) {
-        console.error('Error fetching featured article:', err);
-        setArticleError('Failed to load the latest news. Please try again later.');
-        // Fallback to default article if API fails
-        setFeaturedArticle({
-          slug: 'ai-astrology-mlb-deep-dive-20250531',
-          title: 'AI & Astrology: A New Frontier in MLB Predictions',
-          subheading: 'Discover how combining advanced AI with ancient astrological wisdom is changing the game for sports bettors.',
-          contentHtml: '<p>Full article content would go here...</p>',
-          featureImageUrl: 'https://images.unsplash.com/photo-1580209949904-5046cf9b3f4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
-          publishedAt: new Date().toISOString(),
-          author: 'AI Insights',
-          tags: ['MLB', 'AI', 'Astrology', 'Predictions'],
-        });
-      } finally {
-        setIsLoadingArticle(false);
-      }
-    };
-
-    fetchFeaturedArticle();
-  }, []);
+  // Fetch the featured article using custom hook
+  const { article: featuredArticle, isLoading: isLoadingArticle, error: articleError } = useFeaturedArticle();
   // State for today's date
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
@@ -422,126 +372,8 @@ const Dashboard: React.FC = () => {
     day: 'numeric',
   });
 
-  // Type alias for astroData from the hook, used by the transformer
-  type HookAstroData = ReturnType<typeof useAstroData>['astroData'];
-
-  // Standalone transformer function
-  const transformHookDataToGamePredictionData = (hookData: HookAstroData): GamePredictionData | null => {
-    if (!hookData) return null;
-
-    const observerData = hookData.observer || { latitude: 0, longitude: 0, timezone: 'UTC' };
-
-    const planetsData: Record<string, CelestialBody> = {};
-    let sunBody: CelestialBody | undefined;
-    let moonBody: CelestialBody | undefined;
-
-    if (hookData.planets) {
-      for (const key in hookData.planets) {
-        const p = hookData.planets[key];
-        if (!p) continue; // Skip if planet data is null or undefined
-
-        const baseBody = createDefaultCelestialBody(p.name || key, (p.sign as ZodiacSign) || 'Aries');
-        
-        const celestialBody: CelestialBody = {
-          ...baseBody,
-          name: p.name || key,
-          longitude: p.longitude,
-          sign: (p.sign as ZodiacSign) || 'Aries',
-          degree: p.degree ?? (p as any).degrees ?? 0,
-          minute: p.minute ?? 0,
-          retrograde: p.retrograde ?? false,
-          speed: (p as any).speed ?? baseBody.speed,
-          latitude: (p as any).latitude ?? baseBody.latitude,
-          distance: (p as any).distance ?? baseBody.distance,
-          house: (p as any).house ?? baseBody.house,
-          declination: (p as any).declination ?? baseBody.declination,
-          rightAscension: (p as any).rightAscension ?? baseBody.rightAscension,
-          phase: (p as any).phase ?? baseBody.phase,
-          phaseValue: (p as any).phaseValue ?? baseBody.phaseValue,
-          phase_name: (p as any).phase_name ?? baseBody.phase_name,
-          magnitude: (p as any).magnitude ?? baseBody.magnitude,
-          illumination: (p as any).illumination ?? baseBody.illumination,
-          dignity: (p as any).dignity ?? baseBody.dignity,
-        };
-        planetsData[key.toLowerCase()] = celestialBody; // Ensure consistent casing for keys
-        if (key.toLowerCase() === 'sun') sunBody = celestialBody;
-        if (key.toLowerCase() === 'moon') moonBody = celestialBody;
-      }
-    }
-
-    const finalSunData = sunBody || createDefaultCelestialBody('Sun', (hookData.planets?.sun?.sign as ZodiacSign) || 'Aries');
-    const finalMoonData = moonBody || createDefaultCelestialBody('Moon', (hookData.planets?.moon?.sign as ZodiacSign) || 'Aries');
-    
-    const moonPhaseData: MoonPhaseInfo = {
-      name: hookData.moonPhase?.name || 'New Moon',
-      value: hookData.moonPhase?.value ?? 0,
-      illumination: hookData.moonPhase?.illumination ?? 0,
-      nextFullMoon: hookData.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000), // Default to ~30 days from now if not available
-      ageInDays: hookData.moonPhase?.ageInDays ?? 0,
-      phaseType: hookData.moonPhase?.phaseType || 'new'
-    };
-
-    const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
-    const aspectsData: Aspect[] = (hookData.aspects || []).map(hookAspect => {
-      const aspectType = hookAspect.type.toLowerCase() as AspectType;
-      // Attempt to find a more specific interpretation if available
-      let interpretation = (hookAspect as any).interpretation || (hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`] as string);
-      // Fallback for general aspect type interpretation if specific one is missing
-      if (!interpretation) {
-        interpretation = (hookData.interpretations?.[hookAspect.type] as string) || 'General influence';
-      }
-      // Check for lacking interpretation for specific planets
-      let lackingInterpretation = '';
-      if (!(hookAspect as any).interpretation && !hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`]) {
-        lackingInterpretation = `Interpretation for ${hookAspect.planets[0]?.name} ${hookAspect.type} ${hookAspect.planets[1]?.name} is pending.`;
-      }
-      if (interpretation && lackingInterpretation) {
-        interpretation += ` Additionally, ${lackingInterpretation.charAt(0).toLowerCase() + lackingInterpretation.slice(1)}`;
-      } else if (lackingInterpretation) {
-        interpretation = lackingInterpretation;
-      }
-
-      return {
-        from: hookAspect.planets[0]?.name || 'Unknown Planet',
-        to: hookAspect.planets[1]?.name || 'Unknown Planet',
-        type: aspectType,
-        orb: hookAspect.orb,
-        influence: { 
-          description: interpretation,
-          strength: (hookAspect as any).influence?.strength ?? 0.5,
-          area: (hookAspect as any).influence?.area ?? [],
-        },
-        exact: Math.abs(hookAspect.orb) < 1, 
-      };
-    }).filter(aspect => validAspectTypes.includes(aspect.type));
-    
-    const gamePredictionInput: GamePredictionData = {
-      date: hookData.date,
-      queryTime: hookData.queryTime || new Date().toISOString(),
-      observer: {
-        latitude: observerData.latitude,
-        longitude: observerData.longitude,
-        timezone: observerData.timezone,
-        altitude: 0, 
-      },
-      sun: finalSunData,
-      moon: finalMoonData,
-      planets: planetsData,
-      aspects: aspectsData,
-      moonPhase: moonPhaseData,
-      elements: hookData.elements || {
-        fire: { score: 0, planets: [], percentage: 0 },
-        earth: { score: 0, planets: [], percentage: 0 },
-        water: { score: 0, planets: [], percentage: 0 },
-        air: { score: 0, planets: [], percentage: 0 },
-      },
-      modalities: hookData.modalities as ModalBalance | undefined,
-      houses: hookData.houses as any, 
-      patterns: hookData.patterns as any, 
-      dignities: hookData.dignities as any, 
-    };
-    return gamePredictionInput;
-  };
+  // Use the imported transformAstroData utility function
+  const transformHookDataToGamePredictionData = transformAstroData;
 
   // Get sports predictions from astrological data
   const sportsPredictions = useMemo(() => {
