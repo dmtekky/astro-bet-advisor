@@ -30,11 +30,34 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        'Content-Security-Policy': [
+          "default-src 'self';",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;",
+          "style-src 'self' 'unsafe-inline' https:;",
+          "img-src 'self' data: https:;",
+          "font-src 'self' data: https:;",
+          "connect-src 'self' https:;",
+          "frame-src 'self';",
+          "media-src 'self' https:;"
+        ].join(' '),
+        'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+      },
       proxy: {
         // Proxy API requests to our API server running on port 3001
         '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
+          headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+          },
         },
       },
     },
