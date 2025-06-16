@@ -1,52 +1,51 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Slick Carousel Styles */
 .slick-slide {
-  padding: 0 10px;
+    padding: 0 10px;
 }
 
 .slick-list {
-  margin: 0 -10px;
+    margin: 0 -10px;
 }
 
 .slick-prev:before,
 .slick-next:before {
-  color: #f59e0b !important;
+    color: #f59e0b !important;
 }
 
 .slick-dots li button:before {
-  color: #f59e0b !important;
-  opacity: 0.5;
+    color: #f59e0b !important;
+    opacity: 0.5;
 }
 
 .slick-dots li.slick-active button:before {
-  color: #f59e0b !important;
-  opacity: 1;
+    color: #f59e0b !important;
+    opacity: 1;
 }
 
 @layer base {
@@ -56,86 +55,91 @@
     background-color: #f9fafb !important; /* Lightest Tailwind gray */
     color: #111827 !important; /* Tailwind gray-900 */
   }
-  
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    @apply w-2 h-2;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full hover:bg-gray-400;
-  }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        @apply w-2 h-2;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-gray-100;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-gray-300 rounded-full hover:bg-gray-400;
+    }
 }
 
 @layer components {
-  .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
-  }
-  
-  .btn-primary {
-    @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
-  }
-  
-  .btn-secondary {
-    @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-indigo-500;
-  }
-  
-  .card {
-    @apply bg-white rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg;
-  }
-  
-  .card-header {
-    @apply px-6 py-4 border-b border-gray-100;
-  }
-  
-  .card-body {
-    @apply p-6;
-  }
-  
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-  
-  .badge-primary {
-    @apply bg-indigo-100 text-indigo-800;
-  }
-  
-  .badge-success {
-    @apply bg-green-100 text-green-800;
-  }
-  
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-  }
-  
-  .badge-danger {
-    @apply bg-red-100 text-red-800;
-  }
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+    }
+
+    .btn-primary {
+        @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
+    }
+
+    .btn-secondary {
+        @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-indigo-500;
+    }
+
+    .card {
+        @apply bg-white rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-gray-100;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-primary {
+        @apply bg-indigo-100 text-indigo-800;
+    }
+
+    .badge-success {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .badge-warning {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .badge-danger {
+        @apply bg-red-100 text-red-800;
+    }
 }
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .animate-pulse-slow {
-  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Custom styles for astrological elements */
 .moon-phase {
-  @apply relative w-6 h-6 rounded-full bg-gray-200 overflow-hidden;
+    @apply relative w-6 h-6 rounded-full bg-gray-200 overflow-hidden;
 }
 
 .moon-phase::before {
-  content: '';
-  @apply absolute top-0 left-0 w-1/2 h-full bg-indigo-500 rounded-full;
-  transform: translateX(50%);
+    content: "";
+    @apply absolute top-0 left-0 w-1/2 h-full bg-indigo-500 rounded-full;
+    transform: translateX(50%);
 }
 
 @layer base {
@@ -143,39 +147,39 @@
     --background: 210 40% 98%; /* light gray */
     --foreground: 222 47% 11%; /* dark text */
 
-    --card: 0 0% 100%; /* white cards */
-    --card-foreground: 222 47% 11%;
+        --card: 0 0% 100%; /* white cards */
+        --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
 
-    --primary: 252 59% 48%;
-    --primary-foreground: 0 0% 100%;
+        --primary: 252 59% 48%;
+        --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 95%;
-    --secondary-foreground: 222 47% 11%;
+        --secondary: 217 33% 95%;
+        --secondary-foreground: 222 47% 11%;
 
-    --muted: 217 33% 95%;
-    --muted-foreground: 222 47% 11%;
+        --muted: 217 33% 95%;
+        --muted-foreground: 222 47% 11%;
 
-    --accent: 217 33% 90%;
-    --accent-foreground: 222 47% 11%;
+        --accent: 217 33% 90%;
+        --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 85%;
-    --input: 217 33% 85%;
-    --ring: 212 100% 47%;
-    
-    --radius: 0.5rem;
-  }
+        --border: 217 33% 85%;
+        --input: 217 33% 85%;
+        --ring: 212 100% 47%;
+
+        --radius: 0.5rem;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
   body {
     @apply bg-background text-foreground;

@@ -33,10 +33,9 @@ import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 
-
 function AppContent() {
   const location = useLocation();
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -52,24 +51,36 @@ function AppContent() {
           <Route path="/event/:id" element={<EventDetails />} />
           {/* NBA-specific routes */}
           <Route path="/nba/teams" element={<NbaTeamsPage />} />
-          
+
           {/* Legal Pages */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
           <Route path="/nba/players" element={<NbaPlayersPage />} />
-          <Route path="/nba/players/:playerId" element={<BasketballPlayerPage />} />
-          
+          <Route
+            path="/nba/players/:playerId"
+            element={<BasketballPlayerPage />}
+          />
+
           {/* Team and player routes */}
           <Route path="/teams/:teamId" element={<TeamPage />} />
-          
+
           {/* Redirects for old NBA player URLs */}
           <Route path="/team/:teamId" element={<TeamPageWrapper />} />
-          <Route path="/team/:teamId/player/:playerId" element={<PlayerDetailPageWrapper />} />
-          <Route path="/teams/:teamId/players/:playerId" element={<PlayerDetailPageWrapper />} />
-          
+          <Route
+            path="/team/:teamId/player/:playerId"
+            element={<PlayerDetailPageWrapper />}
+          />
+          <Route
+            path="/teams/:teamId/players/:playerId"
+            element={<PlayerDetailPageWrapper />}
+          />
+
           {/* Legacy player detail route - redirect to basketball player page */}
-          <Route path="/teams/:teamId/player-details/:playerId" element={<BasketballPlayerPage />} />
+          <Route
+            path="/teams/:teamId/player-details/:playerId"
+            element={<BasketballPlayerPage />}
+          />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
           <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
@@ -80,13 +91,16 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          
+
           {/* Protected Routes */}
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -129,10 +143,12 @@ const TeamPageWrapper = () => {
 const PlayerDetailPageWrapper = () => {
   const { teamId, playerId } = useParams();
   // Redirect to the basketball player page for NBA teams
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // Check if this is an NBA team (you might need to adjust this condition based on your team IDs)
-    const isNbaTeam = teamId && (teamId.startsWith('nba-') || teamId.toLowerCase().includes('nba'));
-    
+    const isNbaTeam =
+      teamId &&
+      (teamId.startsWith("nba-") || teamId.toLowerCase().includes("nba"));
+
     if (isNbaTeam) {
       window.location.href = `/nba/players/${playerId}`;
     } else {
