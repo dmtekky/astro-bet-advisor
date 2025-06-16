@@ -1,18 +1,36 @@
-import React, { useState, useEffect, useMemo, useCallback, Fragment } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import GameCard from '@/components/GameCard';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { groupGamesByDate, formatGameDate } from '@/utils/dateUtils';
-import { useTeams } from '@/hooks/useTeams';
-import { useUpcomingGames } from '@/hooks/useUpcomingGames';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  Fragment,
+} from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import GameCard from "@/components/GameCard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { groupGamesByDate, formatGameDate } from "@/utils/dateUtils";
+import { useTeams } from "@/hooks/useTeams";
+import { useUpcomingGames } from "@/hooks/useUpcomingGames";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import {
   Sparkles,
   Newspaper,
   ArrowRight,
@@ -29,21 +47,32 @@ import {
   AlertTriangle,
   CheckCircle,
   AlertCircle,
-  TrendingUp
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAstroData } from '@/hooks/useAstroData';
-import type { Team } from '@/types';
-import type { Game } from '@/types';
-import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
-import type { ModalBalance, ElementalBalance, ZodiacSign, AspectType, MoonPhaseInfo, CelestialBody, Aspect } from '@/types/astrology';
-import type { GamePredictionData } from '@/types/gamePredictions';
-import type { Article } from '../types/news';
-import { createDefaultCelestialBody } from '@/types/gamePredictions';
+  TrendingUp,
+} from "lucide-react";
+import { format } from "date-fns";
+import { useNavigate, Link } from "react-router-dom";
+import { useAstroData } from "@/hooks/useAstroData";
+import type { Team } from "@/types";
+import type { Game } from "@/types";
+import {
+  calculateSportsPredictions,
+  predictGameOutcome,
+} from "@/utils/sportsPredictions";
+import type {
+  ModalBalance,
+  ElementalBalance,
+  ZodiacSign,
+  AspectType,
+  MoonPhaseInfo,
+  CelestialBody,
+  Aspect,
+} from "@/types/astrology";
+import type { GamePredictionData } from "@/types/gamePredictions";
+import type { Article } from "../types/news";
+import { createDefaultCelestialBody } from "@/types/gamePredictions";
 
 // Extend the Team interface to include additional properties used in the component
-interface ExtendedTeam extends Omit<Team, 'logo' | 'logo_url' | 'external_id'> {
+interface ExtendedTeam extends Omit<Team, "logo" | "logo_url" | "external_id"> {
   logo_url?: string;
   logo?: string;
   primary_color?: string;
@@ -77,52 +106,60 @@ interface ElementsDistribution {
 }
 
 // Constants
-import { Sport } from '@/types';
+import { Sport } from "@/types";
 
-const MLB_LEAGUE_KEY: Sport = 'mlb';
-const DEFAULT_LOGO = '/images/default-team-logo.svg';
+const MLB_LEAGUE_KEY: Sport = "mlb";
+const DEFAULT_LOGO = "/images/default-team-logo.svg";
 
-import AstroDisclosure from '@/components/AstroDisclosure';
+import AstroDisclosure from "@/components/AstroDisclosure";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(true);
   const [articleError, setArticleError] = useState<string | null>(null);
-  const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
-  
+  const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>(
+    [],
+  );
+
   // Fetch the featured article from the news API
   useEffect(() => {
     const fetchFeaturedArticle = async () => {
       try {
         setIsLoadingArticle(true);
-        const response = await fetch('/news/index.json');
-        
+        const response = await fetch("/news/index.json");
+
         if (!response.ok) {
-          throw new Error(`Failed to fetch articles: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch articles: ${response.status} ${response.statusText}`,
+          );
         }
-        
+
         const data = await response.json();
-        const articles = Array.isArray(data) ? data : (data.articles || []);
-        
+        const articles = Array.isArray(data) ? data : data.articles || [];
+
         if (articles.length > 0) {
           const latestArticle = articles[0];
           // Map the article to match our Article interface
           const mappedArticle: Article = {
             slug: latestArticle.slug || `article-${Date.now()}`,
-            title: latestArticle.title || 'Latest News',
-            subheading: latestArticle.description || '',
-            contentHtml: latestArticle.content || `<p>${latestArticle.description || ''}</p>`,
-            featureImageUrl: latestArticle.image || '',
+            title: latestArticle.title || "Latest News",
+            subheading: latestArticle.description || "",
+            contentHtml:
+              latestArticle.content ||
+              `<p>${latestArticle.description || ""}</p>`,
+            featureImageUrl: latestArticle.image || "",
             publishedAt: latestArticle.publishedAt || new Date().toISOString(),
-            author: latestArticle.author || 'AI Insights',
-            tags: latestArticle.tags || ['MLB', 'News'],
+            author: latestArticle.author || "AI Insights",
+            tags: latestArticle.tags || ["MLB", "News"],
           };
           setFeaturedArticle(mappedArticle);
         }
       } catch (err) {
-        console.error('Error fetching featured article:', err);
-        setArticleError('Failed to load the latest news. Please try again later.');
+        console.error("Error fetching featured article:", err);
+        setArticleError(
+          "Failed to load the latest news. Please try again later.",
+        );
       } finally {
         setIsLoadingArticle(false);
       }
@@ -133,41 +170,48 @@ const Dashboard: React.FC = () => {
   // State for today's date
   const today = useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
-  
+
   // Memoize date string for API call
-  const dateString = useMemo(() => selectedDate.toISOString().split('T')[0], [selectedDate]);
-  
+  const dateString = useMemo(
+    () => selectedDate.toISOString().split("T")[0],
+    [selectedDate],
+  );
+
   // Fetch teams and games data
-  const { 
-    teams, 
-    teamMap, 
-    teamByExternalId, 
-    loading: teamsLoading, 
+  const {
+    teams,
+    teamMap,
+    teamByExternalId,
+    loading: teamsLoading,
     error: teamsError,
     resolvedLeagueId: mlbLeagueId, // Rename for clarity
-    isLeagueResolutionComplete: isMlbLeagueResolutionComplete
+    isLeagueResolutionComplete: isMlbLeagueResolutionComplete,
   } = useTeams(MLB_LEAGUE_KEY);
-  
+
   // Fetch upcoming games only when MLB league ID resolution is complete
-  const { 
-    games, 
-    loading: gamesLoading, 
-    error: gamesError 
+  const {
+    games,
+    loading: gamesLoading,
+    error: gamesError,
   } = useUpcomingGames({
-    sport: MLB_LEAGUE_KEY, 
+    sport: MLB_LEAGUE_KEY,
     limit: 12,
     // Only pass leagueId if resolution is complete and ID is available
     leagueId: isMlbLeagueResolutionComplete ? mlbLeagueId : null,
     // Disable hook if resolution is not complete and we are targeting MLB
-    disabled: MLB_LEAGUE_KEY && !isMlbLeagueResolutionComplete 
+    disabled: MLB_LEAGUE_KEY && !isMlbLeagueResolutionComplete,
   });
 
   // Memoized astro data hook call with stable date string
   const stableDateString = useMemo(() => {
-    return new Date().toISOString().split('T')[0];
+    return new Date().toISOString().split("T")[0];
   }, []);
 
-  const { astroData, loading: astroLoading, error: astroError } = useAstroData(stableDateString);
+  const {
+    astroData,
+    loading: astroLoading,
+    error: astroError,
+  } = useAstroData(stableDateString);
 
   // Memoize elements distribution
   const elementsDistribution = useMemo(() => {
@@ -176,7 +220,7 @@ const Dashboard: React.FC = () => {
       fire: astroData.elements.fire?.score || 0,
       earth: astroData.elements.earth?.score || 0,
       water: astroData.elements.water?.score || 0,
-      air: astroData.elements.air?.score || 0
+      air: astroData.elements.air?.score || 0,
     };
   }, [astroData]);
 
@@ -189,29 +233,36 @@ const Dashboard: React.FC = () => {
   // Group games by date
   const groupedGames = useMemo(() => {
     if (!games || games.length === 0) return [];
-    
-    const groups = games.reduce<Record<string, { date: Date; games: Game[] }>>((acc, game) => {
-      const dateKey = new Date(game.start_time || '').toISOString().split('T')[0];
-      if (!acc[dateKey]) {
-        acc[dateKey] = { date: new Date(dateKey), games: [] };
-      }
-      acc[dateKey].games.push(game);
-      return acc;
-    }, {});
-    
-    return Object.values(groups).sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const groups = games.reduce<Record<string, { date: Date; games: Game[] }>>(
+      (acc, game) => {
+        const dateKey = new Date(game.start_time || "")
+          .toISOString()
+          .split("T")[0];
+        if (!acc[dateKey]) {
+          acc[dateKey] = { date: new Date(dateKey), games: [] };
+        }
+        acc[dateKey].games.push(game);
+        return acc;
+      },
+      {},
+    );
+
+    return Object.values(groups).sort(
+      (a, b) => a.date.getTime() - b.date.getTime(),
+    );
   }, [games]);
-  
+
   // Single handler definition
   const handleSeeMoreGames = useCallback(() => {
-    navigate('/games');
+    navigate("/games");
   }, [navigate]);
 
   // Transform games data for display
   const processedGames = useMemo(() => {
     if (!games) return [];
-    
-    return games.map(game => ({
+
+    return games.map((game) => ({
       ...game,
       // Add any game processing logic here
     }));
@@ -219,39 +270,46 @@ const Dashboard: React.FC = () => {
 
   // Create a memoized function to get game-specific predictions
   const getGamePrediction = useCallback(
-    (game: Game, homeTeam: Team | ExtendedTeam, awayTeam: Team | ExtendedTeam) => {
+    (
+      game: Game,
+      homeTeam: Team | ExtendedTeam,
+      awayTeam: Team | ExtendedTeam,
+    ) => {
       if (!sportsPredictions || !sportsPredictions.games) return null;
-      
+
       // Find prediction for this game
-      return sportsPredictions.games.find(
-        (pred: any) => pred && pred.gameId === game.id
-      ) || null;
+      return (
+        sportsPredictions.games.find(
+          (pred: any) => pred && pred.gameId === game.id,
+        ) || null
+      );
     },
-    [sportsPredictions]
+    [sportsPredictions],
   );
 
   // Helper function to find a team with proper type casting
   const findTeam = (teamId: string): Team | undefined => {
     const team = teamMap?.[teamId] as ExtendedTeam | undefined;
     if (!team) return undefined;
-    
+
     const teamData: Team = {
       id: team.id || teamId,
-      name: team.name || 'Unknown Team',
-      abbreviation: team.abbreviation || team.name?.substring(0, 3).toUpperCase() || 'TBD',
+      name: team.name || "Unknown Team",
+      abbreviation:
+        team.abbreviation || team.name?.substring(0, 3).toUpperCase() || "TBD",
       logo_url: team.logo_url || team.logo || DEFAULT_LOGO,
-      sport: 'baseball_mlb' 
+      sport: "baseball_mlb",
     };
     // Add external_id if it exists
     if (team.external_id !== undefined) {
       (teamData as any).external_id = String(team.external_id);
     }
-    
+
     // Add optional properties if they exist
     if (team.city) teamData.city = team.city;
     if (team.primary_color) teamData.primary_color = team.primary_color;
     if (team.secondary_color) teamData.secondary_color = team.secondary_color;
-    
+
     return teamData;
   };
 
@@ -263,16 +321,16 @@ const Dashboard: React.FC = () => {
       let earthScore = 0;
       let waterScore = 0;
       let airScore = 0;
-      
+
       // Process elements from astroData
       if (astroData.elements) {
         const elements = astroData.elements as any;
-        if (typeof elements.fire === 'number') {
+        if (typeof elements.fire === "number") {
           fireScore = elements.fire || 0;
           earthScore = elements.earth || 0;
           waterScore = elements.water || 0;
           airScore = elements.air || 0;
-        } else if (elements.fire && typeof elements.fire === 'object') {
+        } else if (elements.fire && typeof elements.fire === "object") {
           fireScore = elements.fire.score || 0;
           earthScore = elements.earth?.score || 0;
           waterScore = elements.water?.score || 0;
@@ -284,59 +342,75 @@ const Dashboard: React.FC = () => {
 
       // Format astrological influences
       const influences: AstrologyInfluence[] = [];
-      
+
       // Safely get sun sign from astroData
       const sunSign = astroData.planets?.sun?.sign;
-      
+
       // Sun Position is now handled in a dedicated, visually distinct panel below the Moon & Void Status panel. Remove from influences.
-      
+
       // Add moon phase influence if available
-      const moonPhase = astroData.moon?.phase_name || (astroData.planets?.moon as any)?.phase_name;
+      const moonPhase =
+        astroData.moon?.phase_name ||
+        (astroData.planets?.moon as any)?.phase_name;
       if (moonPhase) {
         influences.push({
-          name: 'Lunar Influence',
+          name: "Lunar Influence",
           impact: 0.7,
           description: `${moonPhase} Moon ${getMoonPhaseImpact(moonPhase)}`,
-          icon: <Moon className="h-5 w-5 text-slate-400" />
+          icon: <Moon className="h-5 w-5 text-slate-400" />,
         });
       }
-      
+
       // Add retrograde planets if any
       const retrogradePlanets = [];
       if (astroData.planets) {
-        Object.entries(astroData.planets).forEach(([planet, data]: [string, any]) => {
-          if (data?.retrograde) {
-            retrogradePlanets.push(planet);
-          }
-        });
+        Object.entries(astroData.planets).forEach(
+          ([planet, data]: [string, any]) => {
+            if (data?.retrograde) {
+              retrogradePlanets.push(planet);
+            }
+          },
+        );
       }
-      
+
       if (retrogradePlanets.length > 0) {
-        const planetNames = retrogradePlanets.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
+        const planetNames = retrogradePlanets
+          .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+          .join(", ");
         influences.push({
-          name: 'Retrograde Planets',
+          name: "Retrograde Planets",
           impact: 0.6,
-          description: `${planetNames} ${retrogradePlanets.length > 1 ? 'are' : 'is'} retrograde, which may affect ${retrogradePlanets.length > 1 ? 'their' : 'its'} related aspects of the game`,
-          icon: <Info className="h-5 w-5 text-orange-500" />
+          description: `${planetNames} ${retrogradePlanets.length > 1 ? "are" : "is"} retrograde, which may affect ${retrogradePlanets.length > 1 ? "their" : "its"} related aspects of the game`,
+          icon: <Info className="h-5 w-5 text-orange-500" />,
         });
       }
-      
+
       // Add dominant element influence if we have element data
       if (totalElements > 0) {
-        const elementScores = { fire: fireScore, earth: earthScore, air: airScore, water: waterScore };
-        const dominantEntry = Object.entries(elementScores).sort((a, b) => b[1] - a[1])[0];
-        
+        const elementScores = {
+          fire: fireScore,
+          earth: earthScore,
+          air: airScore,
+          water: waterScore,
+        };
+        const dominantEntry = Object.entries(elementScores).sort(
+          (a, b) => b[1] - a[1],
+        )[0];
+
         if (dominantEntry && dominantEntry[1] > 0) {
-          const [dominantElement, score] = dominantEntry as [keyof ElementsDistribution, number];
+          const [dominantElement, score] = dominantEntry as [
+            keyof ElementsDistribution,
+            number,
+          ];
           influences.push({
-            name: 'Dominant Element',
-            impact: Math.min(0.9, 0.5 + (score / totalElements)),
+            name: "Dominant Element",
+            impact: Math.min(0.9, 0.5 + score / totalElements),
             description: `Strong ${dominantElement} influence (${Math.round((score / totalElements) * 100)}%) affects player ${getElementImpact(dominantElement)}`,
-            icon: <Activity className="h-5 w-5 text-indigo-500" />
+            icon: <Activity className="h-5 w-5 text-indigo-500" />,
           });
         }
       }
-      
+
       setAstroInfluences(influences);
     }
   }, [astroData]);
@@ -344,69 +418,71 @@ const Dashboard: React.FC = () => {
   // Helper functions for astrological descriptions
   function getSunSignImpact(sign: string): string {
     const impacts: Record<string, string> = {
-      'Aries': 'assertive and competitive',
-      'Taurus': 'consistent and determined',
-      'Gemini': 'adaptable and strategic',
-      'Cancer': 'intuitive and defensive',
-      'Leo': 'confident and dominant',
-      'Virgo': 'analytical and precise',
-      'Libra': 'balanced and fair',
-      'Scorpio': 'intense and tactical',
-      'Sagittarius': 'optimistic and risk-taking',
-      'Capricorn': 'disciplined and methodical',
-      'Aquarius': 'innovative and unpredictable',
-      'Pisces': 'intuitive and fluid'
+      Aries: "assertive and competitive",
+      Taurus: "consistent and determined",
+      Gemini: "adaptable and strategic",
+      Cancer: "intuitive and defensive",
+      Leo: "confident and dominant",
+      Virgo: "analytical and precise",
+      Libra: "balanced and fair",
+      Scorpio: "intense and tactical",
+      Sagittarius: "optimistic and risk-taking",
+      Capricorn: "disciplined and methodical",
+      Aquarius: "innovative and unpredictable",
+      Pisces: "intuitive and fluid",
     };
-    return impacts[sign] || 'influential';
+    return impacts[sign] || "influential";
   }
 
   function getMoonPhaseImpact(phase: string): string {
     const impacts: Record<string, string> = {
-      'New Moon': 'suggests fresh strategies and new beginnings',
-      'Waxing Crescent': 'brings building momentum and growing confidence',
-      'First Quarter': 'favors decisive action and breakthrough moments',
-      'Waxing Gibbous': 'enhances skill refinement and preparation',
-      'Full Moon': 'amplifies performance intensity and visibility',
-      'Waning Gibbous': 'supports teamwork and collaborative efforts',
-      'Last Quarter': 'indicates strategic adjustments and reassessment',
-      'Waning Crescent': 'suggests introspection and renewal'
+      "New Moon": "suggests fresh strategies and new beginnings",
+      "Waxing Crescent": "brings building momentum and growing confidence",
+      "First Quarter": "favors decisive action and breakthrough moments",
+      "Waxing Gibbous": "enhances skill refinement and preparation",
+      "Full Moon": "amplifies performance intensity and visibility",
+      "Waning Gibbous": "supports teamwork and collaborative efforts",
+      "Last Quarter": "indicates strategic adjustments and reassessment",
+      "Waning Crescent": "suggests introspection and renewal",
     };
-    return impacts[phase] || 'influences game dynamics';
+    return impacts[phase] || "influences game dynamics";
   }
 
   function getElementImpact(element: string): string {
     const impacts: Record<string, string> = {
-      'fire': 'aggression and risk-taking',
-      'earth': 'endurance and reliability',
-      'air': 'strategy and communication',
-      'water': 'intuition and flow'
+      fire: "aggression and risk-taking",
+      earth: "endurance and reliability",
+      air: "strategy and communication",
+      water: "intuition and flow",
     };
-    return impacts[element.toLowerCase()] || 'performance';
+    return impacts[element.toLowerCase()] || "performance";
   }
 
   function getSunElement(sign: string): string {
     const elements: Record<string, string> = {
-      'Aries': 'Fire',
-      'Taurus': 'Earth',
-      'Gemini': 'Air',
-      'Cancer': 'Water',
-      'Leo': 'Fire',
-      'Virgo': 'Earth',
-      'Libra': 'Air',
-      'Scorpio': 'Water',
-      'Sagittarius': 'Fire',
-      'Capricorn': 'Earth',
-      'Aquarius': 'Air',
-      'Pisces': 'Water'
+      Aries: "Fire",
+      Taurus: "Earth",
+      Gemini: "Air",
+      Cancer: "Water",
+      Leo: "Fire",
+      Virgo: "Earth",
+      Libra: "Air",
+      Scorpio: "Water",
+      Sagittarius: "Fire",
+      Capricorn: "Earth",
+      Aquarius: "Air",
+      Pisces: "Water",
     };
-    return elements[sign] || '—';
+    return elements[sign] || "—";
   }
 
-  function getSunSportsInfluences(astroData: any): { text: string; color: string }[] {
+  function getSunSportsInfluences(
+    astroData: any,
+  ): { text: string; color: string }[] {
     const influences: { text: string; color: string }[] = [];
-    
+
     if (!astroData) return influences;
-    
+
     // Use the sunSign property directly from the API response
     if (astroData.sunSign) {
       const sign = astroData.sunSign;
@@ -414,7 +490,14 @@ const Dashboard: React.FC = () => {
 
       influences.push({
         text: `The Sun in ${sign} brings ${getSunSignImpact(sign)} energy to today's games`,
-        color: element === 'Fire' ? 'bg-red-500' : element === 'Earth' ? 'bg-green-500' : element === 'Air' ? 'bg-sky-300' : 'bg-indigo-500'
+        color:
+          element === "Fire"
+            ? "bg-red-500"
+            : element === "Earth"
+              ? "bg-green-500"
+              : element === "Air"
+                ? "bg-sky-300"
+                : "bg-indigo-500",
       });
     }
 
@@ -422,7 +505,7 @@ const Dashboard: React.FC = () => {
       const degree = Math.floor(astroData.planets.sun.degree);
       influences.push({
         text: `The Sun is at ${degree}°, which may indicate ${getDegreeImpact(degree)} performance`,
-        color: 'bg-orange-500'
+        color: "bg-orange-500",
       });
     }
 
@@ -431,25 +514,29 @@ const Dashboard: React.FC = () => {
 
   function getDegreeImpact(degree: number): string {
     const impacts: Record<string, string> = {
-      '0-10': 'strong start',
-      '11-20': 'building momentum',
-      '21-30': 'peak performance'
+      "0-10": "strong start",
+      "11-20": "building momentum",
+      "21-30": "peak performance",
     };
     const range = Object.keys(impacts).find((r) => {
-      const [start, end] = r.split('-').map((n) => parseInt(n));
+      const [start, end] = r.split("-").map((n) => parseInt(n));
       return degree >= start && degree <= end;
     });
-    return impacts[range] || 'variable';
+    return impacts[range] || "variable";
   }
 
   // Helper function to format degrees and minutes for display
   function formatDegreesMinutes(degrees: number, minutes: number): string {
-    return `${Math.floor(degrees)}°${minutes ? ` ${minutes}'` : ''}`;
+    return `${Math.floor(degrees)}°${minutes ? ` ${minutes}'` : ""}`;
   }
 
   // Helper function to get moon aspect message based on phase and sign with sports focus
-  const getMoonAspectMessage = (moonPhaseData: MoonPhaseInfo | undefined, moonSign: ZodiacSign | undefined): string => {
-    if (!moonPhaseData) return 'Analyzing lunar influences on sports performance';
+  const getMoonAspectMessage = (
+    moonPhaseData: MoonPhaseInfo | undefined,
+    moonSign: ZodiacSign | undefined,
+  ): string => {
+    if (!moonPhaseData)
+      return "Analyzing lunar influences on sports performance";
 
     const { name: phaseName, value: phaseValue, illumination } = moonPhaseData;
 
@@ -462,76 +549,125 @@ const Dashboard: React.FC = () => {
     let description = `Current lunar phase (${phaseName}, ${Math.round(illumination * 100)}% illuminated) `;
 
     if (isWaxing) {
-      description += 'favors teams building momentum. ';
-      description += 'Look for squads that improve as the game progresses. ';
-      if (illumination > 0.7) { // Closer to Full Moon within waxing period
-        description += 'Peak performance conditions expected. ';
+      description += "favors teams building momentum. ";
+      description += "Look for squads that improve as the game progresses. ";
+      if (illumination > 0.7) {
+        // Closer to Full Moon within waxing period
+        description += "Peak performance conditions expected. ";
       }
     } else if (isWaning) {
-      description += 'may benefit experienced teams. ';
-      description += 'Watch for veteran players making key plays. ';
-      if (illumination < 0.3) { // Closer to New Moon within waning period
-        description += 'Potential for unexpected outcomes increases. ';
+      description += "may benefit experienced teams. ";
+      description += "Watch for veteran players making key plays. ";
+      if (illumination < 0.3) {
+        // Closer to New Moon within waning period
+        description += "Potential for unexpected outcomes increases. ";
       }
-    } else if (phaseName === 'Full Moon' || Math.abs(phaseValue - 0.5) < 0.05) { // Check name or close value
-      description = 'Peak intensity conditions (Full Moon). Expect high-energy performances ';
-      description += 'and potential for standout individual efforts. ';
-    } else if (phaseName === 'New Moon' || phaseValue < 0.05 || phaseValue > 0.95) { // Check name or close value
-      description = 'Fresh start energy (New Moon). Underdogs may surprise, ';
-      description += 'and new strategies could prove effective. ';
+    } else if (phaseName === "Full Moon" || Math.abs(phaseValue - 0.5) < 0.05) {
+      // Check name or close value
+      description =
+        "Peak intensity conditions (Full Moon). Expect high-energy performances ";
+      description += "and potential for standout individual efforts. ";
+    } else if (
+      phaseName === "New Moon" ||
+      phaseValue < 0.05 ||
+      phaseValue > 0.95
+    ) {
+      // Check name or close value
+      description = "Fresh start energy (New Moon). Underdogs may surprise, ";
+      description += "and new strategies could prove effective. ";
     }
 
     if (moonSign) {
-      const signStrengths: Record<string, {traits: string, sports: string}> = {
-        'Aries': { traits: 'aggressive play, strong starts, physicality', sports: 'football, hockey, sprinting' },
-        'Taurus': { traits: 'endurance, consistency, strong defense', sports: 'baseball, golf, wrestling' },
-        'Gemini': { traits: 'quick thinking, adaptability, fast breaks', sports: 'basketball, tennis, soccer midfielders' },
-        'Cancer': { traits: 'team chemistry, home advantage, emotional plays', sports: 'team sports, swimming, water polo' },
-        'Leo': { traits: 'leadership, clutch performances, showmanship', sports: 'basketball, gymnastics, figure skating' },
-        'Virgo': { traits: 'precision, technical skills, strategy', sports: 'baseball, golf, figure skating' },
-        'Libra': { traits: 'teamwork, fair play, balanced attack', sports: 'basketball, tennis doubles, volleyball' },
-        'Scorpio': { traits: 'intensity, comebacks, mental toughness', sports: 'boxing, martial arts, football defense' },
-        'Sagittarius': { traits: 'risk-taking, long shots, adventurous play', sports: 'basketball, horse racing, archery' },
-        'Capricorn': { traits: 'discipline, strong defense, late-game strength', sports: 'football, weightlifting, cycling' },
-        'Aquarius': { traits: 'unconventional strategies, surprise plays', sports: 'basketball, soccer, extreme sports' },
-        'Pisces': { traits: 'creativity, intuition, fluid movement', sports: 'soccer, swimming, figure skating' }
+      const signStrengths: Record<string, { traits: string; sports: string }> =
+        {
+          Aries: {
+            traits: "aggressive play, strong starts, physicality",
+            sports: "football, hockey, sprinting",
+          },
+          Taurus: {
+            traits: "endurance, consistency, strong defense",
+            sports: "baseball, golf, wrestling",
+          },
+          Gemini: {
+            traits: "quick thinking, adaptability, fast breaks",
+            sports: "basketball, tennis, soccer midfielders",
+          },
+          Cancer: {
+            traits: "team chemistry, home advantage, emotional plays",
+            sports: "team sports, swimming, water polo",
+          },
+          Leo: {
+            traits: "leadership, clutch performances, showmanship",
+            sports: "basketball, gymnastics, figure skating",
+          },
+          Virgo: {
+            traits: "precision, technical skills, strategy",
+            sports: "baseball, golf, figure skating",
+          },
+          Libra: {
+            traits: "teamwork, fair play, balanced attack",
+            sports: "basketball, tennis doubles, volleyball",
+          },
+          Scorpio: {
+            traits: "intensity, comebacks, mental toughness",
+            sports: "boxing, martial arts, football defense",
+          },
+          Sagittarius: {
+            traits: "risk-taking, long shots, adventurous play",
+            sports: "basketball, horse racing, archery",
+          },
+          Capricorn: {
+            traits: "discipline, strong defense, late-game strength",
+            sports: "football, weightlifting, cycling",
+          },
+          Aquarius: {
+            traits: "unconventional strategies, surprise plays",
+            sports: "basketball, soccer, extreme sports",
+          },
+          Pisces: {
+            traits: "creativity, intuition, fluid movement",
+            sports: "soccer, swimming, figure skating",
+          },
+        };
+
+      const signData = signStrengths[moonSign] || {
+        traits: "competitive edge",
+        sports: "various sports",
       };
-      
-      const signData = signStrengths[moonSign] || { traits: 'competitive edge', sports: 'various sports' };
       description += `\n\n${moonSign} Influence:\n`;
       description += `• Strengths: ${signData.traits}\n`;
       description += `• Favors: ${signData.sports}`;
     }
-    
+
     return description;
   };
 
   // Helper function to get color class for element
   const getElementColor = (element: keyof ElementsDistribution): string => {
     const colors: Record<keyof ElementsDistribution, string> = {
-      fire: 'bg-red-500',
-      earth: 'bg-green-500',
-      air: 'bg-sky-400',
-      water: 'bg-indigo-500'
+      fire: "bg-red-500",
+      earth: "bg-green-500",
+      air: "bg-sky-400",
+      water: "bg-indigo-500",
     };
-    return colors[element] || 'bg-slate-400';
-  }
+    return colors[element] || "bg-slate-400";
+  };
 
   // Simple team color palette for game cards
   const teamColorPalette = {
     getTeamColors: (team?: Team) => {
       return {
-        primary: team?.primary_color || '#4338ca',
-        secondary: team?.secondary_color || '#818cf8',
-        text: '#ffffff'
+        primary: team?.primary_color || "#4338ca",
+        secondary: team?.secondary_color || "#818cf8",
+        text: "#ffffff",
       };
-    }
+    },
   };
 
   // Update the daily recommendation to use real data
   const dailyRecommendation = useMemo(() => {
     if (!astroData) {
-      return '';
+      return "";
     }
 
     // First, check if we have a sports prediction
@@ -541,7 +677,7 @@ const Dashboard: React.FC = () => {
 
     // Fall back to astrological data
     const elements = astroData.elements;
-    let dominantElement = '';
+    let dominantElement = "";
     let maxScore = 0;
 
     // Find the dominant element
@@ -553,8 +689,8 @@ const Dashboard: React.FC = () => {
     });
 
     // Generate recommendation based on dominant element
-    let recommendation = '';
-    
+    let recommendation = "";
+
     // Add moon phase influence if available
     if (astroData.moon?.phase_name) {
       recommendation += `With the ${astroData.moon.phase_name} Moon, `;
@@ -562,7 +698,7 @@ const Dashboard: React.FC = () => {
 
     // Add element-based recommendation
     recommendation += `The strong ${dominantElement} influence suggests ${getElementImpact(dominantElement)}.`;
-    
+
     return recommendation;
   }, [astroData, elementsDistribution, sportsPredictions]);
 
@@ -572,7 +708,7 @@ const Dashboard: React.FC = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut', delay: 0.2 },
+      transition: { duration: 0.6, ease: "easeOut", delay: 0.2 },
     },
   };
 
@@ -582,49 +718,49 @@ const Dashboard: React.FC = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
+        delayChildren: 0.2,
+      },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
-        type: 'spring',
+        type: "spring",
         stiffness: 100,
-        damping: 15
-      }
+        damping: 15,
+      },
     },
     hover: {
       y: -5,
-      transition: { duration: 0.2 }
-    }
+      transition: { duration: 0.2 },
+    },
   };
 
   const fadeIn = {
     hidden: { opacity: 0 },
-    show: { 
+    show: {
       opacity: 1,
       transition: {
         duration: 0.6,
-        ease: 'easeOut'
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
   const slideUp = {
     hidden: { opacity: 0, y: 30 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.16, 1, 0.3, 1]
-      }
-    }
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
   };
 
   const isLoading = astroLoading || teamsLoading || gamesLoading;
@@ -643,7 +779,11 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100">
       {featuredArticle && (
-        <Link to={`/news/${featuredArticle.slug}`} className="block group relative overflow-hidden" onClick={() => window.scrollTo(0, 0)}>
+        <Link
+          to={`/news/${featuredArticle.slug}`}
+          className="block group relative overflow-hidden"
+          onClick={() => window.scrollTo(0, 0)}
+        >
           {/* Animated cosmic background */}
           <div className="absolute inset-0 z-0 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950">
@@ -666,13 +806,13 @@ const Dashboard: React.FC = () => {
                     duration: Math.random() * 3 + 2,
                     repeat: Infinity,
                     ease: "easeInOut",
-                    delay: Math.random() * 2
+                    delay: Math.random() * 2,
                   }}
                 />
               ))}
-              
+
               {/* Animated gradient orbs */}
-              <motion.div 
+              <motion.div
                 className="absolute rounded-full w-64 h-64 -top-32 -right-32 bg-gradient-to-br from-purple-500/20 to-transparent blur-3xl"
                 animate={{
                   scale: [1, 1.1, 1],
@@ -680,10 +820,10 @@ const Dashboard: React.FC = () => {
                 transition={{
                   duration: 8,
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: "easeInOut",
                 }}
               />
-              <motion.div 
+              <motion.div
                 className="absolute rounded-full w-96 h-96 -bottom-48 -left-48 bg-gradient-to-tr from-indigo-500/20 to-transparent blur-3xl"
                 animate={{
                   scale: [1, 1.2, 1],
@@ -692,11 +832,11 @@ const Dashboard: React.FC = () => {
                   duration: 10,
                   repeat: Infinity,
                   ease: "easeInOut",
-                  delay: 2
+                  delay: 2,
                 }}
               />
             </div>
-            
+
             {/* Main content image with overlay */}
             <div className="absolute inset-0 z-10">
               {featuredArticle.featureImageUrl ? (
@@ -706,7 +846,8 @@ const Dashboard: React.FC = () => {
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80';
+                    target.src =
+                      "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80";
                   }}
                 />
               ) : (
@@ -728,27 +869,27 @@ const Dashboard: React.FC = () => {
           >
             <div className="max-w-4xl mx-auto w-full">
               {/* Decorative elements */}
-              <motion.div 
+              <motion.div
                 className="absolute top-6 right-6 w-16 h-1 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               />
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="mb-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-0 group-hover:from-purple-500 group-hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-purple-500/20"
                 >
                   <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                   Featured Insight
                 </Badge>
-                
-                <motion.h2 
+
+                <motion.h2
                   className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -756,9 +897,9 @@ const Dashboard: React.FC = () => {
                 >
                   {featuredArticle.title}
                 </motion.h2>
-                
+
                 {featuredArticle.subheading && (
-                  <motion.p 
+                  <motion.p
                     className="text-base md:text-lg text-white/90 max-w-3xl leading-relaxed line-clamp-2 font-light"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -767,8 +908,8 @@ const Dashboard: React.FC = () => {
                     {featuredArticle.subheading}
                   </motion.p>
                 )}
-                
-                <motion.div 
+
+                <motion.div
                   className="flex items-center mt-6 space-x-3"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -778,14 +919,17 @@ const Dashboard: React.FC = () => {
                     Read Full Story
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
                   </span>
-                  
+
                   {featuredArticle.publishedAt && (
                     <span className="text-sm text-white/70">
-                      {new Date(featuredArticle.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {new Date(featuredArticle.publishedAt).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )}
                     </span>
                   )}
                 </motion.div>
@@ -796,28 +940,34 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Main Dashboard Content Starts Here */}
-      <motion.div 
-        variants={container} 
-        initial="hidden"   
-        animate="show"     
-        exit="hidden"     
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        exit="hidden"
         className="space-y-8"
       >
-        <div className="container mx-auto px-4 md:px-6 lg:px-8 space-y-8">
-
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 space-y-8 bg-white">
           {/* Main Content */}
           {astroError ? (
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <p className="text-red-400 font-medium">Failed to load astrological data</p>
-              <p className="text-slate-500 mt-2">Please try again later</p>
+              <p className="text-red-500 font-medium">
+                Failed to load astrological data
+              </p>
+              <p className="text-gray-600 mt-2">Please try again later</p>
             </div>
           ) : (
             // No global error, proceed to render the main layout with individual section loading
             <div className="grid grid-cols-1 gap-8">
               {/* Upcoming Games Section (Full width) */}
-              <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
-                {(gamesLoading && (!games || games.length === 0)) ? (
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="space-y-8"
+              >
+                {gamesLoading && (!games || games.length === 0) ? (
                   // Skeletons for Games section
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                     <CardHeader className="pb-3">
@@ -826,7 +976,10 @@ const Dashboard: React.FC = () => {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton key={`game-skel-${i}`} className="h-64 rounded-xl" />
+                          <Skeleton
+                            key={`game-skel-${i}`}
+                            className="h-64 rounded-xl"
+                          />
                         ))}
                       </div>
                     </CardContent>
@@ -835,30 +988,44 @@ const Dashboard: React.FC = () => {
                   // Actual Games content
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-xl font-semibold text-slate-800">Upcoming Games</CardTitle>
+                      <CardTitle className="text-xl font-semibold text-gray-900">
+                        Upcoming Games
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {groupedGames.map((group) => (
                         <div key={group.date.toString()} className="mb-6">
-                          <h3 className="text-lg font-semibold text-slate-700 mb-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
-                            {format(group.date, 'EEEE, MMMM d')}
+                          <h3 className="text-lg font-semibold text-gray-800 mb-3 sticky top-0 bg-white py-2 z-10">
+                            {format(group.date, "EEEE, MMMM d")}
                           </h3>
                           <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
                             {group.games.map((game) => {
                               // Get team data with proper fallbacks
-                              const homeTeam = typeof game.home_team === 'string' 
-                                ? { id: game.home_team_id, name: 'Home Team' } 
-                                : game.home_team || { id: game.home_team_id, name: 'Home Team' };
-                              
-                              const awayTeam = typeof game.away_team === 'string'
-                                ? { id: game.away_team_id, name: 'Away Team' }
-                                : game.away_team || { id: game.away_team_id, name: 'Away Team' };
+                              const homeTeam =
+                                typeof game.home_team === "string"
+                                  ? { id: game.home_team_id, name: "Home Team" }
+                                  : game.home_team || {
+                                      id: game.home_team_id,
+                                      name: "Home Team",
+                                    };
 
-                              const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
-                              
+                              const awayTeam =
+                                typeof game.away_team === "string"
+                                  ? { id: game.away_team_id, name: "Away Team" }
+                                  : game.away_team || {
+                                      id: game.away_team_id,
+                                      name: "Away Team",
+                                    };
+
+                              const gamePrediction = getGamePrediction(
+                                game,
+                                homeTeam,
+                                awayTeam,
+                              );
+
                               // Use memoized game prediction data directly
                               const gameCardAstroData = sportsPredictions;
-                              
+
                               // Merge game data with its prediction and team data for the GameCard
                               const gameWithTeams = {
                                 ...game,
@@ -867,33 +1034,61 @@ const Dashboard: React.FC = () => {
 
                               // Ensure we have proper team objects with required properties
                               const homeTeamData = {
-                                ...(typeof homeTeam === 'string' ? {} : homeTeam || {}),
+                                ...(typeof homeTeam === "string"
+                                  ? {}
+                                  : homeTeam || {}),
                                 id: game.home_team_id,
-                                name: typeof homeTeam === 'string' ? homeTeam : homeTeam?.name || 'Home Team',
+                                name:
+                                  typeof homeTeam === "string"
+                                    ? homeTeam
+                                    : homeTeam?.name || "Home Team",
                                 // Try logo_url first, then logo, then empty string
-                                logo_url: typeof homeTeam === 'string' 
-                                  ? '' 
-                                  : (homeTeam?.logo_url || homeTeam?.logo || ''),
+                                logo_url:
+                                  typeof homeTeam === "string"
+                                    ? ""
+                                    : homeTeam?.logo_url ||
+                                      homeTeam?.logo ||
+                                      "",
                                 // Also include the logo property for backward compatibility
-                                logo: typeof homeTeam === 'string'
-                                  ? ''
-                                  : (homeTeam?.logo || homeTeam?.logo_url || ''),
-                                record: typeof homeTeam === 'string' ? '0-0' : homeTeam?.record || '0-0',
+                                logo:
+                                  typeof homeTeam === "string"
+                                    ? ""
+                                    : homeTeam?.logo ||
+                                      homeTeam?.logo_url ||
+                                      "",
+                                record:
+                                  typeof homeTeam === "string"
+                                    ? "0-0"
+                                    : homeTeam?.record || "0-0",
                               };
 
                               const awayTeamData = {
-                                ...(typeof awayTeam === 'string' ? {} : awayTeam || {}),
+                                ...(typeof awayTeam === "string"
+                                  ? {}
+                                  : awayTeam || {}),
                                 id: game.away_team_id,
-                                name: typeof awayTeam === 'string' ? awayTeam : awayTeam?.name || 'Away Team',
+                                name:
+                                  typeof awayTeam === "string"
+                                    ? awayTeam
+                                    : awayTeam?.name || "Away Team",
                                 // Try logo_url first, then logo, then empty string
-                                logo_url: typeof awayTeam === 'string'
-                                  ? ''
-                                  : (awayTeam?.logo_url || awayTeam?.logo || ''),
+                                logo_url:
+                                  typeof awayTeam === "string"
+                                    ? ""
+                                    : awayTeam?.logo_url ||
+                                      awayTeam?.logo ||
+                                      "",
                                 // Also include the logo property for backward compatibility
-                                logo: typeof awayTeam === 'string'
-                                  ? ''
-                                  : (awayTeam?.logo || awayTeam?.logo_url || ''),
-                                record: typeof awayTeam === 'string' ? '0-0' : awayTeam?.record || '0-0',
+                                logo:
+                                  typeof awayTeam === "string"
+                                    ? ""
+                                    : awayTeam?.logo ||
+                                      awayTeam?.logo_url ||
+                                      "",
+                                record:
+                                  typeof awayTeam === "string"
+                                    ? "0-0"
+                                    : awayTeam?.record || "0-0",
                               };
 
                               return (
@@ -909,387 +1104,634 @@ const Dashboard: React.FC = () => {
                         </div>
                       ))}
                       {games.length === 0 && !gamesLoading ? (
-                        <p className="text-center text-slate-500 py-8">No upcoming games scheduled for this league.</p>
+                        <p className="text-center text-gray-600 py-8">
+                          No upcoming games scheduled for this league.
+                        </p>
                       ) : (
                         <div className="mt-8 mb-2 flex justify-center">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="group relative inline-flex items-center justify-center px-6 py-3 overflow-hidden font-medium text-indigo-600 transition duration-300 ease-out border-2 border-indigo-500 rounded-full shadow-md group"
                             onClick={handleSeeMoreGames}
                           >
                             <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-indigo-500 group-hover:translate-x-0 ease">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                ></path>
                               </svg>
                             </span>
                             <span className="absolute flex items-center justify-center w-full h-full text-indigo-500 transition-all duration-300 transform group-hover:translate-x-full ease">
                               View All Games
                             </span>
-                            <span className="relative invisible">View All Games</span>
+                            <span className="relative invisible">
+                              View All Games
+                            </span>
                           </Button>
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                ) : (!gamesLoading && (!games || games.length === 0)) ? (
+                ) : !gamesLoading && (!games || games.length === 0) ? (
                   // No games found message
                   <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle>Upcoming Games</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-center text-slate-500 py-8">No upcoming games found.</p>
+                      <p className="text-center text-slate-500 py-8">
+                        No upcoming games found.
+                      </p>
                     </CardContent>
                   </Card>
                 ) : null}
               </motion.div>
 
               {/* Astrological Insights Section */}
-              <motion.div variants={slideUp} initial="hidden" animate="show" className="mt-12">
+              <motion.div
+                variants={slideUp}
+                initial="hidden"
+                animate="show"
+                className="mt-12"
+              >
                 <div className="flex items-center mb-6">
-                  <h2 className="text-2xl font-bold text-slate-800">Astrological Insights</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Astrological Insights
+                  </h2>
                   <span className="ml-3 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
-                    {format(selectedDate, 'MMMM d, yyyy')}
+                    {format(selectedDate, "MMMM d, yyyy")}
                   </span>
                 </div>
                 {/* Elemental Balance Full-Width Card */}
-                <motion.div variants={fadeIn} initial="hidden" animate="show" className="w-full mb-8 border border-slate-200/50 bg-white/70 backdrop-blur-sm shadow-md">
+                <motion.div
+                  variants={fadeIn}
+                  initial="hidden"
+                  animate="show"
+                  className="w-full mb-8 border border-gray-200 bg-white shadow-sm"
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
                       Elemental Balance
                     </CardTitle>
-                    <CardDescription className="text-slate-600">Distribution of planetary energies by element.</CardDescription>
+                    <CardDescription className="text-slate-600">
+                      Distribution of planetary energies by element.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="w-full flex items-center mt-2 mb-4">
                       {/* Segmented horizontal bar for elements */}
-                      <div className="flex w-full h-6 rounded-full overflow-hidden border border-slate-200">
-                        <div className="h-full" style={{width: `${elementsDistribution.fire}%`, background: 'linear-gradient(90deg, #f87171 60%, #fbbf24 100%)'}} title={`Fire: ${elementsDistribution.fire}%`} />
-                        <div className="h-full" style={{width: `${elementsDistribution.earth}%`, background: 'linear-gradient(90deg, #34d399 60%, #a7f3d0 100%)'}} title={`Earth: ${elementsDistribution.earth}%`} />
-                        <div className="h-full" style={{width: `${elementsDistribution.water}%`, background: 'linear-gradient(90deg, #60a5fa 60%, #818cf8 100%)'}} title={`Water: ${elementsDistribution.water}%`} />
-                        <div className="h-full" style={{width: `${elementsDistribution.air}%`, background: 'linear-gradient(90deg, #f472b6 60%, #a78bfa 100%)'}} title={`Air: ${elementsDistribution.air}%`} />
+                      <div className="flex w-full h-6 rounded-full overflow-hidden border border-gray-200">
+                        <div
+                          className="h-full"
+                          style={{
+                            width: `${elementsDistribution.fire}%`,
+                            background:
+                              "linear-gradient(90deg, #f87171 60%, #fbbf24 100%)",
+                          }}
+                          title={`Fire: ${elementsDistribution.fire}%`}
+                        />
+                        <div
+                          className="h-full"
+                          style={{
+                            width: `${elementsDistribution.earth}%`,
+                            background:
+                              "linear-gradient(90deg, #34d399 60%, #a7f3d0 100%)",
+                          }}
+                          title={`Earth: ${elementsDistribution.earth}%`}
+                        />
+                        <div
+                          className="h-full"
+                          style={{
+                            width: `${elementsDistribution.water}%`,
+                            background:
+                              "linear-gradient(90deg, #60a5fa 60%, #818cf8 100%)",
+                          }}
+                          title={`Water: ${elementsDistribution.water}%`}
+                        />
+                        <div
+                          className="h-full"
+                          style={{
+                            width: `${elementsDistribution.air}%`,
+                            background:
+                              "linear-gradient(90deg, #f472b6 60%, #a78bfa 100%)",
+                          }}
+                          title={`Air: ${elementsDistribution.air}%`}
+                        />
                       </div>
                     </div>
                     {elementsDistribution ? (
-                      <div className="flex flex-wrap justify-between text-sm font-medium text-slate-700">
+                      <div className="flex flex-wrap justify-between text-sm font-medium text-gray-800">
                         <div>Fire: {elementsDistribution.fire?.score}</div>
                         <div>Earth: {elementsDistribution.earth?.score}</div>
                         <div>Water: {elementsDistribution.water?.score}</div>
                         <div>Air: {elementsDistribution.air?.score}</div>
                       </div>
                     ) : (
-                      <div className="text-slate-400">Element data unavailable</div>
-                    )}
-                    {elementsDistribution && (elementsDistribution.fire + elementsDistribution.earth + elementsDistribution.water + elementsDistribution.air > 0) && (
-                      <div className="mt-4 pt-4 border-t border-slate-200/60">
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                          {getDynamicElementalInterpretation(elementsDistribution)}
-                        </p>
+                      <div className="text-gray-500">
+                        Element data unavailable
                       </div>
                     )}
+                    {elementsDistribution &&
+                      elementsDistribution.fire +
+                        elementsDistribution.earth +
+                        elementsDistribution.water +
+                        elementsDistribution.air >
+                        0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {getDynamicElementalInterpretation(
+                              elementsDistribution,
+                            )}
+                          </p>
+                        </div>
+                      )}
                   </CardContent>
                 </motion.div>
                 {/* Other astrology cards below */}
-                <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(astroLoading && !astroData) ? (
-                  // Skeletons for Astro section
-                  <>
-                    <Skeleton className="h-48 rounded-xl" />
-                    <Skeleton className="h-64 rounded-xl" />
-                    <Skeleton className="h-56 rounded-xl md:col-span-2" />
-                  </>
-                ) : astroData ? (
-                  // Actual Astro content
-                  <>
-                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" /> Solar Influence
-                        </CardTitle>
-                        <CardDescription className="text-slate-600">
-                          The Sun is in {astroData?.planets?.sun?.sign || ''} ({formatDegreesMinutes(astroData?.planets?.sun?.degree || 0, astroData?.planets?.sun?.minute || 0)}), {astroData?.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(astroData?.planets?.sun?.sign || '')}.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3 pt-2">
-                        {/* Sun Visualization Section */}
-                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
-                          <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
-                            <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
-                              {/* Sun visualization */}
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
-                                <div className="absolute w-full h-full rounded-full" style={{
-                                  boxShadow: '0 0 80px 30px rgba(252, 211, 77, 0.4)',
-                                  pointerEvents: 'none',
-                                  background: 'radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)'
-                                }} />
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  {astroLoading && !astroData ? (
+                    // Skeletons for Astro section
+                    <>
+                      <Skeleton className="h-48 rounded-xl" />
+                      <Skeleton className="h-64 rounded-xl" />
+                      <Skeleton className="h-56 rounded-xl md:col-span-2" />
+                    </>
+                  ) : astroData ? (
+                    // Actual Astro content
+                    <>
+                      <motion.div
+                        variants={item}
+                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                      >
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                            <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" />{" "}
+                            Solar Influence
+                          </CardTitle>
+                          <CardDescription className="text-slate-600">
+                            The Sun is in {astroData?.planets?.sun?.sign || ""}{" "}
+                            (
+                            {formatDegreesMinutes(
+                              astroData?.planets?.sun?.degree || 0,
+                              astroData?.planets?.sun?.minute || 0,
+                            )}
+                            ), {astroData?.sidereal ? "Sidereal" : "Tropical"}.
+                            Element:{" "}
+                            {getSunElement(astroData?.planets?.sun?.sign || "")}
+                            .
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3 pt-2">
+                          {/* Sun Visualization Section */}
+                          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
+                            <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
+                              <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+                                {/* Sun visualization */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
+                                  <div
+                                    className="absolute w-full h-full rounded-full"
+                                    style={{
+                                      boxShadow:
+                                        "0 0 80px 30px rgba(252, 211, 77, 0.4)",
+                                      pointerEvents: "none",
+                                      background:
+                                        "radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)",
+                                    }}
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            <div className="text-center md:text-left flex-1">
-                              <h4 className="text-2xl font-bold text-yellow-700 mb-1">
-                                Sun Position
-                              </h4>
-                              <p className="text-sm text-yellow-600 mb-2">
-                                {astroData?.planets?.sun?.sign || ''} ({formatDegreesMinutes(astroData?.planets?.sun?.degree || 0, astroData?.planets?.sun?.minute || 0)})
-                              </p>
-                              <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                Element: {getSunElement(astroData?.planets?.sun?.sign || '')}
-                              </div>
-                              <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
-                                <p className="text-base text-slate-700 leading-relaxed">
-                                  {getSunSportsInfluences(astroData)[0]?.text || 'The Sun’s current sign sets the tone for vitality and momentum.'}
+                              <div className="text-center md:text-left flex-1">
+                                <h4 className="text-2xl font-bold text-yellow-700 mb-1">
+                                  Sun Position
+                                </h4>
+                                <p className="text-sm text-yellow-600 mb-2">
+                                  {astroData?.planets?.sun?.sign || ""} (
+                                  {formatDegreesMinutes(
+                                    astroData?.planets?.sun?.degree || 0,
+                                    astroData?.planets?.sun?.minute || 0,
+                                  )}
+                                  )
                                 </p>
-                              </div>
-                              {/* Sun Details */}
-                              <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Sun Sign</div>
-                                  <div className="font-semibold text-yellow-700">{astroData?.planets?.sun?.sign || ''}</div>
-                                </div>
-                                <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
-                                  <div className="font-semibold text-yellow-700">
-                                    {astroData?.planets?.sun?.degree ? `${Math.floor(astroData.planets.sun.degree)}°` : '—'}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Solar Influence Details */}
-                        <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
-                          <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center"><Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" /> Solar Influence Insights</h5>
-                          <ul className="list-disc pl-5 space-y-1">
-                            {getSunSportsInfluences(astroData).map((influence, index) => (
-                              <li key={`sun-influence-${index}`} className="text-sm text-slate-700">{influence.text}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </CardContent>
-                    </motion.div>
-
-                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow duration-300 md:col-span-2">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Moon className="h-5 w-5 mr-2 text-indigo-500" /> Lunar & Void Status
-                        </CardTitle>
-                        <CardDescription className="text-slate-600">
-                          {astroData?.voidMoon ? (astroData.voidMoon.isVoid ? ' • Void of Course' : ' • Not Void of Course') : ''}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3 pt-2">
-                        {/* Moon Phase Section with Visualization */}
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
-                          <div className="flex flex-col items-center md:flex-row md:items-start">
-                            <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
-                              {/* Moon phase visualization */}
-                              <div 
-                                className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out" 
-                                style={{
-                                  clipPath: `inset(0 ${50 - (astroData?.moonPhase?.illumination || 0) * 50}% 0 0)`,
-                                  opacity: 0.95,
-                                  boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.8)'
-                                }}
-                              >
-                                {/* Add some subtle craters */}
-                                <div className="absolute w-4 h-4 bg-slate-200/30 rounded-full top-1/3 left-1/4"></div>
-                                <div className="absolute w-5 h-5 bg-slate-300/40 rounded-full top-2/3 left-1/2"></div>
-                                <div className="absolute w-3 h-3 bg-slate-200/50 rounded-full top-1/4 left-3/4"></div>
-                                <div className="absolute w-6 h-6 bg-slate-300/30 rounded-full top-3/4 left-1/3"></div>
-                                <div className="absolute w-3.5 h-3.5 bg-slate-200/40 rounded-full top-1/5 left-1/2"></div>
-                              </div>
-                              {/* Glow effect */}
-                              <div 
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                  boxShadow: '0 0 60px 15px rgba(99, 102, 241, 0.4)',
-                                  pointerEvents: 'none',
-                                  background: 'radial-gradient(circle at 30% 30%, rgba(199, 210, 254, 0.3), transparent 60%)'
-                                }}
-                              />
-                            </div>
-                            <div className="text-center md:text-left flex-1">
-                              <h4 className="text-2xl font-bold text-indigo-800 mb-1">
-                                Moon Phase
-                              </h4>
-                              <p className="text-sm text-indigo-600 mb-2">
-                                {astroData?.moonPhase?.name || 'Current phase unknown'}
-                              </p>
-                              <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                {astroData?.moonPhase?.illumination !== null && astroData?.moonPhase?.illumination !== undefined
-                                  ? `🌕 ${Math.round((astroData.moonPhase.illumination) * 100)}% Illuminated`
-                                  : '🌑 Illumination unknown'}
-                              </div>
-                              <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
-                                <p className="text-base text-slate-700 leading-relaxed">
-                                  {astroData?.moonPhase?.name && getMoonPhaseImpact(astroData.moonPhase.name)}
-                                </p>
-                              </div>
-                              
-                              <div className="grid grid-cols-3 gap-2 mb-4">
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Moon Sign</div>
-                                  <div className="font-semibold text-indigo-700">{astroData?.planets?.moon?.sign || 'Unknown'}</div>
-                                </div>
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Next Full Moon</div>
-                                  <div className="font-semibold text-indigo-700">
-                                    {astroData?.moonPhase?.nextFullMoon 
-                                      ? new Date(astroData.moonPhase.nextFullMoon).toLocaleDateString('en-US', { 
-                                          month: 'short', 
-                                          day: 'numeric',
-                                          year: '2-digit'
-                                        })
-                                      : '—'}
-                                  </div>
-                                </div>
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Zodiac Degree</div>
-                                  <div className="font-semibold text-indigo-700">
-                                    {astroData?.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Void of Course Status */}
-                              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
-                                <div className="p-3 border-b border-amber-100">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="font-medium text-slate-800 flex items-center text-sm">
-                                      <div className={`w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 ${astroData?.voidMoon?.isVoid ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                                      Void of Course Status
-                                    </h4>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${astroData?.voidMoon?.isVoid ? 'bg-red-100 text-red-800' : 'bg-red-50 text-red-700'}`}>
-                                      {astroData?.voidMoon?.isVoid ? 'Active' : 'Inactive'}
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div className="p-3">
-                                  <p className="text-sm text-slate-700 mb-2">
-                                    {astroData?.voidMoon?.isVoid 
-                                      ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
-                                      : getMoonAspectMessage(astroData?.moonPhase, astroData?.planets?.moon?.sign as ZodiacSign | undefined)}
-                                  </p>
-                                  
-                                  {astroData?.voidMoon?.isVoid && (
-                                    <div className="space-y-3 mt-3">
-                                      <div>
-                                        <div className="w-full bg-amber-100 rounded-full h-1.5 mb-1">
-                                          <div 
-                                            className="bg-amber-500 h-1.5 rounded-full transition-all duration-500 ease-out"
-                                            style={{
-                                              width: `${Math.max(5, Math.min(100, (new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime()) * 100))}%`
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="flex justify-between text-[10px] text-amber-700">
-                                          <span>Started: {new Date(astroData.voidMoon.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                          <span>Ends: {new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className={`p-2 rounded-lg border text-xs ${astroData?.voidMoon.isVoid ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
-                                        <p className={`font-medium mb-1 ${astroData?.voidMoon.isVoid ? 'text-red-800' : 'text-slate-700'}`}>
-                                          {astroData?.voidMoon.isVoid 
-                                            ? '⚠️ Void of Course Moon'
-                                            : '✓ Strong Lunar Aspects'}
-                                        </p>
-                                        <p className={astroData?.voidMoon.isVoid ? 'text-red-700' : 'text-slate-600'}>
-                                          {astroData?.voidMoon.isVoid
-                                            ? 'The moon is not making any major aspects. Game outcomes may be more unpredictable during this period.'
-                                            : getMoonAspectMessage(astroData?.moonPhase, astroData?.planets?.moon?.sign as ZodiacSign | undefined)}
-                                        </p>
-                                      </div>
-                                    </div>
+                                <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
+                                  Element:{" "}
+                                  {getSunElement(
+                                    astroData?.planets?.sun?.sign || "",
                                   )}
                                 </div>
+                                <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
+                                  <p className="text-base text-slate-700 leading-relaxed">
+                                    {getSunSportsInfluences(astroData)[0]
+                                      ?.text ||
+                                      "The Sun’s current sign sets the tone for vitality and momentum."}
+                                  </p>
+                                </div>
+                                {/* Sun Details */}
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                  <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
+                                      Sun Sign
+                                    </div>
+                                    <div className="font-semibold text-yellow-700">
+                                      {astroData?.planets?.sun?.sign || ""}
+                                    </div>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-lg border border-slate-100">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
+                                      Zodiac Degree
+                                    </div>
+                                    <div className="font-semibold text-yellow-700">
+                                      {astroData?.planets?.sun?.degree
+                                        ? `${Math.floor(astroData.planets.sun.degree)}°`
+                                        : "—"}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Technical Measurement */}
-                        <div className="bg-white p-3 rounded-md border border-slate-200">
-                          <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
-                            <Activity className="h-4 w-4 mr-1 text-slate-400" /> Lunar Technical Analysis
-                          </h4>
-                          <div className="space-y-2">
-                            <div>
-                              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                <span>Moon Speed</span>
-                                <span>{astroData?.planets?.moon?.speed ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day` : 'Unknown'}</span>
-                              </div>
-                              <Progress 
-                                value={astroData?.planets?.moon?.speed ? Math.min(Math.abs(astroData.planets.moon.speed) / 15 * 100, 100) : 50} 
-                                className="h-2"
-                              />
-                            </div>
-                            <div>
-                              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                <span>Lunar Sign Position</span>
-                                <span>{astroData?.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ''}` : 'Unknown'}</span>
-                              </div>
-                              <Progress 
-                                value={astroData?.planets?.moon?.degree ? (astroData.planets.moon.degree / 30) * 100 : 50} 
-                                className="h-2"
-                              />
-                            </div>
+                          {/* Solar Influence Details */}
+                          <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
+                            <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center">
+                              <Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" />{" "}
+                              Solar Influence Insights
+                            </h5>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {getSunSportsInfluences(astroData).map(
+                                (influence, index) => (
+                                  <li
+                                    key={`sun-influence-${index}`}
+                                    className="text-sm text-slate-700"
+                                  >
+                                    {influence.text}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
                           </div>
-                        </div>
-                      </CardContent>
-                    </motion.div>
+                        </CardContent>
+                      </motion.div>
 
-                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
-                        </CardTitle>
-                        <CardDescription>Current significant astrological energies.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {astroInfluences.length > 0 ? (
-                          astroInfluences.map((influence, index) => (
-                            <div key={`influence-${index}`} className="flex items-start space-x-2">
-                              <div className="flex-shrink-0 mt-0.5">
-                                {influence.icon || <Activity className="h-5 w-5 text-slate-400" />}
+                      <motion.div
+                        variants={item}
+                        className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 md:col-span-2"
+                      >
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                            <Moon className="h-5 w-5 mr-2 text-indigo-500" />{" "}
+                            Lunar & Void Status
+                          </CardTitle>
+                          <CardDescription className="text-slate-600">
+                            {astroData?.voidMoon
+                              ? astroData.voidMoon.isVoid
+                                ? " • Void of Course"
+                                : " • Not Void of Course"
+                              : ""}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3 pt-2">
+                          {/* Moon Phase Section with Visualization */}
+                          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
+                            <div className="flex flex-col items-center md:flex-row md:items-start">
+                              <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+                                {/* Moon phase visualization */}
+                                <div
+                                  className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out"
+                                  style={{
+                                    clipPath: `inset(0 ${50 - (astroData?.moonPhase?.illumination || 0) * 50}% 0 0)`,
+                                    opacity: 0.95,
+                                    boxShadow:
+                                      "inset 0 0 40px rgba(255, 255, 255, 0.8)",
+                                  }}
+                                >
+                                  {/* Add some subtle craters */}
+                                  <div className="absolute w-4 h-4 bg-slate-200/30 rounded-full top-1/3 left-1/4"></div>
+                                  <div className="absolute w-5 h-5 bg-slate-300/40 rounded-full top-2/3 left-1/2"></div>
+                                  <div className="absolute w-3 h-3 bg-slate-200/50 rounded-full top-1/4 left-3/4"></div>
+                                  <div className="absolute w-6 h-6 bg-slate-300/30 rounded-full top-3/4 left-1/3"></div>
+                                  <div className="absolute w-3.5 h-3.5 bg-slate-200/40 rounded-full top-1/5 left-1/2"></div>
+                                </div>
+                                {/* Glow effect */}
+                                <div
+                                  className="absolute inset-0 rounded-full"
+                                  style={{
+                                    boxShadow:
+                                      "0 0 60px 15px rgba(99, 102, 241, 0.4)",
+                                    pointerEvents: "none",
+                                    background:
+                                      "radial-gradient(circle at 30% 30%, rgba(199, 210, 254, 0.3), transparent 60%)",
+                                  }}
+                                />
+                              </div>
+                              <div className="text-center md:text-left flex-1">
+                                <h4 className="text-2xl font-bold text-indigo-800 mb-1">
+                                  Moon Phase
+                                </h4>
+                                <p className="text-sm text-indigo-600 mb-2">
+                                  {astroData?.moonPhase?.name ||
+                                    "Current phase unknown"}
+                                </p>
+                                <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
+                                  {astroData?.moonPhase?.illumination !==
+                                    null &&
+                                  astroData?.moonPhase?.illumination !==
+                                    undefined
+                                    ? `🌕 ${Math.round(astroData.moonPhase.illumination * 100)}% Illuminated`
+                                    : "🌑 Illumination unknown"}
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
+                                  <p className="text-base text-slate-700 leading-relaxed">
+                                    {astroData?.moonPhase?.name &&
+                                      getMoonPhaseImpact(
+                                        astroData.moonPhase.name,
+                                      )}
+                                  </p>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 mb-4">
+                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
+                                      Moon Sign
+                                    </div>
+                                    <div className="font-semibold text-indigo-700">
+                                      {astroData?.planets?.moon?.sign ||
+                                        "Unknown"}
+                                    </div>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
+                                      Next Full Moon
+                                    </div>
+                                    <div className="font-semibold text-indigo-700">
+                                      {astroData?.moonPhase?.nextFullMoon
+                                        ? new Date(
+                                            astroData.moonPhase.nextFullMoon,
+                                          ).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "2-digit",
+                                          })
+                                        : "—"}
+                                    </div>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
+                                      Zodiac Degree
+                                    </div>
+                                    <div className="font-semibold text-indigo-700">
+                                      {astroData?.planets?.moon?.degree
+                                        ? `${Math.floor(astroData.planets.moon.degree)}°`
+                                        : "—"}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Void of Course Status */}
+                                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
+                                  <div className="p-3 border-b border-amber-100">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-medium text-slate-800 flex items-center text-sm">
+                                        <div
+                                          className={`w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 ${astroData?.voidMoon?.isVoid ? "bg-red-500" : "bg-green-500"}`}
+                                        ></div>
+                                        Void of Course Status
+                                      </h4>
+                                      <span
+                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${astroData?.voidMoon?.isVoid ? "bg-red-100 text-red-800" : "bg-red-50 text-red-700"}`}
+                                      >
+                                        {astroData?.voidMoon?.isVoid
+                                          ? "Active"
+                                          : "Inactive"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="p-3">
+                                    <p className="text-sm text-slate-700 mb-2">
+                                      {astroData?.voidMoon?.isVoid
+                                        ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                                        : getMoonAspectMessage(
+                                            astroData?.moonPhase,
+                                            astroData?.planets?.moon?.sign as
+                                              | ZodiacSign
+                                              | undefined,
+                                          )}
+                                    </p>
+
+                                    {astroData?.voidMoon?.isVoid && (
+                                      <div className="space-y-3 mt-3">
+                                        <div>
+                                          <div className="w-full bg-amber-100 rounded-full h-1.5 mb-1">
+                                            <div
+                                              className="bg-amber-500 h-1.5 rounded-full transition-all duration-500 ease-out"
+                                              style={{
+                                                width: `${Math.max(5, Math.min(100, ((new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime())) * 100))}%`,
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="flex justify-between text-[10px] text-amber-700">
+                                            <span>
+                                              Started:{" "}
+                                              {new Date(
+                                                astroData.voidMoon.start,
+                                              ).toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                              })}
+                                            </span>
+                                            <span>
+                                              Ends:{" "}
+                                              {new Date(
+                                                astroData.voidMoon.end,
+                                              ).toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                              })}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        <div
+                                          className={`p-2 rounded-lg border text-xs ${astroData?.voidMoon.isVoid ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}
+                                        >
+                                          <p
+                                            className={`font-medium mb-1 ${astroData?.voidMoon.isVoid ? "text-red-800" : "text-slate-700"}`}
+                                          >
+                                            {astroData?.voidMoon.isVoid
+                                              ? "⚠️ Void of Course Moon"
+                                              : "✓ Strong Lunar Aspects"}
+                                          </p>
+                                          <p
+                                            className={
+                                              astroData?.voidMoon.isVoid
+                                                ? "text-red-700"
+                                                : "text-slate-600"
+                                            }
+                                          >
+                                            {astroData?.voidMoon.isVoid
+                                              ? "The moon is not making any major aspects. Game outcomes may be more unpredictable during this period."
+                                              : getMoonAspectMessage(
+                                                  astroData?.moonPhase,
+                                                  astroData?.planets?.moon
+                                                    ?.sign as
+                                                    | ZodiacSign
+                                                    | undefined,
+                                                )}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Technical Measurement */}
+                          <div className="bg-white p-3 rounded-md border border-slate-200">
+                            <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
+                              <Activity className="h-4 w-4 mr-1 text-slate-400" />{" "}
+                              Lunar Technical Analysis
+                            </h4>
+                            <div className="space-y-2">
+                              <div>
+                                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                  <span>Moon Speed</span>
+                                  <span>
+                                    {astroData?.planets?.moon?.speed
+                                      ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day`
+                                      : "Unknown"}
+                                  </span>
+                                </div>
+                                <Progress
+                                  value={
+                                    astroData?.planets?.moon?.speed
+                                      ? Math.min(
+                                          (Math.abs(
+                                            astroData.planets.moon.speed,
+                                          ) /
+                                            15) *
+                                            100,
+                                          100,
+                                        )
+                                      : 50
+                                  }
+                                  className="h-2"
+                                />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-slate-700">{influence.name}</p>
-                                <p className="text-xs text-slate-500">{influence.description}</p>
+                                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                  <span>Lunar Sign Position</span>
+                                  <span>
+                                    {astroData?.planets?.moon?.degree
+                                      ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ""}`
+                                      : "Unknown"}
+                                  </span>
+                                </div>
+                                <Progress
+                                  value={
+                                    astroData?.planets?.moon?.degree
+                                      ? (astroData.planets.moon.degree / 30) *
+                                        100
+                                      : 50
+                                  }
+                                  className="h-2"
+                                />
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-slate-500">No specific planetary influences highlighted at the moment.</p>
-                        )}
-                      </CardContent>
-                    </motion.div>
+                          </div>
+                        </CardContent>
+                      </motion.div>
 
-                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
+                      <motion.div
+                        variants={item}
+                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                            <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key
+                            Planetary Influences
+                          </CardTitle>
+                          <CardDescription>
+                            Current significant astrological energies.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {astroInfluences.length > 0 ? (
+                            astroInfluences.map((influence, index) => (
+                              <div
+                                key={`influence-${index}`}
+                                className="flex items-start space-x-2"
+                              >
+                                <div className="flex-shrink-0 mt-0.5">
+                                  {influence.icon || (
+                                    <Activity className="h-5 w-5 text-slate-400" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-slate-700">
+                                    {influence.name}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {influence.description}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-slate-500">
+                              No specific planetary influences highlighted at
+                              the moment.
+                            </p>
+                          )}
+                        </CardContent>
+                      </motion.div>
+
+                      <motion.div
+                        variants={item}
+                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                            <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />{" "}
+                            Daily Astro Tip
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-slate-600">
+                            {dailyRecommendation ||
+                              "General astrological conditions apply. Stay observant and adaptive."}
+                          </p>
+                        </CardContent>
+                      </motion.div>
+                    </>
+                  ) : !astroLoading && !astroData ? (
+                    // No Astro data message
+                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
                       <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Lightbulb className="h-5 w-5 mr-2 text-amber-500" /> Daily Astro Tip
-                        </CardTitle>
+                        <CardTitle>Astrological Insights</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-slate-600">
-                          {dailyRecommendation || 'General astrological conditions apply. Stay observant and adaptive.'}
+                        <p className="text-center text-slate-500 py-8">
+                          Astrological insights are currently unavailable.
                         </p>
                       </CardContent>
-                    </motion.div>
-                  </>
-                ) : (!astroLoading && !astroData) ? (
-                  // No Astro data message
-                  <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>Astrological Insights</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-center text-slate-500 py-8">Astrological insights are currently unavailable.</p>
-                    </CardContent>
-                  </Card>
-                ) : null}
+                    </Card>
+                  ) : null}
                 </motion.div>
               </motion.div>
             </div>
@@ -1298,6 +1740,6 @@ const Dashboard: React.FC = () => {
       </motion.div>
     </div>
   );
-}
+};
 
 export default Dashboard;
