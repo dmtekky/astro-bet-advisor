@@ -282,11 +282,23 @@ const Dashboard: React.FC = () => {
   const sunDegree = astroData?.planets?.sun?.degree || 0;
   const sunMinute = astroData?.planets?.sun?.minute || 0;
 
-  // Group games by date
-  const groupedGames = useMemo(() => 
-    games ? groupGamesByDate(games) : [], 
-    [games]
-  );
+  // Group games by date and limit to first 4 games for a single row
+  const groupedGames = useMemo(() => {
+    if (!games) return [];
+    
+    const grouped = groupGamesByDate(games);
+    
+    // If we have any groups, take only the first group (earliest date)
+    // and limit to first 4 games to fit in a single row
+    if (grouped.length > 0) {
+      return [{
+        date: grouped[0].date,
+        games: grouped[0].games.slice(0, 4) // Only take first 4 games
+      }];
+    }
+    
+    return [];
+  }, [games]);
 
   // Format date for display
   const formattedDate = selectedDate.toLocaleDateString('en-US', {

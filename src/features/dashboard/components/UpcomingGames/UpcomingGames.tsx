@@ -107,7 +107,7 @@ const UpcomingGames: React.FC<UpcomingGamesProps> = ({
               <h3 className="text-lg font-semibold text-slate-700 mb-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
                 {format(group.date, 'EEEE, MMMM d')}
               </h3>
-              <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
+              <div className="flex overflow-x-auto pb-4 gap-6 hide-scrollbar">
                 {group.games.map((game) => {
                   // Get team data with proper fallbacks and type safety
                   const foundHomeTeam = findTeam(String(game.home_team_id));
@@ -143,16 +143,18 @@ const UpcomingGames: React.FC<UpcomingGamesProps> = ({
                   } : createDefaultTeam(String(game.away_team_id), 'Away Team');
 
                   return (
-                    <GameCard
-                      key={game.id}
-                      game={game}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                    >
-                      <div className="mt-3">
-                        {renderGamePrediction(game)}
-                      </div>
-                    </GameCard>
+                    <div key={game.id} className="min-w-[250px] flex-shrink-0">
+                      <GameCard
+                        game={game}
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        className="w-full"
+                      >
+                        <div className="mt-3">
+                          {renderGamePrediction(game)}
+                        </div>
+                      </GameCard>
+                    </div>
                   );
                 })}
               </div>

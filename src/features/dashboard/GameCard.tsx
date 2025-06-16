@@ -102,7 +102,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
     return (
       <div className={`flex items-center ${className}`}>
         {hasLogo ? (
-          <div className="relative w-10 h-10 mr-2 flex-shrink-0">
+          <div className="relative w-8 h-8 mr-1.5 flex-shrink-0">
             <img 
               src={logoUrl}
               alt={`${teamName} logo`}
@@ -115,7 +115,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
             />
           </div>
         ) : (
-          <div className="w-10 h-10 mr-2 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-300 flex-shrink-0">
+          <div className="w-8 h-8 mr-1.5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-300 flex-shrink-0">
             {teamAbbr}
           </div>
         )}
@@ -146,54 +146,58 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
   const gameUrl = `/game/${encodeURIComponent(gameId)}`;
   
   return (
-    <Link to={gameUrl} className="block" onClick={(e) => {
+    <Link to={gameUrl} className="block h-full" onClick={(e) => {
       // Add additional validation before navigation
       if (!isValidGameId) {
         e.preventDefault();
         console.error('Prevented navigation due to invalid game ID');
       }
     }}>
-      <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full", className)}>
+      <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full text-sm", className)}>
         <div className="flex-1 flex flex-col">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-0 px-2 pt-1">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   {game.league || game.sport?.toUpperCase() || 'GAME'}
                 </span>
               </div>
               <div className="flex items-center">
-                <Badge variant={isLive ? "destructive" : "secondary"} className="w-full justify-center animate-pulse">
+                <Badge variant={isLive ? "destructive" : "secondary"} className="h-5 text-[10px] px-1.5 justify-center animate-pulse">
                   {isLive ? 'LIVE' : isToday ? 'TODAY' : startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Badge>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
-            <div className="grid grid-cols-3 gap-4 text-center flex-1">
-              <div className="flex flex-col">
+          <CardContent className="flex-1 flex flex-col py-0 px-1.5">
+            <div className="grid grid-cols-3 gap-1 text-center flex-1">
+              <div className="flex flex-col h-full">
                 <TeamLogo team={game.away_team} className="justify-center" />
-                <div className="mt-2">
+                <div className="mt-1">
                   <TeamRecord team={game.away_team} />
                 </div>
-                <div className="mt-auto">
+                <div className="mt-1">
                   <Badge variant="outline" className="text-lg py-1 px-3">
                     {game.away_score ?? '--'}
                   </Badge>
                 </div>
               </div>
-              <div className="flex flex-col items-center justify-center">
-                <div className="text-xs text-muted-foreground mb-1">Spread</div>
-                <div className="text-lg font-mono">--</div>
-                <div className="text-xs text-muted-foreground mt-3">Total</div>
-                <div className="text-lg font-mono">O/U --</div>
+              <div className="flex flex-col items-center justify-center space-y-0">
+                <div className="flex items-center text-[10px] text-muted-foreground justify-between mt-0.5">
+                  <div className="text-[10px] text-muted-foreground">Spread</div>
+                  <div className="text-sm font-mono">--</div>
+                </div>
+                <div className="flex items-center text-[10px] text-muted-foreground justify-between mt-0.5">
+                  <div className="text-[10px] text-muted-foreground">Total</div>
+                  <div className="text-sm font-mono">O/U --</div>
+                </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col h-full">
                 <TeamLogo team={game.home_team} className="justify-end" />
-                <div className="mt-2 flex justify-end">
+                <div className="mt-1 flex justify-end">
                   <TeamRecord team={game.home_team} />
                 </div>
-                <div className="mt-auto flex justify-end">
+                <div className="mt-1 flex justify-end">
                   <Badge variant="outline" className="text-lg py-1 px-3">
                     {game.home_score ?? '--'}
                   </Badge>

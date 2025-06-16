@@ -192,23 +192,21 @@ const GameCard: React.FC<GameCardProps> = ({
   }
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600 h-full flex flex-col">
+    <Card className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md hover:border-blue-500 dark:hover:border-blue-600">
       <Link to={`/game/${game.id}`} className="block h-full">
-        <CardContent className="p-4 h-full flex flex-col">
-          <div className="flex-1">
+        <CardContent className="p-4">
+          <div className="space-y-3">
             {/* Home Team */}
             {homeTeam ? (
               <div 
-                className="flex justify-between items-center mb-2 sm:mb-3"
+                className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
               >
-                <div className="flex items-center min-w-0">
-                  <div 
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0"
-                  >
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 p-1 shadow-sm border border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <img 
                       src={homeTeam.logo_url || defaultLogo} 
                       alt={homeTeam.name} 
-                      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = defaultLogo;
@@ -216,22 +214,24 @@ const GameCard: React.FC<GameCardProps> = ({
                     />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-medium text-xs sm:text-sm truncate text-gray-900 dark:text-white">
+                    <h3 className="font-medium text-sm truncate text-gray-900 dark:text-white">
                       {homeTeam.name}
                     </h3>
-                    <p className="text-[10px] sm:text-xs text-gray-500">{homeTeam.record || '0-0'}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{homeTeam.record || '0-0'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 whitespace-nowrap">
-                    Home
-                  </span>
-                  {game.home_score !== undefined && (
-                    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                      {game.home_score}
-                    </span>
-                  )}
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 text-center">
+                    {game.home_score !== undefined && (
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {game.home_score}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center ml-4">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-300">Home</span>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -241,28 +241,28 @@ const GameCard: React.FC<GameCardProps> = ({
             )}
 
             {/* VS Divider */}
-            <div className="relative flex justify-center">
+            <div className="relative py-3">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
+                <div className="w-full border-t-2 border-gray-200 dark:border-gray-700"></div>
               </div>
-              <div className="relative px-2 bg-white dark:bg-gray-900 text-xs font-medium text-gray-500 dark:text-gray-400">
-                VS
+              <div className="relative flex justify-center">
+                <span className="px-4 py-1 bg-white dark:bg-gray-900 text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-full">
+                  VS
+                </span>
               </div>
             </div>
 
             {/* Away Team */}
             {awayTeam ? (
               <div 
-                className="flex justify-between items-center mt-2 sm:mt-3"
+                className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
               >
-                <div className="flex items-center min-w-0">
-                  <div 
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0"
-                  >
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 p-1 shadow-sm border border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <img 
                       src={awayTeam.logo_url || defaultLogo} 
                       alt={awayTeam.name} 
-                      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = defaultLogo;
@@ -270,22 +270,24 @@ const GameCard: React.FC<GameCardProps> = ({
                     />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-medium text-xs sm:text-sm truncate text-gray-900 dark:text-white">
+                    <h3 className="font-medium text-sm truncate text-gray-900 dark:text-white">
                       {awayTeam.name}
                     </h3>
-                    <p className="text-[10px] sm:text-xs text-gray-500">{awayTeam.record || '0-0'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{awayTeam.record || '0-0'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 whitespace-nowrap">
-                    Away
-                  </span>
-                  {game.away_score !== undefined && (
-                    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                      {game.away_score}
-                    </span>
-                  )}
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 text-center">
+                    {game.away_score !== undefined && (
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {game.away_score}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center ml-4">
+                    <span className="text-sm font-medium text-purple-600 dark:text-purple-300">Away</span>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -294,10 +296,10 @@ const GameCard: React.FC<GameCardProps> = ({
               </div>
             )}
             {/* Game Info */}
-            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex justify-between items-center text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                <span>Start</span>
-                <span className="font-medium">{formatGameTime(game.start_time)}</span>
+            <div className="mt-6 pt-4 border-t-2 border-gray-100 dark:border-gray-800">
+              <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
+                <span className="font-semibold">Start Time</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{formatGameTime(game.start_time)}</span>
               </div>
               
               {/* Game Status */}
