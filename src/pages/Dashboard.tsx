@@ -4,7 +4,7 @@ import GameCard from '@/components/GameCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAstroData } from '@/hooks/useAstroData';
 import { useTeams } from '@/hooks/useTeams';
@@ -43,9 +43,9 @@ import {
   MoonPhaseInfoCard, 
   VoidMoonStatus, 
   LunarTechnicalAnalysis, 
-  PlanetaryInfluences, 
   DailyAstroTip 
 } from '@/features/dashboard/components/astro';
+import PlanetaryInfluences from '@/features/dashboard/components/astro/PlanetaryInfluences'; // Default import to avoid duplicate React instances
 import ArticleSection from '@/features/dashboard/components/ArticleSection';
 import UpcomingGames from '@/features/dashboard/components/UpcomingGames';
 import { calculateSportsPredictions, predictGameOutcome } from '@/utils/sportsPredictions';
@@ -385,18 +385,23 @@ const Dashboard: React.FC = () => {
       
       // 1. Add significant aspects (excluding sun/moon aspects shown elsewhere)
       const significantAspects = astroData.aspects?.filter(aspect => {
+        if (!aspect?.planet1 || !aspect?.aspectType) return false;
+        
         // Only include aspects involving outer planets or major configurations
         const outerPlanets = ['mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+        const planet1 = String(aspect.planet1 || '').toLowerCase();
+        const planet2 = aspect.planet2 ? String(aspect.planet2).toLowerCase() : '';
+        
         const isOuterPlanetAspect = 
-          outerPlanets.includes(aspect.planet1.toLowerCase()) || 
-          outerPlanets.includes(aspect.planet2?.toLowerCase() || '');
+          outerPlanets.includes(planet1) || 
+          (planet2 && outerPlanets.includes(planet2));
           
         // Only include major aspects (conjunction, square, opposition, trine)
-        const isMajorAspect = ['conjunction', 'square', 'opposition', 'trine'].includes(
-          aspect.aspectType?.toLowerCase()
-        );
+        const aspectType = String(aspect.aspectType || '').toLowerCase();
+        const isMajorAspect = ['conjunction', 'square', 'opposition', 'trine'].includes(aspectType);
         
-        return isOuterPlanetAspect && isMajorAspect && aspect.orb && Math.abs(aspect.orb) < 5;
+        const orb = Number(aspect.orb) || 0;
+        return isOuterPlanetAspect && isMajorAspect && Math.abs(orb) < 5;
       }) || [];
 
       // Add significant aspects to influences
@@ -1175,30 +1180,8 @@ const Dashboard: React.FC = () => {
                       </CardContent>
                     </motion.div>
 
-                    <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                          <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
-                        </CardTitle>
-                        <CardDescription>Current significant astrological energies.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {astroInfluences.length > 0 ? (
-                          astroInfluences.map((influence, index) => (
-                            <div key={`influence-${index}`} className="flex items-start space-x-2">
-                              <div className="flex-shrink-0 mt-0.5">
-                                {influence.icon || <Activity className="h-5 w-5 text-slate-400" />}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-slate-700">{influence.name}</p>
-                                <p className="text-xs text-slate-500">{influence.description}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-slate-500">No specific planetary influences highlighted at the moment.</p>
-                        )}
-                      </CardContent>
+                    <motion.div variants={item} className="md:col-span-2">
+                      <PlanetaryInfluences influences={astroInfluences} />
                     </motion.div>
 
                     <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
