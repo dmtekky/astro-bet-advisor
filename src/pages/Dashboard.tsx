@@ -63,7 +63,7 @@ import type {
 import { transformAstroData } from '@/utils/astroTransform';
 import type { GamePredictionData } from '@/types/gamePredictions';
 import type { Article } from '../types/news';
-import { createDefaultCelestialBody } from '@/types/gamePredictions';
+import { createDefaultCelestialBody, createDefaultPredictionData } from '@/types/gamePredictions';
 
 // Extend the Team interface to include additional properties used in the component
 interface ExtendedTeam extends Omit<Team, 'logo' | 'logo_url' | 'external_id'> {
@@ -141,7 +141,72 @@ const Dashboard: React.FC = () => {
   });
 
   // Get astro data
-  const { astroData, isLoading: astroLoading, error: astroError } = useAstroData(selectedDate);
+  const { astroData, loading: astroLoading, error: astroError } = useAstroData(selectedDate);
+  
+  // Transform astro data into game prediction data
+  const gamePredictionData = useMemo(() => {
+    if (!astroData) return null;
+    
+    const defaultData = createDefaultPredictionData();
+    
+    // Transform aspects to match Aspect interface
+    const transformedAspects = (astroData.aspects || []).map(aspect => {
+      const aspectType = (aspect.type || 'conjunction') as AspectType;
+      let influence: { description: string; strength: number; area?: string[] };
+      
+      if (typeof aspect.influence === 'string') {
+        influence = {
+          description: aspect.influence,
+          strength: 0.5,
+          area: []
+        };
+      } else if (typeof aspect.influence === 'object' && aspect.influence !== null) {
+        const influenceObj = aspect.influence as { description?: string; strength?: number; area?: string[] };
+        influence = {
+          description: influenceObj.description || '',
+          strength: influenceObj.strength || 0.5,
+          area: influenceObj.area || []
+        };
+      } else {
+        influence = {
+          description: '',
+          strength: 0.5,
+          area: []
+        };
+      }
+      
+      return {
+        from: aspect.planets[0]?.name || '',
+        to: aspect.planets[1]?.name || '',
+        type: aspectType,
+        orb: aspect.orb || 0,
+        exact: Math.abs(aspect.orb || 0) < 1,
+        influence
+      } as Aspect;
+    });
+    
+    return {
+      ...defaultData,
+      ...astroData,
+      sun: astroData.planets?.sun || createDefaultCelestialBody('Sun'),
+      moon: astroData.planets?.moon || createDefaultCelestialBody('Moon'),
+      planets: {
+        ...defaultData.planets,
+        ...astroData.planets
+      },
+      aspects: transformedAspects,
+      moonPhase: {
+        ...defaultData.moonPhase,
+        ...astroData.moonPhase
+      },
+      elements: {
+        fire: { ...defaultData.elements.fire, ...astroData.elements?.fire },
+        earth: { ...defaultData.elements.earth, ...astroData.elements?.earth },
+        water: { ...defaultData.elements.water, ...astroData.elements?.water },
+        air: { ...defaultData.elements.air, ...astroData.elements?.air }
+      }
+    };
+  }, [astroData]);
   
   // Get game predictions using the new hook
   const { 
@@ -149,7 +214,7 @@ const Dashboard: React.FC = () => {
     sportsPredictions = null, 
     getGamePrediction = () => null, 
     isLoading: predictionsLoading = true
-  } = useGamePredictions(astroData) || {};
+  } = useGamePredictions(gamePredictionData) || {};
   
   // Alias for backward compatibility with proper null check
   const predictionData = transformedData || null;
@@ -385,19 +450,19 @@ const Dashboard: React.FC = () => {
       
       // 1. Add significant aspects (excluding sun/moon aspects shown elsewhere)
       const significantAspects = astroData.aspects?.filter(aspect => {
-        if (!aspect?.planet1 || !aspect?.aspectType) return false;
+        if (!aspect?.planets || aspect.planets.length < 2) return false;
         
         // Only include aspects involving outer planets or major configurations
         const outerPlanets = ['mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-        const planet1 = String(aspect.planet1 || '').toLowerCase();
-        const planet2 = aspect.planet2 ? String(aspect.planet2).toLowerCase() : '';
+        const planet1 = String(aspect.planets[0] || '').toLowerCase();
+        const planet2 = aspect.planets[1] ? String(aspect.planets[1]).toLowerCase() : '';
         
         const isOuterPlanetAspect = 
           outerPlanets.includes(planet1) || 
           (planet2 && outerPlanets.includes(planet2));
           
         // Only include major aspects (conjunction, square, opposition, trine)
-        const aspectType = String(aspect.aspectType || '').toLowerCase();
+        const aspectType = String(aspect.type || '').toLowerCase();
         const isMajorAspect = ['conjunction', 'square', 'opposition', 'trine'].includes(aspectType);
         
         const orb = Number(aspect.orb) || 0;
@@ -406,9 +471,9 @@ const Dashboard: React.FC = () => {
 
       // Add significant aspects to influences
       significantAspects.forEach(aspect => {
-        const planet1 = aspect.planet1.charAt(0).toUpperCase() + aspect.planet1.slice(1);
-        const planet2 = aspect.planet2 ? aspect.planet2.charAt(0).toUpperCase() + aspect.planet2.slice(1) : '';
-        const aspectType = aspect.aspectType?.toLowerCase() || 'aspect';
+        const planet1 = aspect.planets[0].charAt(0).toUpperCase() + aspect.planets[0].slice(1);
+        const planet2 = aspect.planets[1] ? aspect.planets[1].charAt(0).toUpperCase() + aspect.planets[1].slice(1) : '';
+        const aspectType = aspect.type?.toLowerCase() || 'aspect';
         
         let impact = 0.6; // Default impact
         if (aspectType === 'conjunction' || aspectType === 'opposition') impact = 0.8;
@@ -417,9 +482,9 @@ const Dashboard: React.FC = () => {
         influences.push({
           name: `${planet1} ${aspectType} ${planet2}`,
           impact,
-          description: `This ${aspectType} between ${planet1} and ${planet2} may influence ${getAspectInfluence(aspect.planet1, aspect.planet2, aspectType)}`,
+          description: `This ${aspectType} between ${planet1} and ${planet2} may influence ${getAspectInfluence(planet1, planet2, aspectType)}`,
           type: 'aspect',
-          timeWindow: aspect.timeWindow || 'Today'
+          timeWindow: 'Today'
         });
       });
 
@@ -516,8 +581,18 @@ const Dashboard: React.FC = () => {
     }
   }, [astroData, astroLoading, transformedData]);
 
+  // Wrap getGamePrediction to match the expected signature for GamePredictions
+  const getGamePredictionForComponent = (game: Game, astroData?: GamePredictionData) => {
+    if (!astroData) return null;
+    // Use calculateSportsPredictions which expects only astroData
+    return calculateSportsPredictions(astroData);
+  };
+
   // Helper function to get aspect influence description
-  function getAspectInfluence(planet1: string, planet2: string, aspectType: string): string {
+  function getAspectInfluence(planet1: string | CelestialBody, planet2: string | CelestialBody, aspectType: string): string {
+    // Ensure planet1 and planet2 are strings
+    const p1 = typeof planet1 === 'string' ? planet1 : planet1?.name || '';
+    const p2 = typeof planet2 === 'string' ? planet2 : planet2?.name || '';
     // Simplified for brevity - expand with more detailed interpretations
     const influences = {
       conjunction: 'intensified energy and focus',
@@ -526,7 +601,6 @@ const Dashboard: React.FC = () => {
       trine: 'harmonious flow of energy',
       sextile: 'opportunities for positive development'
     };
-    
     return influences[aspectType as keyof typeof influences] || 'the game dynamics';
   }
 
@@ -801,34 +875,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 15
-      }
-    },
-    hover: {
-      y: -5,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    show: { 
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: 'easeOut'
-      }
-    }
-  };
-
   const slideUp = {
     hidden: { opacity: 0, y: 30 },
     show: { 
@@ -836,10 +882,40 @@ const Dashboard: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.16, 1, 0.3, 1]
+        ease: "easeOut"
       }
     }
-  };
+  } as const;
+
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    show: { 
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  } as const;
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    },
+    hover: { 
+      y: -5,
+      transition: {
+        duration: 0.2
+      }
+    }
+  } as const;
 
   return (
     <div className="min-h-screen bg-background">
@@ -877,14 +953,17 @@ const Dashboard: React.FC = () => {
                   isLoading={gamesLoading}
                   onViewAllGames={handleSeeMoreGames}
                   findTeam={findTeam}
-                  renderGamePrediction={(game) => (
-                    <GamePredictions 
-                      game={game}
-                      astroData={astroData}
-                      getGamePrediction={getGamePrediction}
-                      transformHookDataToGamePredictionData={transformHookDataToGamePredictionData}
-                    />
-                  )}
+                  renderGamePrediction={(game) => {
+                    const predictionData = astroData ? gamePredictionData : null;
+                    return (
+                      <GamePredictions 
+                        game={game}
+                        astroData={predictionData}
+                        getGamePrediction={getGamePredictionForComponent}
+                        transformHookDataToGamePredictionData={transformHookDataToGamePredictionData}
+                      />
+                    );
+                  }}
                 />
               </motion.div>
 
@@ -977,7 +1056,7 @@ const Dashboard: React.FC = () => {
                               </div>
                               <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
                                 <p className="text-base text-slate-700 leading-relaxed">
-                                  {getSunSportsInfluences(astroData)[0]?.text || 'The Sun’s current sign sets the tone for vitality and momentum.'}
+                                  {getSunSportsInfluences(astroData)[0]?.text || "The Sun's current sign sets the tone for vitality and momentum."}
                                 </p>
                               </div>
                               {/* Sun Details */}
@@ -1181,7 +1260,34 @@ const Dashboard: React.FC = () => {
                     </motion.div>
 
                     <motion.div variants={item} className="md:col-span-2">
-                      <PlanetaryInfluences influences={astroInfluences} />
+                      <PlanetaryInfluences 
+                        planets={astroData?.planets || {}}
+                        aspects={astroData?.aspects?.map(aspect => {
+                          const aspectType = (aspect.type || 'conjunction') as AspectType;
+                          const fromPlanet = typeof aspect.planets?.[0] === 'string' ? aspect.planets[0] : 
+                                           typeof aspect.planets?.[0] === 'object' ? aspect.planets[0].name : '';
+                          const toPlanet = typeof aspect.planets?.[1] === 'string' ? aspect.planets[1] : 
+                                         typeof aspect.planets?.[1] === 'object' ? aspect.planets[1].name : '';
+                          let influence: AspectInfluence = { description: '', strength: 0.5, area: [] };
+                          if (typeof aspect.influence === 'object' && aspect.influence !== null) {
+                            influence = {
+                              description: (aspect.influence as any).description || '',
+                              strength: (aspect.influence as any).strength || 0.5,
+                              area: (aspect.influence as any).area || []
+                            };
+                          }
+                          return {
+                            from: fromPlanet,
+                            to: toPlanet,
+                            type: aspectType,
+                            orb: aspect.orb || 0,
+                            exact: Math.abs(aspect.orb || 0) < 1,
+                            influence
+                          } as Aspect;
+                        }) || []}
+                        patterns={astroData?.patterns || []}
+                        dignities={astroData?.dignities || {}}
+                      />
                     </motion.div>
 
                     <motion.div variants={item} className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2">
