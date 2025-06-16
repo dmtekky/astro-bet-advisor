@@ -6,7 +6,15 @@
  */
 import { useMemo, useCallback } from 'react';
 import useSWR from 'swr';
+import { createClient } from '@supabase/supabase-js';
 import type { AspectType, CelestialBody, ZodiacSign, MoonPhaseInfo } from '../types/astrology';
+import * as z from 'zod'; // Import Zod
+
+// Initialize Supabase client with fallback to REACT_APP_ prefixed variables for backward compatibility
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || import.meta.env.REACT_APP_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.REACT_APP_SUPABASE_ANON_KEY || ''
+);
 
 // Import the moon phase calculation functions
 import { getMoonPhase, getMoonPhaseInfo } from '../lib/astroCalculations';
@@ -271,43 +279,165 @@ export const useAstroData = (dateParam: Date | string | null = new Date()): UseA
   }
 
   // Stable key for SWR, based on actual data dependencies
-  const swrKey = `${API_BASE_URL}?date=${dateStr}&sidereal=true`;
-  // Fetch function for SWR
-const fetcher = async (baseApiUrl: string) => {
-  const urlToFetch = `${baseApiUrl}&t=${Date.now()}`; // Append timestamp for cache-busting
-  console.log('[Fetcher] Attempting to fetch URL:', urlToFetch);
-  const response = await fetch(urlToFetch);
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Fetcher] API request failed:', response.status, errorText);
-    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
-  }
-  const rawText = await response.text();
-  try {
-    const jsonData = JSON.parse(rawText);
-    return jsonData;
-  } catch (e) {
-    console.error('[Fetcher] Failed to parse API response JSON:', e, "Raw text was:", rawText);
-    throw new Error('Failed to parse API response JSON');
-  }
-};
+  const swrKey = `/api/unified-astro?date=${dateStr}&sidereal=true`;
 
-const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
-    swrKey, // Use the stable key
-    fetcher,
-    {
-      revalidateOnFocus: false, // Keep
-      revalidateOnReconnect: false, // Keep
-      shouldRetryOnError: false,    // Disable retries for now
-      // Using SWR default for dedupingInterval
-      // No fallbackData, apiData will be undefined initially then populated
+  // Enhanced fetch function with better error handling and auth flow
+  const fetcher = async (baseApiUrl: string) => {
+    const urlToFetch = `${baseApiUrl}&t=${Date.now()}`; // Append timestamp for cache-busting
+    console.log('[useAstroData] Fetching URL:', urlToFetch);
+    
+    // Get Supabase session if available
+    console.log('[useAstroData] Getting Supabase session...');
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.warn('[useAstroData] Error getting Supabase session:', sessionError);
+    } else {
+      console.log('[useAstroData] Session status:', session ? 'Authenticated' : 'No active session');
     }
+
+    // Prepare headers with auth
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add auth token if available, otherwise use anon key as fallback
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.REACT_APP_SUPABASE_ANON_KEY;
+    if (session?.access_token) {
+      console.log('[useAstroData] Using authenticated session token');
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    } else if (anonKey) {
+      console.log('[useAstroData] Using anonymous access with anon key');
+      headers['apikey'] = anonKey;
+      headers['Authorization'] = `Bearer ${anonKey}`;
+    } else {
+      console.warn('[useAstroData] No auth token or anon key available');
+    }
+
+    try {
+      console.log('[useAstroData] Making request with headers:', JSON.stringify(headers, null, 2));
+      const response = await fetch(urlToFetch, {
+        headers,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[useAstroData] API request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: urlToFetch,
+          error: errorText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        // Handle 401/403 specifically with retry logic
+        if (response.status === 401 || response.status === 403) {
+          console.log('[useAstroData] Authentication required, attempting to refresh session...');
+          
+          try {
+            const { data, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError || !data.session) {
+              console.error('[useAstroData] Session refresh failed:', refreshError);
+              // If refresh fails, try with anon key if not already using it
+              if (anonKey && !headers['apikey']) {
+                console.log('[useAstroData] Retrying with anonymous access...');
+                const anonHeaders = {
+                  ...headers,
+                  'apikey': anonKey,
+                  'Authorization': `Bearer ${anonKey}`
+                };
+                const anonResponse = await fetch(urlToFetch, { 
+                  headers: anonHeaders,
+                  credentials: 'include' 
+                });
+                
+                if (!anonResponse.ok) {
+                  throw new Error(`Anonymous access failed: ${anonResponse.status} ${anonResponse.statusText}`);
+                }
+                return await anonResponse.json();
+              }
+              throw new Error(`Authentication failed: ${refreshError?.message || 'No session after refresh'}`);
+            }
+            
+            // Retry with new token
+            console.log('[useAstroData] Session refreshed, retrying with new token...');
+            const retryHeaders = {
+              ...headers,
+              'Authorization': `Bearer ${data.session.access_token}`
+            };
+            
+            const retryResponse = await fetch(urlToFetch, { 
+              headers: retryHeaders,
+              credentials: 'include' 
+            });
+            
+            if (!retryResponse.ok) {
+              const retryError = await retryResponse.text();
+              throw new Error(`Retry failed with status ${retryResponse.status}: ${retryError}`);
+            }
+            
+            return await retryResponse.json();
+            
+          } catch (refreshError) {
+            console.error('[useAstroData] Error during session refresh/retry:', refreshError);
+            throw new Error(`Failed to refresh session: ${refreshError.message}`);
+          }
+        }
+        
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('[useAstroData] Successfully fetched data');
+      return responseData;
+      
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.error('[useAstroData] Request failed:', {
+        error: errorMessage,
+        url: urlToFetch,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error(`Request failed: ${errorMessage}`);
+    }
+  };
+
+  const swrOptions = {
+    dedupingInterval: 30000, // Prevent duplicate requests for 30 seconds
+    revalidateOnFocus: false,
+    revalidateOnReconnect: true,
+    shouldRetryOnError: true,
+    retryCount: 3,
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
+    onErrorRetry: (error: Error, _: any, __: any, revalidate: any, { retryCount }: { retryCount: number }) => {
+      // Don't retry on 403 (permission denied) as it's likely an auth issue
+      if (error.message.includes('403')) {
+        console.log('[useAstroData] Not retrying 403 error');
+        return;
+      }
+      
+      // Only retry up to configured retryCount
+      if (retryCount >= 3) return;
+      
+      // Retry with exponential backoff
+      const timeout = Math.min(1000 * 2 ** retryCount, 30000);
+      console.log(`[useAstroData] Retrying (${retryCount + 1}/3) in ${timeout}ms...`);
+      setTimeout(() => revalidate({ retryCount }), timeout);
+    }
+  };
+
+  const { data: apiData, error, isLoading } = useSWR(
+    swrKey,
+    fetcher,
+    swrOptions
   );
 
   // Function to manually refresh data
   const refreshData = useCallback(() => {
-    mutate();
-  }, [mutate]);
+    // mutate();
+  }, []);
 
   // Console log for debugging
   console.log('API Response:', { 
@@ -339,6 +469,91 @@ const { data: apiData, error, isLoading, mutate } = useSWR<ApiResponse>(
     try {
       console.log('[useAstroData/transformedData] Inside try block, pre-JSON.stringify apiData:', apiData ? Object.keys(apiData).join(', ') : 'apiData is null');
       console.log('Raw API Data:', JSON.stringify(apiData, null, 2));
+      
+      // Zod schema for API response
+      const AstroDataSchema = z.object({
+        date: z.string().datetime(),
+        sidereal: z.boolean().optional(),
+        ayanamsa: z.number().optional(),
+        planets: z.record(z.object({
+          longitude: z.number(),
+          sign: z.string(),
+          degrees: z.number(),
+          retrograde: z.boolean(),
+          weight: z.number().optional(),
+          tropicalLongitude: z.number().optional()
+        })),
+        moonPhase: z.object({
+          illumination: z.number(),
+          angle: z.number(),
+          phase: z.string()
+        }).optional(),
+        aspects: z.array(z.object({
+          planet1: z.string(),
+          planet2: z.string(),
+          aspect: z.string(),
+          angle: z.number(),
+          orb: z.number(),
+          strength: z.number(),
+          applying: z.boolean(),
+          interpretation: z.string().optional()
+        })).optional(),
+        elements: z.object({
+          fire: z.number(),
+          earth: z.number(),
+          water: z.number(),
+          air: z.number()
+        }).optional(),
+        modalities: z.object({
+          cardinal: z.number(),
+          fixed: z.number(),
+          mutable: z.number()
+        }).optional(),
+        astro_weather: z.object({
+          overall: z.number(),
+          action: z.number(),
+          thinking: z.number(),
+          feeling: z.number(),
+          creativity: z.number(),
+          spirituality: z.number()
+        }).optional(),
+        interpretations: z.object({
+          planets: z.record(z.object({
+            sign: z.string(),
+            retrograde: z.boolean(),
+            interpretation: z.string()
+          })),
+          aspects: z.array(z.object({
+            planet1: z.string(),
+            planet2: z.string(),
+            aspect: z.string(),
+            angle: z.number(),
+            orb: z.number(),
+            strength: z.number(),
+            applying: z.boolean(),
+            interpretation: z.string()
+          }))
+        }).optional(),
+        sunSign: z.string().optional()
+      });
+      
+      // Validate and parse API response
+      const parseResult = AstroDataSchema.safeParse(apiData);
+      if (!parseResult.success) {
+        console.error('[useAstroData] API response validation failed:', {
+          error: parseResult.error,
+          response: apiData
+        });
+        
+        // Return minimal valid structure
+        return {
+          date,
+          planets: {},
+          aspects: [],
+          elements: undefined,
+          sunSign: undefined
+        };
+      }
       
       // Extract necessary data from actual API response
       const {

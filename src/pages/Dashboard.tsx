@@ -85,9 +85,11 @@ const DEFAULT_LOGO = '/images/default-team-logo.svg';
 import AstroDisclosure from '@/components/AstroDisclosure';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(true);
   const [articleError, setArticleError] = useState<string | null>(null);
+  const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
   
   // Fetch the featured article from the news API
   useEffect(() => {
@@ -121,17 +123,6 @@ const Dashboard: React.FC = () => {
       } catch (err) {
         console.error('Error fetching featured article:', err);
         setArticleError('Failed to load the latest news. Please try again later.');
-        // Fallback to default article if API fails
-        setFeaturedArticle({
-          slug: 'ai-astrology-mlb-deep-dive-20250531',
-          title: 'AI & Astrology: A New Frontier in MLB Predictions',
-          subheading: 'Discover how combining advanced AI with ancient astrological wisdom is changing the game for sports bettors.',
-          contentHtml: '<p>Full article content would go here...</p>',
-          featureImageUrl: 'https://images.unsplash.com/photo-1580209949904-5046cf9b3f4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
-          publishedAt: new Date().toISOString(),
-          author: 'AI Insights',
-          tags: ['MLB', 'AI', 'Astrology', 'Predictions'],
-        });
       } finally {
         setIsLoadingArticle(false);
       }
@@ -140,7 +131,11 @@ const Dashboard: React.FC = () => {
     fetchFeaturedArticle();
   }, []);
   // State for today's date
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const today = useMemo(() => new Date(), []);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  
+  // Memoize date string for API call
+  const dateString = useMemo(() => selectedDate.toISOString().split('T')[0], [selectedDate]);
   
   // Fetch teams and games data
   const { 
@@ -167,389 +162,72 @@ const Dashboard: React.FC = () => {
     disabled: MLB_LEAGUE_KEY && !isMlbLeagueResolutionComplete 
   });
 
-  // Fetch astrological data
-  const { 
-    astroData, 
-    loading: astroLoading, 
-    error: astroError 
-  } = useAstroData(selectedDate);
+  // Memoized astro data hook call with stable date string
+  const stableDateString = useMemo(() => {
+    return new Date().toISOString().split('T')[0];
+  }, []);
 
-  // Add this useEffect to log the astroData when it changes
-  useEffect(() => {
-    if (astroData) {
-      console.log('AstroData from API:', {
-        date: astroData.date,
-        sidereal: astroData.sidereal,
-        sunSign: astroData.sunSign,
-        elements: astroData.elements,
-        moonPhase: astroData.moonPhase,
-        planets: Object.keys(astroData.planets || {}),
-        aspects: astroData.aspects?.length,
-        interpretations: Object.keys(astroData.interpretations?.planets || {})
-      });
-    }
-  }, [astroData]);
+  const { astroData, loading: astroLoading, error: astroError } = useAstroData(stableDateString);
 
-  // Add this useEffect to log the astroData when it changes
-  useEffect(() => {
-    if (astroData) {
-      console.log('astroData:', JSON.stringify({
-        // Only include the most relevant parts to avoid console clutter
-        date: astroData.date,
-        sidereal: astroData.sidereal,
-        sunSign: astroData.sunSign,
-        planets: {
-          sun: astroData.planets?.sun,
-          moon: astroData.planets?.moon
-        },
-        moonPhase: astroData.moonPhase,
-        elements: astroData.elements,
-        modalities: astroData.modalities,
-        astroWeather: astroData.astroWeather,
-        interpretations: {
-          planets: Object.keys(astroData.interpretations?.planets || {})
-        },
-        aspects: astroData.aspects?.length
-      }, null, 2));
-    }
-  }, [astroData]);
-
-  // State for astrological influences
-  const [astroInfluences, setAstroInfluences] = useState<AstrologyInfluence[]>([]);
-  // Helper function to calculate elemental distribution from astroData
-  function getElementsDistribution(data: any): ElementsDistribution {
-    const distribution: ElementsDistribution = { fire: 0, earth: 0, water: 0, air: 0 };
-    if (!data || !data.planets) {
-      // Return a default balanced distribution if no data, or handle as preferred
-      return { fire: 25, earth: 25, water: 25, air: 25 };
-    }
-
-    const signToElement: { [key: string]: keyof ElementsDistribution } = {
-      'Aries': 'fire', 'Leo': 'fire', 'Sagittarius': 'fire',
-      'Taurus': 'earth', 'Virgo': 'earth', 'Capricorn': 'earth',
-      'Gemini': 'air', 'Libra': 'air', 'Aquarius': 'air',
-      'Cancer': 'water', 'Scorpio': 'water', 'Pisces': 'water',
-    };
-
-    let totalPoints = 0;
-    for (const planetKey in data.planets) {
-      const planet = data.planets[planetKey];
-      if (planet && planet.sign) {
-        const element = signToElement[planet.sign];
-        if (element) {
-          distribution[element]++;
-          totalPoints++;
-        }
-      }
-    }
-
-    if (totalPoints === 0) {
-      return { fire: 25, earth: 25, water: 25, air: 25 }; // Default if no planets contributed
-    }
-
-    // Calculate percentages and round them
-    let firePct = Math.round((distribution.fire / totalPoints) * 100);
-    let earthPct = Math.round((distribution.earth / totalPoints) * 100);
-    let waterPct = Math.round((distribution.water / totalPoints) * 100);
-    let airPct = Math.round((distribution.air / totalPoints) * 100);
-
-    // Adjust to ensure sum is 100 due to rounding
-    let sumPct = firePct + earthPct + waterPct + airPct;
-    if (sumPct !== 100) {
-      const diff = 100 - sumPct;
-      // A simple way to adjust: add/subtract difference to/from the largest percentage
-      const percentages = [{name: 'fire', value: firePct}, {name: 'earth', value: earthPct}, {name: 'water', value: waterPct}, {name: 'air', value: airPct}];
-      percentages.sort((a,b) => b.value - a.value);
-      if (percentages[0].name === 'fire') firePct += diff;
-      else if (percentages[0].name === 'earth') earthPct += diff;
-      else if (percentages[0].name === 'water') waterPct += diff;
-      else airPct += diff;
-    }
-
+  // Memoize elements distribution
+  const elementsDistribution = useMemo(() => {
+    if (!astroData?.elements) return { fire: 0, earth: 0, water: 0, air: 0 };
     return {
-      fire: firePct,
-      earth: earthPct,
-      water: waterPct,
-      air: airPct,
+      fire: astroData.elements.fire?.score || 0,
+      earth: astroData.elements.earth?.score || 0,
+      water: astroData.elements.water?.score || 0,
+      air: astroData.elements.air?.score || 0
     };
-  }
+  }, [astroData]);
 
-  const elementsDistribution = useMemo(() => getElementsDistribution(astroData), [astroData]);
-
-  function getDynamicElementalInterpretation(distribution: ElementsDistribution): string {
-    const { fire, earth, water, air } = distribution;
-    const elementsOriginal = [
-      { name: 'Fire', value: fire },
-      { name: 'Earth', value: earth },
-      { name: 'Water', value: water },
-      { name: 'Air', value: air },
-    ];
-
-    const sortedElements = [...elementsOriginal].sort((a, b) => b.value - a.value);
-    const [first, second, third, fourth] = sortedElements;
-
-    const dominantThr = 35;
-    const strongThr = 28;
-    const lackingThr = 15;
-    // const moderateLowThr = 16;
-    // const moderateHighThr = 27;
-
-    let interpretation = '';
-
-    // Scenario 1: Two Dominant Elements
-    if (first.value >= dominantThr && second.value >= strongThr) {
-      if ((first.name === 'Fire' && second.name === 'Air') || (first.name === 'Air' && second.name === 'Fire')) {
-        interpretation = "An absolute inferno of Fire meeting a whirlwind of Air! Brace for a spectacle of breathtaking speed, audacious offensive assaults, and genius-level playmaking. Star players will be gunning for legendary status. But this high-wire act courts disaster: expect shocking defensive breakdowns, high-profile errors under pressure, and teams risking burnout. This is a matchup where the scoreboard might explode!";
-      } else if ((first.name === 'Fire' && second.name === 'Earth') || (first.name === 'Earth' && second.name === 'Fire')) {
-        interpretation = "A titanic clash of raw Firepower against immovable Earth! Expect brutal physicality, where explosive offensive bursts meet ironclad defensive stands. Games could turn on moments of individual brilliance overcoming sheer resilience, or disciplined strategy quelling aggressive onslaughts. Player endurance and the ability to absorb punishment will be paramount.";
-      } else if ((first.name === 'Fire' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Fire')) {
-        interpretation = "A seething cauldron of Fire and Water! Today's contests will be fought with raw, untamed emotion. Expect simmering rivalries to erupt, with players riding a tidal wave of adrenaline. This volatile brew can forge legendary, clutch moments OR trigger epic meltdowns under the spotlight. Psychological fortitude will be as crucial as physical skill.";
-      } else if ((first.name === 'Earth' && second.name === 'Air') || (first.name === 'Air' && second.name === 'Earth')) {
-        interpretation = "Strategic Air intellect versus methodical Earth power! This is a chess match on the grandest scale. Expect calculated risks and innovative game plans trying to dismantle disciplined, resilient opponents. Will quick thinking and adaptability outmaneuver sheer persistence, or will relentless pressure expose tactical flaws? Mental toughness meets physical grind.";
-      } else if ((first.name === 'Earth' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Earth')) {
-        interpretation = "Deep Water intuition flows into formidable Earth structures. Teams might display incredible synergy, turning disciplined defense into fluid, opportunistic attacks. Player instincts combined with unwavering team strategy can create an almost unbreakable force. However, if the emotional Water gets muddied or Earth's foundations crack, it could lead to surprising collapses.";
-      } else if ((first.name === 'Air' && second.name === 'Water') || (first.name === 'Water' && second.name === 'Air')) {
-        interpretation = "The unpredictable currents of Water meet the strategic gusts of Air! Expect a dazzling display of creative playmaking, where intuitive flashes are backed by intelligent execution. Teams that can 'feel' the game's rhythm while outthinking their opponents will thrive. However, this blend can also lead to over-complication or emotional decisions overriding sound strategy. Genius or chaos could prevail.";
-      }
-    } 
-    // Scenario 2: One Element Clearly Dominant
-    else if (first.value >= dominantThr) {
-      if (first.name === 'Fire') {
-        interpretation = "Pure Fire fuels the arena today! This is where individual brilliance can single-handedly dominate. Expect aggressive, attacking play from the get-go, with teams pushing the tempo relentlessly. Records could be challenged, but so could composure – watch for explosive tempers or costly, overzealous penalties. Underdogs banking on a defensive grind will struggle immensely.";
-      } else if (first.name === 'Earth') {
-        interpretation = "The relentless power of Earth shapes today's battlefield! Expect a masterclass in defensive discipline, physical dominance, and unwavering resolve. Teams built on solid foundations and methodical execution will grind opponents into submission. Low-scoring, gritty affairs are likely, where every inch is fought for. Flashy plays give way to sheer willpower.";
-      } else if (first.name === 'Air') {
-        interpretation = "The game will be played at the speed of thought with Air ascendant! Prepare for strategic masterminds to dictate play, with dazzling displays of skill, quick adaptation, and telepathic teamwork. Teams that can out-think and outmaneuver their rivals will soar. However, an over-reliance on intellect can lead to paralysis by analysis or vulnerability to raw, unpredictable power.";
-      } else if (first.name === 'Water') {
-        interpretation = "A tidal wave of Water energy floods the competition! Intuition, team synergy, and emotional intensity will define victory. Expect players to tap into a collective consciousness, making instinctive, game-changing plays. Momentum will be king, capable of carrying teams to stunning heights or dragging them into despair. Clutch performances under immense pressure are on the cards.";
-      }
-    }
-
-    // Scenario 3: One Element Lacking (can be an additional insight or primary if no dominant scenario)
-    let lackingInterpretation = '';
-    if (fourth.value <= lackingThr) {
-      const lackingElement = fourth.name;
-      if (lackingElement === 'Fire') {
-        lackingInterpretation = "A critical lack of Fire could extinguish offensive sparks! Teams might struggle for aggression, killer instinct, and the individual brilliance needed to break deadlocks. Expect cautious play, possibly leading to stalemates or low-energy contests decided by errors rather than daring.";
-      } else if (lackingElement === 'Earth') {
-        lackingInterpretation = "Dangerously low Earth energy means the very foundation of disciplined play is crumbling! Watch for chaotic execution, a shocking lack of fundamentals, and teams utterly failing to protect a lead. This is prime territory for monumental upsets, as even elite teams might look amateurish.";
-      } else if (lackingElement === 'Air') {
-        lackingInterpretation = "A deficit in Air could lead to strategic meltdowns! Teams may suffer from poor decision-making, an inability to adapt, and breakdowns in communication. Expect sloppy plays, mental errors, and an inability to exploit opponents' weaknesses. Raw talent alone won't save the day if the game plan is incoherent.";
-      } else if (lackingElement === 'Water') {
-        lackingInterpretation = "Low Water energy can drain the passion from the game! Teams might lack cohesion, struggle to find rhythm, or fail to connect emotionally with the stakes. Expect mechanical performances, a lack of intuitive plays, and difficulty mounting comebacks when adversity strikes. Resilience will be tested.";
-      }
-      if (interpretation && lackingInterpretation) {
-        interpretation += ` Additionally, ${lackingInterpretation.charAt(0).toLowerCase() + lackingInterpretation.slice(1)}`;
-      } else if (lackingInterpretation) {
-        interpretation = lackingInterpretation;
-      }
-    }
-
-    // Scenario 4: Balanced State (if no other strong scenarios hit)
-    if (!interpretation && elementsOriginal.every(el => el.value > lackingThr && el.value < dominantThr )) {
-       // Check for a more tightly balanced scenario
-        const allModerate = elementsOriginal.every(el => el.value >= (lackingThr + 5) && el.value <= (strongThr -3)); // e.g. all between 20-25
-        if (allModerate) {
-            interpretation = "A truly balanced elemental field means today's victory will be forged by superior all-around execution and strategic genius. No single approach will dominate; teams must be masters of adaptation, exploiting subtle shifts in momentum. This is where coaching prowess and deep rosters shine, potentially leading to a chess match decided by fine margins.";
-        } else {
-            // General prominent element if not strictly balanced but no other rule hit
-            if (first.value >= strongThr) { // A less dominant 'first' element
-                let prominentQuality = '';
-                switch (first.name) {
-                    case 'Fire': prominentQuality = 'aggressive plays and individual efforts'; break;
-                    case 'Earth': prominentQuality = 'strong defensive plays and resilience'; break;
-                    case 'Air': prominentQuality = 'smart strategies and adaptability'; break;
-                    case 'Water': prominentQuality = 'intuitive teamwork and emotional drive'; break;
-                }
-                interpretation = `While no single element overwhelmingly dominates, ${first.name} provides a significant undercurrent of ${prominentQuality}. Expect this to subtly shape game dynamics, favoring teams that can tap into this leading energy while remaining versatile against other influences.`;
-            }
-        }
-    }
-
-    // Fallback if no specific interpretation was set
-    if (!interpretation) {
-      interpretation = "Today's unique elemental cocktail creates an unpredictable arena! Elite athletes will need to draw on every ounce of skill, strategy, and instinct. Look for moments where the sheer will to win defies the patterns, and where unexpected heroes can emerge from the complex interplay of energies. Anything can happen!";
-    }
-
-    return interpretation;
-  }
-
-  // Navigation
-  const navigate = useNavigate();
-  
-  // Handle navigation to upcoming games page
-  const handleSeeMoreGames = () => {
-    navigate('/upcoming-games');
-  };
-
-  // Calculate loading and error states
-  const isLoading = astroLoading || gamesLoading || teamsLoading;
-  const error = astroError || gamesError || teamsError;
-
-  // Extract sun sign data for easy access
-  const sunSign = astroData?.sunSign || 'Unknown';
-  const sunDegree = astroData?.planets?.sun?.degree || 0;
-  const sunMinute = astroData?.planets?.sun?.minute || 0;
-
-  // Group games by date
-  const groupedGames = useMemo(() => 
-    games ? groupGamesByDate(games) : [], 
-    [games]
-  );
-
-  // Format date for display
-  const formattedDate = selectedDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  // Type alias for astroData from the hook, used by the transformer
-  type HookAstroData = ReturnType<typeof useAstroData>['astroData'];
-
-  // Standalone transformer function
-  const transformHookDataToGamePredictionData = (hookData: HookAstroData): GamePredictionData | null => {
-    if (!hookData) return null;
-
-    const observerData = hookData.observer || { latitude: 0, longitude: 0, timezone: 'UTC' };
-
-    const planetsData: Record<string, CelestialBody> = {};
-    let sunBody: CelestialBody | undefined;
-    let moonBody: CelestialBody | undefined;
-
-    if (hookData.planets) {
-      for (const key in hookData.planets) {
-        const p = hookData.planets[key];
-        if (!p) continue; // Skip if planet data is null or undefined
-
-        const baseBody = createDefaultCelestialBody(p.name || key, (p.sign as ZodiacSign) || 'Aries');
-        
-        const celestialBody: CelestialBody = {
-          ...baseBody,
-          name: p.name || key,
-          longitude: p.longitude,
-          sign: (p.sign as ZodiacSign) || 'Aries',
-          degree: p.degree ?? (p as any).degrees ?? 0,
-          minute: p.minute ?? 0,
-          retrograde: p.retrograde ?? false,
-          speed: (p as any).speed ?? baseBody.speed,
-          latitude: (p as any).latitude ?? baseBody.latitude,
-          distance: (p as any).distance ?? baseBody.distance,
-          house: (p as any).house ?? baseBody.house,
-          declination: (p as any).declination ?? baseBody.declination,
-          rightAscension: (p as any).rightAscension ?? baseBody.rightAscension,
-          phase: (p as any).phase ?? baseBody.phase,
-          phaseValue: (p as any).phaseValue ?? baseBody.phaseValue,
-          phase_name: (p as any).phase_name ?? baseBody.phase_name,
-          magnitude: (p as any).magnitude ?? baseBody.magnitude,
-          illumination: (p as any).illumination ?? baseBody.illumination,
-          dignity: (p as any).dignity ?? baseBody.dignity,
-        };
-        planetsData[key.toLowerCase()] = celestialBody; // Ensure consistent casing for keys
-        if (key.toLowerCase() === 'sun') sunBody = celestialBody;
-        if (key.toLowerCase() === 'moon') moonBody = celestialBody;
-      }
-    }
-
-    const finalSunData = sunBody || createDefaultCelestialBody('Sun', (hookData.planets?.sun?.sign as ZodiacSign) || 'Aries');
-    const finalMoonData = moonBody || createDefaultCelestialBody('Moon', (hookData.planets?.moon?.sign as ZodiacSign) || 'Aries');
-    
-    const moonPhaseData: MoonPhaseInfo = {
-      name: hookData.moonPhase?.name || 'New Moon',
-      value: hookData.moonPhase?.value ?? 0,
-      illumination: hookData.moonPhase?.illumination ?? 0,
-      nextFullMoon: hookData.moonPhase?.nextFullMoon || new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000), // Default to ~30 days from now if not available
-      ageInDays: hookData.moonPhase?.ageInDays ?? 0,
-      phaseType: hookData.moonPhase?.phaseType || 'new'
-    };
-
-    const validAspectTypes: AspectType[] = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
-    const aspectsData: Aspect[] = (hookData.aspects || []).map(hookAspect => {
-      const aspectType = hookAspect.type.toLowerCase() as AspectType;
-      // Attempt to find a more specific interpretation if available
-      let interpretation = (hookAspect as any).interpretation || (hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`] as string);
-      // Fallback for general aspect type interpretation if specific one is missing
-      if (!interpretation) {
-        interpretation = (hookData.interpretations?.[hookAspect.type] as string) || 'General influence';
-      }
-      // Check for lacking interpretation for specific planets
-      let lackingInterpretation = '';
-      if (!(hookAspect as any).interpretation && !hookData.interpretations?.[`${hookAspect.planets[0]?.name}-${hookAspect.planets[1]?.name}-${hookAspect.type}`]) {
-        lackingInterpretation = `Interpretation for ${hookAspect.planets[0]?.name} ${hookAspect.type} ${hookAspect.planets[1]?.name} is pending.`;
-      }
-      if (interpretation && lackingInterpretation) {
-        interpretation += ` Additionally, ${lackingInterpretation.charAt(0).toLowerCase() + lackingInterpretation.slice(1)}`;
-      } else if (lackingInterpretation) {
-        interpretation = lackingInterpretation;
-      }
-
-      return {
-        from: hookAspect.planets[0]?.name || 'Unknown Planet',
-        to: hookAspect.planets[1]?.name || 'Unknown Planet',
-        type: aspectType,
-        orb: hookAspect.orb,
-        influence: { 
-          description: interpretation,
-          strength: (hookAspect as any).influence?.strength ?? 0.5,
-          area: (hookAspect as any).influence?.area ?? [],
-        },
-        exact: Math.abs(hookAspect.orb) < 1, 
-      };
-    }).filter(aspect => validAspectTypes.includes(aspect.type));
-    
-    const gamePredictionInput: GamePredictionData = {
-      date: hookData.date,
-      queryTime: hookData.queryTime || new Date().toISOString(),
-      observer: {
-        latitude: observerData.latitude,
-        longitude: observerData.longitude,
-        timezone: observerData.timezone,
-        altitude: 0, 
-      },
-      sun: finalSunData,
-      moon: finalMoonData,
-      planets: planetsData,
-      aspects: aspectsData,
-      moonPhase: moonPhaseData,
-      elements: hookData.elements || {
-        fire: { score: 0, planets: [] },
-        earth: { score: 0, planets: [] },
-        water: { score: 0, planets: [] },
-        air: { score: 0, planets: [] },
-      },
-      modalities: hookData.modalities as ModalBalance | undefined,
-      houses: hookData.houses as any, 
-      patterns: hookData.patterns as any, 
-      dignities: hookData.dignities as any, 
-    };
-    return gamePredictionInput;
-  };
-
-  // Get sports predictions from astrological data
+  // Memoize game prediction data
   const sportsPredictions = useMemo(() => {
     if (!astroData) return null;
-    const transformedData: GamePredictionData | null = transformHookDataToGamePredictionData(astroData);
-    return calculateSportsPredictions(transformedData);
-  }, [astroData, transformHookDataToGamePredictionData]);
+    return calculateSportsPredictions(astroData);
+  }, [astroData]);
+
+  // Group games by date
+  const groupedGames = useMemo(() => {
+    if (!games || games.length === 0) return [];
+    
+    const groups = games.reduce<Record<string, { date: Date; games: Game[] }>>((acc, game) => {
+      const dateKey = new Date(game.start_time || '').toISOString().split('T')[0];
+      if (!acc[dateKey]) {
+        acc[dateKey] = { date: new Date(dateKey), games: [] };
+      }
+      acc[dateKey].games.push(game);
+      return acc;
+    }, {});
+    
+    return Object.values(groups).sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [games]);
+  
+  // Single handler definition
+  const handleSeeMoreGames = useCallback(() => {
+    navigate('/games');
+  }, [navigate]);
+
+  // Transform games data for display
+  const processedGames = useMemo(() => {
+    if (!games) return [];
+    
+    return games.map(game => ({
+      ...game,
+      // Add any game processing logic here
+    }));
+  }, [games]);
 
   // Create a memoized function to get game-specific predictions
   const getGamePrediction = useCallback(
-    (game: Game, homeTeam?: Team, awayTeam?: Team) => {
-      console.log('%%%%% CHECKING ASTRODATA IN getGamePrediction:', astroData);
-      const rawAstro = astroData;
-      if (!rawAstro) {
-        console.warn(`No astro data for game ${game.id} in getGamePrediction`);
-        return null;
-      }
-      // Ensure rawAstro is treated as HookAstroData, which might be AstroData | null | undefined
-      const transformedAstro = transformHookDataToGamePredictionData(rawAstro as HookAstroData);
-      if (!transformedAstro) {
-        console.warn(`Failed to transform astro data for game ${game.id}`);
-        return null;
-      }
-      return predictGameOutcome(game, homeTeam, awayTeam, transformedAstro);
+    (game: Game, homeTeam: Team | ExtendedTeam, awayTeam: Team | ExtendedTeam) => {
+      if (!sportsPredictions || !sportsPredictions.games) return null;
+      
+      // Find prediction for this game
+      return sportsPredictions.games.find(
+        (pred: any) => pred && pred.gameId === game.id
+      ) || null;
     },
-    [astroData, transformHookDataToGamePredictionData]
+    [sportsPredictions]
   );
 
   // Helper function to find a team with proper type casting
@@ -580,8 +258,6 @@ const Dashboard: React.FC = () => {
   // Process astrological data when it's available
   useEffect(() => {
     if (astroData && !astroLoading) {
-      console.log('AstroData received:', astroData);
-      
       // Initialize element scores
       let fireScore = 0;
       let earthScore = 0;
@@ -609,29 +285,8 @@ const Dashboard: React.FC = () => {
       // Format astrological influences
       const influences: AstrologyInfluence[] = [];
       
-      // Always use the API's sign property for the Sun in sidereal mode
-      let sunSign = '';
-      let isSidereal = false;
-      
-      if (astroData.planets?.sun?.sign) {
-        sunSign = astroData.planets.sun.sign;
-        isSidereal = Boolean(astroData.sidereal);
-      }
-      // Fallback to positions array if planets.sun is missing
-      else if (astroData.positions) {
-        const sunPosition = astroData.positions.find((p: any) => p.planet?.toLowerCase() === 'sun');
-        if (sunPosition) {
-          sunSign = sunPosition.sign;
-          isSidereal = true;
-        }
-      }
-      // Fallback to sun object
-      else if (astroData.sun?.sign) {
-        sunSign = astroData.sun.sign;
-        isSidereal = Boolean(astroData.sidereal);
-      }
-      
-      console.log('UI Sun sign:', sunSign, 'astroData.planets.sun:', astroData.planets?.sun);
+      // Safely get sun sign from astroData
+      const sunSign = astroData.planets?.sun?.sign;
       
       // Sun Position is now handled in a dedicated, visually distinct panel below the Moon & Void Status panel. Remove from influences.
       
@@ -875,37 +530,39 @@ const Dashboard: React.FC = () => {
 
   // Update the daily recommendation to use real data
   const dailyRecommendation = useMemo(() => {
-    console.log('Calculating dailyRecommendation with astroData:', astroData);
     if (!astroData) {
-      console.log('No astroData available, returning empty string');
       return '';
     }
-    
+
+    // First, check if we have a sports prediction
     if (sportsPredictions?.prediction) {
-      console.log('Using sports prediction:', sportsPredictions.prediction);
       return sportsPredictions.prediction;
     }
+
+    // Fall back to astrological data
+    const elements = astroData.elements;
+    let dominantElement = '';
+    let maxScore = 0;
+
+    // Find the dominant element
+    Object.entries(elements).forEach(([element, data]) => {
+      if (data.score > maxScore) {
+        maxScore = data.score;
+        dominantElement = element;
+      }
+    });
+
+    // Generate recommendation based on dominant element
+    let recommendation = '';
     
-    // Fallback to element-based recommendation if no specific prediction
-    const dominantElement = Object.entries(elementsDistribution)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] as keyof ElementsDistribution;
-    
-    console.log('Dominant element:', dominantElement);
-    
-    let recommendation = "Today's celestial influences suggest " + 
-      (dominantElement === 'fire' ? 'an aggressive playing style could be advantageous. ' :
-       dominantElement === 'earth' ? 'teams with strong fundamentals may excel. ' :
-       dominantElement === 'air' ? 'strategic and adaptive play could be key. ' :
-       'teams that trust their intuition might have an edge. ');
-    
+    // Add moon phase influence if available
     if (astroData.moon?.phase_name) {
-      console.log('Moon phase:', astroData.moon.phase_name);
-      recommendation += getMoonPhaseImpact(astroData.moon.phase_name);
-    } else {
-      console.log('No moon phase data available');
+      recommendation += `With the ${astroData.moon.phase_name} Moon, `;
     }
+
+    // Add element-based recommendation
+    recommendation += `The strong ${dominantElement} influence suggests ${getElementImpact(dominantElement)}.`;
     
-    console.log('Final recommendation:', recommendation);
     return recommendation;
   }, [astroData, elementsDistribution, sportsPredictions]);
 
@@ -970,8 +627,21 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const isLoading = astroLoading || teamsLoading || gamesLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-lg text-slate-300">Loading astrological data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100">
       {featuredArticle && (
         <Link to={`/news/${featuredArticle.slug}`} className="block group relative overflow-hidden" onClick={() => window.scrollTo(0, 0)}>
           {/* Animated cosmic background */}
@@ -1036,7 +706,7 @@ const Dashboard: React.FC = () => {
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+                    target.src = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80';
                   }}
                 />
               ) : (
@@ -1136,16 +806,11 @@ const Dashboard: React.FC = () => {
         <div className="container mx-auto px-4 md:px-6 lg:px-8 space-y-8">
 
           {/* Main Content */}
-          {error ? (
-            // Error state: Display a global error message
-            <div className="flex items-center justify-center h-64">
-              <Alert variant="destructive" className="bg-white/70 backdrop-blur-sm max-w-md">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {error.message || "An unexpected error occurred while loading dashboard data. Please try again later."}
-                </AlertDescription>
-              </Alert>
+          {astroError ? (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <p className="text-red-400 font-medium">Failed to load astrological data</p>
+              <p className="text-slate-500 mt-2">Please try again later</p>
             </div>
           ) : (
             // No global error, proceed to render the main layout with individual section loading
@@ -1180,19 +845,6 @@ const Dashboard: React.FC = () => {
                           </h3>
                           <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
                             {group.games.map((game) => {
-                              // const homeTeam = findTeam(String(game.home_team_id)); // Replaced by game.home_team
-                              // const awayTeam = findTeam(String(game.away_team_id)); // Replaced by game.away_team
-                              // Log the raw game data for debugging
-                              console.log('Raw game data:', {
-                                gameId: game.id,
-                                home_team: game.home_team,
-                                away_team: game.away_team,
-                                home_team_id: game.home_team_id,
-                                away_team_id: game.away_team_id,
-                                home_team_logo: game.home_team?.logo_url || game.home_team?.logo,
-                                away_team_logo: game.away_team?.logo_url || game.away_team?.logo
-                              });
-
                               // Get team data with proper fallbacks
                               const homeTeam = typeof game.home_team === 'string' 
                                 ? { id: game.home_team_id, name: 'Home Team' } 
@@ -1201,25 +853,17 @@ const Dashboard: React.FC = () => {
                               const awayTeam = typeof game.away_team === 'string'
                                 ? { id: game.away_team_id, name: 'Away Team' }
                                 : game.away_team || { id: game.away_team_id, name: 'Away Team' };
-                              
-                              console.log('Processed team data:', { homeTeam, awayTeam });
 
                               const gamePrediction = getGamePrediction(game, homeTeam, awayTeam);
                               
-                              // Transform astroData from the hook for the GameCard prop
-                              const gameCardAstroData: GamePredictionData | null = astroData
-                                ? transformHookDataToGamePredictionData(astroData as HookAstroData)
-                                : null;
-
+                              // Use memoized game prediction data directly
+                              const gameCardAstroData = sportsPredictions;
+                              
                               // Merge game data with its prediction and team data for the GameCard
                               const gameWithTeams = {
                                 ...game,
                                 prediction: gamePrediction ?? undefined, // Ensure undefined if null for type compatibility
                               };
-
-                              // Log the raw team data for debugging
-                              console.log('Raw home team data:', homeTeam);
-                              console.log('Raw away team data:', awayTeam);
 
                               // Ensure we have proper team objects with required properties
                               const homeTeamData = {
@@ -1251,9 +895,6 @@ const Dashboard: React.FC = () => {
                                   : (awayTeam?.logo || awayTeam?.logo_url || ''),
                                 record: typeof awayTeam === 'string' ? '0-0' : awayTeam?.record || '0-0',
                               };
-
-                              console.log('Processed home team data:', homeTeamData);
-                              console.log('Processed away team data:', awayTeamData);
 
                               return (
                                 <GameCard
@@ -1329,12 +970,16 @@ const Dashboard: React.FC = () => {
                         <div className="h-full" style={{width: `${elementsDistribution.air}%`, background: 'linear-gradient(90deg, #f472b6 60%, #a78bfa 100%)'}} title={`Air: ${elementsDistribution.air}%`} />
                       </div>
                     </div>
-                    <div className="flex flex-wrap justify-between text-sm font-medium text-slate-700">
-                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#f87171'}}></span>fire {elementsDistribution.fire}%</span>
-                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#34d399'}}></span>earth {elementsDistribution.earth}%</span>
-                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#60a5fa'}}></span>water {elementsDistribution.water}%</span>
-                      <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full" style={{background: '#f472b6'}}></span>air {elementsDistribution.air}%</span>
-                    </div>
+                    {elementsDistribution ? (
+                      <div className="flex flex-wrap justify-between text-sm font-medium text-slate-700">
+                        <div>Fire: {elementsDistribution.fire?.score}</div>
+                        <div>Earth: {elementsDistribution.earth?.score}</div>
+                        <div>Water: {elementsDistribution.water?.score}</div>
+                        <div>Air: {elementsDistribution.air?.score}</div>
+                      </div>
+                    ) : (
+                      <div className="text-slate-400">Element data unavailable</div>
+                    )}
                     {elementsDistribution && (elementsDistribution.fire + elementsDistribution.earth + elementsDistribution.water + elementsDistribution.air > 0) && (
                       <div className="mt-4 pt-4 border-t border-slate-200/60">
                         <p className="text-sm text-slate-700 leading-relaxed">
@@ -1362,7 +1007,7 @@ const Dashboard: React.FC = () => {
                           <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" /> Solar Influence
                         </CardTitle>
                         <CardDescription className="text-slate-600">
-                          The Sun is in {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)}), {astroData.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(sunSign)}.
+                          The Sun is in {astroData?.planets?.sun?.sign || ''} ({formatDegreesMinutes(astroData?.planets?.sun?.degree || 0, astroData?.planets?.sun?.minute || 0)}), {astroData?.sidereal ? 'Sidereal' : 'Tropical'}. Element: {getSunElement(astroData?.planets?.sun?.sign || '')}.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3 pt-2">
@@ -1385,10 +1030,10 @@ const Dashboard: React.FC = () => {
                                 Sun Position
                               </h4>
                               <p className="text-sm text-yellow-600 mb-2">
-                                {sunSign} ({formatDegreesMinutes(sunDegree, sunMinute)})
+                                {astroData?.planets?.sun?.sign || ''} ({formatDegreesMinutes(astroData?.planets?.sun?.degree || 0, astroData?.planets?.sun?.minute || 0)})
                               </p>
                               <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                Element: {getSunElement(sunSign)}
+                                Element: {getSunElement(astroData?.planets?.sun?.sign || '')}
                               </div>
                               <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
                                 <p className="text-base text-slate-700 leading-relaxed">
@@ -1399,12 +1044,12 @@ const Dashboard: React.FC = () => {
                               <div className="grid grid-cols-2 gap-3 mb-4">
                                 <div className="bg-white p-3 rounded-lg border border-slate-100">
                                   <div className="text-xs uppercase text-slate-500 font-medium mb-1">Sun Sign</div>
-                                  <div className="font-semibold text-yellow-700">{sunSign}</div>
+                                  <div className="font-semibold text-yellow-700">{astroData?.planets?.sun?.sign || ''}</div>
                                 </div>
                                 <div className="bg-white p-3 rounded-lg border border-slate-100">
                                   <div className="text-xs uppercase text-slate-500 font-medium mb-1">Zodiac Degree</div>
                                   <div className="font-semibold text-yellow-700">
-                                    {sunDegree ? `${Math.floor(sunDegree)}°` : '—'}
+                                    {astroData?.planets?.sun?.degree ? `${Math.floor(astroData.planets.sun.degree)}°` : '—'}
                                   </div>
                                 </div>
                               </div>
@@ -1429,7 +1074,7 @@ const Dashboard: React.FC = () => {
                           <Moon className="h-5 w-5 mr-2 text-indigo-500" /> Lunar & Void Status
                         </CardTitle>
                         <CardDescription className="text-slate-600">
-                          {astroData.voidMoon ? (astroData.voidMoon.isVoid ? ' • Void of Course' : ' • Not Void of Course') : ''}
+                          {astroData?.voidMoon ? (astroData.voidMoon.isVoid ? ' • Void of Course' : ' • Not Void of Course') : ''}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3 pt-2">
@@ -1441,7 +1086,7 @@ const Dashboard: React.FC = () => {
                               <div 
                                 className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out" 
                                 style={{
-                                  clipPath: `inset(0 ${50 - (astroData.moonPhase?.illumination || 0) * 50}% 0 0)`,
+                                  clipPath: `inset(0 ${50 - (astroData?.moonPhase?.illumination || 0) * 50}% 0 0)`,
                                   opacity: 0.95,
                                   boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.8)'
                                 }}
@@ -1468,30 +1113,28 @@ const Dashboard: React.FC = () => {
                                 Moon Phase
                               </h4>
                               <p className="text-sm text-indigo-600 mb-2">
-                                {astroData.moonPhase?.name || 'Current phase unknown'}
+                                {astroData?.moonPhase?.name || 'Current phase unknown'}
                               </p>
                               <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                {astroData.moonPhase?.illumination !== null && astroData.moonPhase?.illumination !== undefined
+                                {astroData?.moonPhase?.illumination !== null && astroData?.moonPhase?.illumination !== undefined
                                   ? `🌕 ${Math.round((astroData.moonPhase.illumination) * 100)}% Illuminated`
                                   : '🌑 Illumination unknown'}
                               </div>
                               <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
                                 <p className="text-base text-slate-700 leading-relaxed">
-                                  {astroData.moonPhase?.name && getMoonPhaseImpact(astroData.moonPhase.name)}
+                                  {astroData?.moonPhase?.name && getMoonPhaseImpact(astroData.moonPhase.name)}
                                 </p>
                               </div>
                               
                               <div className="grid grid-cols-3 gap-2 mb-4">
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Moon Sign</div>
-                                  <div className="font-semibold text-indigo-700 text-sm truncate">
-                                    {astroData.planets?.moon?.sign || 'Unknown'}
-                                  </div>
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Moon Sign</div>
+                                  <div className="font-semibold text-indigo-700">{astroData?.planets?.moon?.sign || 'Unknown'}</div>
                                 </div>
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Next Full Moon</div>
-                                  <div className="font-semibold text-indigo-700 text-sm">
-                                    {astroData.moonPhase?.nextFullMoon 
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Next Full Moon</div>
+                                  <div className="font-semibold text-indigo-700">
+                                    {astroData?.moonPhase?.nextFullMoon 
                                       ? new Date(astroData.moonPhase.nextFullMoon).toLocaleDateString('en-US', { 
                                           month: 'short', 
                                           day: 'numeric',
@@ -1501,9 +1144,9 @@ const Dashboard: React.FC = () => {
                                   </div>
                                 </div>
                                 <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                  <div className="text-[10px] uppercase text-slate-500 font-medium mb-0.5 truncate">Zodiac Degree</div>
-                                  <div className="font-semibold text-indigo-700 text-sm">
-                                    {astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
+                                  <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">Zodiac Degree</div>
+                                  <div className="font-semibold text-indigo-700">
+                                    {astroData?.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°` : '—'}
                                   </div>
                                 </div>
                               </div>
@@ -1513,23 +1156,23 @@ const Dashboard: React.FC = () => {
                                 <div className="p-3 border-b border-amber-100">
                                   <div className="flex items-center justify-between">
                                     <h4 className="font-medium text-slate-800 flex items-center text-sm">
-                                      <div className={`w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 ${astroData.voidMoon?.isVoid ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                      <div className={`w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 ${astroData?.voidMoon?.isVoid ? 'bg-red-500' : 'bg-green-500'}`}></div>
                                       Void of Course Status
                                     </h4>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${astroData.voidMoon?.isVoid ? 'bg-red-100 text-red-800' : 'bg-red-50 text-red-700'}`}>
-                                      {astroData.voidMoon?.isVoid ? 'Active' : 'Inactive'}
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${astroData?.voidMoon?.isVoid ? 'bg-red-100 text-red-800' : 'bg-red-50 text-red-700'}`}>
+                                      {astroData?.voidMoon?.isVoid ? 'Active' : 'Inactive'}
                                     </span>
                                   </div>
                                 </div>
                                 
                                 <div className="p-3">
                                   <p className="text-sm text-slate-700 mb-2">
-                                    {astroData.voidMoon?.isVoid 
+                                    {astroData?.voidMoon?.isVoid 
                                       ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
-                                      : getMoonAspectMessage(astroData.moonPhase, astroData.planets?.moon?.sign as ZodiacSign | undefined)}
+                                      : getMoonAspectMessage(astroData?.moonPhase, astroData?.planets?.moon?.sign as ZodiacSign | undefined)}
                                   </p>
                                   
-                                  {astroData.voidMoon?.isVoid && (
+                                  {astroData?.voidMoon?.isVoid && (
                                     <div className="space-y-3 mt-3">
                                       <div>
                                         <div className="w-full bg-amber-100 rounded-full h-1.5 mb-1">
@@ -1546,16 +1189,16 @@ const Dashboard: React.FC = () => {
                                         </div>
                                       </div>
                                       
-                                      <div className={`p-2 rounded-lg border text-xs ${astroData.voidMoon.isVoid ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
-                                        <p className={`font-medium mb-1 ${astroData.voidMoon.isVoid ? 'text-red-800' : 'text-slate-700'}`}>
-                                          {astroData.voidMoon.isVoid 
+                                      <div className={`p-2 rounded-lg border text-xs ${astroData?.voidMoon.isVoid ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
+                                        <p className={`font-medium mb-1 ${astroData?.voidMoon.isVoid ? 'text-red-800' : 'text-slate-700'}`}>
+                                          {astroData?.voidMoon.isVoid 
                                             ? '⚠️ Void of Course Moon'
                                             : '✓ Strong Lunar Aspects'}
                                         </p>
-                                        <p className={astroData.voidMoon.isVoid ? 'text-red-700' : 'text-slate-600'}>
-                                          {astroData.voidMoon.isVoid
+                                        <p className={astroData?.voidMoon.isVoid ? 'text-red-700' : 'text-slate-600'}>
+                                          {astroData?.voidMoon.isVoid
                                             ? 'The moon is not making any major aspects. Game outcomes may be more unpredictable during this period.'
-                                            : getMoonAspectMessage(astroData.moonPhase, astroData.planets?.moon?.sign as ZodiacSign | undefined)}
+                                            : getMoonAspectMessage(astroData?.moonPhase, astroData?.planets?.moon?.sign as ZodiacSign | undefined)}
                                         </p>
                                       </div>
                                     </div>
@@ -1575,20 +1218,20 @@ const Dashboard: React.FC = () => {
                             <div>
                               <div className="flex justify-between text-xs text-slate-500 mb-1">
                                 <span>Moon Speed</span>
-                                <span>{astroData.planets?.moon?.speed ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day` : 'Unknown'}</span>
+                                <span>{astroData?.planets?.moon?.speed ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day` : 'Unknown'}</span>
                               </div>
                               <Progress 
-                                value={astroData.planets?.moon?.speed ? Math.min(Math.abs(astroData.planets.moon.speed) / 15 * 100, 100) : 50} 
+                                value={astroData?.planets?.moon?.speed ? Math.min(Math.abs(astroData.planets.moon.speed) / 15 * 100, 100) : 50} 
                                 className="h-2"
                               />
                             </div>
                             <div>
                               <div className="flex justify-between text-xs text-slate-500 mb-1">
                                 <span>Lunar Sign Position</span>
-                                <span>{astroData.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ''}` : 'Unknown'}</span>
+                                <span>{astroData?.planets?.moon?.degree ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ''}` : 'Unknown'}</span>
                               </div>
                               <Progress 
-                                value={astroData.planets?.moon?.degree ? (astroData.planets.moon.degree / 30) * 100 : 50} 
+                                value={astroData?.planets?.moon?.degree ? (astroData.planets.moon.degree / 30) * 100 : 50} 
                                 className="h-2"
                               />
                             </div>
