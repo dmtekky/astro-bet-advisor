@@ -174,7 +174,14 @@ const GameCard: React.FC<GameCardProps> = ({
           text: awayTextColor
         }
       },
-      gameTime: game?.start_time ? new Date(game.start_time).toISOString() : 'TBD'
+      gameTime: (() => {
+        try {
+          return game?.start_time ? new Date(game.start_time).toISOString() : 'TBD';
+        } catch (e) {
+          console.error('Invalid date format:', game?.start_time, e);
+          return 'TBD';
+        }
+      })()
     });
   }
 

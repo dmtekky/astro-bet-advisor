@@ -83,9 +83,17 @@ function AppContent() {
           />
 
           {/* Legacy player detail route - redirect to basketball player page */}
+          {/* MLB Player Detail Page */}
           <Route
             path="/teams/:teamId/player-details/:playerId"
-            element={<BasketballPlayerPage />}
+            element={<PlayerDetailPage />}
+          />
+          {/* Legacy route for backward compatibility */}
+          <Route
+            path="/mlb/players/:playerId"
+            element={
+              <Navigate to={`/teams/mlb-${useParams().playerId}/player-details/${useParams().playerId}`} replace />
+            }
           />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/upcoming-games" element={<UpcomingGames />} />
