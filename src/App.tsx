@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import {
   Routes,
   Route,
@@ -12,181 +13,180 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PageViewProvider } from "./contexts/PageViewContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import EventDetails from "./pages/EventDetails";
-import TeamPage from "./pages/TeamPage";
-import PlayerDetailPage from "./pages/PlayerDetailPage";
-import LeaguePage from "./pages/LeaguePage";
-import GamePage from "./pages/GamePage";
-import SearchResults from "./pages/SearchResults";
-import UpcomingGames from "./pages/UpcomingGames";
-import NewsPage from "./pages/NewsPage";
-import NewsArticle from "./pages/NewsArticle";
-import NotFound from "./pages/NotFound";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Profile from "./pages/Profile";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import FloatingBackButton from "./components/common/FloatingBackButton";
-import SignUpPrompt from "./components/auth/SignUpPrompt";
+
+import ScrollToTop from "./components/ScrollToTop";
+import SignUpPrompt from './components/auth/SignUpPrompt';
 import useSignUpPrompt from "./hooks/useSignUpPrompt";
-// NBA imports
-import NbaTeamsPage from "./pages/NbaTeamsPage";
-import NbaTeamDetailPage from "./pages/NbaTeamDetailPage";
-import NbaPlayersPage from "./pages/NbaPlayersPage";
-import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import SignUpPromptPreview from "./pages/SignUpPromptPreview";
+
+// Lazy load pages for code splitting
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const EventDetails = lazy(() => import('./pages/EventDetails'));
+const TeamPage = lazy(() => import('./pages/TeamPage'));
+const PlayerDetailPage = lazy(() => import('./pages/PlayerDetailPage'));
+const LeaguePage = lazy(() => import('./pages/LeaguePage'));
+const GamePage = lazy(() => import('./pages/GamePage'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
+const UpcomingGames = lazy(() => import('./pages/UpcomingGames'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const NewsArticle = lazy(() => import('./pages/NewsArticle'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Header = lazy(() => import('./components/Header'));
+const Footer = lazy(() => import('./components/Footer'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const Profile = lazy(() => import('./pages/Profile'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const FloatingBackButton = lazy(() => import('./components/common/FloatingBackButton'));
+
+const NbaTeamsPage = lazy(() => import('./pages/NbaTeamsPage'));
+const NbaTeamDetailPage = lazy(() => import('./pages/NbaTeamDetailPage'));
+const NbaPlayersPage = lazy(() => import('./pages/NbaPlayersPage'));
+const BasketballPlayerPage = lazy(() => import('./pages/players/BasketballPlayerPage'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const SignUpPromptPreview = lazy(() => import('./pages/SignUpPromptPreview'));
+
+// Import the LoadingScreen component
+import LoadingScreen from "./components/LoadingScreen";
+
+// Single instance of QueryClient with optimized defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 30 * 60 * 1000, // 30 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SearchProvider>
+        <PageViewProvider>
+          <AuthProvider>
+            <Suspense fallback={<LoadingScreen fullScreen />}>
+              <AppContent />
+            </Suspense>
+          </AuthProvider>
+        </PageViewProvider>
+      </SearchProvider>
+    </QueryClientProvider>
+  );
+}
 
 function AppContent() {
   const location = useLocation();
+  const { showPrompt, handleClose } = useSignUpPrompt();
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <ScrollToTop />
       <Header />
       <FloatingBackButton />
+      
       <main className="flex-grow pt-16 md:pt-20 bg-gray-50">
         <SignUpPromptWrapper />
         <Analytics />
         <SpeedInsights />
+        
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/league/:leagueId" element={<LeaguePage />} />
-          <Route path="/game/:gameId" element={<GamePage />} />
-          <Route path="/event/:id" element={<EventDetails />} />
-          {/* NBA-specific routes */}
-          <Route path="/nba/teams" element={<NbaTeamsPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/league/:leagueId" element={<LeaguePage />} />
+              <Route path="/game/:gameId" element={<GamePage />} />
+              <Route path="/event/:id" element={<EventDetails />} />
+              
+              {/* NBA-specific routes */}
+              <Route path="/nba/teams" element={<NbaTeamsPage />} />
+              <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
+              <Route path="/nba/players" element={<NbaPlayersPage />} />
+              <Route path="/nba/players/:playerId" element={<BasketballPlayerPage />} />
+              
+              {/* Team and player routes */}
+              <Route path="/teams/:teamId" element={<TeamPage />} />
+              
+              {/* Redirects for old NBA player URLs */}
+              <Route path="/team/:teamId" element={<TeamPageWrapper />} />
+              <Route path="/team/:teamId/player/:playerId" element={<PlayerDetailPageWrapper />} />
+              <Route path="/teams/:teamId/players/:playerId" element={<PlayerDetailPageWrapper />} />
+              <Route path="/teams/:teamId/player-details/:playerId" element={<PlayerDetailPage />} />
+              <Route path="/players/:playerId" element={<PlayerDetailPage />} />
+              
+              {/* Search and Content */}
+              <Route path="/search" element={<SearchResults />} />
+              <Route path="/upcoming-games" element={<UpcomingGames />} />
+              <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
+              <Route path="/news" element={<NewsPage />} />
+              <Route path="/news/:slug" element={<NewsArticle />} />
+              
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              
+              <Route path="/reset-password" element={<ResetPassword />} />
+              
 
-          {/* Legal Pages */}
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/nba/teams/:teamId" element={<NbaTeamDetailPage />} />
-          <Route path="/nba/players" element={<NbaPlayersPage />} />
-          <Route
-            path="/nba/players/:playerId"
-            element={<BasketballPlayerPage />}
-          />
-
-          {/* Team and player routes */}
-          <Route path="/teams/:teamId" element={<TeamPage />} />
-
-          {/* Redirects for old NBA player URLs */}
-          <Route path="/team/:teamId" element={<TeamPageWrapper />} />
-          <Route
-            path="/team/:teamId/player/:playerId"
-            element={<PlayerDetailPageWrapper />}
-          />
-          <Route
-            path="/teams/:teamId/players/:playerId"
-            element={<PlayerDetailPageWrapper />}
-          />
-
-          {/* Legacy player detail route - redirect to basketball player page */}
-          {/* MLB Player Detail Page */}
-          <Route
-            path="/teams/:teamId/player-details/:playerId"
-            element={<PlayerDetailPage />}
-          />
-          {/* Legacy route for backward compatibility */}
-          <Route
-            path="/mlb/players/:playerId"
-            element={
-              <Navigate to={`/teams/mlb-${useParams().playerId}/player-details/${useParams().playerId}`} replace />
-            }
-          />
-          <Route path="/search" element={<SearchResults />} />
-          <Route path="/upcoming-games" element={<UpcomingGames />} />
-          <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/news/:slug" element={<NewsArticle />} />
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-
-          {/* Protected Routes */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/preview/signup-prompt" element={<SignUpPromptPreview />} />
-          <Route path="*" element={<NotFound />} />
+              {/* Protected Routes */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route path="/preview/signup-prompt" element={<SignUpPromptPreview />} />
+              <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      
       <Footer />
     </div>
   );
 }
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PageViewProvider>
-          <SearchProvider>
-            <AppContent />
-          </SearchProvider>
-        </PageViewProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+// Wrapper components for handling redirects with parameters
+function TeamPageWrapper() {
+  const { teamId } = useParams();
+  return <Navigate to={`/teams/${teamId}`} replace />;
 }
 
-// Wrapper components for handling redirects with parameters
-const TeamPageWrapper = () => {
-  const { teamId } = useParams<{ teamId: string }>();
-  return <Navigate to={`/teams/${teamId}`} replace />;
-};
-
-const PlayerDetailPageWrapper = () => {
+function PlayerDetailPageWrapper() {
   const { teamId, playerId } = useParams();
-  // Redirect to the basketball player page for NBA teams
-  if (typeof window !== "undefined") {
-    // Check if this is an NBA team (you might need to adjust this condition based on your team IDs)
-    const isNbaTeam =
-      teamId &&
-      (teamId.startsWith("nba-") || teamId.toLowerCase().includes("nba"));
-
-    if (isNbaTeam) {
-      window.location.href = `/nba/players/${playerId}`;
-    } else {
-      // For non-NBA teams, use the generic player detail page
-      window.location.href = `/teams/${teamId}/player-details/${playerId}`;
-    }
-    return null;
+  
+  // Handle different URL patterns for player details
+  if (teamId && playerId) {
+    return <Navigate to={`/teams/${teamId}/player-details/${playerId}`} replace />;
   }
-  return null;
-};
+  
+  // If we only have a playerId (from old URL format), redirect to search
+  if (playerId) {
+    return <Navigate to={`/search?q=${encodeURIComponent(playerId)}`} replace />;
+  }
+  
+  // Fallback to home if no valid parameters
+  return <Navigate to="/" replace />;
+}
 
-const SignUpPromptWrapper = () => {
+function SignUpPromptWrapper() {
   const { showPrompt, handleClose } = useSignUpPrompt();
-
+  
+  if (!showPrompt) return null;
+  
   return (
-    <>
-      <SignUpPrompt showPrompt={showPrompt} onClose={handleClose} />
-    </>
+    <SignUpPrompt 
+      showPrompt={showPrompt}
+      onClose={handleClose}
+    />
   );
-};
+}
 
 export default App;

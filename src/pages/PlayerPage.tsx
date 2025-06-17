@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAstroData } from '../hooks/useAstroData';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import LoadingScreen from '@/components/LoadingScreen';
 import type { Database } from '@/types/database.types';
 
 // Define types based on Supabase schema
@@ -177,7 +178,7 @@ const PlayerPage: React.FC = () => {
   }
 
   if (loadingProfile) {
-    return <div className="p-4">Loading player profile...</div>;
+    return <LoadingScreen fullScreen={false} message="Loading player profile..." />;
   }
 
   if (errorProfile) {

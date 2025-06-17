@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameCard from './GameCard';
-import LoadingSpinner from './LoadingSpinner';
+import LoadingScreen from '../../components/LoadingScreen';
 import SportTabs from './SportTabs';
 import AstroStatus from './AstroStatus';
 import NextEvent from './NextEvent';
@@ -80,7 +80,7 @@ function GamesSection() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <LoadingScreen fullScreen={false} />;
   }
 
   if (error) {

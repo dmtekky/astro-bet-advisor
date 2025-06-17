@@ -107,6 +107,7 @@ interface ElementsDistribution {
 
 // Constants
 import { Sport } from "@/types";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const MLB_LEAGUE_KEY: Sport = "mlb";
 const DEFAULT_LOGO = "/images/default-team-logo.svg";
@@ -773,14 +774,7 @@ const Dashboard: React.FC = () => {
   const isLoading = astroLoading || teamsLoading || gamesLoading;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-lg text-slate-300">Loading astrological data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen fullScreen />;
   }
 
   return (

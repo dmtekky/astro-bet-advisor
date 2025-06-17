@@ -1,6 +1,6 @@
 // Layout & Structure
 export { default as Layout } from './Layout';
-export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as LoadingScreen } from './LoadingScreen';
 
 // Game Components
 export { default as GamesSection } from './GamesSection';

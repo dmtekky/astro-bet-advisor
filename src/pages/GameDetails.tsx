@@ -369,15 +369,10 @@ const GameDetails: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-4 md:p-8 bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen text-white">
-          <div className="flex items-center space-x-2 text-sm mb-4">
-            <Skeleton className="h-5 w-16 bg-slate-700" />
-            <Skeleton className="h-5 w-5 bg-slate-700 rounded-full" />
-            <Skeleton className="h-5 w-24 bg-slate-700" />
-          </div>
-          
-          <div className="flex justify-between items-center mb-6">
-            <Button variant="outline" onClick={() => navigate(-1)} className="bg-slate-700/50 border-slate-600 hover:bg-slate-600/70 text-slate-200">
+        <LoadingScreen fullScreen={false} message="Loading game details..." />
+      </DashboardLayout>
+    );
+  }
               <ChevronLeft className="mr-2 h-4 w-4" /> Back
             </Button>
           </div>
