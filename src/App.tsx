@@ -31,6 +31,8 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import FloatingBackButton from "./components/common/FloatingBackButton";
+import SignUpPrompt from "./components/auth/SignUpPrompt";
+import useSignUpPrompt from "./hooks/useSignUpPrompt";
 // NBA imports
 import NbaTeamsPage from "./pages/NbaTeamsPage";
 import NbaTeamDetailPage from "./pages/NbaTeamDetailPage";
@@ -38,6 +40,7 @@ import NbaPlayersPage from "./pages/NbaPlayersPage";
 import BasketballPlayerPage from "./pages/players/BasketballPlayerPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import SignUpPromptPreview from "./pages/SignUpPromptPreview";
 
 function AppContent() {
   const location = useLocation();
@@ -47,6 +50,7 @@ function AppContent() {
       <Header />
       <FloatingBackButton />
       <main className="flex-grow pt-16 md:pt-20 bg-gray-50">
+        <SignUpPromptWrapper />
         <Analytics />
         <SpeedInsights />
         <Routes location={location} key={location.pathname}>
@@ -115,10 +119,12 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route path="/preview/signup-prompt" element={<SignUpPromptPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
+      <SignUpPromptWrapper />
     </div>
   );
 }
@@ -172,6 +178,11 @@ const PlayerDetailPageWrapper = () => {
     return null;
   }
   return null;
+};
+
+const SignUpPromptWrapper = () => {
+  const { showPrompt, handleClose } = useSignUpPrompt();
+  return showPrompt ? <SignUpPrompt onClose={handleClose} /> : null;
 };
 
 export default App;

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 // Define the User type to match Supabase's User type
-type User = {
+export type User = {
   id: string;
   email?: string;
   user_metadata: {
@@ -12,8 +12,9 @@ type User = {
   };
 };
 
-type AuthContextType = {
+export type AuthContextType = {
   user: User | null;
+  currentUser: User | null; // Alias for user for backward compatibility
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
@@ -109,8 +110,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const value = {
+  const contextValue = {
     user,
+    currentUser: user, // Alias for backward compatibility
     loading,
     signIn,
     signUp,
@@ -121,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {!loading && children}
     </AuthContext.Provider>
   );
