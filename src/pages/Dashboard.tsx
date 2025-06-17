@@ -1183,7 +1183,7 @@ const Dashboard: React.FC = () => {
                   variants={fadeIn}
                   initial="hidden"
                   animate="show"
-                  className="w-full mb-8 border border-gray-200 bg-white shadow-sm"
+                  className="w-full mb-8 border border-gray-200 bg-white shadow-sm rounded-lg overflow-hidden"
                 >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
@@ -1194,7 +1194,7 @@ const Dashboard: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="w-full flex items-center mt-2 mb-4">
+                    <div className="w-full flex items-center mt-2 mb-4 p-2 bg-gray-50 rounded">
                       {/* Segmented horizontal bar for elements */}
                       <div className="flex w-full h-6 rounded-full overflow-hidden border border-gray-200">
                         <div
@@ -1237,10 +1237,22 @@ const Dashboard: React.FC = () => {
                     </div>
                     {elementsDistribution ? (
                       <div className="flex flex-wrap justify-between text-sm font-medium text-gray-800">
-                        <div>Fire: {Math.round(elementsDistribution.fire)}</div>
-                        <div>Earth: {Math.round(elementsDistribution.earth)}</div>
-                        <div>Water: {Math.round(elementsDistribution.water)}</div>
-                        <div>Air: {Math.round(elementsDistribution.air)}</div>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#f87171' }}></span>
+                          <span>Fire: {Math.round(elementsDistribution.fire)}%</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#34d399' }}></span>
+                          <span>Earth: {Math.round(elementsDistribution.earth)}%</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
+                          <span>Water: {Math.round(elementsDistribution.water)}%</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#f472b6' }}></span>
+                          <span>Air: {Math.round(elementsDistribution.air)}%</span>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-gray-500">
