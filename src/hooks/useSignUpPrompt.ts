@@ -38,9 +38,18 @@ const useSignUpPrompt = () => {
       setCookie('astro_first_visit', Date.now().toString(), 1);
     }
     
+    // Increment visit count only when pathname changes
     const visitCount = parseInt(getCookie(VISIT_COOKIE) || '0', 10) + 1;
     setCookie(VISIT_COOKIE, visitCount.toString(), 1); // 1 day expiry
     
+    setIsInitialized(true);
+  }, [location.pathname]); // Only run on pathname change
+  
+  // Check if we should show prompt
+  useEffect(() => {
+    if (currentUser) return;
+    
+    const visitCount = parseInt(getCookie(VISIT_COOKIE) || '0', 10);
     const hasSeenPrompt = getCookie(PROMPT_SHOWN_COOKIE) === 'true';
     
     // Show prompt after 5 page views or 3 minutes on site
@@ -54,9 +63,7 @@ const useSignUpPrompt = () => {
         return () => clearTimeout(timer);
       }
     }
-    
-    setIsInitialized(true);
-  }, [currentUser, getCookie, setCookie, isInitialized]);
+  }, [currentUser, getCookie, setCookie]);
 
   // Reset prompt when navigating to new pages
   useEffect(() => {
