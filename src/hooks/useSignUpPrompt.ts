@@ -38,8 +38,8 @@ const useSignUpPrompt = () => {
     
     const hasSeenPrompt = getCookie(PROMPT_SHOWN_COOKIE) === 'true';
     
-    // Show prompt after 3 page views or 2 minutes on site
-    if (visitCount >= 3 || (Date.now() - parseInt(getCookie('astro_first_visit') || '0', 10) > 2 * 60 * 1000)) {
+    // Show prompt after 5 page views or 5 minutes on site
+    if (visitCount >= 5 || (Date.now() - parseInt(getCookie('astro_first_visit') || '0', 10) > 5 * 60 * 1000)) {
       if (!hasSeenPrompt) {
         const timer = setTimeout(() => {
           setShowPrompt(true);
