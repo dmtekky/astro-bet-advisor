@@ -153,9 +153,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
         console.error('Prevented navigation due to invalid game ID');
       }
     }}>
-      <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full", className)}>
+      <Card className={cn("flex flex-col bg-gray-900/50 border-gray-800 hover:border-blue-500/30 transition-colors h-full w-[320px] flex-shrink-0", className)}>
         <div className="flex-1 flex flex-col">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 px-4">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -169,7 +169,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
+          <CardContent className="flex-1 flex flex-col px-4">
             <div className="grid grid-cols-3 gap-4 text-center flex-1">
               <div className="flex flex-col">
                 <TeamLogo team={game.away_team} className="justify-center" />
@@ -218,7 +218,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, className, astroEdge =
               </>
             )}
           </CardContent>
-          <CardFooter className="flex justify-between gap-2">
+          <CardFooter className="flex justify-between gap-2 px-4 pb-4">
             <Button variant="outline" size="sm">
               <TrendingUp className="w-4 h-4 mr-2" />
               View Matchup Details

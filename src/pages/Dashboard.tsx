@@ -998,7 +998,7 @@ const Dashboard: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-800 mb-3 sticky top-0 bg-white py-2 z-10">
                             {format(group.date, "EEEE, MMMM d")}
                           </h3>
-                          <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar">
+                          <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar px-4">
                             {group.games.map((game) => {
                               // Get team data with proper fallbacks
                               const homeTeam =
