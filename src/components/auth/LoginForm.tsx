@@ -38,7 +38,12 @@ const LoginForm = () => {
     setError('');
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://fullmoonodds.com/auth/callback'
+        }
+      });
       if (error) throw error;
     } catch (error: any) {
       setError(error.message || 'Failed to sign in with Google');
