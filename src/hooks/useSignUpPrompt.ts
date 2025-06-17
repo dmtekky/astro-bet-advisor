@@ -33,13 +33,19 @@ const useSignUpPrompt = () => {
   useEffect(() => {
     if (currentUser || isInitialized) return;
     
+    // Set first visit time if not set
+    if (!getCookie('astro_first_visit')) {
+      setCookie('astro_first_visit', Date.now().toString(), 1);
+    }
+    
     const visitCount = parseInt(getCookie(VISIT_COOKIE) || '0', 10) + 1;
     setCookie(VISIT_COOKIE, visitCount.toString(), 1); // 1 day expiry
     
     const hasSeenPrompt = getCookie(PROMPT_SHOWN_COOKIE) === 'true';
     
     // Show prompt after 5 page views or 5 minutes on site
-    if (visitCount >= 5 || (Date.now() - parseInt(getCookie('astro_first_visit') || '0', 10) > 5 * 60 * 1000)) {
+    const firstVisitTime = parseInt(getCookie('astro_first_visit') || '0', 10);
+    if (visitCount >= 5 || (firstVisitTime && Date.now() - firstVisitTime > 5 * 60 * 1000)) {
       if (!hasSeenPrompt) {
         const timer = setTimeout(() => {
           setShowPrompt(true);
@@ -47,11 +53,6 @@ const useSignUpPrompt = () => {
         }, 1500);
         return () => clearTimeout(timer);
       }
-    }
-    
-    // Set first visit time if not set
-    if (!getCookie('astro_first_visit')) {
-      setCookie('astro_first_visit', Date.now().toString(), 1);
     }
     
     setIsInitialized(true);
