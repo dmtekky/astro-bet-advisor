@@ -216,11 +216,18 @@ const Dashboard: React.FC = () => {
   // Memoize elements distribution
   const elementsDistribution = useMemo(() => {
     if (!astroData?.elements) return { fire: 0, earth: 0, water: 0, air: 0 };
+    
+    // Helper function to extract numeric value from element (handles both number and {score: number} types)
+    const getElementValue = (element: number | { score: number } | undefined): number => {
+      if (element === undefined) return 0;
+      return typeof element === 'number' ? element : element.score || 0;
+    };
+    
     return {
-      fire: astroData.elements.fire?.score || 0,
-      earth: astroData.elements.earth?.score || 0,
-      water: astroData.elements.water?.score || 0,
-      air: astroData.elements.air?.score || 0,
+      fire: getElementValue(astroData.elements.fire),
+      earth: getElementValue(astroData.elements.earth),
+      water: getElementValue(astroData.elements.water),
+      air: getElementValue(astroData.elements.air),
     };
   }, [astroData]);
 
@@ -1230,16 +1237,18 @@ const Dashboard: React.FC = () => {
                     </div>
                     {elementsDistribution ? (
                       <div className="flex flex-wrap justify-between text-sm font-medium text-gray-800">
-                        <div>Fire: {elementsDistribution.fire?.score}</div>
-                        <div>Earth: {elementsDistribution.earth?.score}</div>
-                        <div>Water: {elementsDistribution.water?.score}</div>
-                        <div>Air: {elementsDistribution.air?.score}</div>
+                        <div>Fire: {Math.round(elementsDistribution.fire)}</div>
+                        <div>Earth: {Math.round(elementsDistribution.earth)}</div>
+                        <div>Water: {Math.round(elementsDistribution.water)}</div>
+                        <div>Air: {Math.round(elementsDistribution.air)}</div>
                       </div>
                     ) : (
                       <div className="text-gray-500">
                         Element data unavailable
                       </div>
                     )}
+                    {/* Temporarily removed undefined function call */}
+                    {/* {getDynamicElementalInterpretation(...)} */}
                     {elementsDistribution &&
                       elementsDistribution.fire +
                         elementsDistribution.earth +
@@ -1248,9 +1257,8 @@ const Dashboard: React.FC = () => {
                         0 && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed">
-                            {getDynamicElementalInterpretation(
-                              elementsDistribution,
-                            )}
+                            {/* Temporarily removed undefined function call */}
+                            {/* {getDynamicElementalInterpretation(...)} */}
                           </p>
                         </div>
                       )}
