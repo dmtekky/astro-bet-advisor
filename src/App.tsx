@@ -124,7 +124,6 @@ function AppContent() {
         </Routes>
       </main>
       <Footer />
-      <SignUpPromptWrapper />
     </div>
   );
 }
