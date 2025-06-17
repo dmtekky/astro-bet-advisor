@@ -47,6 +47,9 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const SignUpPromptPreview = lazy(() => import('./pages/SignUpPromptPreview'));
 
+// Lazy load preview pages
+const ExampleProfilePage = lazy(() => import('./pages/preview/ExampleProfilePage'));
+
 // Import the LoadingScreen component
 import LoadingScreen from "./components/LoadingScreen";
 
@@ -143,7 +146,17 @@ function AppContent() {
                 }
               />
               
-              <Route path="/preview/signup-prompt" element={<SignUpPromptPreview />} />
+              <Route path="/preview/signup-prompt" element={
+                <Suspense fallback={<LoadingScreen fullScreen />}>
+                  <SignUpPromptPreview />
+                  <SignUpPromptWrapper />
+                </Suspense>
+              } />
+              <Route path="/preview/profile" element={
+                <Suspense fallback={<LoadingScreen fullScreen />}>
+                  <ExampleProfilePage />
+                </Suspense>
+              } />
               <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -176,17 +189,13 @@ function PlayerDetailPageWrapper() {
   return <Navigate to="/" replace />;
 }
 
+// SignUpPromptWrapper is a simple component that shows the SignUpPrompt
 function SignUpPromptWrapper() {
   const { showPrompt, handleClose } = useSignUpPrompt();
   
   if (!showPrompt) return null;
   
-  return (
-    <SignUpPrompt 
-      showPrompt={showPrompt}
-      onClose={handleClose}
-    />
-  );
+  return <SignUpPrompt onClose={handleClose} showPrompt={showPrompt} />;
 }
 
 export default App;

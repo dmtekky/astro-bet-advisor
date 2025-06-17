@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface SignUpPromptProps {
   onClose: () => void;
-  showPrompt: boolean;
+  showPrompt?: boolean;
 }
 
 const SignUpPrompt: React.FC<SignUpPromptProps> = ({ onClose, showPrompt }) => {

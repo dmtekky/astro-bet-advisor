@@ -224,7 +224,22 @@ const Header: React.FC<HeaderProps> = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="hidden md:flex items-center space-x-6">
+                {process.env.NODE_ENV === 'development' && (
+                  <Link
+                    to="/preview/profile"
+                    className="text-sm font-medium text-yellow-400 hover:text-yellow-300 transition-colors"
+                    title="Preview Profile (Dev Only)"
+                  >
+                    🎨 Preview Profile
+                  </Link>
+                )}
+                <Link
+                  to="/"
+                  className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === '/' ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  Home
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
