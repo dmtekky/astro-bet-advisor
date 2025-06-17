@@ -182,7 +182,12 @@ const PlayerDetailPageWrapper = () => {
 
 const SignUpPromptWrapper = () => {
   const { showPrompt, handleClose } = useSignUpPrompt();
-  return showPrompt ? <SignUpPrompt onClose={handleClose} /> : null;
+
+  return (
+    <>
+      <SignUpPrompt showPrompt={showPrompt} onClose={handleClose} />
+    </>
+  );
 };
 
 export default App;

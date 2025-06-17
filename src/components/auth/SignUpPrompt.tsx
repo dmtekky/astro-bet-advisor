@@ -7,53 +7,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface SignUpPromptProps {
   onClose: () => void;
+  showPrompt: boolean;
 }
 
-const SignUpPrompt: React.FC<SignUpPromptProps> = ({ onClose }) => {
+const SignUpPrompt: React.FC<SignUpPromptProps> = ({ onClose, showPrompt }) => {
   const { user: currentUser } = useAuth();
-  const [isVisible, setIsVisible] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    // Show the prompt after a short delay
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 500);
-    
     // Auto-advance steps
     const interval = setInterval(() => {
       setStep(prev => (prev + 1) % 3);
     }, 3000);
     
     return () => {
-      clearTimeout(timer);
       clearInterval(interval);
     };
   }, []);
-
-  const features = [
-    {
-      icon: <BarChart2 className="w-6 h-6 text-indigo-500" />,
-      title: "Advanced Analytics",
-      description: "Unlock detailed player stats and game predictions"
-    },
-    {
-      icon: <Star className="w-6 h-6 text-amber-400" />,
-      title: "Exclusive Content",
-      description: "Get access to premium insights and expert analysis"
-    },
-    {
-      icon: <Zap className="w-6 h-6 text-purple-500" />,
-      title: "Real-time Updates",
-      description: "Stay ahead with live scores and instant notifications"
-    }
-  ];
 
   if (currentUser) return null;
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {showPrompt && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -90,65 +66,48 @@ const SignUpPrompt: React.FC<SignUpPromptProps> = ({ onClose }) => {
                   Join our community of sports enthusiasts and get access to exclusive features and insights.
                 </p>
                 
-                <div className="relative h-32 overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-700/50 p-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    {features.map((feature, index) => (
-                      <motion.div
-                        key={index}
-                        className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center"
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{
-                          opacity: step === index ? 1 : 0,
-                          x: step === index ? 0 : (step > index ? -50 : 50),
-                          scale: step === index ? 1 : 0.9
-                        }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      >
-                        <div className="mb-2">{feature.icon}</div>
-                        <h4 className="font-semibold text-slate-900 dark:text-white">{feature.title}</h4>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">{feature.description}</p>
-                      </motion.div>
-                    ))}
+                <div className="flex justify-center space-x-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mb-2">
+                      <BarChart2 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Advanced Stats</span>
                   </div>
-                  <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
-                    {[0, 1, 2].map((i) => (
-                      <button
-                        key={i}
-                        onClick={() => setStep(i)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          step === i ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'
-                        }`}
-                        aria-label={`Go to step ${i + 1}`}
-                      />
-                    ))}
+                  
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-2">
+                      <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Premium Features</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-2">
+                      <Zap className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Real-time Alerts</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex space-x-3 pt-2">
-                <Button
-                  onClick={onClose}
-                  variant="outline"
-                  className="flex-1 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                >
-                  Maybe Later
-                </Button>
-                <Button
-                  asChild
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md"
-                >
-                  <a href="/signup">
-                    Sign Up Free
+                
+                <div className="pt-4">
+                  <Button 
+                    asChild
+                    className="w-full py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <a href="/signup">
+                      Sign Up Free
+                      <Zap className="ml-2 w-4 h-4 fill-current" />
+                    </a>
+                  </Button>
+                </div>
+                
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                  Already have an account?{' '}
+                  <a href="/login" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+                    Log In
                   </a>
-                </Button>
+                </p>
               </div>
-              
-              <p className="text-xs text-center text-slate-500 dark:text-slate-400">
-                Already have an account?{' '}
-                <a href="/login" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-                  Sign in
-                </a>
-              </p>
             </div>
           </div>
         </motion.div>

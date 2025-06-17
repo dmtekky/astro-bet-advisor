@@ -102,14 +102,26 @@ const getBoxShadow = (color: ColorValue): string => {
 const formatGameTime = (dateString?: string): string => {
   try {
     if (!dateString) return 'TBD';
+    
+    // Handle malformed date strings with duplicated ISO strings
+    if (dateString.length > 30 && dateString.includes('T') && dateString.lastIndexOf('T') > 20) {
+      dateString = dateString.substring(0, 25);
+    }
+    
     const date = new Date(dateString);
+    
+    // Validate the parsed date
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date: ${dateString}`);
+    }
+    
     return date.toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit',
       timeZone: 'UTC' 
     });
   } catch (e) {
-    console.error('Error formatting date:', e);
+    console.error('Error formatting date:', e, 'Input:', dateString);
     return 'TBD';
   }
 };

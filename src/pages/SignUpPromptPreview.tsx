@@ -3,7 +3,11 @@ import SignUpPrompt from '../components/auth/SignUpPrompt';
 import { Button } from '../components/ui/button';
 
 export default function SignUpPromptPreview() {
-  const [showPrompt, setShowPrompt] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(true);
+
+  const handleClose = () => {
+    setShowPrompt(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -39,7 +43,7 @@ export default function SignUpPromptPreview() {
         {showPrompt && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="relative w-full max-w-md">
-              <SignUpPrompt onClose={() => setShowPrompt(false)} />
+              <SignUpPrompt showPrompt={showPrompt} onClose={handleClose} />
             </div>
           </div>
         )}
