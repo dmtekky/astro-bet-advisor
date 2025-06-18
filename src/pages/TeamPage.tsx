@@ -91,6 +91,15 @@ const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | n
       };
     }
 
+    if (error) {
+      console.error('[fetchTeamChemistry] Team chemistry query error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+    }
+
     // Special handling only for NBA teams
     if (teamId && isUUID(teamId)) {
       console.log('[fetchTeamChemistry] Using NBA-specific fallback');
@@ -129,7 +138,7 @@ const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | n
     console.log('[fetchTeamChemistry] No chemistry data found');
     return null;
   } catch (error) {
-    console.error('[fetchTeamChemistry] Error fetching chemistry data:', error);
+    console.error('[fetchTeamChemistry] Unhandled error:', error);
     return null;
   }
 };
