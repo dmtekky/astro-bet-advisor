@@ -36,175 +36,98 @@ const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | n
     
     console.log('[fetchTeamChemistry] Fetching chemistry for team ID:', teamId);
     
-    // First try to get from nba_teams
-    const { data: nbaTeamData, error: nbaTeamError } = await supabase
-      .from('nba_teams')
-      .select('chemistry_score, elemental_balance, last_astro_update')
-      .eq('id', teamId)
-      .single();
+    // Unified approach for all leagues - use team_chemistry table
+    const { data, error } = await supabase
+      .from('team_chemistry')
+      .select('*')
+      .eq('team_id', teamId)
+      .maybeSingle<TeamChemistryDB>();
 
-    if (!nbaTeamError && nbaTeamData) {
-      console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
-      const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
-        ? JSON.parse(nbaTeamData.elemental_balance) 
-        : nbaTeamData.elemental_balance;
+    if (data && !error) {
+      console.log('[fetchTeamChemistry] Found chemistry data in team_chemistry table');
+      
+      // Parse elements from JSON if it's a string
+      let elements: Record<string, any> = {};
+      try {
+        const elementsData = typeof data.elements === 'string' 
+          ? JSON.parse(data.elements)
+          : data.elements || {};
+        
+        // Ensure we have all required fields with defaults
+        elements = {
+          fire: typeof elementsData.fire === 'number' ? elementsData.fire : 25,
+          earth: typeof elementsData.earth === 'number' ? elementsData.earth : 25,
+          air: typeof elementsData.air === 'number' ? elementsData.air : 25,
+          water: typeof elementsData.water === 'number' ? elementsData.water : 25,
+          balance: typeof elementsData.balance === 'number' ? elementsData.balance : 50,
+          ...elementsData // Spread any additional properties
+        };
+      } catch (e) {
+        console.error('[fetchTeamChemistry] Error parsing elements JSON:', e);
+        elements = {
+          fire: 25,
+          earth: 25,
+          air: 25,
+          water: 25,
+          balance: 50
+        };
+      }
       
       return {
-        score: nbaTeamData.chemistry_score || 50,
+        score: data.score || 50,
         elements: {
-          fire: elementalBalance?.fire || 25,
-          earth: elementalBalance?.earth || 25,
-          air: elementalBalance?.air || 25,
-          water: elementalBalance?.water || 25,
-          balance: elementalBalance?.balance || 50
+          fire: elements.fire || 25,
+          earth: elements.earth || 25,
+          air: elements.air || 25,
+          water: elements.water || 25,
+          balance: elements.balance || 50
         },
         aspects: {
           harmonyScore: 50,
           challengeScore: 20,
           netHarmony: 50
         },
-        calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
+        calculatedAt: data.last_updated || new Date().toISOString()
       };
     }
 
-    // For non-NBA teams, first get the team data to find external_id and league
-    const { data: teamData, error: teamError } = await supabase
-      .from('teams')
-      .select('id, external_id, league_id, name, abbreviation')
-      .eq('id', teamId)
-      .single();
+    // Special handling only for NBA teams
+    if (teamId && isUUID(teamId)) {
+      console.log('[fetchTeamChemistry] Using NBA-specific fallback');
+      // First try to get from nba_teams
+      const { data: nbaTeamData, error: nbaTeamError } = await supabase
+        .from('nba_teams')
+        .select('chemistry_score, elemental_balance, last_astro_update')
+        .eq('id', teamId)
+        .single();
 
-    if (teamError || !teamData) {
-      console.error('[fetchTeamChemistry] Could not find team data for ID:', teamId, 'Error:', teamError?.message);
-      return null;
-    }
-
-    console.log('[fetchTeamChemistry] Team data:', {
-      teamId,
-      teamName: teamData.name,
-      leagueId: teamData.league_id,
-      externalId: teamData.external_id,
-      abbreviation: teamData.abbreviation
-    });
-
-    // Try multiple approaches to find chemistry data
-    let chemistryData: TeamChemistryDB | null = null;
-    
-    // For MLB teams, try with external_id first (as string)
-    if (teamData.league_id === 'mlb' && teamData.external_id) {
-      console.log('[fetchTeamChemistry] Trying MLB team with external_id:', teamData.external_id);
-      const { data, error } = await supabase
-        .from('team_chemistry')
-        .select('*')
-        .eq('team_id', String(teamData.external_id))
-        .maybeSingle<TeamChemistryDB>();
-      
-      if (data && !error) {
-        chemistryData = data;
-        console.log('[fetchTeamChemistry] Found chemistry data using MLB external_id');
-      } else {
-        // Add detailed error logging
-        console.error('[fetchTeamChemistry] Error fetching with external_id:', error);
-        console.log('[fetchTeamChemistry] No chemistry data found with external_id, trying other methods...');
+      if (!nbaTeamError && nbaTeamData) {
+        console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
+        const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
+          ? JSON.parse(nbaTeamData.elemental_balance) 
+          : nbaTeamData.elemental_balance;
+        
+        return {
+          score: nbaTeamData.chemistry_score || 50,
+          elements: {
+            fire: elementalBalance?.fire || 25,
+            earth: elementalBalance?.earth || 25,
+            air: elementalBalance?.air || 25,
+            water: elementalBalance?.water || 25,
+            balance: elementalBalance?.balance || 50
+          },
+          aspects: {
+            harmonyScore: 50,
+            challengeScore: 20,
+            netHarmony: 50
+          },
+          calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
+        };
       }
     }
 
-    // If not found, try with team UUID
-    if (!chemistryData) {
-      console.log('[fetchTeamChemistry] Trying with team UUID:', teamId);
-      const { data, error } = await supabase
-        .from('team_chemistry')
-        .select('*')
-        .eq('team_id', teamId)
-        .maybeSingle<TeamChemistryDB>();
-      
-      chemistryData = data;
-      
-      if (chemistryData) {
-        console.log('[fetchTeamChemistry] Found chemistry data using team UUID');
-      } else {
-        console.log('[fetchTeamChemistry] No chemistry data found with team UUID');
-      }
-    }
-
-    // If still not found, try with team abbreviation (as a last resort)
-    if (!chemistryData && teamData.abbreviation) {
-      console.log('[fetchTeamChemistry] Trying with team abbreviation:', teamData.abbreviation);
-      const { data, error } = await supabase
-        .from('team_chemistry')
-        .select('*')
-        .ilike('team_id', `%${teamData.abbreviation}%`)
-        .maybeSingle<TeamChemistryDB>();
-      
-      if (data && !error) {
-        chemistryData = data;
-        console.log('[fetchTeamChemistry] Found chemistry data using team abbreviation');
-      } else {
-        console.log('[fetchTeamChemistry] No chemistry data found with team abbreviation');
-      }
-    }
-
-    if (!chemistryData) {
-      console.warn('[fetchTeamChemistry] No chemistry data found for team after all attempts:', {
-        teamId,
-        teamName: teamData.name,
-        leagueId: teamData.league_id,
-        externalId: teamData.external_id,
-        abbreviation: teamData.abbreviation
-      });
-      return null;
-    }
-
-    console.log('[fetchTeamChemistry] Found chemistry data in team_chemistry table:', {
-      teamId: chemistryData.team_id,
-      score: chemistryData.score,
-      elements: chemistryData.elements,
-      last_updated: chemistryData.last_updated
-    });
-    
-    // Parse elements from JSON if it's a string
-    let elements: Record<string, any> = {};
-    try {
-      const elementsData = typeof chemistryData.elements === 'string' 
-        ? JSON.parse(chemistryData.elements)
-        : chemistryData.elements || {};
-      
-      // Ensure we have all required fields with defaults
-      elements = {
-        fire: typeof elementsData.fire === 'number' ? elementsData.fire : 25,
-        earth: typeof elementsData.earth === 'number' ? elementsData.earth : 25,
-        air: typeof elementsData.air === 'number' ? elementsData.air : 25,
-        water: typeof elementsData.water === 'number' ? elementsData.water : 25,
-        balance: typeof elementsData.balance === 'number' ? elementsData.balance : 50,
-        ...elementsData // Spread any additional properties
-      };
-    } catch (e) {
-      console.error('[fetchTeamChemistry] Error parsing elements JSON:', e);
-      elements = {
-        fire: 25,
-        earth: 25,
-        air: 25,
-        water: 25,
-        balance: 50
-      };
-    }
-    
-    return {
-      score: chemistryData.score || 50,
-      elements: {
-        fire: elements.fire || 25,
-        earth: elements.earth || 25,
-        air: elements.air || 25,
-        water: elements.water || 25,
-        balance: elements.balance || 50
-      },
-      aspects: {
-        harmonyScore: 50,
-        challengeScore: 20,
-        netHarmony: 50
-      },
-      calculatedAt: chemistryData.last_updated || new Date().toISOString()
-    };
+    console.log('[fetchTeamChemistry] No chemistry data found');
+    return null;
   } catch (error) {
     console.error('[fetchTeamChemistry] Error fetching chemistry data:', error);
     return null;
