@@ -29,6 +29,11 @@ interface TeamChemistryDB {
 // Function to fetch team chemistry data
 const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | null> => {
   try {
+    // Add authentication state logging
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[fetchTeamChemistry] Authentication state:', 
+      session?.user?.email ? `Authenticated as ${session.user.email}` : 'Not authenticated');
+    
     console.log('[fetchTeamChemistry] Fetching chemistry for team ID:', teamId);
     
     // First try to get from nba_teams
@@ -98,6 +103,8 @@ const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | n
         chemistryData = data;
         console.log('[fetchTeamChemistry] Found chemistry data using MLB external_id');
       } else {
+        // Add detailed error logging
+        console.error('[fetchTeamChemistry] Error fetching with external_id:', error);
         console.log('[fetchTeamChemistry] No chemistry data found with external_id, trying other methods...');
       }
     }
