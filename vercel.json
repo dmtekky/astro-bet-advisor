@@ -20,20 +20,21 @@
     {
       "source": "/:path*",
       "has": [
-        { "type": "header", "key": "x-forwarded-proto", "value": "http" }
+        { "type": "host", "value": "www.fullmoonodds.com" },
+        { "type": "header", "key": "accept", "value": "text/html" }
       ],
       "destination": "https://fullmoonodds.com/:path*",
-      "permanent": true,
-      "statusCode": 308
+      "permanent": true
     },
     {
       "source": "/:path*",
       "has": [
-        { "type": "host", "value": "www.fullmoonodds.com" }
+        { "type": "host", "value": "fullmoonodds.com" },
+        { "type": "header", "key": "x-forwarded-proto", "value": "http" },
+        { "type": "header", "key": "accept", "value": "text/html" }
       ],
       "destination": "https://fullmoonodds.com/:path*",
-      "permanent": true,
-      "statusCode": 308
+      "permanent": true
     }
   ],
   "rewrites": [
