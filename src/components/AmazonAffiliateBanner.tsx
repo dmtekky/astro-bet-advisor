@@ -1,7 +1,7 @@
 import React from 'react';
 
 const AmazonAffiliateBanner: React.FC = () => {
-  const amazonLink = "https://www.amazon.com/amazonprime?&linkCode=ll2&tag=fullmoonodds-20&linkId=b29a0bc34867f77d625c60791d60a732&language=en_US&ref_=as_li_ss_tl";
+  const amazonLink = "https://www.amazon.com?&linkCode=ll2&tag=fullmoonodds-20&linkId=0fbb6f99ad5a2c3ad6a88aa0207948c8&language=en_US&ref_=as_li_ss_tl";
 
   return (
     <div className="w-full bg-blue-600 text-white py-1.5 px-0 flex justify-center items-center">
