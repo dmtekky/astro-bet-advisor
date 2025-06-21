@@ -366,14 +366,16 @@ interface TeamChemistryData {
 }
 
 const TeamPage = () => {
-  // Get parameters from URL - handle both teamId and id for backward compatibility
-  const params = useParams<{ teamId?: string; id?: string }>();
+  // Get parameters from URL - handle both teamId/id and leagueSlug/teamSlug for backward compatibility
+  const params = useParams<{ teamId?: string; id?: string; leagueSlug?: string; teamSlug?: string }>();
   const teamId = params.teamId || params.id;
-  
+  const leagueSlug = params.leagueSlug;
+  const teamSlug = params.teamSlug;
+
   // Debug logs to track data flow
-  console.log('[TeamPage] Team ID from URL:', teamId);
-  if (!teamId) {
-    console.error('[TeamPage] No team ID found in URL parameters');
+  console.log('[TeamPage] Parameters from URL:', { teamId, leagueSlug, teamSlug });
+  if (!teamId && !(leagueSlug && teamSlug)) {
+    console.error('[TeamPage] No team identifier found in URL parameters');
   }
   const navigate = useNavigate();
 
@@ -391,8 +393,9 @@ const TeamPage = () => {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    if (!teamId) {
-      setError('No team ID provided');
+    // If we have neither a teamId nor slug parameters, show an error
+    if (!teamId && !(leagueSlug && teamSlug)) {
+      setError('No team identifier provided');
       setLoading(false);
       return;
     }
@@ -401,6 +404,53 @@ const TeamPage = () => {
       try {
         setLoading(true);
 
+        // First, try to fetch from the unified teams table if we have slug parameters
+        if (leagueSlug && teamSlug) {
+          console.log(`[TeamPage] Fetching team data by slug: ${leagueSlug}/${teamSlug}`);
+          const { data: teamData, error: teamError } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('league_key', leagueSlug)
+            .eq('slug', teamSlug)
+            .single();
+
+          if (teamData && !teamError) {
+            console.log('[TeamPage] Found team by slug:', teamData.name);
+            setTeam({
+              id: teamData.id?.toString() ?? '',
+              name: teamData.name ?? '',
+              logo_url: teamData.logo_url ?? '/placeholder-team.png',
+              city: teamData.city ?? '',
+              venue: teamData.venue ?? '',
+              conference: teamData.conference ?? '',
+              division: teamData.division ?? '',
+              abbreviation: teamData.abbreviation ?? '',
+              primary_color: teamData.primary_color ?? '#17408B',
+              secondary_color: teamData.secondary_color ?? '#C9082A',
+              league_id: teamData.league_id ?? '',
+              external_id: teamData.external_id ?? teamData.id,
+              league: { 
+                id: teamData.league_key ?? '', 
+                name: teamData.league_name ?? '', 
+                sport: teamData.sport ?? '' 
+              },
+            });
+
+            // Fetch chemistry and players using the team ID
+            await Promise.all([
+              fetchChemistryData(teamData.id),
+              fetchPlayersData(teamData.id, teamData.external_id),
+              fetchUpcomingGames(teamData.id)
+            ]);
+
+            setLoading(false);
+            return;
+          } else if (teamError) {
+            console.error('[TeamPage] Error fetching team by slug:', teamError);
+          }
+        }
+
+        // Fallback to ID-based lookup if slug lookup failed or we only have teamId
         // --- NBA TEAM LOGIC ---
         // Try to fetch from nba_teams first
         console.log('[TeamPage] Fetching NBA team data for ID:', teamId);
@@ -875,36 +925,6 @@ const TeamPage = () => {
           .from('games')
           .select(`
             id,
-            game_date,
-            game_time_utc,
-            status,
-            home_team_id,
-            away_team_id,
-            home_score,
-            away_score,
-            home_team:home_team_id(id, name, abbreviation, logo_url, city),
-            away_team:away_team_id(id, name, abbreviation, logo_url, city)
-          `)
-          .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
-          .gte('game_time_utc', new Date().toISOString())
-          .order('game_time_utc', { ascending: true })
-          .limit(6);
-
-        if (gamesError) {
-          console.error('Error fetching games:', gamesError);
-          toast({
-            title: 'Error loading games',
-            description: gamesError.message,
-            variant: 'destructive',
-          });
-        } else if (gamesData) {
-          console.log('Fetched upcoming games:', gamesData);
-          
-          // Process games data to ensure it matches the Game type
-          // Filter out error responses and ensure we have valid game data
-          const processedGames = gamesData
-            .filter((item): item is GameData => {
-              // Check if this is a valid game object with required properties
               return typeof item === 'object' && 
                 item !== null && 
                 'id' in item && 
@@ -985,7 +1005,7 @@ const TeamPage = () => {
     };
 
     fetchTeamData();
-  }, [teamId]);
+  }, [teamId, leagueSlug, teamSlug]);
 
   // Zodiac sign calculation utility
   function getZodiacSign(dateString?: string): string {
