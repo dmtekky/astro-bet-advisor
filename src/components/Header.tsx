@@ -26,6 +26,9 @@ const Header: React.FC<HeaderProps> = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaguesOpen, setIsLeaguesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [bannerVisible, setBannerVisible] = useState(true);
 
   const handleSignOut = async () => {
     try {
@@ -62,6 +65,28 @@ const Header: React.FC<HeaderProps> = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isLeaguesOpen]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setBannerVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   const leagues = [
     { id: "nba", name: "NBA", icon: "🏀" },
@@ -459,10 +484,9 @@ const Header: React.FC<HeaderProps> = () => {
             ></div>
           )}
         </div>
-      </div>
       
       {/* Amazon Banner below header */}
-      <div className="w-full">
+      <div className={`w-full transition-all duration-300 ${bannerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <AmazonAffiliateBanner />
       </div>
     </header>
