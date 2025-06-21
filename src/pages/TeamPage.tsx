@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase, getServiceRoleClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import TeamShareButton from '@/components/teams/TeamShareButton';
 import { Helmet } from 'react-helmet';
 
@@ -31,150 +31,73 @@ interface TeamChemistryDB {
 // Function to fetch team chemistry data
 const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | null> => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[fetchTeamChemistry] Authentication state:', session?.user?.email ? `Authenticated as ${session.user.email}` : 'Not authenticated');
+    
     console.log('[fetchTeamChemistry] Fetching chemistry for team ID:', teamId);
     
-    // Log auth session for debugging
-    const { data: { session } } = await supabase.auth.getSession();
-    const isAuthenticated = !!session?.user;
-    console.log('[fetchTeamChemistry] Auth session:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
-    
-    // Use service role client for authenticated users to bypass RLS policies
-    const client = isAuthenticated ? getServiceRoleClient() || supabase : supabase;
-    console.log('[fetchTeamChemistry] Using client:', isAuthenticated ? 'Service Role Client' : 'Public Client');
-    
-    // First try to get from team_chemistry table
-    const { data, error } = await client
+    // Unified approach for all leagues - use team_chemistry table with RLS handling
+    const { data, error } = await supabase
       .from('team_chemistry')
       .select('*')
       .eq('team_id', teamId)
-      .single<TeamChemistryDB>();
-
-    if (data && !error) {
-      console.log('[fetchTeamChemistry] Found chemistry data in team_chemistry table');
-      
-      // Parse elements from JSON if it's a string
+      .maybeSingle<TeamChemistryDB>();
+    
+    if (error) {
+      console.error('[fetchTeamChemistry] Query error:', error);
+      // If 403 error, log RLS issue and return null or default only if unauthenticated
+      if (error.code === 'PGRST116' || error.status === 403) {  // Handle RLS forbidden error
+        console.error('[fetchTeamChemistry] RLS permission denied - check policies for authenticated users');
+        if (session?.user) {
+          return null;  // Do not return defaults for authenticated users; let the component handle the error
+        }
+      }
+      return null;
+    }
+    
+    if (data) {
+      console.log('[fetchTeamChemistry] Found chemistry data');
       let elements: Record<string, any> = {};
       try {
-        const elementsData = typeof data.elements === 'string' 
-          ? JSON.parse(data.elements)
-          : data.elements || {};
-        
-        // Ensure we have all required fields with defaults
+        const elementsData = typeof data.elements === 'string' ? JSON.parse(data.elements) : data.elements || {};
         elements = {
           fire: typeof elementsData.fire === 'number' ? elementsData.fire : 25,
           earth: typeof elementsData.earth === 'number' ? elementsData.earth : 25,
           air: typeof elementsData.air === 'number' ? elementsData.air : 25,
           water: typeof elementsData.water === 'number' ? elementsData.water : 25,
           balance: typeof elementsData.balance === 'number' ? elementsData.balance : 50,
-          ...elementsData // Spread any additional properties
+          ...elementsData
         };
       } catch (e) {
         console.error('[fetchTeamChemistry] Error parsing elements JSON:', e);
-        elements = {
-          fire: 25,
-          earth: 25,
-          air: 25,
-          water: 25,
-          balance: 50
-        };
+        elements = { fire: 25, earth: 25, air: 25, water: 25, balance: 50 };
       }
-      
       return {
         score: data.score || 50,
         elements: {
-          fire: elements.fire || 25,
-          earth: elements.earth || 25,
-          air: elements.air || 25,
-          water: elements.water || 25,
-          balance: elements.balance || 50
+          fire: elements.fire,
+          earth: elements.earth,
+          air: elements.air,
+          water: elements.water,
+          balance: elements.balance
         },
         aspects: {
-          harmonyScore: 50,
-          challengeScore: 20,
-          netHarmony: 50
+          harmonyScore: data.aspects?.harmonyScore || 50,
+          challengeScore: data.aspects?.challengeScore || 20,
+          netHarmony: data.aspects?.netHarmony || 50
         },
-        calculatedAt: data.last_updated || new Date().toISOString()
+        calculatedAt: data.calculated_at || new Date().toISOString()
       };
     }
-
-    if (error) {
-      console.error('[fetchTeamChemistry] Team chemistry query error:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
-    }
-
-    // Special handling only for NBA teams
-    if (teamId && isUUID(teamId)) {
-      console.log('[fetchTeamChemistry] Using NBA-specific fallback');
-      // First try to get from nba_teams
-      try {
-        const { data: nbaTeamData, error: nbaTeamError } = await client
-          .from('nba_teams')
-          .select('chemistry_score, elemental_balance, last_astro_update')
-          .eq('id', teamId)
-          .single();
-          
-        if (nbaTeamError) {
-          console.error('[fetchTeamChemistry] NBA team query error:', {
-            message: nbaTeamError.message,
-            code: nbaTeamError.code,
-            details: nbaTeamError.details,
-            hint: nbaTeamError.hint
-          });
-        }
-
-        if (!nbaTeamError && nbaTeamData) {
-          console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
-          const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
-            ? JSON.parse(nbaTeamData.elemental_balance) 
-            : nbaTeamData.elemental_balance;
-          
-          return {
-            score: nbaTeamData.chemistry_score || 50,
-            elements: {
-              fire: elementalBalance?.fire || 25,
-              earth: elementalBalance?.earth || 25,
-              air: elementalBalance?.air || 25,
-              water: elementalBalance?.water || 25,
-              balance: elementalBalance?.balance || 50
-            },
-            aspects: {
-              harmonyScore: 50,
-              challengeScore: 20,
-              netHarmony: 50
-            },
-            calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
-          };
-        }
-      } catch (nbaError) {
-        console.error('[fetchTeamChemistry] Error in NBA team chemistry lookup:', nbaError);
-      }
-    }
-
-    console.log('[fetchTeamChemistry] No chemistry data found');
+    
+    // Remove NBA-specific fallback to ensure consistency; handle in a separate function if needed
+    console.log('[fetchTeamChemistry] No chemistry data found in team_chemistry');
     return null;
   } catch (error) {
     console.error('[fetchTeamChemistry] Unhandled error:', error);
     return null;
   }
 };
-import { motion } from 'framer-motion';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, Check, Info, MapPin as MapPinIcon, PlusSquare, ShieldCheck, Sparkles, Star, TrendingUp, Trophy, Users, Zap } from 'lucide-react';
-import PlayerCardNew from '@/components/PlayerCardNew';
-import { toast } from '../components/ui/use-toast';
-import TeamRoster from '../components/TeamRoster';
-import { GameCarousel } from '../components/games/GameCarousel';
-import { getTeamColorStyles } from '@/utils/teamColors';
-import { Card, CardContent } from '../components/ui/card';
-import { Skeleton } from '../components/ui/skeleton';
-import { TeamChemistryMeter } from '@/components/TeamChemistryMeter';
-import { calculateImpactScore } from '../utils/calculateImpactScore';
 
 // Type for ElementalBalance to match TeamChemistryData
 interface ElementalBalance {
@@ -585,11 +508,7 @@ const TeamPage = () => {
               }
               
               // Fetch upcoming games
-              if (typeof fetchUpcomingGames === 'function') {
-                fetchUpcomingGames(exactMatch.id);
-              } else {
-                console.warn('[TeamPage] fetchUpcomingGames is not defined');
-              }
+              fetchUpcomingGames(exactMatch.id);
               
               // Set loading to false and return early
               setLoading(false);
