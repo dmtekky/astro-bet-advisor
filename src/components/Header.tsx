@@ -462,7 +462,7 @@ const Header: React.FC<HeaderProps> = () => {
       </div>
       
       {/* Amazon Banner below header */}
-      <div className="w-full sticky top-0 z-50">
+      <div className="w-full">
         <AmazonAffiliateBanner />
       </div>
     </header>
