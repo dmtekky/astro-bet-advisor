@@ -52,6 +52,7 @@ const ExampleProfilePage = lazy(() => import('./pages/preview/ExampleProfilePage
 
 // Import the LoadingScreen component
 import LoadingScreen from "./components/LoadingScreen";
+import AmazonAffiliateBanner from "./components/AmazonAffiliateBanner";
 
 // Single instance of QueryClient with optimized defaults
 const queryClient = new QueryClient({
@@ -91,9 +92,12 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-white">
       <ScrollToTop />
       <Header />
+      <div className="w-full mt-20">
+        <AmazonAffiliateBanner />
+      </div>
       <FloatingBackButton />
       
-      <main className="flex-grow pt-16 md:pt-20 bg-gray-50">
+      <main className="flex-grow bg-gray-50">
         <SignUpPromptWrapper />
         <Analytics />
         <SpeedInsights />
@@ -161,7 +165,10 @@ function AppContent() {
         </Routes>
       </main>
       
-      <Footer />
+      <div className="border-t border-gray-200">
+        <AmazonAffiliateBanner />
+        <Footer />
+      </div>
     </div>
   );
 }
