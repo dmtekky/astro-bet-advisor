@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import TeamShareButton from '@/components/teams/TeamShareButton';
+import { Helmet } from 'react-helmet';
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const isUUID = (id: string | undefined): boolean => {
@@ -813,7 +815,7 @@ const TeamPage = () => {
                 if (chemistryData.elements) {
                   try {
                     const elements = typeof chemistryData.elements === 'string' 
-                      ? JSON.parse(chemistryData.elements) 
+                      ? JSON.parse(chemistryData.elements)
                       : chemistryData.elements;
                     
                     parsedElements = {
@@ -1005,6 +1007,36 @@ const TeamPage = () => {
     return 'Capricorn';
   }
 
+  // Function to generate Open Graph meta tags
+  const renderMetaTags = () => {
+    if (!team) return null;
+    
+    const title = `${team.name} Astro Score: ${team.astro_score}`;
+    const description = `Explore ${team.name}'s astrological insights and performance predictions.`;
+    const imageUrl = team.logo_url || 'https://example.com/default-team-logo.png';
+    const url = window.location.href;
+    
+    return (
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        
+        {/* Open Graph Tags */}
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:url" content={url} />
+        <meta property="og:type" content="website" />
+        
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={imageUrl} />
+      </Helmet>
+    );
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -1062,11 +1094,21 @@ const TeamPage = () => {
 
   const teamColors = getTeamColorStyles(team);
 
+  const teamShareData = {
+    id: team?.id,
+    name: team?.name,
+    logo: team?.logo_url || '',
+    astroScore: team?.astro_score || 0,
+    leagueSlug: team?.league_id,
+    teamSlug: team?.abbreviation
+  };
+
   return (
     <div 
       className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8"
       style={{ background: teamColors.gradientBg }}
     >
+      {renderMetaTags()}
       <div className="container pb-12 pt-0 px-4 md:px-6 mx-auto">
         
         {/* Team Header */}
@@ -1221,7 +1263,10 @@ const TeamPage = () => {
             {/* Additional Insights - Now in a row below */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 p-4 md:p-6 border-t border-slate-100 mt-6 md:mt-8">
               <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100">
-                <h3 className="font-semibold mb-3 md:mb-4 text-slate-800 text-base md:text-lg">Season Performance</h3>
+                <h3 className="font-semibold text-lg mb-4 text-slate-800 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+                  Season Performance
+                </h3>
                 <div className="flex items-center">
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center bg-blue-100 bg-opacity-50 border-2 border-blue-200 mr-4">
                     <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
@@ -1330,6 +1375,9 @@ const TeamPage = () => {
             />
           </div>
         </motion.div>
+      </div>
+      <div className="flex items-center space-x-4">
+        <TeamShareButton team={teamShareData} className="ml-auto" />
       </div>
     </div>
   );
