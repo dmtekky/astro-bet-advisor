@@ -4,6 +4,7 @@ import { Database, type Json } from '@/integrations/supabase/types'; // Correcte
 // Try Vite's import.meta.env first, then fall back to process.env for Node scripts
 const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL) || process.env?.VITE_SUPABASE_URL || '';
 const supabaseKey = (import.meta.env?.VITE_SUPABASE_KEY) || process.env?.VITE_SUPABASE_KEY || '';
+const supabaseServiceRoleKey = (import.meta.env?.VITE_SUPABASE_SERVICE_ROLE_KEY) || process.env?.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_KEY are set.');
@@ -55,6 +56,24 @@ export function getSupabaseClient(): SupabaseClient<Database> {
 
 // Export the singleton instance
 export const supabase = getSupabaseClient();
+
+/**
+ * Get a Supabase client with service role privileges
+ * This bypasses RLS policies and should be used carefully
+ */
+export function getServiceRoleClient(): SupabaseClient<Database> | null {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    console.error('Missing Supabase service role key. Cannot create service role client.');
+    return null;
+  }
+  
+  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
 
 console.debug('Supabase initialized with URL:', supabaseUrl);
 

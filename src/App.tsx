@@ -116,7 +116,7 @@ function AppContent() {
               <Route path="/nba/players/:playerId" element={<BasketballPlayerPage />} />
               
               {/* Team and player routes */}
-              <Route path="/teams/:teamId" element={<TeamPage />} />
+              <Route path="/teams/:identifier" element={<TeamPage />} />
               
               {/* Redirects for old NBA player URLs */}
               <Route path="/team/:teamId" element={<TeamPageWrapper />} />

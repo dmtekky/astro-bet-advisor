@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase, getServiceRoleClient } from '@/lib/supabase';
 import TeamShareButton from '@/components/teams/TeamShareButton';
 import { Helmet } from 'react-helmet';
 
@@ -31,19 +31,23 @@ interface TeamChemistryDB {
 // Function to fetch team chemistry data
 const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | null> => {
   try {
-    // Add authentication state logging
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log('[fetchTeamChemistry] Authentication state:', 
-      session?.user?.email ? `Authenticated as ${session.user.email}` : 'Not authenticated');
-    
     console.log('[fetchTeamChemistry] Fetching chemistry for team ID:', teamId);
     
-    // Unified approach for all leagues - use team_chemistry table
-    const { data, error } = await supabase
+    // Log auth session for debugging
+    const { data: { session } } = await supabase.auth.getSession();
+    const isAuthenticated = !!session?.user;
+    console.log('[fetchTeamChemistry] Auth session:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
+    
+    // Use service role client for authenticated users to bypass RLS policies
+    const client = isAuthenticated ? getServiceRoleClient() || supabase : supabase;
+    console.log('[fetchTeamChemistry] Using client:', isAuthenticated ? 'Service Role Client' : 'Public Client');
+    
+    // First try to get from team_chemistry table
+    const { data, error } = await client
       .from('team_chemistry')
       .select('*')
       .eq('team_id', teamId)
-      .maybeSingle<TeamChemistryDB>();
+      .single<TeamChemistryDB>();
 
     if (data && !error) {
       console.log('[fetchTeamChemistry] Found chemistry data in team_chemistry table');
@@ -106,34 +110,47 @@ const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | n
     if (teamId && isUUID(teamId)) {
       console.log('[fetchTeamChemistry] Using NBA-specific fallback');
       // First try to get from nba_teams
-      const { data: nbaTeamData, error: nbaTeamError } = await supabase
-        .from('nba_teams')
-        .select('chemistry_score, elemental_balance, last_astro_update')
-        .eq('id', teamId)
-        .single();
+      try {
+        const { data: nbaTeamData, error: nbaTeamError } = await client
+          .from('nba_teams')
+          .select('chemistry_score, elemental_balance, last_astro_update')
+          .eq('id', teamId)
+          .single();
+          
+        if (nbaTeamError) {
+          console.error('[fetchTeamChemistry] NBA team query error:', {
+            message: nbaTeamError.message,
+            code: nbaTeamError.code,
+            details: nbaTeamError.details,
+            hint: nbaTeamError.hint
+          });
+        }
 
-      if (!nbaTeamError && nbaTeamData) {
-        console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
-        const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
-          ? JSON.parse(nbaTeamData.elemental_balance) 
-          : nbaTeamData.elemental_balance;
-        
-        return {
-          score: nbaTeamData.chemistry_score || 50,
-          elements: {
-            fire: elementalBalance?.fire || 25,
-            earth: elementalBalance?.earth || 25,
-            air: elementalBalance?.air || 25,
-            water: elementalBalance?.water || 25,
-            balance: elementalBalance?.balance || 50
-          },
-          aspects: {
-            harmonyScore: 50,
-            challengeScore: 20,
-            netHarmony: 50
-          },
-          calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
-        };
+        if (!nbaTeamError && nbaTeamData) {
+          console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
+          const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
+            ? JSON.parse(nbaTeamData.elemental_balance) 
+            : nbaTeamData.elemental_balance;
+          
+          return {
+            score: nbaTeamData.chemistry_score || 50,
+            elements: {
+              fire: elementalBalance?.fire || 25,
+              earth: elementalBalance?.earth || 25,
+              air: elementalBalance?.air || 25,
+              water: elementalBalance?.water || 25,
+              balance: elementalBalance?.balance || 50
+            },
+            aspects: {
+              harmonyScore: 50,
+              challengeScore: 20,
+              netHarmony: 50
+            },
+            calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
+          };
+        }
+      } catch (nbaError) {
+        console.error('[fetchTeamChemistry] Error in NBA team chemistry lookup:', nbaError);
       }
     }
 
@@ -182,11 +199,10 @@ interface Team {
   secondary_color: string;
   league_id: string;
   external_id?: string | number;
-  // Additional team fields
   intFormedYear?: string | number;
   strStadium?: string;
   strDescriptionEN?: string;
-  // League relationship
+  slug?: string;
   league?: {
     id: string;
     name: string;
@@ -366,14 +382,25 @@ interface TeamChemistryData {
 }
 
 const TeamPage = () => {
-  // Get parameters from URL - handle both teamId and id for backward compatibility
-  const params = useParams<{ teamId?: string; id?: string }>();
-  const teamId = params.teamId || params.id;
+  // Get parameters from URL - handle both teamId, id, and identifier for compatibility
+  const params = useParams<{ teamId?: string; id?: string; slug?: string; identifier?: string }>();
+  
+  // The identifier could be either a teamId (UUID) or a slug
+  const identifier = params.identifier || params.teamId || params.id;
+  
+  // Determine if the identifier is a UUID, numeric ID, or slug
+  const isUuidIdentifier = isUUID(identifier);
+  const isNumIdentifier = !isUuidIdentifier && identifier ? /^\d+$/.test(identifier) : false;
+  
+  // If it's not a UUID or numeric ID, treat it as a slug
+  const teamId = isUuidIdentifier || isNumIdentifier ? identifier : null;
+  const teamSlug = !isUuidIdentifier && !isNumIdentifier ? identifier : params.slug;
   
   // Debug logs to track data flow
   console.log('[TeamPage] Team ID from URL:', teamId);
-  if (!teamId) {
-    console.error('[TeamPage] No team ID found in URL parameters');
+  console.log('[TeamPage] Team Slug from URL:', teamSlug);
+  if (!teamId && !teamSlug) {
+    console.error('[TeamPage] No team ID or slug found in URL parameters');
   }
   const navigate = useNavigate();
 
@@ -391,8 +418,8 @@ const TeamPage = () => {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    if (!teamId) {
-      setError('No team ID provided');
+    if (!teamId && !teamSlug) {
+      setError('No team ID or slug provided');
       setLoading(false);
       return;
     }
@@ -525,19 +552,145 @@ const TeamPage = () => {
         let fallbackTeamQuery = supabase.from('teams').select(`*,
             league:league_id(*)
           `);
-        if (isUUID(teamId)) {
+        
+        // If we have a slug parameter, use that first
+        if (teamSlug) {
+          console.log('[TeamPage] Fetching team by slug:', teamSlug);
+          
+          // First try exact match on slug - use single() to ensure we get exactly one row
+          // This will throw an error if there are multiple matches or no matches
+          try {
+            const { data: exactMatch, error: exactError } = await supabase
+              .from('teams')
+              .select(`*, league:league_id(*)`)
+              .eq('slug', teamSlug)
+              .single();
+              
+            if (exactMatch && !exactError) {
+              console.log('[TeamPage] Found exact slug match:', exactMatch);
+              setTeam(exactMatch);
+              
+              // Fetch chemistry data for MLB/other leagues
+              if (exactMatch.id) {
+                try {
+                  const chemistryData = await fetchTeamChemistry(exactMatch.id);
+                  if (chemistryData) {
+                    setChemistry(chemistryData);
+                  }
+                } catch (chemError) {
+                  console.error('[TeamPage] Error fetching chemistry data:', chemError);
+                } finally {
+                  setChemistryLoading(false);
+                }
+              }
+              
+              // Fetch upcoming games
+              if (typeof fetchUpcomingGames === 'function') {
+                fetchUpcomingGames(exactMatch.id);
+              } else {
+                console.warn('[TeamPage] fetchUpcomingGames is not defined');
+              }
+              
+              // Set loading to false and return early
+              setLoading(false);
+              return;
+            } else {
+              console.log('[TeamPage] No exact slug match found, continuing with fallback approaches');
+              console.log('[TeamPage] Exact match error:', exactError);
+            }
+          } catch (singleError) {
+            console.error('[TeamPage] Error with single() query:', singleError);
+          }
+          
+          // If we get here, the single() query failed, so fall back to the regular query
+          fallbackTeamQuery = fallbackTeamQuery.eq('slug', teamSlug);
+          
+          // Log the query for debugging
+          console.log('[TeamPage] Falling back to regular query with slug:', fallbackTeamQuery);
+        } else if (teamId && isUUID(teamId)) {
           fallbackTeamQuery = fallbackTeamQuery.eq('id', teamId);
-        } else if (isNum) {
-          fallbackTeamQuery = fallbackTeamQuery.eq('external_id', parseInt(teamId!, 10));
-        } else {
+        } else if (teamId && /^\d+$/.test(teamId)) {
+          fallbackTeamQuery = fallbackTeamQuery.eq('external_id', parseInt(teamId, 10));
+        } else if (teamId && typeof teamId === 'string') {
           // Assuming non-UUID, non-numeric teamId is an abbreviation
-          fallbackTeamQuery = fallbackTeamQuery.eq('abbreviation', teamId!.toUpperCase());
+          fallbackTeamQuery = fallbackTeamQuery.eq('abbreviation', teamId.toUpperCase());
         }
-        const { data: teamData, error: teamError } = await fallbackTeamQuery.single();
-
-        if (teamError) {
-          console.error('Error fetching team:', teamError);
-          setError(teamError.message);
+        
+        // First, get all matching rows to check if we have multiple matches
+        let { data: allMatches, error: countError } = await fallbackTeamQuery;
+        
+        if (countError) {
+          console.error('[TeamPage] Error checking team count:', countError);
+          setError(countError.message);
+          setLoading(false);
+          return;
+        }
+        
+        console.log(`[TeamPage] Found ${allMatches?.length || 0} matching teams`);
+        
+        // If no matches found with slug, try a more flexible approach
+        if (teamSlug && (!allMatches || allMatches.length === 0)) {
+          console.log('[TeamPage] No exact slug match found, trying case-insensitive search');
+          
+          // Try a case-insensitive search or partial match
+          const { data: fuzzyMatches, error: fuzzyError } = await supabase
+            .from('teams')
+            .select(`*, league:league_id(*)`)
+            .ilike('slug', `%${teamSlug}%`);
+            
+          if (fuzzyError) {
+            console.error('[TeamPage] Error with fuzzy search:', fuzzyError);
+          }
+          
+          console.log(`[TeamPage] Found ${fuzzyMatches?.length || 0} fuzzy matches`);
+          
+          if (fuzzyMatches && fuzzyMatches.length > 0) {
+            // Use the fuzzy matches instead
+            console.log('[TeamPage] Using fuzzy matches:', fuzzyMatches);
+            allMatches = fuzzyMatches;
+          } else {
+            // Try searching by team name as last resort
+            console.log('[TeamPage] Trying to match by team name');
+            const { data: nameMatches, error: nameError } = await supabase
+              .from('teams')
+              .select(`*, league:league_id(*)`)
+              .ilike('name', `%${teamSlug.replace(/-/g, ' ')}%`);
+              
+            if (nameError) {
+              console.error('[TeamPage] Error with name search:', nameError);
+            }
+            
+            console.log(`[TeamPage] Found ${nameMatches?.length || 0} name matches`);
+            
+            if (nameMatches && nameMatches.length > 0) {
+              allMatches = nameMatches;
+            }
+          }
+        }
+        
+        if (!allMatches || allMatches.length === 0) {
+          console.error(`[TeamPage] Team not found with identifier: ${teamSlug || teamId}`);
+          setError(`Team not found: ${teamSlug || teamId}`);
+          setLoading(false);
+          return;
+        }
+        
+        if (allMatches.length > 1) {
+          console.warn('[TeamPage] Multiple teams found with the same identifier:', 
+            allMatches.map(t => {
+              // Use type assertion to access slug property
+              const team = t as any;
+              return `${team.name} (${team.id}, slug: ${team.slug || 'undefined'})`;
+            }))
+          // Continue with the first match
+          console.log('[TeamPage] Using first match:', allMatches[0]);
+        }
+        
+        const teamData = allMatches[0];
+        
+        if (!teamData) {
+          console.error('[TeamPage] No team data found');
+          setError('Team not found');
           setLoading(false);
           return;
         }
