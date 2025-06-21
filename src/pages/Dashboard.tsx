@@ -109,6 +109,24 @@ interface ElementsDistribution {
 import { Sport } from "@/types";
 import LoadingScreen from "@/components/LoadingScreen";
 
+// Helper function to calculate moon clip path based on illumination (0-1)
+const getMoonClipPath = (illumination: number): string => {
+  if (!illumination) return 'circle(50%)';
+  
+  // For waxing phases (0-0.5)
+  if (illumination <= 0.5) {
+    const radius = 50;
+    const x = (illumination * 2) * 100;
+    return `circle(${radius}% at ${x}% 50%)`;
+  } 
+  // For waning phases (0.5-1.0)
+  else {
+    const radius = 50;
+    const x = ((illumination - 0.5) * 2) * 100;
+    return `circle(${radius}% at ${x}% 50%)`;
+  }
+};
+
 const MLB_LEAGUE_KEY: Sport = "mlb";
 const DEFAULT_LOGO = "/images/default-team-logo.svg";
 
@@ -1426,7 +1444,7 @@ const Dashboard: React.FC = () => {
                                 <div
                                   className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out"
                                   style={{
-                                    clipPath: `inset(0 ${50 - (astroData?.moonPhase?.illumination || 0) * 50}% 0 0)`,
+                                    clipPath: getMoonClipPath(astroData?.moonPhase?.illumination || 0),
                                     opacity: 0.95,
                                     boxShadow:
                                       "inset 0 0 40px rgba(255, 255, 255, 0.8)",
