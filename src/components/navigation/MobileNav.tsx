@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, User, Search, ArrowLeft } from 'lucide-react';
+import { Menu, X, Calendar, User, Search, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sport } from '@/types';
 import { useSearch } from '@/context/SearchContext';
@@ -41,7 +41,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ className = '' }) => {
     setSearchQuery('');
   };
 
-  const isDashboard = location.pathname === '/dashboard';
+
   const isTeamsPage = location.pathname === '/teams';
   const isGamesPage = location.pathname.includes('/upcoming-games');
   const isProfile = location.pathname.includes('/profile');
@@ -66,7 +66,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ className = '' }) => {
               <nav className="mb-6">
                 <ul className="grid grid-cols-2 gap-2">
                   {sports.map((sport) => {
-                    const isActive = isDashboard && new URLSearchParams(location.search).get('sport') === sport.id;
+                    const isActive = location.pathname === '/dashboard' && new URLSearchParams(location.search).get('sport') === sport.id;
                     
                     return (
                       <li key={sport.id}>
@@ -90,17 +90,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ className = '' }) => {
               <h3 className="text-sm font-medium text-muted-foreground mb-2 mt-6">Navigation</h3>
               <nav>
                 <ul className="space-y-1">
-                  <li>
-                    <Link 
-                      to="/dashboard" 
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors w-full ${
-                        isDashboard ? 'bg-accent text-accent-foreground font-medium' : 'hover:bg-accent hover:text-accent-foreground'
-                      }`}
-                    >
-                      <Home className="h-5 w-5" />
-                      <span>Home</span>
-                    </Link>
-                  </li>
                   <li>
                     <Link 
                       to="/upcoming-games" 
