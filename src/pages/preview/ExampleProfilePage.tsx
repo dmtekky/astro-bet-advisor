@@ -15,6 +15,13 @@ import {
 } from '@/components/ui/select';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the NatalChartProfile component with SSR disabled
+const NatalChartProfile = dynamic(
+  () => import('@/components/astrology/NatalChartProfile'),
+  { ssr: false }
+);
 
 // Define sport type
 type Sport = {
@@ -404,6 +411,14 @@ const ExampleProfilePage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </div>
+      
+      {/* Natal Chart Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-6">Your Astrological Profile</h2>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <NatalChartProfile />
         </div>
       </div>
     </div>
