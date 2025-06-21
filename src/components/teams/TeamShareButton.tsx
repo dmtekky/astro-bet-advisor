@@ -92,11 +92,11 @@ const TeamShareButton: React.FC<TeamShareButtonProps> = ({ team }) => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="secondary"
-            size="icon"
-            className="rounded-full w-10 h-10"
+            className="flex items-center gap-2"
             aria-label="Share team"
           >
             <Share2Icon className="h-4 w-4" />
+            <span>Share Team</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">

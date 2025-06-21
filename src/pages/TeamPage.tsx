@@ -1011,27 +1011,30 @@ const TeamPage = () => {
   const renderMetaTags = () => {
     if (!team) return null;
     
-    const title = `${team.name} Astro Score: ${team.astro_score}`;
-    const description = `Explore ${team.name}'s astrological insights and performance predictions.`;
-    const imageUrl = team.logo_url || 'https://example.com/default-team-logo.png';
-    const url = window.location.href;
+    const currentUrl = window.location.href;
+    const title = `${team.name} | Astro Score: ${team.astroScore}`;
+    const description = `${team.name}'s Astro Score: ${team.astroScore}. Discover their performance insights and predictions.`;
+    const imageUrl = `${window.location.origin}/api/team-og-image?teamId=${team.id}`;
     
     return (
       <Helmet>
         <title>{title}</title>
         <meta name="description" content={description} />
         
-        {/* Open Graph Tags */}
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:url" content={url} />
+        {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={`Discover ${team.name}'s performance insights and predictions with our Astro Score technology.`} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:image:width" content="300" />
+        <meta property="og:image:height" content="300" />
         
-        {/* Twitter Card Tags */}
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={currentUrl} />
         <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
+        <meta name="twitter:description" content={`${team.name}'s performance insights and predictions`} />
         <meta name="twitter:image" content={imageUrl} />
       </Helmet>
     );
@@ -1155,6 +1158,13 @@ const TeamPage = () => {
 
         </div>
       </motion.div>
+      
+      {/* Top Floating Share Button */}
+      <div className="fixed top-40 right-8 z-50">
+        <div className="backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 rounded-lg p-2 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/70 transition-shadow">
+          <TeamShareButton team={teamShareData} />
+        </div>
+      </div>
       
       {/* Top Players */}
       <motion.div 
