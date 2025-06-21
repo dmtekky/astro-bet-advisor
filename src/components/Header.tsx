@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = () => {
   if (location.pathname === "/") return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <div className="w-full">
         {/* Main header content */}
         {/* Frosted glass effect using CSS */}
@@ -462,7 +462,7 @@ const Header: React.FC<HeaderProps> = () => {
       </div>
       
       {/* Amazon Banner below header */}
-      <div className="w-full">
+      <div className="w-full sticky top-0 z-50">
         <AmazonAffiliateBanner />
       </div>
     </header>
