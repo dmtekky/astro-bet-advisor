@@ -436,12 +436,99 @@ const TeamPage = () => {
               },
             });
 
-            // Fetch chemistry and players using the team ID
-            await Promise.all([
-              fetchChemistryData(teamData.id),
-              fetchPlayersData(teamData.id, teamData.external_id),
-              fetchUpcomingGames(teamData.id)
-            ]);
+            // Fetch chemistry data
+            const chemistryData = await fetchTeamChemistry(teamData.id);
+            setChemistry(chemistryData);
+            setChemistryLoading(false);
+            
+            // Fetch players data
+            try {
+              // Try to fetch from the unified players table first
+              const { data: playersData, error: playersError } = await supabase
+                .from('players')
+                .select('*, impact_score, astro_influence')
+                .eq('team_id', teamData.id);
+
+              if (playersData && playersData.length > 0) {
+                console.log('[TeamPage] Found players in unified table:', playersData.length);
+                setPlayers(playersData);
+                // Sort players by impact score for top players
+                const sortedPlayers = [...playersData].sort((a, b) => 
+                  (b.impact_score || 0) - (a.impact_score || 0)
+                ).slice(0, 3);
+                setTopPlayers(sortedPlayers);
+              } else if (teamData.external_id) {
+                // Fallback to league-specific tables if needed
+                const { data: nbaPlayersData, error: nbaPlayersError } = await supabase
+                  .from('nba_players')
+                  .select('*, impact_score, astro_influence')
+                  .eq('team_id', teamData.external_id);
+
+                if (nbaPlayersData && nbaPlayersData.length > 0) {
+                  console.log('[TeamPage] Found NBA players:', nbaPlayersData.length);
+                  setPlayers(nbaPlayersData);
+                  // Sort players by impact score for top players
+                  const sortedPlayers = [...nbaPlayersData].sort((a, b) => 
+                    (b.impact_score || 0) - (a.impact_score || 0)
+                  ).slice(0, 3);
+                  setTopPlayers(sortedPlayers);
+                }
+              }
+            } catch (error) {
+              console.error('[TeamPage] Error fetching players:', error);
+            }
+            
+            // Fetch upcoming games
+            try {
+              // Fetch upcoming games for this team
+              const { data: gamesData, error: gamesError } = await supabase
+                .from('games')
+                .select('*, home_team:home_team_id(*), away_team:away_team_id(*)')
+                .or(`home_team_id.eq.${teamData.id},away_team_id.eq.${teamData.id}`)
+                .gte('game_date', new Date().toISOString().split('T')[0])
+                .order('game_date', { ascending: true })
+                .limit(5);
+
+              if (gamesError) {
+                console.error('[TeamPage] Error fetching games:', gamesError);
+              } else if (gamesData && gamesData.length > 0) {
+                console.log('[TeamPage] Found upcoming games:', gamesData.length);
+                
+                // Process the games data to ensure it matches the Game type
+                const processedGames = gamesData.map(game => {
+                  // Ensure all required fields are present with correct types
+                  return {
+                    id: String(game.id || ''),
+                    home_team_id: String(game.home_team_id || ''),
+                    away_team_id: String(game.away_team_id || ''),
+                    league_id: String(game.league_id || ''),
+                    home_team: game.home_team as Team,
+                    away_team: game.away_team as Team,
+                    home_odds: game.home_odds || null,
+                    away_odds: game.away_odds || null,
+                    spread: game.spread || null,
+                    over_under: game.over_under || null,
+                    astroInfluence: game.astro_influence || '',
+                    astroEdge: game.astro_edge || 0,
+                    venue: {
+                      name: game.venue?.name || null,
+                      city: game.venue?.city || null
+                    },
+                    name: game.name || null,
+                    city: game.city || null,
+                    game_date: game.game_date || '',
+                    game_time_utc: game.game_time_utc || '',
+                    status: game.status || '',
+                    home_score: game.home_score || null,
+                    away_score: game.away_score || null
+                  } as Game;
+                });
+                
+                setUpcomingGames(processedGames);
+              }
+            } catch (error) {
+              console.error('[TeamPage] Error fetching upcoming games:', error);
+            }
 
             setLoading(false);
             return;
@@ -921,26 +1008,64 @@ const TeamPage = () => {
         }
 
         // Fetch upcoming games with proper type handling
-        const { data: gamesData, error: gamesError } = await supabase
-          .from('games')
-          .select(`
-            id,
-              return typeof item === 'object' && 
-                item !== null && 
-                'id' in item && 
-                !('error' in item);
-            })
-            .map((gameData: GameData): Game => {
-            // Safely extract home team data
-            const homeTeam: Team | null = gameData.home_team && 
-              typeof gameData.home_team === 'object' && 
-              !('error' in gameData.home_team)
-                ? {
-                    id: String(gameData.home_team.id || ''),
-                    name: String(gameData.home_team.name || 'Unknown Team'),
-                    abbreviation: String(gameData.home_team.abbreviation || 'TBD'),
-                    city: String(gameData.home_team.city || 'Unknown'),
-                    logo_url: gameData.home_team.logo_url,
+        const fetchUpcomingGames = async (id: string) => {
+          try {
+            // Fetch upcoming games for this team
+            const { data: gamesData, error: gamesError } = await supabase
+              .from('games')
+              .select('*, home_team:home_team_id(*), away_team:away_team_id(*)')
+              .or(`home_team_id.eq.${id},away_team_id.eq.${id}`)
+              .gte('game_date', new Date().toISOString().split('T')[0])
+              .order('game_date', { ascending: true })
+              .limit(5);
+
+            if (gamesError) {
+              console.error('[TeamPage] Error fetching games:', gamesError);
+              return;
+            }
+
+            if (gamesData && gamesData.length > 0) {
+              console.log('[TeamPage] Found upcoming games:', gamesData.length);
+              
+              // Process the games data to ensure it matches the Game type
+              const processedGames = gamesData.map(game => {
+                // Ensure all required fields are present with correct types
+                return {
+                  id: String(game.id || ''),
+                  home_team_id: String(game.home_team_id || ''),
+                  away_team_id: String(game.away_team_id || ''),
+                  league_id: String(game.league_id || ''),
+                  home_team: game.home_team as Team,
+                  away_team: game.away_team as Team,
+                  home_odds: game.home_odds || null,
+                  away_odds: game.away_odds || null,
+                  spread: game.spread || null,
+                  over_under: game.over_under || null,
+                  astroInfluence: game.astro_influence || '',
+                  astroEdge: game.astro_edge || 0,
+                  venue: {
+                    name: game.venue?.name || null,
+                    city: game.venue?.city || null
+                  },
+                  name: game.name || null,
+                  city: game.city || null,
+                  game_date: game.game_date || '',
+                  game_time_utc: game.game_time_utc || '',
+                  status: game.status || '',
+                  home_score: game.home_score || null,
+                  away_score: game.away_score || null
+                } as Game;
+              });
+              
+              setUpcomingGames(processedGames);
+            }
+          } catch (error) {
+            console.error('[TeamPage] Error fetching upcoming games:', error);
+          }
+        };
+
+        fetchUpcomingGames(teamData.id);
+
                     primary_color: gameData.home_team.primary_color || '#000000',
                     secondary_color: gameData.home_team.secondary_color || '#FFFFFF',
                     league_id: String(gameData.home_team.league_id || gameData.league_id || 'unknown'),
@@ -1118,12 +1243,12 @@ const TeamPage = () => {
   const teamColors = getTeamColorStyles(team);
 
   const teamShareData = {
-    id: team?.id,
-    name: team?.name,
+    id: team?.id || '',
+    name: team?.name || '',
     logo: team?.logo_url || '',
-    astroScore: team?.astro_score || 0,
-    leagueSlug: team?.league_id,
-    teamSlug: team?.abbreviation
+    astroScore: chemistry?.score,
+    leagueSlug: team?.league?.id || '',
+    teamSlug: team?.name?.toLowerCase().replace(/\s+/g, '-') || ''
   };
 
   return (
