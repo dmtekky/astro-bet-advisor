@@ -38,12 +38,26 @@ const TeamShareButton: React.FC<TeamShareButtonProps> = ({ team, className = '' 
   }
 
   // Use team abbreviation for a cleaner URL
-  const teamPageUrl = `${window.location.origin}/teams/${team.teamSlug.toLowerCase()}`;  // e.g., /teams/ari
+  const teamPageUrl = `${window.location.origin}/teams/${team.teamSlug.toLowerCase()}`;
   const astroScore = team.astro_score ?? 0;
   const teamName = team.name || 'This team';
-  
-  // Format for Twitter - single line with emoji and URL at the end
-  const shareText = `🏀 ${teamName}'s Astro Score: ${astroScore}/100 - See how the stars align for their performance! ${teamPageUrl}`;
+  const leagueEmoji = getLeagueEmoji(team.leagueSlug);
+
+  // Format for sharing - team page URL is the main link
+  const shareText = `${leagueEmoji} ${teamName}'s Astro Score: ${astroScore}/100 - See how the stars align for their performance!`;
+
+  function getLeagueEmoji(leagueSlug: string) {
+    switch (leagueSlug.toLowerCase()) {
+      case 'mlb':
+        return '⚾'; // Baseball
+      case 'nba':
+        return '🏀'; // Basketball
+      case 'nfl':
+        return '🏈'; // American Football
+      default:
+        return '⭐'; // Default star emoji
+    }
+  }
 
   const trackShareEvent = (platform: string) => {
     // Implement analytics tracking here
@@ -73,9 +87,12 @@ const TeamShareButton: React.FC<TeamShareButtonProps> = ({ team, className = '' 
     }
 
     try {
-      const shareData = {
+      // Prepare share data with the team page URL as the main link
+      const shareData: ShareData = {
         title: `${teamName} - Full Moon Odds`,
-        text: shareText,
+        text: team.logo 
+          ? `${shareText}\n\n${team.logo}` // Include logo URL in text as fallback
+          : shareText,
         url: teamPageUrl,
       };
 

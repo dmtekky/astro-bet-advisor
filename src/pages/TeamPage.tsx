@@ -550,8 +550,6 @@ const TeamPage = () => {
               .single();
               
             if (exactMatch && !exactError) {
-              console.log('[TeamPage] Found exact slug match:', exactMatch);
-              console.log('Fetched team data:', exactMatch);
               setTeam(exactMatch);
               
               // Fetch chemistry data for MLB/other leagues
@@ -1315,12 +1313,12 @@ const TeamPage = () => {
 
   const teamColors = getTeamColorStyles(team);
 
-  // Prepare data for sharing with astro_score
+  // Prepare data for sharing with chemistry score from team_chemistry
   const teamShareData = team ? {
     id: team.id,
     name: team.name,
     logo: team.logo_url || '',
-    astro_score: team.astro_score || 0, // Ensure astro_score is included
+    astro_score: chemistry?.score || 0, // Use chemistry score from team_chemistry
     leagueSlug: team.league?.sport || 'mlb',
     teamSlug: team.slug || team.id,
   } : null;
@@ -1383,292 +1381,156 @@ const TeamPage = () => {
                 </Badge>
               )}
             </div>
-          
-
-        </div>
-      </motion.div>
-      
-      {/* Top Floating Share Button */}
-      <div className="fixed top-40 right-8 z-50">
-        <div className="backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 rounded-lg p-2 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/70 transition-shadow">
-          <TeamShareButton team={teamShareData} />
-        </div>
-      </div>
-      
-      {/* Top Players */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="-mt-1.5 mb-8 md:mb-12"
-      >
-        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-          <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
-          Top Players
-        </h2>
-        <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-4 md:space-x-0 md:mx-0 md:px-0 md:grid md:gap-4 md:grid-cols-2 lg:grid-cols-4 md:justify-items-center md:overflow-visible">
-          {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
-            // Calculate team average astro influence for the glow effect
-            const teamAverageAstroInfluence = players.length > 0 
-              ? players.reduce((sum, p) => sum + (p.astro_influence || 0), 0) / players.length 
-              : 0;
-              
-            return (
-              <PlayerCardNew
-                key={player.id}
-                id={player.id}
-                player_id={player.player_id}
-                full_name={player.full_name}
-                headshot_url={player.headshot_url || undefined}
-                birth_date={player.birth_date || undefined}
-                primary_number={player.number?.toString() || undefined}
-                primary_position={player.position || undefined}
-                impact_score={player.impact_score || 0}
-                astro_influence={player.astro_influence || 0}
-                teamAverageAstroInfluence={teamAverageAstroInfluence}
-                linkPath={team?.league_id === 'nba' 
-                  ? `/nba/players/${player.id}`
-                  : `/teams/${teamId}/players/${player.id}`
-                }
-              />
-            );
-          }) : (
-            <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
-          )}
-        </div>
-      </motion.div>
-      
-      {/* Team Insights */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-8 md:mb-12"
-      >
-        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-          <Info className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
-          Team Insights
-        </h2>
+          </div>
+        </motion.div>
         
-        <Card className="bg-white w-full">
-          <CardContent className="p-0">
-            {/* Team Chemistry Meter - Full Width */}
-            <div className="w-full border rounded-lg overflow-hidden">
-              {chemistry ? (
-                <div className="p-4 bg-white">
-                  <h3 className="font-semibold text-lg mb-4 text-slate-800 flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-amber-500" />
-                    Team Chemistry
-                  </h3>
-                  <div className="border rounded-lg p-4 bg-slate-50">
-                    <TeamChemistryMeter 
-                      chemistry={chemistry} 
-                      className="w-full" 
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2 text-right">
-                    Last updated: {new Date(chemistry.calculatedAt).toLocaleString()}
-                  </p>
-                </div>
-              ) : chemistryLoading ? (
-                <div className="p-6 md:p-8 rounded-lg bg-slate-50 animate-pulse w-full">
-                  <h3 className="font-semibold mb-4 text-slate-700 text-lg">Team Chemistry</h3>
-                  <div className="w-full h-48 md:h-64 bg-slate-200 rounded-md"></div>
-                </div>
-              ) : (
-                <div className="p-6 md:p-8 rounded-lg bg-slate-50 border border-dashed border-slate-300 w-full">
-                  <h3 className="font-semibold mb-4 text-slate-700 flex items-center text-lg">
-                    <Zap className="h-5 w-5 mr-2 text-amber-500" />
-                    Team Chemistry
-                  </h3>
-                  <p className="text-slate-600 text-base mb-4">
-                    No chemistry data is available for this team. The data needs to be generated first.
-                  </p>
-                  <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
-                    <h4 className="text-base font-medium text-amber-800 flex items-center mb-2">
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                      Admin Action Required
-                    </h4>
-                    <ol className="text-sm text-amber-700 list-decimal pl-5 space-y-1">
-                      <li>For NBA teams, run <code className="bg-amber-100 px-1.5 py-0.5 rounded">node scripts/calculate_nba_team_chemistry_v2.js</code></li>
-                      <li>For other teams, ensure the <code className="bg-amber-100 px-1.5 py-0.5 rounded">team_chemistry</code> table exists</li>
-                      <li>Refresh this page to see the team chemistry meter</li>
-                    </ol>
-                  </div>
-                </div>
-            </div>
-          )}
+        {/* Top Floating Share Button */}
+        <div className="fixed top-40 right-8 z-50">
+          <div className="backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 rounded-lg p-2 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/70 transition-shadow">
+            <TeamShareButton team={teamShareData} />
+          </div>
         </div>
         
-        <div className="text-center md:text-left flex-1">
-          <div className="flex flex-row items-start justify-center md:justify-start space-x-3 mb-3.5">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">{team?.name}</h1>
-              <p className="text-slate-500 text-sm">
-                {team?.city} • {team?.venue || 'Venue N/A'}
-              </p>
-            </div>
-            {team?.league?.name && (
-              <Badge 
-                variant="outline"
-                className="text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 mt-2"
-                style={{ borderColor: teamColors.secondary, color: teamColors.primary }}
-              >
-                {team.league.name}
-              </Badge>
+        {/* Top Players */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="-mt-1.5 mb-8 md:mb-12"
+        >
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
+            Top Players
+          </h2>
+          <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-4 md:space-x-0 md:mx-0 md:px-0 md:grid md:gap-4 md:grid-cols-2 lg:grid-cols-4 md:justify-items-center md:overflow-visible">
+            {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
+              // Calculate team average astro influence for the glow effect
+              const teamAverageAstroInfluence = players.length > 0 
+                ? players.reduce((sum, p) => sum + (p.astro_influence || 0), 0) / players.length 
+                : 0;
+                
+              return (
+                <PlayerCardNew
+                  key={player.id}
+                  id={player.id}
+                  player_id={player.player_id}
+                  full_name={player.full_name}
+                  headshot_url={player.headshot_url || undefined}
+                  birth_date={player.birth_date || undefined}
+                  primary_number={player.number?.toString() || undefined}
+                  primary_position={player.position || undefined}
+                  impact_score={player.impact_score || 0}
+                  astro_influence={player.astro_influence || 0}
+                  teamAverageAstroInfluence={teamAverageAstroInfluence}
+                  linkPath={team?.league_id === 'nba' 
+                    ? `/nba/players/${player.id}`
+                    : `/teams/${teamId}/players/${player.id}`
+                  }
+                />
+              );
+            }) : (
+              <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
             )}
           </div>
+        </motion.div>
         
-
-
-      </div>
-    </motion.div>
-    
-    {/* Top Floating Share Button */}
-    <div className="fixed top-40 right-8 z-50">
-      <div className="backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 rounded-lg p-2 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/70 transition-shadow">
-        <TeamShareButton team={teamShareData} />
-      </div>
-    </div>
-    
-    {/* Top Players */}
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="-mt-1.5 mb-8 md:mb-12"
-    >
-      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-        <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
-        Top Players
-      </h2>
-      <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-4 md:space-x-0 md:mx-0 md:px-0 md:grid md:gap-4 md:grid-cols-2 lg:grid-cols-4 md:justify-items-center md:overflow-visible">
-        {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
-          // Calculate team average astro influence for the glow effect
-          const teamAverageAstroInfluence = players.length > 0 
-            ? players.reduce((sum, p) => sum + (p.astro_influence || 0), 0) / players.length 
-            : 0;
-            
-          return (
-            <PlayerCardNew
-              key={player.id}
-              id={player.id}
-              player_id={player.player_id}
-              full_name={player.full_name}
-              headshot_url={player.headshot_url || undefined}
-              birth_date={player.birth_date || undefined}
-              primary_number={player.number?.toString() || undefined}
-              primary_position={player.position || undefined}
-              impact_score={player.impact_score || 0}
-              astro_influence={player.astro_influence || 0}
-              teamAverageAstroInfluence={teamAverageAstroInfluence}
-              linkPath={team?.league_id === 'nba' 
-                ? `/nba/players/${player.id}`
-                : `/teams/${teamId}/players/${player.id}`
-              }
-            />
-          );
-        }) : (
-          <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
-        )}
-      </div>
-    </motion.div>
-    
-    {/* Team Insights */}
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="mb-8 md:mb-12"
-    >
-      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-        <Info className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
-        Team Insights
-      </h2>
-      
-      <Card className="bg-white w-full">
-        <CardContent className="p-0">
-          {/* Team Chemistry Meter - Full Width */}
-          <div className="w-full border rounded-lg overflow-hidden">
-            {chemistry ? (
-              <div className="p-4 bg-white">
-                <h3 className="font-semibold text-lg mb-4 text-slate-800 flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-amber-500" />
-                  Team Chemistry
-                </h3>
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <TeamChemistryMeter 
-                    chemistry={chemistry} 
-                    className="w-full" 
-                  />
+        {/* Team Insights */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <Info className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
+            Team Insights
+          </h2>
+          
+          <Card className="bg-white w-full">
+            <CardContent className="p-0">
+              {/* Team Chemistry Meter - Full Width */}
+              <div className="w-full border rounded-lg overflow-hidden">
+                {chemistry ? (
+                  <div className="p-4 bg-white">
+                    <h3 className="font-semibold text-lg mb-4 text-slate-800 flex items-center">
+                      <Zap className="h-5 w-5 mr-2 text-amber-500" />
+                      Team Chemistry
+                    </h3>
+                    <div className="border rounded-lg p-4 bg-slate-50">
+                      <TeamChemistryMeter 
+                        chemistry={chemistry} 
+                        className="w-full" 
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 text-right">
+                      Last updated: {new Date(chemistry.calculatedAt).toLocaleString()}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-2xl md:text-3xl font-bold">{Math.floor(Math.random() * 30) + 50}%</p>
-                    <p className="text-xs md:text-sm text-slate-500">Win Rate</p>
+                ) : chemistryLoading ? (
+                  <div className="p-6 md:p-8 rounded-lg bg-slate-50 animate-pulse w-full">
+                    <h3 className="font-semibold mb-4 text-slate-700 text-lg">Team Chemistry</h3>
+                    <div className="w-full h-48 md:h-64 bg-slate-200 rounded-md"></div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-6 md:p-8 rounded-lg bg-slate-50 border border-dashed border-slate-300 w-full">
+                    <h3 className="font-semibold mb-4 text-slate-700 flex items-center text-lg">
+                      <Zap className="h-5 w-5 mr-2 text-amber-500" />
+                      Team Chemistry
+                    </h3>
+                    <p className="text-slate-600 text-base mb-4">
+                      No chemistry data is available for this team. The data needs to be generated first.
+                    </p>
+                    <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+                      <h4 className="text-base font-medium text-amber-800 flex items-center mb-2">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        Admin Action Required
+                      </h4>
+                      <ol className="text-sm text-amber-700 list-decimal pl-5 space-y-1">
+                        <li>For NBA teams, run <code className="bg-amber-100 px-1.5 py-0.5 rounded">node scripts/calculate_nba_team_chemistry_v2.js</code></li>
+                        <li>For other teams, ensure the <code className="bg-amber-100 px-1.5 py-0.5 rounded">team_chemistry</code> table exists</li>
+                        <li>Refresh this page to see the team chemistry meter</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              <div className="p-4 rounded-lg bg-slate-50">
-                <h3 className="font-semibold mb-2 text-slate-700 text-sm md:text-base">Team Strength</h3>
-                <p className="text-xs md:text-sm text-slate-600">
-                  {team?.name} has shown exceptional performance in {
-                    team?.league?.sport?.toLowerCase() === 'baseball' ? 'pitching and home runs' :
-                    team?.league?.sport?.toLowerCase() === 'basketball' ? '3-point shooting and rebounding' :
-                    team?.league?.sport?.toLowerCase() === 'football' ? 'rushing and defense' :
-                    'key performance metrics'
-                  } this season.
-                </p>
-              </div>
-              
-              <div className="p-4 rounded-lg bg-slate-50 md:col-span-2 lg:col-span-1">
-                <h3 className="font-semibold mb-2 text-slate-700 text-sm md:text-base">Cosmic Influence</h3>
-                <p className="text-xs md:text-sm text-slate-600">
-                  The {team?.name} are currently under the influence of {
-                    ['Venus', 'Jupiter', 'Mercury', 'Mars', 'Saturn'][Math.floor(Math.random() * 5)]
-                  }, suggesting favorable conditions for their upcoming games, especially during {
-                    ['full moon', 'waxing moon', 'new moon'][Math.floor(Math.random() * 3)]
-                  } periods.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-      
-      {/* Upcoming Games */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mb-8 md:mb-12 mt-8"
-      >
-        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-          <CalendarIcon className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
-          Upcoming Games
-        </h2>
+            </CardContent>
+          </Card>
+        </motion.div>
         
-        {upcomingGames.length > 0 ? (
-          <GameCarousel 
-            games={upcomingGames
-              .filter((game): game is GameWithTeams => (
-                  !!game.home_team && 
-                  !!game.away_team
-                ))
-                .map(game => ({
-                  ...game,
-                  home_team: game.home_team,
-                  away_team: game.away_team,
-                  astroInfluence: game.astroInfluence || ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
-                  astroEdge: game.astroEdge || Math.random() * 15 + 5
-                }))
-              }
-              defaultLogo="/placeholder-team.png"
-              className="mt-6 -ml-5"
-            />
-          ) : (
-            <p className="text-center py-8 text-slate-500">No upcoming games scheduled</p>
-          )}
+        {/* Upcoming Games */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-8 md:mb-12 mt-8"
+        >
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <CalendarIcon className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
+            Upcoming Games
+          </h2>
+          
+          {upcomingGames.length > 0 ? (
+            <GameCarousel 
+              games={upcomingGames
+                .filter((game): game is GameWithTeams => (
+                    !!game.home_team && 
+                    !!game.away_team
+                  ))
+                  .map(game => ({
+                    ...game,
+                    home_team: game.home_team,
+                    away_team: game.away_team,
+                    astroInfluence: game.astroInfluence || ['Favorable Moon', 'Rising Mars', 'Jupiter Aligned'][Math.floor(Math.random() * 3)],
+                    astroEdge: game.astroEdge || Math.random() * 15 + 5
+                  }))
+                }
+                defaultLogo="/placeholder-team.png"
+                className="mt-6 -ml-5"
+              />
+            ) : (
+              <p className="text-center py-8 text-slate-500">No upcoming games scheduled</p>
+            )}
         </motion.div>
         
         {/* Team Roster */}
