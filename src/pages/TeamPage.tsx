@@ -31,73 +31,133 @@ interface TeamChemistryDB {
 // Function to fetch team chemistry data
 const fetchTeamChemistry = async (teamId: string): Promise<TeamChemistryData | null> => {
   try {
+    // Add authentication state logging
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('[fetchTeamChemistry] Authentication state:', session?.user?.email ? `Authenticated as ${session.user.email}` : 'Not authenticated');
+    console.log('[fetchTeamChemistry] Authentication state:', 
+      session?.user?.email ? `Authenticated as ${session.user.email}` : 'Not authenticated');
     
     console.log('[fetchTeamChemistry] Fetching chemistry for team ID:', teamId);
     
-    // Unified approach for all leagues - use team_chemistry table with RLS handling
+    // Unified approach for all leagues - use team_chemistry table
     const { data, error } = await supabase
       .from('team_chemistry')
       .select('*')
       .eq('team_id', teamId)
       .maybeSingle<TeamChemistryDB>();
-    
-    if (error) {
-      console.error('[fetchTeamChemistry] Query error:', error);
-      // If 403 error, log RLS issue and return null or default only if unauthenticated
-      if (error.code === 'PGRST116' || error.status === 403) {  // Handle RLS forbidden error
-        console.error('[fetchTeamChemistry] RLS permission denied - check policies for authenticated users');
-        if (session?.user) {
-          return null;  // Do not return defaults for authenticated users; let the component handle the error
-        }
-      }
-      return null;
-    }
-    
-    if (data) {
-      console.log('[fetchTeamChemistry] Found chemistry data');
+
+    if (data && !error) {
+      console.log('[fetchTeamChemistry] Found chemistry data in team_chemistry table');
+      
+      // Parse elements from JSON if it's a string
       let elements: Record<string, any> = {};
       try {
-        const elementsData = typeof data.elements === 'string' ? JSON.parse(data.elements) : data.elements || {};
+        const elementsData = typeof data.elements === 'string' 
+          ? JSON.parse(data.elements)
+          : data.elements || {};
+        
+        // Ensure we have all required fields with defaults
         elements = {
           fire: typeof elementsData.fire === 'number' ? elementsData.fire : 25,
           earth: typeof elementsData.earth === 'number' ? elementsData.earth : 25,
           air: typeof elementsData.air === 'number' ? elementsData.air : 25,
           water: typeof elementsData.water === 'number' ? elementsData.water : 25,
           balance: typeof elementsData.balance === 'number' ? elementsData.balance : 50,
-          ...elementsData
+          ...elementsData // Spread any additional properties
         };
       } catch (e) {
         console.error('[fetchTeamChemistry] Error parsing elements JSON:', e);
-        elements = { fire: 25, earth: 25, air: 25, water: 25, balance: 50 };
+        elements = {
+          fire: 25,
+          earth: 25,
+          air: 25,
+          water: 25,
+          balance: 50
+        };
       }
+      
       return {
         score: data.score || 50,
         elements: {
-          fire: elements.fire,
-          earth: elements.earth,
-          air: elements.air,
-          water: elements.water,
-          balance: elements.balance
+          fire: elements.fire || 25,
+          earth: elements.earth || 25,
+          air: elements.air || 25,
+          water: elements.water || 25,
+          balance: elements.balance || 50
         },
         aspects: {
-          harmonyScore: data.aspects?.harmonyScore || 50,
-          challengeScore: data.aspects?.challengeScore || 20,
-          netHarmony: data.aspects?.netHarmony || 50
+          harmonyScore: 50,
+          challengeScore: 20,
+          netHarmony: 50
         },
-        calculatedAt: data.calculated_at || new Date().toISOString()
+        calculatedAt: data.last_updated || new Date().toISOString()
       };
     }
-    
-    // Remove NBA-specific fallback to ensure consistency; handle in a separate function if needed
-    console.log('[fetchTeamChemistry] No chemistry data found in team_chemistry');
+
+    if (error) {
+      console.error('[fetchTeamChemistry] Team chemistry query error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+    }
+
+    // Special handling only for NBA teams
+    if (teamId && isUUID(teamId)) {
+      console.log('[fetchTeamChemistry] Using NBA-specific fallback');
+      // First try to get from nba_teams
+      const { data: nbaTeamData, error: nbaTeamError } = await supabase
+        .from('nba_teams')
+        .select('chemistry_score, elemental_balance, last_astro_update')
+        .eq('id', teamId)
+        .single();
+
+      if (!nbaTeamError && nbaTeamData) {
+        console.log('[fetchTeamChemistry] Found chemistry data in nba_teams');
+        const elementalBalance = typeof nbaTeamData.elemental_balance === 'string' 
+          ? JSON.parse(nbaTeamData.elemental_balance) 
+          : nbaTeamData.elemental_balance;
+        
+        return {
+          score: nbaTeamData.chemistry_score || 50,
+          elements: {
+            fire: elementalBalance?.fire || 25,
+            earth: elementalBalance?.earth || 25,
+            air: elementalBalance?.air || 25,
+            water: elementalBalance?.water || 25,
+            balance: elementalBalance?.balance || 50
+          },
+          aspects: {
+            harmonyScore: 50,
+            challengeScore: 20,
+            netHarmony: 50
+          },
+          calculatedAt: nbaTeamData.last_astro_update || new Date().toISOString()
+        };
+      }
+    }
+
+    console.log('[fetchTeamChemistry] No chemistry data found');
     return null;
   } catch (error) {
     console.error('[fetchTeamChemistry] Unhandled error:', error);
     return null;
   }
 };
+import { motion } from 'framer-motion';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { AlertCircle, ChevronLeft, Calendar as CalendarIcon, Check, Info, MapPin as MapPinIcon, PlusSquare, ShieldCheck, Sparkles, Star, TrendingUp, Trophy, Users, Zap } from 'lucide-react';
+import PlayerCardNew from '@/components/PlayerCardNew';
+import { toast } from '../components/ui/use-toast';
+import TeamRoster from '../components/TeamRoster';
+import { GameCarousel } from '../components/games/GameCarousel';
+import { getTeamColorStyles } from '@/utils/teamColors';
+import { Card, CardContent } from '../components/ui/card';
+import { Skeleton } from '../components/ui/skeleton';
+import { TeamChemistryMeter } from '@/components/TeamChemistryMeter';
+import { calculateImpactScore } from '../utils/calculateImpactScore';
 
 // Type for ElementalBalance to match TeamChemistryData
 interface ElementalBalance {
@@ -491,6 +551,7 @@ const TeamPage = () => {
               
             if (exactMatch && !exactError) {
               console.log('[TeamPage] Found exact slug match:', exactMatch);
+              console.log('Fetched team data:', exactMatch);
               setTeam(exactMatch);
               
               // Fetch chemistry data for MLB/other leagues
@@ -615,6 +676,7 @@ const TeamPage = () => {
         }
 
         console.log('[TeamPage] Fallback team data:', teamData);
+        console.log('Fetched team data:', teamData);
         setTeam(teamData);
 
         // Fetch chemistry data for MLB/other leagues using the main fetchTeamChemistry function
@@ -640,7 +702,6 @@ const TeamPage = () => {
             setChemistry({
               score: 50,
               elements: { fire: 25, earth: 25, air: 25, water: 25, balance: 50 },
-              aspects: { harmonyScore: 50, challengeScore: 20, netHarmony: 50 },
               calculatedAt: new Date().toISOString()
             });
           }
@@ -1079,37 +1140,122 @@ const TeamPage = () => {
     return 'Capricorn';
   }
 
+  // Function to fetch upcoming games for a team
+  const fetchUpcomingGames = async (teamId: string) => {
+    try {
+      // First, get the basic game data
+      const { data: games, error } = await supabase
+        .from('games')
+        .select('*')
+        .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+        .gte('game_date', new Date().toISOString())
+        .order('game_date', { ascending: true })
+        .limit(5);
+
+      if (error) throw error;
+      
+      if (!games || games.length === 0) return;
+
+      // Then, get the team data for the home and away teams
+      const teamIds = new Set<string>();
+      games.forEach(game => {
+        if (game.home_team_id) teamIds.add(game.home_team_id);
+        if (game.away_team_id) teamIds.add(game.away_team_id);
+      });
+
+      const { data: teams, error: teamError } = await supabase
+        .from('teams')
+        .select('*')
+        .in('id', Array.from(teamIds));
+
+      if (teamError) throw teamError;
+
+      const teamMap = new Map(teams?.map(team => [team.id, team]) || []);
+
+      // Format the games with team data
+      const formattedGames = games.map(game => {
+        const homeTeam = teamMap.get(game.home_team_id) || null;
+        const awayTeam = teamMap.get(game.away_team_id) || null;
+        
+        return {
+          ...game,
+          id: game.id.toString(),
+          home_team_id: game.home_team_id?.toString() || '',
+          away_team_id: game.away_team_id?.toString() || '',
+          league_id: game.league_id?.toString() || '',
+          venue_id: game.venue_id?.toString() || '',
+          home_team: homeTeam,
+          away_team: awayTeam,
+          venue: game.venue_id ? {
+            id: game.venue_id.toString(),
+            name: null,
+            city: null
+          } : null
+        };
+      });
+      
+      setUpcomingGames(formattedGames as unknown as Game[]);
+    } catch (error) {
+      console.error('Error fetching upcoming games:', error);
+    }
+  };
+
   // Function to generate Open Graph meta tags
   const renderMetaTags = () => {
     if (!team) return null;
     
-    const currentUrl = window.location.href;
-    const title = `${team.name} | Astro Score: ${team.astroScore}`;
-    const description = `${team.name}'s Astro Score: ${team.astroScore}. Discover their performance insights and predictions.`;
-    const imageUrl = `${window.location.origin}/api/team-og-image?teamId=${team.id}`;
-    
-    return (
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={`Discover ${team.name}'s performance insights and predictions with our Astro Score technology.`} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:image:width" content="300" />
-        <meta property="og:image:height" content="300" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={currentUrl} />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={`${team.name}'s performance insights and predictions`} />
-        <meta name="twitter:image" content={imageUrl} />
-      </Helmet>
-    );
+    try {
+      // Use the team's abbreviation for a clean URL
+      const teamAbbr = (team.abbreviation || team.id || '').toLowerCase();
+      const teamPageUrl = `${window.location.origin}/teams/${teamAbbr}`;
+      
+      const astroScore = team.astro_score || 0;
+      const teamName = team.name || 'Team';
+      const title = `${teamName} | Astro Score: ${astroScore}/100 | Full Moon Odds`;
+      const description = `Discover ${teamName}'s Astro Score: ${astroScore}/100 and see how the stars align for their performance!`;
+      
+      // Use the team logo directly if available, otherwise fall back to the OG image generator
+      let logoUrl = '';
+      if (team.logo_url) {
+        logoUrl = team.logo_url.startsWith('http') ? team.logo_url : `${window.location.origin}${team.logo_url}`;
+      } else {
+        logoUrl = `${window.location.origin}/team-logos/${teamAbbr}.png`;
+      }
+      
+      // Ensure image URL is absolute
+      const imageUrl = logoUrl.startsWith('http') ? logoUrl : `${window.location.origin}${logoUrl}`;
+      
+      return (
+        <Helmet>
+          <title>{title}</title>
+          <meta name="description" content={description} />
+          
+          {/* Open Graph / Facebook */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Full Moon Odds" />
+          <meta property="og:url" content={teamPageUrl} />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          <meta property="og:image" content={imageUrl} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={`${teamName} Astro Score: ${astroScore}/100`} />
+          
+          {/* Twitter */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:site" content="@fullmoonodds" />
+          <meta name="twitter:creator" content="@fullmoonodds" />
+          <meta name="twitter:url" content={teamPageUrl} />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={description} />
+          <meta name="twitter:image" content={imageUrl} />
+          <meta name="twitter:image:alt" content={`${teamName} logo with Astro Score: ${astroScore}/100`} />
+        </Helmet>
+      );
+    } catch (error) {
+      console.error('Error generating meta tags:', error);
+      return null;
+    }
   };
 
   // Loading state
@@ -1169,19 +1315,30 @@ const TeamPage = () => {
 
   const teamColors = getTeamColorStyles(team);
 
-  const teamShareData = {
-    id: team?.id,
-    name: team?.name,
-    logo: team?.logo_url || '',
-    astroScore: team?.astro_score || 0,
-    leagueSlug: team?.league_id,
-    teamSlug: team?.abbreviation
-  };
+  // Prepare data for sharing with astro_score
+  const teamShareData = team ? {
+    id: team.id,
+    name: team.name,
+    logo: team.logo_url || '',
+    astro_score: team.astro_score || 0, // Ensure astro_score is included
+    leagueSlug: team.league?.sport || 'mlb',
+    teamSlug: team.slug || team.id,
+  } : null;
+  
+  console.log('Team Share Data:', {
+    ...teamShareData,
+    // Don't log the entire chemistry object to avoid console spam
+    chemistryScore: chemistry?.score
+  });
 
   return (
     <div 
       className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8"
-      style={{ background: teamColors.gradientBg }}
+      style={{
+        '--primary-color': teamColors.primary,
+        '--secondary-color': teamColors.secondary,
+        '--text-color': teamColors.text
+      } as React.CSSProperties}
     >
       {renderMetaTags()}
       <div className="container pb-12 pt-0 px-4 md:px-6 mx-auto">
@@ -1339,19 +1496,111 @@ const TeamPage = () => {
                     </ol>
                   </div>
                 </div>
-              )}
             </div>
+          )}
+        </div>
+        
+        <div className="text-center md:text-left flex-1">
+          <div className="flex flex-row items-start justify-center md:justify-start space-x-3 mb-3.5">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">{team?.name}</h1>
+              <p className="text-slate-500 text-sm">
+                {team?.city} • {team?.venue || 'Venue N/A'}
+              </p>
+            </div>
+            {team?.league?.name && (
+              <Badge 
+                variant="outline"
+                className="text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 mt-2"
+                style={{ borderColor: teamColors.secondary, color: teamColors.primary }}
+              >
+                {team.league.name}
+              </Badge>
+            )}
+          </div>
+        
+
+
+      </div>
+    </motion.div>
+    
+    {/* Top Floating Share Button */}
+    <div className="fixed top-40 right-8 z-50">
+      <div className="backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 rounded-lg p-2 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/70 transition-shadow">
+        <TeamShareButton team={teamShareData} />
+      </div>
+    </div>
+    
+    {/* Top Players */}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="-mt-1.5 mb-8 md:mb-12"
+    >
+      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+        <Star className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
+        Top Players
+      </h2>
+      <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-4 md:space-x-0 md:mx-0 md:px-0 md:grid md:gap-4 md:grid-cols-2 lg:grid-cols-4 md:justify-items-center md:overflow-visible">
+        {topPlayers.length > 0 ? topPlayers.slice(0, 4).map(player => {
+          // Calculate team average astro influence for the glow effect
+          const teamAverageAstroInfluence = players.length > 0 
+            ? players.reduce((sum, p) => sum + (p.astro_influence || 0), 0) / players.length 
+            : 0;
             
-            {/* Additional Insights - Now in a row below */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 p-4 md:p-6 border-t border-slate-100 mt-6 md:mt-8">
-              <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100">
+          return (
+            <PlayerCardNew
+              key={player.id}
+              id={player.id}
+              player_id={player.player_id}
+              full_name={player.full_name}
+              headshot_url={player.headshot_url || undefined}
+              birth_date={player.birth_date || undefined}
+              primary_number={player.number?.toString() || undefined}
+              primary_position={player.position || undefined}
+              impact_score={player.impact_score || 0}
+              astro_influence={player.astro_influence || 0}
+              teamAverageAstroInfluence={teamAverageAstroInfluence}
+              linkPath={team?.league_id === 'nba' 
+                ? `/nba/players/${player.id}`
+                : `/teams/${teamId}/players/${player.id}`
+              }
+            />
+          );
+        }) : (
+          <p className="col-span-full text-slate-500 text-center py-10">No player data available</p>
+        )}
+      </div>
+    </motion.div>
+    
+    {/* Team Insights */}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="mb-8 md:mb-12"
+    >
+      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+        <Info className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: teamColors.primary }} />
+        Team Insights
+      </h2>
+      
+      <Card className="bg-white w-full">
+        <CardContent className="p-0">
+          {/* Team Chemistry Meter - Full Width */}
+          <div className="w-full border rounded-lg overflow-hidden">
+            {chemistry ? (
+              <div className="p-4 bg-white">
                 <h3 className="font-semibold text-lg mb-4 text-slate-800 flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
-                  Season Performance
+                  <Zap className="h-5 w-5 mr-2 text-amber-500" />
+                  Team Chemistry
                 </h3>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center bg-blue-100 bg-opacity-50 border-2 border-blue-200 mr-4">
-                    <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <TeamChemistryMeter 
+                    chemistry={chemistry} 
+                    className="w-full" 
+                  />
                   </div>
                   <div>
                     <p className="text-2xl md:text-3xl font-bold">{Math.floor(Math.random() * 30) + 50}%</p>

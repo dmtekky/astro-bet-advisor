@@ -57,6 +57,14 @@ interface Elements {
   dominantElement?: string;
 }
 
+interface ElementalBalance {
+  fire?: number | { percentage: number };
+  earth?: number | { percentage: number };
+  air?: number | { percentage: number };
+  water?: number | { percentage: number };
+  dominantElement?: string;
+}
+
 interface Modality {
   percentage?: number;
   value?: number;
@@ -85,11 +93,12 @@ interface Aspect {
 }
 
 interface AstroData {
-  elements?: Elements;
-  modalities?: Modalities;
+  elements?: Elements | Record<string, any>;
+  modalities?: Modalities | Record<string, any>;
   dominantPlanets?: DominantPlanets | DominantPlanet[];
   moonPhase?: number | { value: number };
-  aspects?: Aspect[];
+  value: number;
+  aspects?: Array<Aspect | { pair: string; type: string | null }>;
 }
 
 interface Player {
@@ -242,21 +251,36 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
     const seasonFactor = 0.25; // Base season factor
     
     // Calculate moon phase score
-    // Assumption: moonPhase is a value between 0 and 1
+    let moonPhaseValue = 0;
+    let moonPhaseAdjusted = 0;
+    
+    if (astroData.moonPhase !== undefined) {
+      moonPhaseValue = typeof astroData.moonPhase === 'number' 
+        ? astroData.moonPhase 
+        : (astroData.moonPhase as any)?.value || 0;
+        
+      // Adjust moon phase based on season
+      moonPhaseAdjusted = moonPhaseValue * (1 + seasonFactor);
     }
-    // Defensive fallback if not available
-    if (isNaN(moonPhaseValue)) moonPhaseValue = 0;
-    if (isNaN(moonPhaseAdjusted)) moonPhaseAdjusted = 0;
 
     // Calculate elemental score
     let elementalScore = 0;
     
     // Defensive extraction for elemental balance
-    const elements = (astroData.elements && typeof astroData.elements === 'object') ? astroData.elements : {};
-    const fireValue = (typeof elements.fire === 'object' && elements.fire && typeof elements.fire.percentage === 'number') ? elements.fire.percentage : 0;
-    const earthValue = (typeof elements.earth === 'object' && elements.earth && typeof elements.earth.percentage === 'number') ? elements.earth.percentage : 0;
-    const airValue = (typeof elements.air === 'object' && elements.air && typeof elements.air.percentage === 'number') ? elements.air.percentage : 0;
-    const waterValue = (typeof elements.water === 'object' && elements.water && typeof elements.water.percentage === 'number') ? elements.water.percentage : 0;
+    const elements = (astroData.elements && typeof astroData.elements === 'object') 
+      ? astroData.elements 
+      : {} as Record<string, any>;
+    const getElementValue = (element: any): number => {
+      if (element && typeof element === 'object' && 'percentage' in element) {
+        return Number(element.percentage) || 0;
+      }
+      return 0;
+    };
+    
+    const fireValue = getElementValue(elements.fire);
+    const earthValue = getElementValue(elements.earth);
+    const airValue = getElementValue(elements.air);
+    const waterValue = getElementValue(elements.water);
 
     // Convert to array of element values with seasonal weights
     const elementalScores = [
@@ -268,12 +292,31 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
 
     // Get dominant element
     let dominantElement: string | undefined;
-    if (typeof elements.dominantElement === 'string') {
-      dominantElement = elements.dominantElement.toLowerCase();
-    } else if (Array.isArray(elements) && elements.length > 0) {
-      // If elements is an array, get the highest valued one
-      const maxElement = [...elementalScores].sort((a, b) => b.value - a.value)[0];
-      dominantElement = maxElement.element;
+    
+    // Safely access dominantElement from elements object
+    if (elements && typeof elements === 'object') {
+      const elementsRecord = elements as Record<string, any>;
+      if (elementsRecord.dominantElement && typeof elementsRecord.dominantElement === 'string') {
+        dominantElement = elementsRecord.dominantElement.toLowerCase();
+      } else if (Array.isArray(elements)) {
+        // If elements is an array, get the highest valued one
+        const sorted = elements
+          .filter((el): el is { element: string; value: number } => 
+            el && typeof el === 'object' && 'element' in el && 'value' in el
+          )
+          .sort((a, b) => (b.value || 0) - (a.value || 0));
+        dominantElement = sorted[0]?.element?.toLowerCase();
+      } else if ('fire' in elements || 'earth' in elements || 'air' in elements || 'water' in elements) {
+        // Handle object with element values
+        const elementValues = [
+          { element: 'fire', value: getElementValue(elements.fire) },
+          { element: 'earth', value: getElementValue(elements.earth) },
+          { element: 'air', value: getElementValue(elements.air) },
+          { element: 'water', value: getElementValue(elements.water) }
+        ];
+        const sorted = elementValues.sort((a, b) => (b.value || 0) - (a.value || 0));
+        dominantElement = sorted[0]?.element;
+      }
     }
     
     if (dominantElement) {
@@ -283,21 +326,25 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
       }
     }
         
-        if (elementalScore === 0) {
-          // Fallback if no dominant element
-          elementalScore = Math.max(...elementalScores.map(e => (e.value / 100) * e.power));
-        }
-      }
+    if (elementalScore === 0) {
+      // Fallback if no dominant element
+      elementalScore = Math.max(...elementalScores.map(e => (e.value / 100) * e.power));
     }
     
     // Calculate modal score
     let modalScore = 0;
     if (astroData.modalities && typeof astroData.modalities === 'object') {
-      const modalities = astroData.modalities;
+      const modalities: Record<string, any> = astroData.modalities;
       // Defensive extraction for modalities
-      const cardinalValue = (typeof modalities.cardinal === 'object' && modalities.cardinal && typeof modalities.cardinal.percentage === 'number') ? modalities.cardinal.percentage : 0;
-      const fixedValue = (typeof modalities.fixed === 'object' && modalities.fixed && typeof modalities.fixed.percentage === 'number') ? modalities.fixed.percentage : 0;
-      const mutableValue = (typeof modalities.mutable === 'object' && modalities.mutable && typeof modalities.mutable.percentage === 'number') ? modalities.mutable.percentage : 0;
+      const cardinalValue = (modalities.cardinal && typeof modalities.cardinal === 'object' && 'percentage' in modalities.cardinal) 
+        ? Number(modalities.cardinal.percentage) || 0 
+        : 0;
+      const fixedValue = (modalities.fixed && typeof modalities.fixed === 'object' && 'percentage' in modalities.fixed) 
+        ? Number(modalities.fixed.percentage) || 0 
+        : 0;
+      const mutableValue = (modalities.mutable && typeof modalities.mutable === 'object' && 'percentage' in modalities.mutable) 
+        ? Number(modalities.mutable.percentage) || 0 
+        : 0;
       // Modality scores with seasonal weights
       modalScore = Math.max(
         (cardinalValue / 100) * seasonalWeights.modalities.cardinal,
@@ -359,19 +406,23 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
       const aspectCycle = (dayOfYear % 30) / 30; // 0-1 value that cycles every month
       const dynamicAspectMultiplier = 0.8 + (Math.sin(aspectCycle * Math.PI * 2) * 0.2); // 0.8-1.0 multiplier
       
-      // Calculate total aspect bonus with dynamic weighting
+      // Calculate aspect bonus with dynamic weighting
       const aspectBonus = (astroData.aspects || []).reduce((total, aspect) => {
-        if (!aspect?.type) return total;
-        const baseScore = ASPECT_SCORES[aspect.type.toLowerCase()] || 1;
+        if (!aspect) return total;
+        
+        // Handle different aspect types
+        let baseScore = 1;
+        if (typeof aspect === 'object' && 'type' in aspect && aspect.type) {
+          const aspectType = typeof aspect.type === 'string' ? aspect.type.toLowerCase() : '';
+          baseScore = ASPECT_SCORES[aspectType] || 1;
+        }
         
         // Safely handle orb value
         let orbValue = 0;
-        if (aspect.orb !== undefined) {
-          // Direct orb value
+        if (aspect && typeof aspect === 'object' && 'orb' in aspect) {
           orbValue = typeof aspect.orb === 'number' ? aspect.orb : 0;
-        } else if (typeof aspect === 'object') {
-          // Try to find orb in the aspect object
-          orbValue = (aspect as any).orbValue || 0;
+        } else if (aspect && typeof aspect === 'object' && 'orbValue' in aspect) {
+          orbValue = typeof (aspect as any).orbValue === 'number' ? (aspect as any).orbValue : 0;
         }
         
         // Apply orb penalty (closer to exact = stronger)
@@ -449,12 +500,12 @@ export async function calculateAstroInfluenceScore(player: any, currentDate?: Da
     }
     
     // Final score with all bonuses
-    let finalScore = Math.max(0, Math.min(100, combinedScore + universalBoost + moonBonus));
+    const finalScore = Math.max(0, Math.min(100, combinedScore + universalBoost + moonBonus));
     
     return finalScore;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error calculating astro influence score:', error);
-    return 50; // Return a neutral score on error
+    return 0; // Return a neutral score on error
   }
 }
 

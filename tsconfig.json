@@ -8,6 +8,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "incremental": true,
     "downlevelIteration": true,
     "baseUrl": ".",
@@ -20,13 +21,13 @@
     },
     "strict": true,
     "noImplicitAny": false,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "allowJs": true,
-    "types": ["vite/client", "node"],
+    "types": ["vite/client", "node", "@types/react", "@types/react-dom"],
     "noEmit": true
   },
   "include": [
@@ -35,9 +36,5 @@
     "src/**/*.tsx",
     "src/**/*.d.ts"
   ],
-  "exclude": ["node_modules"],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "exclude": ["node_modules"]
 }
