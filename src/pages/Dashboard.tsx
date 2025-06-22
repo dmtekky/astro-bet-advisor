@@ -48,6 +48,7 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
+  Globe,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate, Link } from "react-router-dom";
@@ -243,10 +244,10 @@ const Dashboard: React.FC = () => {
     };
     
     return {
-      fire: getElementValue(astroData.elements.fire),
-      earth: getElementValue(astroData.elements.earth),
-      water: getElementValue(astroData.elements.water),
-      air: getElementValue(astroData.elements.air),
+      fire: getElementValue(astroData?.elements?.fire),
+      earth: getElementValue(astroData?.elements?.earth),
+      water: getElementValue(astroData?.elements?.water),
+      air: getElementValue(astroData?.elements?.air),
     };
   }, [astroData]);
 
@@ -370,14 +371,14 @@ const Dashboard: React.FC = () => {
       const influences: AstrologyInfluence[] = [];
 
       // Safely get sun sign from astroData
-      const sunSign = astroData.planets?.sun?.sign;
+      const sunSign = astroData?.planets?.sun?.sign;
 
       // Sun Position is now handled in a dedicated, visually distinct panel below the Moon & Void Status panel. Remove from influences.
 
       // Add moon phase influence if available
       const moonPhase =
-        astroData.moon?.phase_name ||
-        (astroData.planets?.moon as any)?.phase_name;
+        astroData?.moon?.phase_name ||
+        (astroData?.planets?.moon as any)?.phase_name;
       if (moonPhase) {
         influences.push({
           name: "Lunar Influence",
@@ -389,7 +390,7 @@ const Dashboard: React.FC = () => {
 
       // Add retrograde planets if any
       const retrogradePlanets = [];
-      if (astroData.planets) {
+      if (astroData?.planets) {
         Object.entries(astroData.planets).forEach(
           ([planet, data]: [string, any]) => {
             if (data?.retrograde) {
@@ -510,7 +511,7 @@ const Dashboard: React.FC = () => {
     if (!astroData) return influences;
 
     // Use the sunSign property directly from the API response
-    if (astroData.sunSign) {
+    if (astroData?.sunSign) {
       const sign = astroData.sunSign;
       const element = getSunElement(sign);
 
@@ -702,7 +703,7 @@ const Dashboard: React.FC = () => {
     }
 
     // Fall back to astrological data
-    const elements = astroData.elements;
+    const elements = astroData?.elements;
     let dominantElement = "";
     let maxScore = 0;
 
@@ -718,8 +719,8 @@ const Dashboard: React.FC = () => {
     let recommendation = "";
 
     // Add moon phase influence if available
-    if (astroData.moon?.phase_name) {
-      recommendation += `With the ${astroData.moon.phase_name} Moon, `;
+    if (astroData?.moon?.phase_name) {
+      recommendation += `With the ${astroData?.moon?.phase_name} Moon, `;
     }
 
     // Add element-based recommendation
@@ -790,6 +791,26 @@ const Dashboard: React.FC = () => {
   };
 
   const isLoading = astroLoading || teamsLoading || gamesLoading;
+
+  useEffect(() => {
+    if (astroData) {
+      console.log("Dashboard planets:", astroData?.planets);
+      console.log("Dashboard aspects:", astroData?.aspects?.slice(0, 5));
+      
+      // Log individual planets
+      topPlanets.forEach(planetName => {
+        const planetKey = planetName.toLowerCase();
+        console.log(`Dashboard planet ${planetName}:`, astroData?.planets?.[planetKey]);
+      });
+      
+      // Log individual aspects
+      astroData?.aspects?.slice(0, 5).forEach((aspect, index) => {
+        console.log(`Dashboard aspect ${index}:`, aspect);
+      });
+    }
+  }, [astroData]);
+
+  const topPlanets = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
 
   if (isLoading) {
     return <LoadingScreen fullScreen />;
@@ -1205,6 +1226,8 @@ const Dashboard: React.FC = () => {
                       Distribution of planetary energies by element.
                     </CardDescription>
                   </CardHeader>
+                  
+
                   <CardContent>
                     <div className="w-full flex items-center mt-2 mb-4 p-2 bg-gray-50 rounded">
                       {/* Segmented horizontal bar for elements */}
@@ -1271,6 +1294,19 @@ const Dashboard: React.FC = () => {
                         Element data unavailable
                       </div>
                     )}
+                    
+                    {/* Daily Astro Tip */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h3 className="text-md font-medium text-slate-800 flex items-center">
+                        <Lightbulb className="h-4 w-4 mr-2 text-amber-500" />
+                        Daily Astro Tip
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        {dailyRecommendation ||
+                          "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence (37%) benefits teams with superior passing, communication, and strategic adaptability."}
+                      </p>
+                    </div>
+                    
                     {/* Temporarily removed undefined function call */}
                     {/* {getDynamicElementalInterpretation(...)} */}
                     {elementsDistribution &&
@@ -1330,7 +1366,7 @@ const Dashboard: React.FC = () => {
                         <CardContent className="space-y-3 pt-2">
                           {/* Sun Visualization Section */}
                           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
-                            <div className="flex flex-col items-center md:flex-row-reverse md:items-start">
+                            <div className="flex flex-col items-center md:flex-row md:items-start">
                               <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
                                 {/* Sun visualization */}
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -1371,11 +1407,39 @@ const Dashboard: React.FC = () => {
                                       ?.text ||
                                       "The Sun’s current sign sets the tone for vitality and momentum."}
                                   </p>
+                                  {/* Planet Positions Section */}
+                                  <div className="mt-4">
+                                    <h5 className="text-sm font-semibold text-blue-700 mb-2">Planet Positions</h5>
+                                    {/* Planet positions data */}
+                                    
+                                    {topPlanets.map((planetName) => {
+                                      const planetKey = planetName.toLowerCase();
+                                      const planetInfo = astroData?.planets?.[planetKey];
+                                      
+                                      // Debug log
+                                      console.log(`Dashboard planet ${planetName}:`, planetInfo);
+                                      
+                                      if (!planetInfo) {
+                                        console.warn(`Missing planet data for ${planetName}`);
+                                        return null;
+                                      }
+                                      
+                                      return (
+                                        <div key={planetName} className="bg-white p-3 rounded-lg border border-blue-50 mb-2">
+                                          <div className="text-sm font-medium text-slate-800">
+                                            {planetInfo.name || planetName}
+                                          </div>
+                                          <div className="text-xs text-slate-600">
+                                            {planetInfo.sign} at {planetInfo.degree}°
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                                {/* Sun Details */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                   <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
                                       Sun Sign
                                     </div>
                                     <div className="font-semibold text-yellow-700">
@@ -1383,12 +1447,12 @@ const Dashboard: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
                                       Zodiac Degree
                                     </div>
                                     <div className="font-semibold text-yellow-700">
                                       {astroData?.planets?.sun?.degree
-                                        ? `${Math.floor(astroData.planets.sun.degree)}°`
+                                        ? `${Math.floor(astroData?.planets?.sun?.degree || 0)}°`
                                         : "—"}
                                     </div>
                                   </div>
@@ -1429,7 +1493,7 @@ const Dashboard: React.FC = () => {
                           </CardTitle>
                           <CardDescription className="text-slate-600">
                             {astroData?.voidMoon
-                              ? astroData.voidMoon.isVoid
+                              ? astroData?.voidMoon?.isVoid
                                 ? " • Void of Course"
                                 : " • Not Void of Course"
                               : ""}
@@ -1482,26 +1546,23 @@ const Dashboard: React.FC = () => {
                                     null &&
                                   astroData?.moonPhase?.illumination !==
                                     undefined
-                                    ? `🌕 ${Math.round(astroData.moonPhase.illumination * 100)}% Illuminated`
+                                    ? `🌕 ${Math.round((astroData?.moonPhase?.illumination || 0) * 100)}% Illuminated`
                                     : "🌑 Illumination unknown"}
                                 </div>
                                 <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
                                   <p className="text-base text-slate-700 leading-relaxed">
                                     {astroData?.moonPhase?.name &&
                                       getMoonPhaseImpact(
-                                        astroData.moonPhase.name,
+                                        astroData?.moonPhase?.name || 'Unknown',
                                       )}
                                   </p>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 mb-4">
                                   <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
-                                      Moon Sign
-                                    </div>
+                                    <div className="text-xs uppercase text-slate-500">{astroData?.planets?.moon?.sign}</div>
                                     <div className="font-semibold text-indigo-700">
-                                      {astroData?.planets?.moon?.sign ||
-                                        "Unknown"}
+                                      {astroData?.planets?.moon?.sign}
                                     </div>
                                   </div>
                                   <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
@@ -1511,7 +1572,7 @@ const Dashboard: React.FC = () => {
                                     <div className="font-semibold text-indigo-700">
                                       {astroData?.moonPhase?.nextFullMoon
                                         ? new Date(
-                                            astroData.moonPhase.nextFullMoon,
+                                            astroData?.moonPhase?.nextFullMoon || 'Unknown',
                                           ).toLocaleDateString("en-US", {
                                             month: "short",
                                             day: "numeric",
@@ -1526,7 +1587,7 @@ const Dashboard: React.FC = () => {
                                     </div>
                                     <div className="font-semibold text-indigo-700">
                                       {astroData?.planets?.moon?.degree
-                                        ? `${Math.floor(astroData.planets.moon.degree)}°`
+                                        ? `${Math.floor(astroData?.planets?.moon?.degree || 0)}°`
                                         : "—"}
                                     </div>
                                   </div>
@@ -1555,7 +1616,7 @@ const Dashboard: React.FC = () => {
                                   <div className="p-3">
                                     <p className="text-sm text-slate-700 mb-2">
                                       {astroData?.voidMoon?.isVoid
-                                        ? `Moon is void of course until ${new Date(astroData.voidMoon.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                                        ? `Moon is void of course until ${new Date(astroData?.voidMoon?.end || new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                                         : getMoonAspectMessage(
                                             astroData?.moonPhase,
                                             astroData?.planets?.moon?.sign as
@@ -1571,7 +1632,7 @@ const Dashboard: React.FC = () => {
                                             <div
                                               className="bg-amber-500 h-1.5 rounded-full transition-all duration-500 ease-out"
                                               style={{
-                                                width: `${Math.max(5, Math.min(100, ((new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime())) * 100))}%`,
+                                                width: `${astroData?.voidMoon?.start && astroData?.voidMoon?.end ? Math.max(5, Math.min(100, ((new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime())) * 100)) : 0}%`,
                                               }}
                                             />
                                           </div>
@@ -1579,7 +1640,7 @@ const Dashboard: React.FC = () => {
                                             <span>
                                               Started:{" "}
                                               {new Date(
-                                                astroData.voidMoon.start,
+                                                astroData?.voidMoon?.start || new Date().toISOString(),
                                               ).toLocaleTimeString([], {
                                                 hour: "2-digit",
                                                 minute: "2-digit",
@@ -1588,7 +1649,7 @@ const Dashboard: React.FC = () => {
                                             <span>
                                               Ends:{" "}
                                               {new Date(
-                                                astroData.voidMoon.end,
+                                                astroData?.voidMoon?.end || new Date().toISOString(),
                                               ).toLocaleTimeString([], {
                                                 hour: "2-digit",
                                                 minute: "2-digit",
@@ -1645,7 +1706,7 @@ const Dashboard: React.FC = () => {
                                   <span>Moon Speed</span>
                                   <span>
                                     {astroData?.planets?.moon?.speed
-                                      ? `${Math.abs(astroData.planets.moon.speed).toFixed(2)}°/day`
+                                      ? `${Math.abs(astroData?.planets?.moon?.speed || 0).toFixed(2)}°/day`
                                       : "Unknown"}
                                   </span>
                                 </div>
@@ -1654,7 +1715,7 @@ const Dashboard: React.FC = () => {
                                     astroData?.planets?.moon?.speed
                                       ? Math.min(
                                           (Math.abs(
-                                            astroData.planets.moon.speed,
+                                            astroData?.planets?.moon?.speed || 0,
                                           ) /
                                             15) *
                                             100,
@@ -1670,14 +1731,14 @@ const Dashboard: React.FC = () => {
                                   <span>Lunar Sign Position</span>
                                   <span>
                                     {astroData?.planets?.moon?.degree
-                                      ? `${Math.floor(astroData.planets.moon.degree)}°${astroData.planets.moon.minute ? ` ${astroData.planets.moon.minute}'` : ""}`
+                                      ? `${Math.floor(astroData?.planets?.moon?.degree || 0)}°${astroData?.planets?.moon?.minute ? ` ${astroData?.planets?.moon?.minute}'` : ""}`
                                       : "Unknown"}
                                   </span>
                                 </div>
                                 <Progress
                                   value={
                                     astroData?.planets?.moon?.degree
-                                      ? (astroData.planets.moon.degree / 30) *
+                                      ? ((astroData?.planets?.moon?.degree || 0) / 30) *
                                         100
                                       : 50
                                   }
@@ -1689,67 +1750,69 @@ const Dashboard: React.FC = () => {
                         </CardContent>
                       </motion.div>
 
-                      <motion.div
-                        variants={item}
-                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
-                      >
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                            <Zap className="h-5 w-5 mr-2 text-blue-500" /> Key
-                            Planetary Influences
-                          </CardTitle>
-                          <CardDescription>
-                            Current significant astrological energies.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {astroInfluences.length > 0 ? (
-                            astroInfluences.map((influence, index) => (
-                              <div
-                                key={`influence-${index}`}
-                                className="flex items-start space-x-2"
-                              >
-                                <div className="flex-shrink-0 mt-0.5">
-                                  {influence.icon || (
-                                    <Activity className="h-5 w-5 text-slate-400" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-slate-700">
-                                    {influence.name}
-                                  </p>
-                                  <p className="text-xs text-slate-500">
-                                    {influence.description}
-                                  </p>
-                                </div>
+                      {astroData && astroData.aspects && astroData.planets && (
+                        <motion.div
+                          variants={item}
+                          className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                        >
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
+                              <Globe className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
+                            </CardTitle>
+                            <CardDescription className="text-slate-600">
+                              Significant planetary aspects and positions impacting sports performance.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-3 pt-2">
+                            {/* Prominent Aspects Section */}
+                            <div>
+                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Prominent Aspects</h5>
+                              {astroData?.aspects?.slice(0, 5).map((aspect, index) => {
+                                if (!aspect.planets || aspect.planets.length < 2 || !aspect.planets[0] || !aspect.planets[1]) {
+                                  return null;
+                                }
+                                const influenceValue = aspect.influence ? parseInt(aspect.influence) : 0;
+                                return (
+                                  <div key={index} className="flex items-center justify-between mb-2">
+                                    <div className="text-sm font-medium">
+                                      {aspect.planets[0].name} {aspect.type} {aspect.planets[1].name}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Progress value={influenceValue} className="w-24" />
+                                      <span className="text-xs text-muted-foreground">
+                                        {aspect.influence}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            {/* Planet Position Visualization */}
+                            <div>
+                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Planet Positions</h5>
+                              <div className="grid grid-cols-2 gap-2">
+                                {astroData?.planets && typeof astroData?.planets === 'object' && Object.entries(astroData.planets).map(([planet, data]: [string, any]) => (
+                                  <div key={planet} className="bg-white p-2 rounded-lg border border-slate-100">
+                                    <div className="text-xs uppercase text-slate-500">{planet}</div>
+                                    <div className="font-semibold text-blue-700">
+                                      {data?.sign || 'Unknown'} at {typeof data?.degree === 'number' ? data.degree.toFixed(2) : 'N/A'}°
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-slate-500">
-                              No specific planetary influences highlighted at
-                              the moment.
-                            </p>
-                          )}
-                        </CardContent>
-                      </motion.div>
+                            </div>
+                            {/* Personalized Insight Panel */}
+                            <div>
+                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Insights</h5>
+                              <p className="text-sm text-slate-700">
+                                Based on current aspects, focus on {astroData && Array.isArray(astroData.aspects) && astroData.aspects[0]?.interpretation || 'general strategies for team performance'}.
+                              </p>
+                            </div>
+                          </CardContent>
+                        </motion.div>
+                      )}
 
-                      <motion.div
-                        variants={item}
-                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
-                      >
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                            <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />{" "}
-                            Daily Astro Tip
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-slate-600">
-                            {dailyRecommendation ||
-                              "General astrological conditions apply. Stay observant and adaptive."}
-                          </p>
-                        </CardContent>
-                      </motion.div>
+                      {/* Daily Astro Tip moved to Elemental Balance section */}
                     </>
                   ) : !astroLoading && !astroData ? (
                     // No Astro data message

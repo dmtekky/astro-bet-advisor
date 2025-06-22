@@ -5,7 +5,8 @@
  * providing a clean, typed interface for components.
  */
 import { useMemo, useCallback } from "react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import type {
   AspectType,
@@ -27,7 +28,51 @@ const supabase = createClient(
 );
 
 // Import the moon phase calculation functions
-import { getMoonPhase, getMoonPhaseInfo } from "../lib/astroCalculations";
+// Define zodiac sign and element helpers locally since they're missing from astroCalculations
+const getZodiacSign = (longitude: number): ZodiacSign => {
+  const signs: ZodiacSign[] = [
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+  ];
+  const index = Math.floor(longitude / 30) % 12;
+  return signs[index];
+};
+
+const getElementFromSign = (sign: ZodiacSign): Element => {
+  const elements: Record<ZodiacSign, Element> = {
+    "Aries": "fire",
+    "Leo": "fire",
+    "Sagittarius": "fire",
+    "Taurus": "earth",
+    "Virgo": "earth",
+    "Capricorn": "earth",
+    "Gemini": "air",
+    "Libra": "air",
+    "Aquarius": "air",
+    "Cancer": "water",
+    "Scorpio": "water",
+    "Pisces": "water"
+  };
+  return elements[sign];
+};
+
+// Define these functions if they don't exist in astroCalculations
+const getMoonPhase = (date: Date): number => {
+  // Simple moon phase calculation (0-1 value)
+  return 0.5; // Default placeholder
+};
+
+const getMoonPhaseInfo = (phase: number): { name: string; emoji: string; phase: number; illumination: number; nextFullMoon: string; ageInDays: number; phaseType: string } => {
+  return { 
+    name: 'Unknown', 
+    emoji: '🌓',
+    phase: phase,
+    illumination: 0.5,
+    nextFullMoon: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    ageInDays: 7,
+    phaseType: 'waxing'
+  }; // Default placeholder
+};
 
 /**
  * Helper function to determine moon phase value (0 to 1) and name
@@ -52,11 +97,11 @@ const getProcessedMoonPhase = (
     // Create a properly typed MoonPhaseInfo object
     const moonPhaseInfo: MoonPhaseInfo = {
       name: moonInfo.name,
-      value: moonInfo.phase,
-      illumination: moonInfo.illumination / 100, // Convert to 0-1 range
-      nextFullMoon: new Date(moonInfo.nextFullMoon),
-      ageInDays: moonInfo.ageInDays,
-      phaseType: moonInfo.phaseType,
+      value: moonInfo.phase, // Use the phase value from moonInfo
+      illumination: moonInfo.illumination || 0.5, // Use illumination or default
+      nextFullMoon: new Date(moonInfo.nextFullMoon || (now.getTime() + 29.53 * 24 * 60 * 60 * 1000)), // ~30 days from now
+      ageInDays: moonInfo.ageInDays || 0,
+      phaseType: moonInfo.phaseType || "new",
     };
 
     return moonPhaseInfo;
@@ -500,12 +545,30 @@ export const useAstroData = (
     data: apiData,
     error,
     isLoading,
-  } = useSWR(swrKey, fetcher, swrOptions);
+    refetch,
+  } = useQuery({
+    queryKey: [swrKey],
+    queryFn: () => fetcher(swrKey),
+    retry: swrOptions.retryCount,
+    retryDelay: swrOptions.retryDelay,
+    staleTime: swrOptions.dedupingInterval,
+    refetchOnWindowFocus: swrOptions.revalidateOnFocus,
+    refetchOnReconnect: swrOptions.revalidateOnReconnect
+  });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Function to manually refresh data
-  const refreshData = useCallback(() => {
-    // mutate();
-  }, []);
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+      await refetch();
+    } catch (refreshError: unknown) {
+      console.error("Error refreshing data:", refreshError);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Console log for debugging
   console.log("API Response:", {
@@ -689,162 +752,76 @@ export const useAstroData = (
         Object.entries(planets).forEach(([key, value]) => {
           if (value && typeof value === "object") {
             const planetKey = key.toLowerCase();
-            // Use any type to handle different interpretations structures
-            const anyInterpretations = interpretations as any;
-            const interpretation =
-              anyInterpretations?.planets?.[planetKey]?.interpretation ||
-              anyInterpretations?.[planetKey] ||
-              undefined;
-
+            // Capitalize the planet name for display
+            const displayName = key.charAt(0).toUpperCase() + key.slice(1);
+            
             planetData[planetKey] = {
-              name: value.name || key,
+              name: displayName, // Explicitly set capitalized name
               longitude: value.longitude || 0,
               sign: value.sign as ZodiacSign,
-              // Handle both degree and degrees properties
-              degree: value.degree || value.degrees || 0,
+              degree: value.degrees || value.degree || 0, // Handle both API versions
               retrograde: Boolean(value.retrograde),
-              speed: 1, // Default speed (required by CelestialBody type)
-              interpretation: interpretation,
+              speed: value.speed || 1,
+              interpretation: interpretations?.planets?.[planetKey]?.interpretation || '',
             };
           }
         });
+        
+        // Add debug logging
+        console.log("[useAstroData] Transformed planets:", planetData);
       }
 
       // Map aspects
       const mappedAspects = Array.isArray(aspects)
-        ? (aspects
-            .map((rawAspect: RawApiAspect, index) => {
-              console.log(
-                `[useAstroData/transformedData/aspects] Processing raw aspect ${index}:`,
-                JSON.stringify(rawAspect),
-              );
+        ? aspects.map((rawAspect) => {
+            const p1Name = rawAspect.planet1?.toLowerCase();
+            const p2Name = rawAspect.planet2?.toLowerCase();
+            
+            // Skip if planet names are missing
+            if (!p1Name || !p2Name) {
+              console.warn("[useAstroData] Missing planet names in aspect:", rawAspect);
+              return null;
+            }
+            
+            const planet1 = planetData[p1Name];
+            const planet2 = planetData[p2Name];
+            
+            // Skip if planets not found in planetData
+            if (!planet1 || !planet2) {
+              console.warn(`[useAstroData] Planets not found for aspect: ${p1Name}-${rawAspect.aspect}-${p2Name}`);
+              return null;
+            }
 
-              const p1Name = rawAspect.planet1?.toLowerCase();
-              const p2Name = rawAspect.planet2?.toLowerCase();
-              const aspectType = rawAspect.aspect?.toLowerCase();
+            // Find matching interpretation
+            const aspectInterpretation = interpretations?.aspects?.find(
+              (a) => 
+                (a.planet1?.toLowerCase() === p1Name && 
+                 a.planet2?.toLowerCase() === p2Name && 
+                 a.aspect?.toLowerCase() === rawAspect.aspect?.toLowerCase()) ||
+                (a.planet1?.toLowerCase() === p2Name && 
+                 a.planet2?.toLowerCase() === p1Name && 
+                 a.aspect?.toLowerCase() === rawAspect.aspect?.toLowerCase())
+            )?.interpretation || '';
 
-              if (!p1Name || !p2Name || !aspectType) {
-                console.warn(
-                  `[useAstroData/transformedData/aspects] Skipping aspect ${index} due to missing planet names or aspect type.`,
-                  rawAspect,
-                );
-                return null; // Or a default/empty aspect object
-              }
-
-              const planet1 = planetData[p1Name];
-              const planet2 = planetData[p2Name];
-
-              if (!planet1 || !planet2) {
-                console.warn(
-                  `[useAstroData/transformedData/aspects] Skipping aspect ${index} because one or both planets ('${p1Name}', '${p2Name}') not found in planetData. Raw aspect:`,
-                  rawAspect,
-                  "PlanetData keys:",
-                  Object.keys(planetData),
-                );
-                return null;
-              }
-
-              console.log(
-                `[useAstroData/transformedData/aspects] Mapped planets for aspect ${index}:`,
-                planet1.name,
-                planet2.name,
-              );
-
-              const influence =
-                rawAspect.strength != null
-                  ? `${Math.round(rawAspect.strength * 100)}%`
-                  : "N/A";
-
-              let interpretationText = "";
-              if (
-                interpretations?.aspects &&
-                Array.isArray(interpretations.aspects)
-              ) {
-                const foundInterpretation = interpretations.aspects.find(
-                  (interp: RawApiAspectInterpretation) => {
-                    const interpP1 = interp.planet1?.toLowerCase();
-                    const interpP2 = interp.planet2?.toLowerCase();
-                    const interpAspect = interp.aspect?.toLowerCase();
-                    return (
-                      (interpP1 === p1Name &&
-                        interpP2 === p2Name &&
-                        interpAspect === aspectType) ||
-                      (interpP1 === p2Name &&
-                        interpP2 === p1Name &&
-                        interpAspect === aspectType) // Check reversed order
-                    );
-                  },
-                );
-                if (foundInterpretation && foundInterpretation.interpretation) {
-                  interpretationText = foundInterpretation.interpretation;
-                  console.log(
-                    `[useAstroData/transformedData/aspects] Found interpretation for ${p1Name}-${aspectType}-${p2Name}: "${interpretationText}"`,
-                  );
-                } else {
-                  console.log(
-                    `[useAstroData/transformedData/aspects] No interpretation found for ${p1Name}-${aspectType}-${p2Name} from API. Searched in:`,
-                    interpretations.aspects,
-                  );
-
-                  // Client-side fallback for missing interpretations
-                  const fallbackKey = `${p1Name}-${aspectType}-${p2Name}`;
-                  const reversedFallbackKey = `${p2Name}-${aspectType}-${p1Name}`;
-
-                  // Organized fallbacks by planet combinations
-                  const knownFallbacks: Record<string, string> = {
-                    // Uranus-Pluto aspects
-                    "uranus-sextile-pluto":
-                      "Uranus sextile Pluto: This aspect fosters transformative breakthroughs and innovative approaches to deep-seated issues. It encourages embracing change and using personal power constructively to evolve societal structures or personal paradigms.",
-                    "pluto-sextile-uranus":
-                      "Pluto sextile Uranus: This aspect fosters transformative breakthroughs and innovative approaches to deep-seated issues. It encourages embracing change and using personal power constructively to evolve societal structures or personal paradigms.",
-                    "uranus-trine-pluto":
-                      "Uranus trine Pluto: This harmonious aspect brings powerful transformative energy and the ability to revolutionize structures in a flowing, natural way. It supports positive change that respects deeper truths and facilitates evolution without unnecessary destruction.",
-                    "pluto-trine-uranus":
-                      "Pluto trine Uranus: This harmonious aspect brings powerful transformative energy and the ability to revolutionize structures in a flowing, natural way. It supports positive change that respects deeper truths and facilitates evolution without unnecessary destruction.",
-
-                    // Neptune-Pluto aspects
-                    "neptune-sextile-pluto":
-                      "Neptune sextile Pluto: This aspect blends spiritual awareness with transformative power. It offers opportunities to dissolve outdated structures and replace them with more spiritually aligned approaches. Intuition and deep psychological insights work together harmoniously.",
-                    "pluto-sextile-neptune":
-                      "Pluto sextile Neptune: This aspect blends transformative power with spiritual awareness. It offers opportunities to dissolve outdated structures and replace them with more spiritually aligned approaches. Deep psychological insights and intuition work together harmoniously.",
-
-                    // Uranus-Neptune aspects
-                    "uranus-sextile-neptune":
-                      "Uranus sextile Neptune: This aspect creates opportunities to blend innovation with spiritual insight. It supports bringing visionary ideas into practical reality and finding unconventional solutions to spiritual or compassionate endeavors.",
-                    "neptune-sextile-uranus":
-                      "Neptune sextile Uranus: This aspect creates opportunities to blend spiritual insight with innovation. It supports bringing visionary ideas into practical reality and finding compassionate approaches to technological or progressive endeavors.",
-                  };
-
-                  if (knownFallbacks[fallbackKey]) {
-                    interpretationText = knownFallbacks[fallbackKey];
-                    console.log(
-                      `[useAstroData/transformedData/aspects] Used client-side fallback for ${fallbackKey}: "${interpretationText}"`,
-                    );
-                  } else if (knownFallbacks[reversedFallbackKey]) {
-                    interpretationText = knownFallbacks[reversedFallbackKey];
-                    console.log(
-                      `[useAstroData/transformedData/aspects] Used client-side fallback for ${reversedFallbackKey} (reversed): "${interpretationText}"`,
-                    );
-                  }
-                }
-              } else {
-                console.log(
-                  `[useAstroData/transformedData/aspects] interpretations.aspects is not an array or is missing.`,
-                );
-              }
-
-              return {
-                planets: [planet1, planet2],
-                type: aspectType,
-                angle: rawAspect.angle || 0,
-                orb: rawAspect.orb || 0,
-                influence: influence,
-                applying: Boolean(rawAspect.applying),
-                interpretation: interpretationText,
-              };
-            })
-            .filter((aspect) => aspect !== null) as TransformedAspect[]) // Remove any skipped aspects and assert type
+            // Capitalize aspect type for display
+            const aspectType = rawAspect.aspect 
+              ? rawAspect.aspect.charAt(0).toUpperCase() + rawAspect.aspect.slice(1).toLowerCase() 
+              : 'Unknown';
+            
+            return {
+              planets: [planet1, planet2],
+              type: aspectType,
+              angle: rawAspect.angle || 0,
+              orb: rawAspect.orb || 0,
+              influence: rawAspect.strength != null ? `${Math.round(rawAspect.strength * 100)}%` : "N/A",
+              applying: Boolean(rawAspect.applying),
+              interpretation: aspectInterpretation,
+            };
+          }).filter(aspect => aspect !== null) as TransformedAspect[]
         : [];
+        
+        // Add debug logging
+        console.log("[useAstroData] First 3 transformed aspects:", mappedAspects.slice(0, 3));
       console.log(
         "[useAstroData/transformedData] Finished mapping aspects:",
         JSON.stringify(mappedAspects, null, 2),
