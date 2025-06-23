@@ -121,43 +121,32 @@ const getMoonClipPath = (illumination: number, phaseName?: string): string => {
   if (illumination >= 0.99) return 'circle(50%)'; // Full Moon (100% illuminated)
   if (illumination <= 0.01) return 'circle(0%)';  // New Moon (0% illuminated)
   
-  // Determine if we're in waxing (increasing) or waning (decreasing) phase
+  // Determine if we're in waxing (illumination increasing) or waning (illumination decreasing) phase
   const isWaxing = phaseName?.toLowerCase().includes('waxing') || 
-                  phaseName?.toLowerCase().includes('first') || 
-                  (phaseName?.toLowerCase().includes('new') && !phaseName?.toLowerCase().includes('full'));
-  const isWaning = phaseName?.toLowerCase().includes('waning') || 
-                  phaseName?.toLowerCase().includes('last');
-                  
-  // Default to waxing if phase name not provided
-  const waxingPhase = isWaning ? false : (isWaxing || !phaseName ? true : false);
-  
-  // IMPORTANT: For the moon visualization, we need to invert the clip-path logic
-  // The clip-path defines what's VISIBLE, but we need to show the SHADED portion
-  // So we use (1 - illumination) to get the shaded percentage
-  const shadedPercentage = 1 - illumination;
+                  (phaseName?.toLowerCase().includes('first') && !phaseName.toLowerCase().includes('last')) ||
+                  (illumination > 0 && illumination <= 0.5);
   
   // For waxing phases (illumination increasing, right side lit)
-  if (waxingPhase) {
-    if (shadedPercentage > 0.5) {
-      // Waxing Crescent: mostly shaded, small right crescent visible
-      // Use an inset to create the crescent shape
-      const xPos = 50 + ((1 - shadedPercentage) * 100); // Position based on illumination
+  if (isWaxing) {
+    if (illumination < 0.5) {
+      // Waxing Crescent: less than 50% illuminated, right side lit
+      const xPos = 50 + ((1 - (illumination * 2)) * 50);
       return `inset(0 0 0 ${xPos}%)`;
     } else {
-      // Waxing Gibbous: less than half shaded on left side
-      const xPos = 50 - (shadedPercentage * 100); // Position the left edge based on shading
-      return `inset(0 0 0 0) polygon(0 0, ${xPos}% 0, ${xPos}% 100%, 0 100%)`;
+      // Waxing Gibbous: more than 50% illuminated, right side lit
+      const xPos = 50 - ((illumination - 0.5) * 100);
+      return `inset(0 0 0 0) polygon(${xPos}% 0, 100% 0, 100% 100%, ${xPos}% 100%)`;
     }
   } 
   // For waning phases (illumination decreasing, left side lit)
   else {
-    if (shadedPercentage > 0.5) {
-      // Waning Crescent: mostly shaded, small left crescent visible
-      const xPos = 50 - ((1 - shadedPercentage) * 100); // Position based on illumination
+    if (illumination < 0.5) {
+      // Waning Crescent: less than 50% illuminated, left side lit
+      const xPos = 50 - ((1 - (illumination * 2)) * 50);
       return `inset(0 ${xPos}% 0 0)`;
     } else {
-      // Waning Gibbous: less than half shaded on right side
-      const xPos = 50 + (shadedPercentage * 100); // Position the right edge based on shading
+      // Waning Gibbous: more than 50% illuminated, left side lit
+      const xPos = 50 + ((illumination - 0.5) * 100);
       return `inset(0 0 0 0) polygon(${xPos}% 0, 100% 0, 100% 100%, ${xPos}% 100%)`;
     }
   }
