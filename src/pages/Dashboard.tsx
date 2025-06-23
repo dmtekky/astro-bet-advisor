@@ -110,21 +110,56 @@ interface ElementsDistribution {
 import { Sport } from "@/types";
 import LoadingScreen from "@/components/LoadingScreen";
 
-// Helper function to calculate moon clip path based on illumination (0-1)
-const getMoonClipPath = (illumination: number): string => {
-  if (!illumination) return 'circle(50%)';
+// Helper function to calculate moon clip path based on illumination (0-1) and phase name
+const getMoonClipPath = (illumination: number, phaseName?: string): string => {
+  // For testing/debugging
+  console.log(`[Moon Illustration] Generating clip path: illumination=${illumination}, phase=${phaseName}`);
   
-  // For waxing phases (0-0.5)
-  if (illumination <= 0.5) {
-    const radius = 50;
-    const x = (illumination * 2) * 100;
-    return `circle(${radius}% at ${x}% 50%)`;
+  if (!illumination && illumination !== 0) return 'circle(50%)';
+  
+  // Handle edge cases
+  if (illumination >= 0.99) return 'circle(50%)'; // Full Moon (100% illuminated)
+  if (illumination <= 0.01) return 'circle(0%)';  // New Moon (0% illuminated)
+  
+  // Determine if we're in waxing (increasing) or waning (decreasing) phase
+  const isWaxing = phaseName?.toLowerCase().includes('waxing') || 
+                  phaseName?.toLowerCase().includes('first') || 
+                  (phaseName?.toLowerCase().includes('new') && !phaseName?.toLowerCase().includes('full'));
+  const isWaning = phaseName?.toLowerCase().includes('waning') || 
+                  phaseName?.toLowerCase().includes('last');
+                  
+  // Default to waxing if phase name not provided
+  const waxingPhase = isWaning ? false : (isWaxing || !phaseName ? true : false);
+  
+  // IMPORTANT: For the moon visualization, we need to invert the clip-path logic
+  // The clip-path defines what's VISIBLE, but we need to show the SHADED portion
+  // So we use (1 - illumination) to get the shaded percentage
+  const shadedPercentage = 1 - illumination;
+  
+  // For waxing phases (illumination increasing, right side lit)
+  if (waxingPhase) {
+    if (shadedPercentage > 0.5) {
+      // Waxing Crescent: mostly shaded, small right crescent visible
+      // Use an inset to create the crescent shape
+      const xPos = 50 + ((1 - shadedPercentage) * 100); // Position based on illumination
+      return `inset(0 0 0 ${xPos}%)`;
+    } else {
+      // Waxing Gibbous: less than half shaded on left side
+      const xPos = 50 - (shadedPercentage * 100); // Position the left edge based on shading
+      return `inset(0 0 0 0) polygon(0 0, ${xPos}% 0, ${xPos}% 100%, 0 100%)`;
+    }
   } 
-  // For waning phases (0.5-1.0)
+  // For waning phases (illumination decreasing, left side lit)
   else {
-    const radius = 50;
-    const x = ((illumination - 0.5) * 2) * 100;
-    return `circle(${radius}% at ${x}% 50%)`;
+    if (shadedPercentage > 0.5) {
+      // Waning Crescent: mostly shaded, small left crescent visible
+      const xPos = 50 - ((1 - shadedPercentage) * 100); // Position based on illumination
+      return `inset(0 ${xPos}% 0 0)`;
+    } else {
+      // Waning Gibbous: less than half shaded on right side
+      const xPos = 50 + (shadedPercentage * 100); // Position the right edge based on shading
+      return `inset(0 0 0 0) polygon(${xPos}% 0, 100% 0, 100% 100%, ${xPos}% 100%)`;
+    }
   }
 };
 
@@ -1501,14 +1536,17 @@ const Dashboard: React.FC = () => {
                         </CardHeader>
                         <CardContent className="space-y-3 pt-2">
                           {/* Moon Phase Section with Visualization */}
-                          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
-                            <div className="flex flex-col items-center md:flex-row md:items-start">
-                              <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+                          <div className="w-full bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
+                            <div className="flex flex-col items-center lg:flex-row lg:items-start">
+                              <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-6 lg:mb-0 lg:mr-8 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
                                 {/* Moon phase visualization */}
                                 <div
                                   className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 rounded-full transition-all duration-1000 ease-in-out"
                                   style={{
-                                    clipPath: getMoonClipPath(astroData?.moonPhase?.illumination || 0),
+                                    clipPath: getMoonClipPath(
+                                      astroData?.moonPhase?.illumination || 0, 
+                                      astroData?.moonPhase?.phaseName
+                                    ),
                                     opacity: 0.95,
                                     boxShadow:
                                       "inset 0 0 40px rgba(255, 255, 255, 0.8)",
@@ -1533,23 +1571,26 @@ const Dashboard: React.FC = () => {
                                   }}
                                 />
                               </div>
-                              <div className="text-center md:text-left flex-1">
-                                <h4 className="text-2xl font-bold text-indigo-800 mb-1">
-                                  Moon Phase
-                                </h4>
-                                <p className="text-sm text-indigo-600 mb-2">
-                                  {astroData?.moonPhase?.name ||
-                                    "Current phase unknown"}
-                                </p>
-                                <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                  {astroData?.moonPhase?.illumination !==
-                                    null &&
-                                  astroData?.moonPhase?.illumination !==
-                                    undefined
-                                    ? `🌕 ${Math.round((astroData?.moonPhase?.illumination || 0) * 100)}% Illuminated`
-                                    : "🌑 Illumination unknown"}
+                              <div className="w-full lg:flex-1">
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+                                  <div>
+                                    <h4 className="text-2xl font-bold text-indigo-800 mb-1">
+                                      Moon Phase
+                                    </h4>
+                                    <p className="text-sm text-indigo-600 mb-2">
+                                      {astroData?.moonPhase?.name ||
+                                        "Current phase unknown"}
+                                    </p>
+                                  </div>
+                                  <div className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 text-sm font-medium px-4 py-1.5 rounded-full mb-3 lg:mb-0">
+                                    {astroData?.moonPhase?.illumination !== null &&
+                                    astroData?.moonPhase?.illumination !== undefined
+                                      ? `${astroData?.moonPhase?.emoji || '🌕'} ${Math.round((astroData?.moonPhase?.illumination || 0) * 100)}% Illuminated`
+                                      : "🌑 Illumination unknown"}
+                                  </div>
                                 </div>
-                                <div className="bg-white p-4 rounded-lg border border-indigo-50 shadow-sm mb-4">
+
+                                <div className="bg-white p-5 rounded-xl border border-indigo-50 shadow-sm mb-6">
                                   <p className="text-base text-slate-700 leading-relaxed">
                                     {astroData?.moonPhase?.name &&
                                       getMoonPhaseImpact(
@@ -1558,21 +1599,21 @@ const Dashboard: React.FC = () => {
                                   </p>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2 mb-4">
-                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                    <div className="text-xs uppercase text-slate-500">{astroData?.planets?.moon?.sign}</div>
-                                    <div className="font-semibold text-indigo-700">
-                                      {astroData?.planets?.moon?.sign}
+                                <div className="flex flex-row flex-wrap items-stretch justify-between gap-3 mb-6">
+                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">Moon Sign</div>
+                                    <div className="font-semibold text-indigo-700 text-lg">
+                                      {astroData?.planets?.moon?.sign || "—"}
                                     </div>
                                   </div>
-                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
+                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
                                       Next Full Moon
                                     </div>
-                                    <div className="font-semibold text-indigo-700">
+                                    <div className="font-semibold text-indigo-700 text-lg">
                                       {astroData?.moonPhase?.nextFullMoon
                                         ? new Date(
-                                            astroData?.moonPhase?.nextFullMoon || 'Unknown',
+                                            astroData?.moonPhase?.nextFullMoon
                                           ).toLocaleDateString("en-US", {
                                             month: "short",
                                             day: "numeric",
@@ -1581,11 +1622,11 @@ const Dashboard: React.FC = () => {
                                         : "—"}
                                     </div>
                                   </div>
-                                  <div className="bg-white p-2 rounded-lg border border-slate-100 flex flex-col">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
+                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                    <div className="text-xs uppercase text-slate-500 font-medium mb-1">
                                       Zodiac Degree
                                     </div>
-                                    <div className="font-semibold text-indigo-700">
+                                    <div className="font-semibold text-indigo-700 text-lg">
                                       {astroData?.planets?.moon?.degree
                                         ? `${Math.floor(astroData?.planets?.moon?.degree || 0)}°`
                                         : "—"}
