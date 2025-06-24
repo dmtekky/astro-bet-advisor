@@ -15,6 +15,7 @@ import type {
   MoonPhaseInfo,
 } from "../types/astrology";
 import * as z from "zod"; // Import Zod
+import { ASPECT_INTERPRETATIONS } from '../utils/aspectInterpretations'; // Import aspect interpretations
 
 // Initialize Supabase client with fallback to REACT_APP_ prefixed variables for backward compatibility
 const supabase = createClient(
@@ -605,9 +606,9 @@ export const useAstroData = (
       revalidate: any,
       { retryCount }: { retryCount: number },
     ) => {
-      // Don't retry on 403 (permission denied) as it's likely an auth issue
-      if (error.message.includes("403")) {
-        console.log("[useAstroData] Not retrying 403 error");
+      // Don't retry on 401/403 as it's likely an auth issue
+      if (error.message.includes("401") || error.message.includes("403")) {
+        console.log("[useAstroData] Not retrying 401/403 error");
         return;
       }
 
@@ -897,7 +898,7 @@ export const useAstroData = (
               orb: rawAspect.orb || 0,
               influence: rawAspect.strength != null ? `${Math.round(rawAspect.strength * 100)}%` : "N/A",
               applying: Boolean(rawAspect.applying),
-              interpretation: aspectInterpretation,
+              interpretation: aspectInterpretation || ASPECT_INTERPRETATIONS[aspectType.toLowerCase()] || 'No interpretation available',
             };
           }).filter(aspect => aspect !== null) as TransformedAspect[]
         : [];

@@ -66,12 +66,12 @@ import {
 } from "@/utils/sportsPredictions";
 import type {
   ModalBalance,
-  ElementalBalance,
+  ElementalBalance as ElementalBalanceType,
   ZodiacSign,
   AspectType,
   MoonPhaseInfo,
-  CelestialBody,
   Aspect,
+  AstroData,
 } from "@/types/astrology";
 import type { GamePredictionData } from "@/types/gamePredictions";
 import type { Article } from "../types/news";
@@ -104,7 +104,8 @@ interface AstrologyInfluence {
   icon?: React.ReactNode;
 }
 
-interface ElementsDistribution {
+// Renamed to avoid conflict with the imported component
+interface ElementDistribution {
   fire: number;
   earth: number;
   water: number;
@@ -161,6 +162,12 @@ const MLB_LEAGUE_KEY: Sport = "mlb";
 const DEFAULT_LOGO = "/images/default-team-logo.svg";
 
 import AstroDisclosure from "@/components/AstroDisclosure";
+
+// Import refactored dashboard components
+import KeyPlanetaryInfluences from "@/components/dashboard/KeyPlanetaryInfluences";
+import LunarStatusCard from "@/components/dashboard/LunarStatusCard";
+import SolarInfluenceInsights from "@/components/dashboard/SolarInfluenceInsights";
+import ElementalBalance from "@/components/dashboard/ElementalBalance";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -455,7 +462,7 @@ const Dashboard: React.FC = () => {
 
         if (dominantEntry && dominantEntry[1] > 0) {
           const [dominantElement, score] = dominantEntry as [
-            keyof ElementsDistribution,
+            keyof ElementDistribution,
             number,
           ];
           influences.push({
@@ -699,8 +706,8 @@ const Dashboard: React.FC = () => {
   };
 
   // Helper function to get color class for element
-  const getElementColor = (element: keyof ElementsDistribution): string => {
-    const colors: Record<keyof ElementsDistribution, string> = {
+  const getElementColor = (element: keyof ElementDistribution): string => {
+    const colors: Record<keyof ElementDistribution, string> = {
       fire: "bg-red-500",
       earth: "bg-green-500",
       air: "bg-sky-400",
@@ -1278,113 +1285,23 @@ const Dashboard: React.FC = () => {
                   variants={fadeIn}
                   initial="hidden"
                   animate="show"
-                  className="w-full mb-8 border border-gray-200 bg-white shadow-sm rounded-lg overflow-hidden"
+                  className="w-full mb-8"
                 >
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                      Elemental Balance
-                    </CardTitle>
-                    <CardDescription className="text-slate-600">
-                      Distribution of planetary energies by element.
-                    </CardDescription>
-                  </CardHeader>
+                  <ElementalBalance 
+                    planets={astroData?.planets} 
+                  />
                   
-
-                  <CardContent>
-                    <div className="w-full flex items-center mt-2 mb-4 p-2 bg-gray-50 rounded">
-                      {/* Segmented horizontal bar for elements */}
-                      <div className="flex w-full h-6 rounded-full overflow-hidden border border-gray-200">
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${elementsDistribution.fire}%`,
-                            background:
-                              "linear-gradient(90deg, #f87171 60%, #fbbf24 100%)",
-                          }}
-                          title={`Fire: ${elementsDistribution.fire}%`}
-                        />
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${elementsDistribution.earth}%`,
-                            background:
-                              "linear-gradient(90deg, #34d399 60%, #a7f3d0 100%)",
-                          }}
-                          title={`Earth: ${elementsDistribution.earth}%`}
-                        />
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${elementsDistribution.water}%`,
-                            background:
-                              "linear-gradient(90deg, #60a5fa 60%, #818cf8 100%)",
-                          }}
-                          title={`Water: ${elementsDistribution.water}%`}
-                        />
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${elementsDistribution.air}%`,
-                            background:
-                              "linear-gradient(90deg, #f472b6 60%, #a78bfa 100%)",
-                          }}
-                          title={`Air: ${elementsDistribution.air}%`}
-                        />
-                      </div>
-                    </div>
-                    {elementsDistribution ? (
-                      <div className="flex flex-wrap justify-between text-sm font-medium text-gray-800">
-                        <div className="flex items-center gap-1">
-                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#f87171' }}></span>
-                          <span>Fire: {Math.round(elementsDistribution.fire)}%</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#34d399' }}></span>
-                          <span>Earth: {Math.round(elementsDistribution.earth)}%</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
-                          <span>Water: {Math.round(elementsDistribution.water)}%</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: '#f472b6' }}></span>
-                          <span>Air: {Math.round(elementsDistribution.air)}%</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-gray-500">
-                        Element data unavailable
-                      </div>
-                    )}
-                    
-                    {/* Daily Astro Tip */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <h3 className="text-md font-medium text-slate-800 flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-2 text-amber-500" />
-                        Daily Astro Tip
-                      </h3>
-                      <p className="mt-2 text-sm text-slate-600">
-                        {dailyRecommendation ||
-                          "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence (37%) benefits teams with superior passing, communication, and strategic adaptability."}
-                      </p>
-                    </div>
-                    
-                    {/* Temporarily removed undefined function call */}
-                    {/* {getDynamicElementalInterpretation(...)} */}
-                    {elementsDistribution &&
-                      elementsDistribution.fire +
-                        elementsDistribution.earth +
-                        elementsDistribution.water +
-                        elementsDistribution.air >
-                        0 && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {/* Temporarily removed undefined function call */}
-                            {/* {getDynamicElementalInterpretation(...)} */}
-                          </p>
-                        </div>
-                      )}
-                  </CardContent>
+                  {/* Daily Astro Tip - Moved outside ElementalBalance component */}
+                  <div className="mt-4 p-4 border border-gray-200 bg-white shadow-sm rounded-lg">
+                    <h3 className="text-md font-medium text-slate-800 flex items-center">
+                      <Lightbulb className="h-4 w-4 mr-2 text-amber-500" />
+                      Daily Astro Tip
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {dailyRecommendation ||
+                        "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence benefits teams with superior passing, communication, and strategic adaptability."}
+                    </p>
+                  </div>
                 </motion.div>
                 {/* Other astrology cards below */}
                 <motion.div
@@ -1403,116 +1320,23 @@ const Dashboard: React.FC = () => {
                   ) : astroData ? (
                     // Actual Astro content
                     <>
-                      <motion.div
+                      <motion.div 
                         variants={item}
-                        className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                        className="md:col-span-2"
                       >
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                            <Sun className="h-3.25 w-3.25 mr-2 text-yellow-500" />{" "}
-                            Solar Influence
-                          </CardTitle>
-                          <CardDescription className="text-slate-600">
-                            The Sun is in {astroData?.planets?.sun?.sign || ""}{" "}
-                            (
-                            {formatDegreesMinutes(
-                              astroData?.planets?.sun?.degree || 0,
-                              astroData?.planets?.sun?.minute || 0,
-                            )}
-                            ), {astroData?.sidereal ? "Sidereal" : "Tropical"}.
-                            Element:{" "}
-                            {getSunElement(astroData?.planets?.sun?.sign || "")}
-                            .
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3 pt-2">
-                          {/* Sun Visualization Section */}
-                          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
-                            <div className="flex flex-col items-center md:flex-row-reverse md:items-start md:justify-between">
-                              <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:ml-4 lg:ml-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
-                                {/* Sun visualization */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
-                                  <div
-                                    className="absolute w-full h-full rounded-full"
-                                    style={{
-                                      boxShadow:
-                                        "0 0 80px 30px rgba(252, 211, 77, 0.4)",
-                                      pointerEvents: "none",
-                                      background:
-                                        "radial-gradient(circle at 60% 40%, rgba(253, 230, 138, 0.3), transparent 60%)",
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="text-center md:text-left flex-1">
-                                <h4 className="text-2xl font-bold text-yellow-700 mb-1">
-                                  Sun Position
-                                </h4>
-                                <p className="text-sm text-yellow-600 mb-2">
-                                  {astroData?.planets?.sun?.sign || ""} (
-                                  {formatDegreesMinutes(
-                                    astroData?.planets?.sun?.degree || 0,
-                                    astroData?.planets?.sun?.minute || 0,
-                                  )}
-                                  )
-                                </p>
-                                <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full mb-3">
-                                  Element:{" "}
-                                  {getSunElement(
-                                    astroData?.planets?.sun?.sign || "",
-                                  )}
-                                </div>
-                                <div className="bg-white p-4 rounded-lg border border-yellow-50 shadow-sm mb-4">
-                                  <p className="text-base text-slate-700 leading-relaxed">
-                                    {getSunSportsInfluences(astroData)[0]
-                                      ?.text ||
-                                      "The Sun's current sign sets the tone for vitality and momentum."}
-                                  </p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                  <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
-                                      Sun Sign
-                                    </div>
-                                    <div className="font-semibold text-yellow-700">
-                                      {astroData?.planets?.sun?.sign || ""}
-                                    </div>
-                                  </div>
-                                  <div className="bg-white p-3 rounded-lg border border-slate-100">
-                                    <div className="text-xs uppercase text-slate-500 font-medium mb-0.5">
-                                      Zodiac Degree
-                                    </div>
-                                    <div className="font-semibold text-yellow-700">
-                                      {astroData?.planets?.sun?.degree
-                                        ? `${Math.floor(astroData?.planets?.sun?.degree || 0)}°`
-                                        : "—"}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Solar Influence Details */}
-                          <div className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm">
-                            <h5 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center">
-                              <Sun className="h-2.5 w-2.5 mr-1 text-yellow-400" />{" "}
-                              Solar Influence Insights
-                            </h5>
-                            <ul className="list-disc pl-5 space-y-1">
-                              {getSunSportsInfluences(astroData).map(
-                                (influence, index) => (
-                                  <li
-                                    key={`sun-influence-${index}`}
-                                    className="text-sm text-slate-700"
-                                  >
-                                    {influence.text}
-                                  </li>
-                                ),
-                              )}
-                            </ul>
-                          </div>
-                        </CardContent>
+                        <SolarInfluenceInsights 
+                          sun={astroData?.planets?.sun} 
+                          getSunSignImpact={getSunSignImpact}
+                          getSunElement={getSunElement}
+                          getElementImpact={getElementImpact}
+                          getDegreeImpact={getDegreeImpact}
+                          getSunSportsInfluences={() => getSunSportsInfluences(astroData)}
+                          sidereal={astroData?.sidereal}
+                          formattedDegree={formatDegreesMinutes(
+                            astroData?.planets?.sun?.degree || 0,
+                            astroData?.planets?.sun?.minute || 0
+                          )}
+                        />
                       </motion.div>
 
                       <motion.div
@@ -1653,136 +1477,8 @@ const Dashboard: React.FC = () => {
                                   </div>
 
                                   <div className="p-3">
-                                    <p className="text-sm text-slate-700 mb-2">
-                                      {astroData?.voidMoon?.isVoid
-                                        ? `Moon is void of course until ${new Date(astroData?.voidMoon?.end || new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                                        : getMoonAspectMessage(
-                                            astroData?.moonPhase,
-                                            astroData?.planets?.moon?.sign as
-                                              | ZodiacSign
-                                              | undefined,
-                                          )}
-                                    </p>
-
-                                    {astroData?.voidMoon?.isVoid && (
-                                      <div className="space-y-3 mt-3">
-                                        <div>
-                                          <div className="w-full bg-amber-100 rounded-full h-1.5 mb-1">
-                                            <div
-                                              className="bg-amber-500 h-1.5 rounded-full transition-all duration-500 ease-out"
-                                              style={{
-                                                width: `${astroData?.voidMoon?.start && astroData?.voidMoon?.end ? Math.max(5, Math.min(100, ((new Date().getTime() - new Date(astroData.voidMoon.start).getTime()) / (new Date(astroData.voidMoon.end).getTime() - new Date(astroData.voidMoon.start).getTime())) * 100)) : 0}%`,
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="flex justify-between text-[10px] text-amber-700">
-                                            <span>
-                                              Started:{" "}
-                                              {new Date(
-                                                astroData?.voidMoon?.start || new Date().toISOString(),
-                                              ).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                              })}
-                                            </span>
-                                            <span>
-                                              Ends:{" "}
-                                              {new Date(
-                                                astroData?.voidMoon?.end || new Date().toISOString(),
-                                              ).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                              })}
-                                            </span>
-                                          </div>
-                                        </div>
-
-                                        <div
-                                          className={`p-2 rounded-lg border text-xs ${astroData?.voidMoon.isVoid ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}
-                                        >
-                                          <p
-                                            className={`font-medium mb-1 ${astroData?.voidMoon.isVoid ? "text-red-800" : "text-slate-700"}`}
-                                          >
-                                            {astroData?.voidMoon.isVoid
-                                              ? "⚠️ Void of Course Moon"
-                                              : "✓ Strong Lunar Aspects"}
-                                          </p>
-                                          <p
-                                            className={
-                                              astroData?.voidMoon.isVoid
-                                                ? "text-red-700"
-                                                : "text-slate-600"
-                                            }
-                                          >
-                                            {astroData?.voidMoon.isVoid
-                                              ? "The moon is not making any major aspects. Game outcomes may be more unpredictable during this period."
-                                              : getMoonAspectMessage(
-                                                  astroData?.moonPhase,
-                                                  astroData?.planets?.moon
-                                                    ?.sign as
-                                                    | ZodiacSign
-                                                    | undefined,
-                                                )}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Technical Measurement */}
-                          <div className="bg-white p-3 rounded-md border border-slate-200">
-                            <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
-                              <Activity className="h-4 w-4 mr-1 text-slate-400" />{" "}
-                              Lunar Technical Analysis
-                            </h4>
-                            <div className="space-y-2">
-                              <div>
-                                <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                  <span>Moon Speed</span>
-                                  <span>
-                                    {astroData?.planets?.moon?.speed
-                                      ? `${Math.abs(astroData?.planets?.moon?.speed || 0).toFixed(2)}°/day`
-                                      : "Unknown"}
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={
-                                    astroData?.planets?.moon?.speed
-                                      ? Math.min(
-                                          (Math.abs(
-                                            astroData?.planets?.moon?.speed || 0,
-                                          ) /
-                                            15) *
-                                            100,
-                                          100,
-                                        )
-                                      : 50
-                                  }
-                                  className="h-2"
-                                />
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                  <span>Lunar Sign Position</span>
-                                  <span>
-                                    {astroData?.planets?.moon?.degree
-                                      ? `${Math.floor(astroData?.planets?.moon?.degree || 0)}°${astroData?.planets?.moon?.minute ? ` ${astroData?.planets?.moon?.minute}'` : ""}`
-                                      : "Unknown"}
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={
-                                    astroData?.planets?.moon?.degree
-                                      ? ((astroData?.planets?.moon?.degree || 0) / 30) *
-                                        100
-                                      : 50
-                                  }
-                                  className="h-2"
-                                />
                               </div>
                             </div>
                           </div>
@@ -1790,94 +1486,14 @@ const Dashboard: React.FC = () => {
                       </motion.div>
 
                       {astroData && astroData.aspects && astroData.planets && (
-                        <motion.div
+                        <motion.div 
                           variants={item}
-                          className="border border-slate-200/50 bg-white/50 backdrop-blur-sm md:col-span-2"
+                          className="md:col-span-2"
                         >
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                              <Globe className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
-                            </CardTitle>
-                            <CardDescription className="text-slate-600">
-                              Significant planetary aspects and positions impacting sports performance.
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-3 pt-2">
-                            {/* Prominent Aspects Section */}
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                              <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
-                                <Activity className="h-4 w-4 mr-1.5 text-blue-500" />
-                                Prominent Aspects
-                              </h5>
-                              <div className="space-y-3">
-                                {astroData?.aspects?.slice(0, 5).map((aspect, index) => {
-                                  if (!aspect.planets || aspect.planets.length < 2 || !aspect.planets[0] || !aspect.planets[1]) {
-                                    return null;
-                                  }
-                                  const influenceValue = aspect.influence ? parseInt(aspect.influence) : 0;
-                                  const strengthClass = influenceValue > 70 ? 'text-green-600' : 
-                                                      influenceValue > 40 ? 'text-amber-600' : 'text-red-600';
-                                  return (
-                                    <div key={index} className="bg-slate-50 p-2.5 rounded-lg">
-                                      <div className="flex items-center justify-between mb-1.5">
-                                        <div className="flex items-center gap-1.5 text-sm font-medium">
-                                          {getPlanetIcon(aspect.planets[0].name)}
-                                          <span className="text-slate-700">{aspect.planets[0].name}</span>
-                                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">{aspect.type}</span>
-                                          <span className="text-slate-700">{aspect.planets[1].name}</span>
-                                          {getPlanetIcon(aspect.planets[1].name)}
-                                        </div>
-                                        <span className={`text-sm font-bold ${strengthClass}`}>
-                                          {aspect.influence.toString().replace('%', '')}%
-                                        </span>
-                                      </div>
-                                      <CosmicWaveProgress 
-                                        value={influenceValue} 
-                                        startIcon={getPlanetIcon(aspect.planets[0].name)} 
-                                        endIcon={getPlanetIcon(aspect.planets[1].name)}
-                                        startPlanet={aspect.planets[0].name.toLowerCase()}
-                                        endPlanet={aspect.planets[1].name.toLowerCase()}
-                                        height={32}
-                                        className="mt-2"
-                                      />
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                            {/* Planet Position Visualization */}
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                              <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
-                                <Globe className="h-4 w-4 mr-1.5 text-blue-500" />
-                                Planet Positions
-                              </h5>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                {astroData?.planets && typeof astroData?.planets === 'object' && Object.entries(astroData.planets).map(([planet, data]: [string, any]) => {
-                                  const sign = data?.sign || 'Unknown';
-                                  const elementColor = getElementColor(sign);
-                                  return (
-                                    <div key={planet} className="bg-slate-50 p-2 rounded-lg border border-slate-100 hover:shadow-md transition-shadow duration-200">
-                                      <div className="flex items-center gap-1.5 mb-1.5">
-                                        {getPlanetIcon(planet)}
-                                        <span className="text-sm font-medium capitalize text-slate-700">{planet}</span>
-                                      </div>
-                                      <div className={`${elementColor} text-white text-xs font-medium px-2 py-1 rounded-md flex items-center justify-between`}>
-                                        <span>{sign}</span>
-                                        <span>{typeof data?.degree === 'number' ? data.degree.toFixed(2) + '°' : 'N/A'}</span>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                            {/* Personalized Insight Panel */}
-                            <div>
-                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Insights</h5>
-                              <p className="text-sm text-slate-700">
-                                Based on current aspects, focus on {astroData && Array.isArray(astroData.aspects) && astroData.aspects[0]?.interpretation || 'general strategies for team performance'}.
-                              </p>
-                            </div>
-                          </CardContent>
+                          <KeyPlanetaryInfluences 
+                            aspects={astroData.aspects} 
+                            planets={astroData.planets} 
+                          />
                         </motion.div>
                       )}
 
