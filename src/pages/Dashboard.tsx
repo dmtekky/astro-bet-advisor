@@ -54,6 +54,7 @@ import {
   CircleOff,
   Waves,
   CircleX,
+  Trophy,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate, Link } from "react-router-dom";
@@ -115,6 +116,8 @@ interface ElementDistribution {
 // Constants
 import { Sport } from "@/types";
 import LoadingScreen from "@/components/LoadingScreen";
+import TopPlayersCarousel from "@/components/dashboard/TopPlayersCarousel";
+import useTopPlayers from "@/hooks/useTopPlayers";
 
 // Helper function to calculate moon clip path based on illumination (0-1) and phase name
 const getMoonClipPath = (illumination: number, phaseName?: string): string => {
@@ -268,6 +271,13 @@ const Dashboard: React.FC = () => {
     loading: astroLoading,
     error: astroError,
   } = useAstroData(stableDateString);
+
+  // Fetch top baseball players with highest astro influence
+  const {
+    players: topPlayers,
+    loading: topPlayersLoading,
+    error: topPlayersError
+  } = useTopPlayers(6); // Limit to top 6 players
 
   // Memoize elements distribution
   const elementsDistribution = useMemo(() => {
@@ -1048,6 +1058,8 @@ const Dashboard: React.FC = () => {
         </Link>
       )}
 
+      {/* Top Players Carousel moved to be directly after Daily Astro Tip */}
+
       {/* Main Dashboard Content Starts Here */}
       <motion.div
         variants={container}
@@ -1301,6 +1313,19 @@ const Dashboard: React.FC = () => {
                       {dailyRecommendation ||
                         "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence benefits teams with superior passing, communication, and strategic adaptability."}
                     </p>
+                  </div>
+                  
+                  {/* Top Players Carousel */}
+                  <div className="mt-6 p-4 border border-gray-200 bg-white shadow-sm rounded-lg">
+                    <h3 className="text-md font-medium text-slate-800 flex items-center mb-4">
+                      <Trophy className="h-4 w-4 mr-2 text-amber-500" />
+                      Top Astro Performers This Week
+                    </h3>
+                    <TopPlayersCarousel 
+                      players={topPlayers}
+                      loading={topPlayersLoading}
+                      error={topPlayersError}
+                    />
                   </div>
                 </motion.div>
                 {/* Other astrology cards below */}
