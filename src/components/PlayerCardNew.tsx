@@ -18,6 +18,7 @@ export interface PlayerCardProps {
   astro_influence_score?: number | null;
   teamAverageAstroInfluence?: number | null;
   linkPath?: string;
+  className?: string;
 }
 
 // Threshold for high astro score (0-100 scale)
@@ -36,6 +37,7 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
   astro_influence_score,
   teamAverageAstroInfluence = 0,
   linkPath,
+  className,
 }) => {
   // Get zodiac sign from birth date
   const zodiacSign = birth_date ? getZodiacSign(birth_date) : null;
@@ -124,7 +126,7 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
           : isAboveAverage 
           ? 'border border-blue-300 hover:border-blue-400 hover:shadow-blue-100' 
           : 'border border-gray-200 hover:border-gray-300 hover:shadow-gray-100'}
-        hover:scale-[1.03] hover:shadow-lg`}
+        hover:scale-[1.03] hover:shadow-lg ${className}`}
       aria-label={`Player card for ${full_name}`}
     >
       {/* ===== PLAYER IMAGE SECTION ===== */}

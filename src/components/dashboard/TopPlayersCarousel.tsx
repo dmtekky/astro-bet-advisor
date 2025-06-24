@@ -1,12 +1,15 @@
 import React from 'react';
-import PlayerCardNew from '../PlayerCardNew';
+import PlayerCardNew, { PlayerCardProps } from '../PlayerCardNew';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Import the Player interface from useTopPlayers
-type Player = ReturnType<typeof import('@/hooks/useTopPlayers')>['players'][number];
+// Extend the PlayerCardProps to include any additional fields we need
+interface PlayerCardData extends Omit<PlayerCardProps, 'astro_influence'> {
+  astro_influence_score: number;
+  teamAverageAstroInfluence?: number;
+}
 
 interface TopPlayersCarouselProps {
-  players?: Player[];
+  players?: PlayerCardData[];
   loading?: boolean;
   error?: Error | null;
 }
@@ -51,49 +54,47 @@ const TopPlayersCarousel: React.FC<TopPlayersCarouselProps> = ({
     : 0;
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Players This Week</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {players.slice(0, 6).map((player) => (
-          <div key={player.id} className="h-full">
-            <PlayerCardNew
-              key={player.id}
-              id={player.id}
-              player_id={player.player_id}
-              full_name={player.full_name}
-              first_name={player.first_name}
-              last_name={player.last_name}
-              headshot_url={player.headshot_url || undefined}
-              team_id={player.team_id || undefined}
-              team_abbreviation={player.team_abbreviation || undefined}
-              birth_date={player.birth_date || undefined}
-              primary_number={player.primary_number?.toString()}
-              primary_position={player.primary_position}
-              position={player.position}
-              impact_score={player.impact_score}
-              astro_influence={player.astro_influence_score}
-              astro_influence_score={player.astro_influence_score}
-              teamAverageAstroInfluence={teamAverageAstroInfluence}
-              linkPath={`/players/${player.id}`} // Default to MLB path
-              stats={{
-                batting: {
-                  hits: player.stats_batting_hits,
-                  homeRuns: player.stats_batting_homeruns,
-                  runs: player.stats_batting_runs,
-                  rbi: player.stats_batting_runs_batted_in,
-                  avg: player.stats_batting_avg
-                },
-                fielding: {
-                  assists: player.stats_fielding_assists,
-                  errors: player.stats_fielding_errors
-                },
-                games: {
-                  played: player.stats_games_played
-                }
-              }}
-            />
+    <div className="relative w-full max-w-[1440px] mx-auto">
+      {/* Mobile & Tablet: Horizontal scroll with snap points */}
+      <div className="lg:hidden">
+        <div className="relative w-full" style={{ height: 'fit-content' }}>
+          <div className="flex space-x-4 px-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-2 -mb-24">
+            {players.slice(0, 6).map((player) => ({
+              ...player,
+              astro_influence: player.astro_influence_score
+            })).map((player) => (
+              <div key={player.id} className="flex-shrink-0 w-[40%] snap-center">
+                <div style={{ 
+                  transform: 'scale(0.6)',
+                  transformOrigin: 'top center',
+                  margin: '0 -20% -40px',
+                  padding: '0 0 20px'
+                }}>
+                  <PlayerCardNew {...player} />
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      </div>
+      
+      {/* Desktop: Grid layout */}
+      <div className="hidden lg:block">
+        <div className="grid grid-cols-6 gap-2 pt-4" style={{ marginBottom: '-160px' }}>
+          {players.slice(0, 6).map((player) => ({
+            ...player,
+            astro_influence: player.astro_influence_score
+          })).map((player) => (
+            <div key={player.id} className="flex justify-center">
+              <div style={{ 
+                transform: 'scale(0.6) translateY(16px)', 
+                transformOrigin: 'top center' 
+              }}>
+                <PlayerCardNew {...player} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

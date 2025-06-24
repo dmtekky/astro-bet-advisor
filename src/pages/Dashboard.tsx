@@ -1316,16 +1316,20 @@ const Dashboard: React.FC = () => {
                   </div>
                   
                   {/* Top Players Carousel */}
-                  <div className="mt-6 p-4 border border-gray-200 bg-white shadow-sm rounded-lg">
-                    <h3 className="text-md font-medium text-slate-800 flex items-center mb-4">
-                      <Trophy className="h-4 w-4 mr-2 text-amber-500" />
-                      Top Astro Performers This Week
-                    </h3>
-                    <TopPlayersCarousel 
-                      players={topPlayers}
-                      loading={topPlayersLoading}
-                      error={topPlayersError}
-                    />
+                  <div className="mt-4 border border-gray-200 bg-white shadow-sm rounded-lg overflow-visible">
+                    <div className="px-4 pt-4">
+                      <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                        <Trophy className="h-5 w-5 mr-3 text-amber-500" />
+                        This Weeks' Astro Allstars
+                      </h3>
+                    </div>
+                    <div className="relative -mt-2">
+                      <TopPlayersCarousel 
+                        players={topPlayers}
+                        loading={topPlayersLoading}
+                        error={topPlayersError}
+                      />
+                    </div>
                   </div>
                 </motion.div>
                 {/* Other astrology cards below */}
