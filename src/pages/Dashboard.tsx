@@ -20,6 +20,7 @@ import { groupGamesByDate, formatGameDate } from "@/utils/dateUtils";
 import { useTeams } from "@/hooks/useTeams";
 import { useUpcomingGames } from "@/hooks/useUpcomingGames";
 import { Progress } from "@/components/ui/progress";
+import CosmicWaveProgress from "@/components/CosmicWaveProgress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -1827,10 +1828,18 @@ const Dashboard: React.FC = () => {
                                           {getPlanetIcon(aspect.planets[1].name)}
                                         </div>
                                         <span className={`text-sm font-bold ${strengthClass}`}>
-                                          {aspect.influence}%
+                                          {aspect.influence.toString().replace('%', '')}%
                                         </span>
                                       </div>
-                                      <Progress value={influenceValue} className="h-1.5 bg-slate-200" />
+                                      <CosmicWaveProgress 
+                                        value={influenceValue} 
+                                        startIcon={getPlanetIcon(aspect.planets[0].name)} 
+                                        endIcon={getPlanetIcon(aspect.planets[1].name)}
+                                        startPlanet={aspect.planets[0].name.toLowerCase()}
+                                        endPlanet={aspect.planets[1].name.toLowerCase()}
+                                        height={32}
+                                        className="mt-2"
+                                      />
                                     </div>
                                   );
                                 })}
