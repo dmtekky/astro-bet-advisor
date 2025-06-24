@@ -56,22 +56,104 @@ const getElementFromSign = (sign: ZodiacSign): Element => {
   return elements[sign];
 };
 
-// Define these functions if they don't exist in astroCalculations
-const getMoonPhase = (date: Date): number => {
-  // Simple moon phase calculation (0-1 value)
-  return 0.5; // Default placeholder
+// Constants for moon phase calculations
+const LUNAR_CYCLE_DAYS = 29.53058867; // Synodic month in days
+const LUNAR_CYCLE_MS = LUNAR_CYCLE_DAYS * 24 * 60 * 60 * 1000;
+
+/**
+ * Calculate the current moon phase (0-1)
+ * 0 = new moon, 0.5 = full moon, 1 = next new moon
+ */
+const getMoonPhase = (date: Date = new Date()): number => {
+  // Known new moon date (Jan 11, 2024 06:57 UTC)
+  const knownNewMoon = new Date('2024-01-11T06:57:00Z').getTime();
+  const now = date.getTime();
+  
+  // Calculate days since known new moon
+  const daysSinceKnownNewMoon = (now - knownNewMoon) / (1000 * 60 * 60 * 24);
+  
+  // Calculate current phase (0-1)
+  const phase = (daysSinceKnownNewMoon % LUNAR_CYCLE_DAYS) / LUNAR_CYCLE_DAYS;
+  
+  return phase;
 };
 
-const getMoonPhaseInfo = (phase: number): { name: string; emoji: string; phase: number; illumination: number; nextFullMoon: string; ageInDays: number; phaseType: string } => {
-  return { 
-    name: 'Unknown', 
-    emoji: '🌓',
-    phase: phase,
-    illumination: 0.5,
-    nextFullMoon: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    ageInDays: 7,
-    phaseType: 'waxing'
-  }; // Default placeholder
+/**
+ * Get detailed moon phase information
+ */
+const getMoonPhaseInfo = (phase?: number, date: Date = new Date()): { 
+  name: string; 
+  emoji: string; 
+  phase: number; 
+  illumination: number; 
+  nextFullMoon: string; 
+  ageInDays: number; 
+  phaseType: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
+} => {
+  // If phase is not provided, calculate it
+  const currentPhase = typeof phase === 'number' ? phase : getMoonPhase(date);
+  
+  // Calculate illumination (0-1) - simplified sine wave approximation
+  const illumination = 0.5 * (1 - Math.cos(2 * Math.PI * currentPhase));
+  
+  // Calculate moon age in days
+  const ageInDays = currentPhase * LUNAR_CYCLE_DAYS;
+  
+  // Calculate next full moon
+  let daysToNextFullMoon = (0.5 - currentPhase) * LUNAR_CYCLE_DAYS;
+  if (daysToNextFullMoon < 0) {
+    daysToNextFullMoon += LUNAR_CYCLE_DAYS; // If we're past full moon this cycle
+  }
+  const nextFullMoon = new Date(date.getTime() + daysToNextFullMoon * 24 * 60 * 60 * 1000);
+  
+  // Determine phase name and type
+  let name: string;
+  let emoji: string;
+  let phaseType: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
+  
+  if (currentPhase < 0.03 || currentPhase > 0.97) {
+    name = 'New Moon';
+    emoji = '🌑';
+    phaseType = 'new';
+  } else if (currentPhase < 0.22) {
+    name = 'Waxing Crescent';
+    emoji = '🌒';
+    phaseType = 'waxing-crescent';
+  } else if (currentPhase < 0.28) {
+    name = 'First Quarter';
+    emoji = '🌓';
+    phaseType = 'first-quarter';
+  } else if (currentPhase < 0.47) {
+    name = 'Waxing Gibbous';
+    emoji = '🌔';
+    phaseType = 'waxing-gibbous';
+  } else if (currentPhase < 0.53) {
+    name = 'Full Moon';
+    emoji = '🌕';
+    phaseType = 'full';
+  } else if (currentPhase < 0.72) {
+    name = 'Waning Gibbous';
+    emoji = '🌖';
+    phaseType = 'waning-gibbous';
+  } else if (currentPhase < 0.78) {
+    name = 'Last Quarter';
+    emoji = '🌗';
+    phaseType = 'last-quarter';
+  } else {
+    name = 'Waning Crescent';
+    emoji = '🌘';
+    phaseType = 'waning-crescent';
+  }
+  
+  return {
+    name,
+    emoji,
+    phase: currentPhase,
+    illumination,
+    nextFullMoon: nextFullMoon.toISOString(),
+    ageInDays,
+    phaseType
+  };
 };
 
 /**
@@ -88,27 +170,27 @@ const getProcessedMoonPhase = (
   },
   _apiMoon_Phase?: { phase_name?: string; illumination?: number | null },
 ): MoonPhaseInfo => {
-  // Always use our accurate moon phase calculation
-  const now = new Date();
-
   try {
+    // Get the current moon phase info using our calculation
+    const now = new Date();
     const moonInfo = getMoonPhaseInfo(undefined, now);
 
     // Create a properly typed MoonPhaseInfo object
     const moonPhaseInfo: MoonPhaseInfo = {
       name: moonInfo.name,
-      value: moonInfo.phase, // Use the phase value from moonInfo
-      illumination: moonInfo.illumination || 0.5, // Use illumination or default
-      nextFullMoon: new Date(moonInfo.nextFullMoon || (now.getTime() + 29.53 * 24 * 60 * 60 * 1000)), // ~30 days from now
-      ageInDays: moonInfo.ageInDays || 0,
-      phaseType: moonInfo.phaseType || "new",
+      value: moonInfo.phase,
+      illumination: moonInfo.illumination,
+      nextFullMoon: new Date(moonInfo.nextFullMoon),
+      ageInDays: moonInfo.ageInDays,
+      phaseType: moonInfo.phaseType,
     };
 
     return moonPhaseInfo;
   } catch (error) {
     console.error("Error processing moon phase:", error);
+    
     // Return a safe default in case of errors
-    const defaultDate = new Date(now.getTime() + 29.53 * 24 * 60 * 60 * 1000); // ~30 days from now
+    const defaultDate = new Date(Date.now() + 29.53 * 24 * 60 * 60 * 1000); // ~30 days from now
 
     const defaultMoonPhase: MoonPhaseInfo = {
       name: "New Moon",
