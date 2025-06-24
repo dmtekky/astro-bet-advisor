@@ -11,13 +11,14 @@ interface MobileNavProps {
   className?: string;
 }
 
-const sports: { id: Sport; name: string; icon: string }[] = [
+const sports: { id: Sport; name: string; icon: string; comingSoon?: boolean }[] = [
   { id: 'nba', name: 'NBA', icon: '🏀' },
   { id: 'mlb', name: 'MLB', icon: '⚾' },
-  { id: 'nfl', name: 'NFL', icon: '🏈' },
-  { id: 'boxing', name: 'Boxing', icon: '🥊' },
-  { id: 'soccer', name: 'Soccer', icon: '⚽' },
-  { id: 'ncaa', name: 'NCAA FB', icon: '🏈' },
+  { id: 'nfl', name: 'NFL', icon: '🏈', comingSoon: true },
+  { id: 'boxing', name: 'Boxing', icon: '🥊', comingSoon: true },
+  { id: 'soccer', name: 'Soccer', icon: '⚽', comingSoon: true },
+  { id: 'ncaa', name: 'NCAA FB', icon: '🏈', comingSoon: true },
+  { id: 'nhl', name: 'NHL', icon: '🏒', comingSoon: true },
 ];
 
 const MobileNav: React.FC<MobileNavProps> = ({ className = '' }) => {
@@ -72,14 +73,26 @@ const MobileNav: React.FC<MobileNavProps> = ({ className = '' }) => {
                       <li key={sport.id}>
                         <Link
                           to={`/dashboard?sport=${sport.id}`}
-                          className={`flex items-center space-x-2 px-3 py-3 rounded-md transition-colors ${
+                          className={`relative flex items-center space-x-2 px-3 py-3 rounded-md transition-colors ${
                             isActive
                               ? 'bg-primary text-primary-foreground font-medium'
                               : 'text-foreground/70 hover:bg-accent hover:text-accent-foreground'
-                          }`}
+                          } ${sport.comingSoon ? 'opacity-60' : ''}`}
+                          onClick={(e) => {
+                            if (sport.comingSoon) {
+                              e.preventDefault();
+                            }
+                          }}
                         >
                           <span className="text-xl mr-2">{sport.icon}</span>
-                          <span>{sport.name}</span>
+                          <div className="flex items-center">
+                            <span>{sport.name}</span>
+                            {sport.comingSoon && (
+                              <span className="ml-1.5 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
+                                Soon
+                              </span>
+                            )}
+                          </div>
                         </Link>
                       </li>
                     );

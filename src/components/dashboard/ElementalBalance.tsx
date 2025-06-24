@@ -115,16 +115,14 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
           Elemental Balance
         </CardTitle>
         <CardDescription className="text-xs sm:text-sm text-slate-600">
-          Distribution of astrological elements affecting today's games
+          Current Elemental Distribution - Distribution of astrological elements affecting today's games
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-2 sm:py-4">
         {/* Elemental Distribution */}
         <section>
-          <h3 className="text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3">
-            Current Elemental Distribution
-          </h3>
+          <div className="h-2"></div> {/* Spacer for consistent layout */}
           
           <div className="bg-gray-200 rounded-full h-6 sm:h-8 overflow-hidden shadow-sm mb-3 sm:mb-4">
             {["fire", "earth", "air", "water"].map((element, index) => {
@@ -161,7 +159,7 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
               return (
                 <div key={element} className="flex items-center justify-center sm:justify-start">
                   <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded ${elementInfo[element].color} whitespace-nowrap`}>
-                    {element.charAt(0).toUpperCase() + element.slice(1)}: {count} ({percentage.toFixed(0)}%)
+                    <span className="font-bold">{element.charAt(0).toUpperCase() + element.slice(1)}</span>: {count} ({percentage.toFixed(0)}%)
                   </span>
                 </div>
               );

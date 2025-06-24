@@ -12,10 +12,11 @@ interface SportsTabsProps {
 const sports: { id: Sport; name: string; comingSoon?: boolean }[] = [
   { id: 'nba', name: 'NBA' },
   { id: 'mlb', name: 'MLB' },
-  { id: 'nfl', name: 'NFL' },
-  { id: 'boxing', name: 'Boxing' },
+  { id: 'nfl', name: 'NFL', comingSoon: true },
+  { id: 'boxing', name: 'Boxing', comingSoon: true },
   { id: 'soccer', name: 'Soccer', comingSoon: true },
   { id: 'ncaa', name: 'NCAA FB', comingSoon: true },
+  { id: 'nhl', name: 'NHL', comingSoon: true },
 ];
 
 const SportsTabs: React.FC<SportsTabsProps> = ({ 

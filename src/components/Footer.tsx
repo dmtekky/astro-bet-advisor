@@ -58,10 +58,11 @@ const Footer: React.FC = () => {
   const leagues = [
     { id: 'nba', name: 'NBA', icon: '🏀' },
     { id: 'mlb', name: 'MLB', icon: '⚾' },
-    { id: 'nfl', name: 'NFL', icon: '🏈' },
-    { id: 'boxing', name: 'Boxing', icon: '🥊' },
+    { id: 'nfl', name: 'NFL', icon: '🏈', comingSoon: true },
+    { id: 'boxing', name: 'Boxing', icon: '🥊', comingSoon: true },
     { id: 'soccer', name: 'Soccer', icon: '⚽', comingSoon: true },
     { id: 'ncaa', name: 'NCAA Football', icon: '🏈', comingSoon: true },
+    { id: 'nhl', name: 'NHL', icon: '🏒', comingSoon: true },
   ];
 
   const footerLinks = [

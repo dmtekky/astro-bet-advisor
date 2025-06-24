@@ -6,10 +6,10 @@ export interface Sport {
   disabled?: boolean;
 }
 
-export const SPORTS: Sport[] = [
+export const SPORTS: (Sport & { comingSoon?: boolean })[] = [
   { id: '1', name: 'NBA', key: 'basketball_nba', label: 'NBA' },
-  { id: '2', name: 'NFL', key: 'americanfootball_nfl', label: 'NFL' },
   { id: '3', name: 'MLB', key: 'baseball_mlb', label: 'MLB' },
-  { id: '4', name: 'NHL', key: 'icehockey_nhl', label: 'NHL' },
-  { id: '5', name: 'Soccer', key: 'soccer_epl', label: 'Premier League' },
+  { id: '2', name: 'NFL', key: 'americanfootball_nfl', label: 'NFL', comingSoon: true },
+  { id: '4', name: 'NHL', key: 'icehockey_nhl', label: 'NHL', comingSoon: true },
+  { id: '5', name: 'Soccer', key: 'soccer_epl', label: 'Premier League', comingSoon: true },
 ];
