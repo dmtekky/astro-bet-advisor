@@ -6,16 +6,33 @@ interface Player {
   id: string;
   player_id: string;
   full_name: string;
+  first_name: string;
+  last_name: string;
   headshot_url?: string | null;
-  team_id?: string | null;
-  birth_date?: string | null;
-  primary_number?: string | number | null;
-  primary_position?: string | null;
-  impact_score?: number | null;
+  team_id: string | null;
+  team_abbreviation: string | null;
+  birth_date: string | null;
+  primary_number: string | number | null;
+  primary_position: string | null;
+  jersey_number: number | null;
+  age: number | null;
+  height: string | null;
+  weight: number | null;
+  bats: string | null;
+  throws: string | null;
+  position: string | null;
+  impact_score: number;
   astro_influence_score: number;
-  team_name?: string | null;
-  team_abbreviation?: string | null;
+  stats_batting_avg: number | null;
+  stats_batting_hits: number | null;
+  stats_batting_homeruns: number | null;
+  stats_batting_runs: number | null;
+  stats_batting_runs_batted_in: number | null;
+  stats_fielding_assists: number | null;
+  stats_fielding_errors: number | null;
+  stats_games_played: number | null;
   team_logo?: string | null;
+  league_id: string;
 }
 
 // Type for raw database records - unknown structure
@@ -40,29 +57,55 @@ const useTopPlayers = (limit = 6) => {
 
         if (error) throw new Error(error.message);
         
-        // Create players using only the fields we need, with careful handling of nulls/undefined
+        // Map database records to Player interface with proper field mapping
         const processedPlayers = (playersData || []).map((rawPlayer: RawPlayerRecord) => {
-          // Create a player object with required fields, using safe defaults
+          // Ensure we have required fields
+          const playerId = String(rawPlayer.player_id || '');
+          if (!playerId) return null; // Skip invalid records
+          
+          const firstName = String(rawPlayer.player_first_name || '');
+          const lastName = String(rawPlayer.player_last_name || '');
+          const fullName = String(rawPlayer.player_full_name || `${firstName} ${lastName}`.trim() || '');
+          
+          // Create player object with exact field mapping from database schema
           const player: Player = {
-            // Use player_id for both id and player_id (player_id is the primary key)
-            id: String(rawPlayer.player_id || ''),
-            player_id: String(rawPlayer.player_id || ''),
-            full_name: String(rawPlayer.full_name || ''),
-            headshot_url: rawPlayer.headshot_url || null,
+            id: playerId,
+            player_id: playerId,
+            full_name: fullName,
+            first_name: firstName,
+            last_name: lastName,
+            headshot_url: rawPlayer.player_official_image_src || null,
             team_id: rawPlayer.team_id || null,
-            birth_date: rawPlayer.birth_date || null,
-            primary_number: rawPlayer.primary_number || rawPlayer.jersey_number || null,
-            primary_position: rawPlayer.primary_position || rawPlayer.position || null,
-            team_name: rawPlayer.team_name || null,
             team_abbreviation: rawPlayer.team_abbreviation || null,
-            impact_score: typeof rawPlayer.impact_score === 'number' ? rawPlayer.impact_score : 0,
-            astro_influence_score: typeof rawPlayer.astro_influence_score === 'number' ? rawPlayer.astro_influence_score : 0,
-            team_logo: rawPlayer.team_logo_url || null,
+            birth_date: rawPlayer.player_birth_date || null,
+            primary_number: rawPlayer.player_jersey_number || null,
+            primary_position: rawPlayer.player_primary_position || null,
+            jersey_number: rawPlayer.player_jersey_number || null,
+            age: rawPlayer.player_age || null,
+            height: rawPlayer.player_height || null,
+            weight: rawPlayer.player_weight || null,
+            bats: rawPlayer.player_handedness_bats || null,
+            throws: rawPlayer.player_handedness_throws || null,
+            position: rawPlayer.player_primary_position || null,
+            impact_score: rawPlayer.impact_score || 0,
+            astro_influence_score: rawPlayer.astro_influence_score || 0,
+            stats_batting_avg: rawPlayer.stats_batting_batting_avg || null,
+            stats_batting_hits: rawPlayer.stats_batting_hits || null,
+            stats_batting_homeruns: rawPlayer.stats_batting_homeruns || null,
+            stats_batting_runs: rawPlayer.stats_batting_runs || null,
+            stats_batting_runs_batted_in: rawPlayer.stats_batting_runs_batted_in || null,
+            stats_fielding_assists: rawPlayer.stats_fielding_assists || null,
+            stats_fielding_errors: rawPlayer.stats_fielding_errors || null,
+            stats_games_played: rawPlayer.stats_games_played || null,
+            team_logo: null, // Will be set from team data if available
+            league_id: 'mlb' // Default to MLB for baseball_players
           };
+          
           return player;
         });
         
-        setPlayers(processedPlayers);
+        // Filter out any null entries from invalid player records
+        setPlayers(processedPlayers.filter((p): p is Player => p !== null));
       } catch (err: any) {
         console.error('Error fetching top baseball players:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch top players'));
