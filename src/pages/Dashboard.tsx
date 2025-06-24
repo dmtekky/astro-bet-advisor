@@ -44,11 +44,15 @@ import {
   BarChart,
   BarChart2,
   Lightbulb,
-  AlertTriangle,
-  CheckCircle,
   AlertCircle,
   TrendingUp,
   Globe,
+  CircleDot,
+  Heart,
+  Flame,
+  CircleOff,
+  Waves,
+  CircleX,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate, Link } from "react-router-dom";
@@ -836,6 +840,39 @@ const Dashboard: React.FC = () => {
 
   const topPlanets = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
 
+  // Helper functions for planetary influences
+  const SIGN_TO_ELEMENT: Record<string, string> = {
+    'aries': 'fire',
+    'taurus': 'earth',
+    'gemini': 'air',
+    'cancer': 'water',
+    'leo': 'fire',
+    'virgo': 'earth',
+    'libra': 'air',
+    'scorpio': 'water',
+    'sagittarius': 'fire',
+    'capricorn': 'earth',
+    'aquarius': 'air',
+    'pisces': 'water',
+  };
+
+  const getPlanetIcon = (planet: string) => {
+    const planetLower = planet.toLowerCase();
+    switch (planetLower) {
+      case 'sun': return <Sun className="h-4 w-4 text-yellow-500" />;
+      case 'moon': return <Moon className="h-4 w-4 text-indigo-500" />;
+      case 'mercury': return <CircleDot className="h-4 w-4 text-gray-500" />;
+      case 'venus': return <Heart className="h-4 w-4 text-pink-500" />;
+      case 'mars': return <Flame className="h-4 w-4 text-red-500" />;
+      case 'jupiter': return <Zap className="h-4 w-4 text-purple-500" />;
+      case 'saturn': return <CircleOff className="h-4 w-4 text-amber-700" />;
+      case 'uranus': return <Sparkles className="h-4 w-4 text-blue-400" />;
+      case 'neptune': return <Waves className="h-4 w-4 text-blue-600" />;
+      case 'pluto': return <CircleX className="h-4 w-4 text-gray-700" />;
+      default: return <CircleDot className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
   if (isLoading) {
     return <LoadingScreen fullScreen />;
   }
@@ -1390,8 +1427,8 @@ const Dashboard: React.FC = () => {
                         <CardContent className="space-y-3 pt-2">
                           {/* Sun Visualization Section */}
                           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm">
-                            <div className="flex flex-col items-center md:flex-row md:items-start">
-                              <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-0 md:-mr-4 lg:-mr-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
+                            <div className="flex flex-col items-center md:flex-row-reverse md:items-start md:justify-between">
+                              <div className="relative w-36 h-36 md:w-42 md:h-42 lg:w-48 lg:h-48 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-300 rounded-full overflow-hidden mb-4 md:mb-0 md:ml-4 lg:ml-6 flex-shrink-0 border-[10px] border-yellow-400/80 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
                                 {/* Sun visualization */}
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <Sun className="h-20.8 w-20.8 md:h-26 md:w-26 text-yellow-400 drop-shadow-lg animate-pulse" />
@@ -1429,37 +1466,8 @@ const Dashboard: React.FC = () => {
                                   <p className="text-base text-slate-700 leading-relaxed">
                                     {getSunSportsInfluences(astroData)[0]
                                       ?.text ||
-                                      "The Sun’s current sign sets the tone for vitality and momentum."}
+                                      "The Sun's current sign sets the tone for vitality and momentum."}
                                   </p>
-                                  {/* Planet Positions Section */}
-                                  <div className="mt-4">
-                                    <h5 className="text-sm font-semibold text-blue-700 mb-2">Planet Positions</h5>
-                                    {/* Planet positions data */}
-                                    
-                                    {topPlanets.map((planetName) => {
-                                      const planetKey = planetName.toLowerCase();
-                                      const planetInfo = astroData?.planets?.[planetKey];
-                                      
-                                      // Debug log
-                                      console.log(`Dashboard planet ${planetName}:`, planetInfo);
-                                      
-                                      if (!planetInfo) {
-                                        console.warn(`Missing planet data for ${planetName}`);
-                                        return null;
-                                      }
-                                      
-                                      return (
-                                        <div key={planetName} className="bg-white p-3 rounded-lg border border-blue-50 mb-2">
-                                          <div className="text-sm font-medium text-slate-800">
-                                            {planetInfo.name || planetName}
-                                          </div>
-                                          <div className="text-xs text-slate-600">
-                                            {planetInfo.sign} at {planetInfo.degree}°
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                   <div className="bg-white p-3 rounded-lg border border-slate-100">
@@ -1562,11 +1570,11 @@ const Dashboard: React.FC = () => {
                               </div>
                               <div className="w-full lg:flex-1">
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
-                                  <div>
-                                    <h4 className="text-2xl font-bold text-indigo-800 mb-1">
+                                  <div className="text-center lg:text-left">
+                                    <h4 className="text-3xl md:text-4xl font-bold text-indigo-800 mb-2">
                                       Moon Phase
                                     </h4>
-                                    <p className="text-sm text-indigo-600 mb-2">
+                                    <p className="text-xl md:text-2xl font-semibold text-indigo-700 mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                                       {astroData?.moonPhase?.name ||
                                         "Current phase unknown"}
                                     </p>
@@ -1624,7 +1632,7 @@ const Dashboard: React.FC = () => {
                                 </div>
 
                                 {/* Void of Course Status */}
-                                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
+                                <div className="w-full bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
                                   <div className="p-3 border-b border-amber-100">
                                     <div className="flex items-center justify-between">
                                       <h4 className="font-medium text-slate-800 flex items-center text-sm">
@@ -1795,40 +1803,62 @@ const Dashboard: React.FC = () => {
                           </CardHeader>
                           <CardContent className="space-y-3 pt-2">
                             {/* Prominent Aspects Section */}
-                            <div>
-                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Prominent Aspects</h5>
-                              {astroData?.aspects?.slice(0, 5).map((aspect, index) => {
-                                if (!aspect.planets || aspect.planets.length < 2 || !aspect.planets[0] || !aspect.planets[1]) {
-                                  return null;
-                                }
-                                const influenceValue = aspect.influence ? parseInt(aspect.influence) : 0;
-                                return (
-                                  <div key={index} className="flex items-center justify-between mb-2">
-                                    <div className="text-sm font-medium">
-                                      {aspect.planets[0].name} {aspect.type} {aspect.planets[1].name}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                              <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
+                                <Activity className="h-4 w-4 mr-1.5 text-blue-500" />
+                                Prominent Aspects
+                              </h5>
+                              <div className="space-y-3">
+                                {astroData?.aspects?.slice(0, 5).map((aspect, index) => {
+                                  if (!aspect.planets || aspect.planets.length < 2 || !aspect.planets[0] || !aspect.planets[1]) {
+                                    return null;
+                                  }
+                                  const influenceValue = aspect.influence ? parseInt(aspect.influence) : 0;
+                                  const strengthClass = influenceValue > 70 ? 'text-green-600' : 
+                                                      influenceValue > 40 ? 'text-amber-600' : 'text-red-600';
+                                  return (
+                                    <div key={index} className="bg-slate-50 p-2.5 rounded-lg">
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <div className="flex items-center gap-1.5 text-sm font-medium">
+                                          {getPlanetIcon(aspect.planets[0].name)}
+                                          <span className="text-slate-700">{aspect.planets[0].name}</span>
+                                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">{aspect.type}</span>
+                                          <span className="text-slate-700">{aspect.planets[1].name}</span>
+                                          {getPlanetIcon(aspect.planets[1].name)}
+                                        </div>
+                                        <span className={`text-sm font-bold ${strengthClass}`}>
+                                          {aspect.influence}%
+                                        </span>
+                                      </div>
+                                      <Progress value={influenceValue} className="h-1.5 bg-slate-200" />
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Progress value={influenceValue} className="w-24" />
-                                      <span className="text-xs text-muted-foreground">
-                                        {aspect.influence}
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
                             {/* Planet Position Visualization */}
-                            <div>
-                              <h5 className="text-sm font-semibold text-blue-700 mb-2">Planet Positions</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {astroData?.planets && typeof astroData?.planets === 'object' && Object.entries(astroData.planets).map(([planet, data]: [string, any]) => (
-                                  <div key={planet} className="bg-white p-2 rounded-lg border border-slate-100">
-                                    <div className="text-xs uppercase text-slate-500">{planet}</div>
-                                    <div className="font-semibold text-blue-700">
-                                      {data?.sign || 'Unknown'} at {typeof data?.degree === 'number' ? data.degree.toFixed(2) : 'N/A'}°
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                              <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
+                                <Globe className="h-4 w-4 mr-1.5 text-blue-500" />
+                                Planet Positions
+                              </h5>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                                {astroData?.planets && typeof astroData?.planets === 'object' && Object.entries(astroData.planets).map(([planet, data]: [string, any]) => {
+                                  const sign = data?.sign || 'Unknown';
+                                  const elementColor = getElementColor(sign);
+                                  return (
+                                    <div key={planet} className="bg-slate-50 p-2 rounded-lg border border-slate-100 hover:shadow-md transition-shadow duration-200">
+                                      <div className="flex items-center gap-1.5 mb-1.5">
+                                        {getPlanetIcon(planet)}
+                                        <span className="text-sm font-medium capitalize text-slate-700">{planet}</span>
+                                      </div>
+                                      <div className={`${elementColor} text-white text-xs font-medium px-2 py-1 rounded-md flex items-center justify-between`}>
+                                        <span>{sign}</span>
+                                        <span>{typeof data?.degree === 'number' ? data.degree.toFixed(2) + '°' : 'N/A'}</span>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                             {/* Personalized Insight Panel */}
