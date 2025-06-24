@@ -122,22 +122,14 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li>
                 <a 
-                  href="mailto:info@fullmoonodds.com" 
+                  href="mailto:Luna@fullmoonodds.com" 
                   className="text-gray-400 hover:text-yellow-400 flex items-center transition-colors"
                 >
                   <span className="mr-2">✉️</span>
-                  info@fullmoonodds.com
+                  Luna@fullmoonodds.com
                 </a>
               </li>
-              <li>
-                <a 
-                  href="tel:+1234567890" 
-                  className="text-gray-400 hover:text-yellow-400 flex items-center transition-colors"
-                >
-                  <span className="mr-2">📞</span>
-                  (123) 456-7890
-                </a>
-              </li>
+              {/* Phone number removed as requested */}
             </ul>
           </div>
 
