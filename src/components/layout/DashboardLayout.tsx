@@ -33,7 +33,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 container py-4 md:py-6 mt-16 bg-gray-50">
+      <main className="flex-1 container py-4 md:py-6 mt-16 bg-white">
         {children}
       </main>
 

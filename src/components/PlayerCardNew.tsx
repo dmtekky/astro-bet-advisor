@@ -19,6 +19,8 @@ export interface PlayerCardProps {
   teamAverageAstroInfluence?: number | null;
   linkPath?: string;
   className?: string;
+  hideImpactScore?: boolean;
+  compact?: boolean;
 }
 
 // Threshold for high astro score (0-100 scale)
@@ -38,7 +40,17 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
   teamAverageAstroInfluence = 0,
   linkPath,
   className,
+  hideImpactScore = false,
+  compact = false,
 }) => {
+  // Card dimensions - fixed to maintain consistency
+  const cardWidth = compact ? 270 : 300; // Slightly wider in compact mode
+  const cardHeight = 500; // Slightly shorter to fit mobile screens better
+  const imageHeight = cardHeight * 0.6; // 60% of card height for image (reduced from 66.67%)
+  
+  // Scale factors for compact mode (0.8 = 80% of original size)
+  const scale = compact ? 0.8 : 1;
+
   // Get zodiac sign from birth date
   const zodiacSign = birth_date ? getZodiacSign(birth_date) : null;
   const colors = getZodiacColorScheme(zodiacSign);
@@ -120,23 +132,35 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
       animate="animate"
       whileHover="hover"
       onClick={handleCardClick}
-      className={`relative w-[300px] sm:w-[330px] h-[540px] rounded-xl overflow-hidden bg-white cursor-pointer group transition-all duration-300 flex-shrink-0 shadow-sm
+      className={`relative w-[${cardWidth}px] h-[${cardHeight * scale}px] sm:w-[${cardWidth * 1.1}px] sm:h-[${cardHeight * scale}px] rounded-xl overflow-hidden bg-white cursor-pointer group transition-all duration-300 flex-shrink-0 shadow-sm
         ${isHighAstro 
           ? 'border border-purple-300 hover:border-purple-400 hover:shadow-purple-100' 
           : isAboveAverage 
           ? 'border border-blue-300 hover:border-blue-400 hover:shadow-blue-100' 
           : 'border border-gray-200 hover:border-gray-300 hover:shadow-gray-100'}
         hover:scale-[1.03] hover:shadow-lg ${className}`}
+      style={{
+        '--scale': scale,
+        '--text-scale': scale,
+        '--spacing-scale': scale,
+        '--size-scale': scale,
+      } as React.CSSProperties}
       aria-label={`Player card for ${full_name}`}
     >
       {/* ===== PLAYER IMAGE SECTION ===== */}
-      <div className="relative w-full h-[360px] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+      <div 
+        className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden"
+        style={{
+          height: `${imageHeight * scale}px`,
+          minHeight: `${imageHeight * scale}px`
+        }}
+      >
         {/* Player Name Overlay */}
         <div className="absolute bottom-0 left-0 right-0 z-10 px-4 pb-1">
           {full_name && (
             <div className="text-left">
               <div 
-                className="text-7xl font-normal tracking-tight leading-none font-['Anton']"
+                className="font-normal tracking-tight leading-none font-['Anton']"
                 style={{
                   background: 'linear-gradient(45deg, #4F46E5 0%, #7C3AED 25%, #EC4899 50%, #F59E0B 75%, #10B981 100%)',
                   WebkitBackgroundClip: 'text',
@@ -145,7 +169,8 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
                   animation: 'gradient 5s ease infinite',
                   textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
                   lineHeight: '0.9',
-                  letterSpacing: '-0.03em'
+                  letterSpacing: '-0.03em',
+                  fontSize: compact ? '2.25rem' : '2.75rem'
                 }}
               >
                 {full_name.split(' ')[0].toUpperCase()}
@@ -156,8 +181,12 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
         {/* Zodiac Sign Badge - Top Right */}
         {zodiacSign && (
           <div 
-            className="absolute top-2 right-2 z-10 bg-white/90 backdrop-blur-md text-xs font-medium px-2.5 py-1 rounded-full shadow-sm border border-gray-100"
+            className="absolute top-2 right-2 z-10 bg-white/90 backdrop-blur-md text-xs font-medium rounded-full shadow-sm border border-gray-100"
             aria-label={`Zodiac sign: ${zodiacSign}`}
+            style={{
+              fontSize: compact ? '0.65rem' : '0.75rem',
+              padding: compact ? '0.25rem 0.5rem' : '0.375rem 0.625rem'
+            }}
           >
             {zodiacSign}
           </div>
@@ -180,8 +209,9 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
                 fontFamily: 'Arial, sans-serif',
                 fontWeight: 700,
                 letterSpacing: '0.05em',
-                fontSize: '0.7rem',
-                lineHeight: '1'
+                fontSize: compact ? '0.6rem' : '0.7rem',
+                lineHeight: '1',
+                padding: compact ? '0.2rem 0.4rem' : '0.25rem 0.5rem'
               }}
             >
               COSMIC EDGE
@@ -220,17 +250,29 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
       </div>
 
       {/* ===== PLAYER INFO SECTION ===== */}
-      <div className="p-4 bg-white">
-        <div className="flex justify-between items-start">
+      <div 
+        className="bg-white overflow-hidden"
+        style={{
+          padding: `${compact ? 10 : 16}px`,
+          paddingBottom: `${compact ? 8 : 16}px`,
+          height: `${(cardHeight - imageHeight) * scale}px`,
+          minHeight: `${(cardHeight - imageHeight) * scale}px`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: `${compact ? 4 : 8}px`
+        }}
+      >
+        <div className="flex justify-between items-start flex-shrink-0" style={{ marginBottom: `${compact ? 2 : 8}px` }}>
           {full_name && full_name.split(' ').length > 1 && (
             <h3 
-              className="text-[1.75rem] font-light font-['Anton'] tracking-wide text-gray-900"
+              className="font-light font-['Anton'] tracking-wide text-gray-900"
               style={{
-                marginTop: '-0.25rem',
+                marginTop: compact ? '-0.1rem' : '-0.25rem',
                 lineHeight: '1',
                 letterSpacing: '0.05em',
                 color: '#000000',
-                fontWeight: 300
+                fontWeight: 300,
+                fontSize: compact ? '1.4rem' : '1.75rem'
               }}
             >
               {full_name.split(' ').slice(1).join(' ').toUpperCase()}
@@ -239,12 +281,16 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
           <div className="flex items-center space-x-2">
             {primary_position && (
               <span 
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap
+                className={`rounded-md text-xs font-semibold whitespace-nowrap
                   ${isHighAstro 
                     ? 'bg-purple-50 text-purple-700 border border-purple-100' 
                     : isAboveAverage 
                     ? 'bg-blue-50 text-blue-700 border border-blue-100' 
                     : 'bg-gray-50 text-gray-700 border border-gray-100'}`}
+                style={{
+                  padding: compact ? '0.2rem 0.5rem' : '0.25rem 0.625rem',
+                  fontSize: compact ? '0.65rem' : '0.75rem'
+                }}
                 aria-label={`Position: ${primary_position}`}
               >
                 {primary_position}
@@ -252,7 +298,11 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
             )}
             {primary_number && (
               <span 
-                className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 whitespace-nowrap"
+                className="font-medium text-gray-500 bg-gray-50 rounded-md border border-gray-100 whitespace-nowrap"
+                style={{
+                  padding: compact ? '0.2rem 0.5rem' : '0.25rem 0.5rem',
+                  fontSize: compact ? '0.65rem' : '0.75rem'
+                }}
                 aria-label={`Jersey number: ${primary_number}`}
               >
                 #{primary_number}
@@ -261,48 +311,59 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
           </div>
         </div>
 
-        {/* Impact Score Meter */}
-        <div className="mt-2 mb-5">
-          <div className="flex justify-between items-center text-xs mb-1">
-            <div className="flex items-center">
-              <span className="font-medium text-gray-600">Impact Score</span>
-              <div className="ml-1.5 flex items-center">
-                <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.329-.43-.616-.952-.84-1.466-.224-.514-.4-1.142-.46-1.946a1.01 1.01 0 00-.007-.14z" clipRule="evenodd" />
-                </svg>
+        {!hideImpactScore && (
+          <div className="mt-1 w-full">
+            <div className="flex justify-between items-center text-xs mb-1">
+              <div className="flex items-center">
+                <span className="font-medium text-gray-600">Impact Score</span>
+                <div className="ml-1.5 flex items-center">
+                  <svg 
+                    className="text-gray-400" 
+                    style={{
+                      width: compact ? '0.75rem' : '0.875rem',
+                      height: compact ? '0.75rem' : '0.875rem'
+                    }} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.329-.43-.616-.952-.84-1.466-.224-.514-.4-1.142-.46-1.946a1.01 1.01 0 00-.007-.14z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <span className="font-bold text-gray-800">{formattedImpactScore}</span>
+                <span 
+                  className="text-gray-400 ml-1"
+                  style={{
+                    fontSize: compact ? '0.55rem' : '0.7rem',
+                    lineHeight: '1'
+                  }}
+                >/100</span>
               </div>
             </div>
-            <div className="flex items-center">
-              <span className="font-bold text-gray-800">{formattedImpactScore}</span>
-              <span className="text-gray-400 text-[10px] ml-1">/100</span>
+            <div 
+              className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden"
+              role="meter"
+              aria-valuenow={impact_score || 0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Impact score: ${formattedImpactScore} out of 100`}
+            >
+              <div 
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{ 
+                  width: `${Math.min(impact_score || 0, 100)}%`,
+                  background: `linear-gradient(90deg, 
+                    hsl(120, 60%, 85%) 0%, 
+                    hsl(120, 60%, 50%) 50%, 
+                    hsl(120, 100%, 20%) 100%)`,
+                  backgroundSize: '200% 100%',
+                  backgroundPosition: `${100 - (impact_score || 0)}% 0%`
+                }}
+              />
             </div>
           </div>
-          <div 
-            className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden"
-            role="meter"
-            aria-valuenow={impact_score || 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Impact score: ${formattedImpactScore} out of 100`}
-          >
-            <div 
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{ 
-                width: `${Math.min(impact_score || 0, 100)}%`,
-                background: `linear-gradient(90deg, 
-                  hsl(120, 60%, 85%) 0%, 
-                  hsl(120, 60%, 50%) 50%, 
-                  hsl(120, 100%, 20%) 100%)`,
-                backgroundSize: '200% 100%',
-                backgroundPosition: `${100 - (impact_score || 0)}% 0%`
-              }}
-            />
-          </div>
-
-        </div>
-
+        )}
+        
         {/* Astro Influence Meter */}
-        <div className="mb-5">
+        <div className="mt-1">
           <div className="flex justify-between items-center text-xs mb-1">
             <div className="flex items-center">
               <span className="font-medium text-gray-600">Astro Influence</span>

@@ -40,8 +40,8 @@ const SolarInfluenceInsights: React.FC<SolarInfluenceInsightsProps> = ({
   const influences = getSunSportsInfluences();
 
   return (
-    <div className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-      <CardHeader className="pb-2">
+    <>
+      <CardHeader className="pb-2 pt-4">
         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
           <Sun className="h-5 w-5 mr-2 text-yellow-500" /> Solar Influence
         </CardTitle>
@@ -152,7 +152,7 @@ const SolarInfluenceInsights: React.FC<SolarInfluenceInsightsProps> = ({
           </div>
         </div>
       </CardContent>
-    </div>
+    </>
   );
 };
 

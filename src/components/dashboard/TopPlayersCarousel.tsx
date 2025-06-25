@@ -54,49 +54,39 @@ const TopPlayersCarousel: React.FC<TopPlayersCarouselProps> = ({
     : 0;
 
   return (
-    <div className="relative w-full max-w-[1440px] mx-auto">
-      {/* Mobile & Tablet: Horizontal scroll with snap points */}
-      <div className="lg:hidden">
-        <div className="relative w-full" style={{ height: 'fit-content' }}>
-          <div className="flex space-x-4 px-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-2 -mb-24">
+    <>
+      {/* Mobile: Horizontal scroll */}
+      <div className="lg:hidden w-full">
+        <div className="relative w-full py-6">
+          <div className="flex space-x-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide w-full">
             {players.slice(0, 6).map((player) => ({
               ...player,
               astro_influence: player.astro_influence_score
             })).map((player) => (
-              <div key={player.id} className="flex-shrink-0 w-[40%] snap-center">
-                <div style={{ 
-                  transform: 'scale(0.6)',
-                  transformOrigin: 'top center',
-                  margin: '0 -20% -40px',
-                  padding: '0 0 20px'
-                }}>
-                  <PlayerCardNew {...player} />
-                </div>
+              <div key={player.id} className="flex-shrink-0 snap-center">
+                <PlayerCardNew {...player} className="w-[240px] h-[432px] sm:w-[264px] sm:h-[432px]" hideImpactScore={true} />
               </div>
             ))}
           </div>
         </div>
       </div>
       
-      {/* Desktop: Grid layout */}
-      <div className="hidden lg:block">
-        <div className="grid grid-cols-6 gap-2 pt-4" style={{ marginBottom: '-160px' }}>
-          {players.slice(0, 6).map((player) => ({
-            ...player,
-            astro_influence: player.astro_influence_score
-          })).map((player) => (
-            <div key={player.id} className="flex justify-center">
-              <div style={{ 
-                transform: 'scale(0.6) translateY(16px)', 
-                transformOrigin: 'top center' 
-              }}>
-                <PlayerCardNew {...player} />
+      {/* Desktop: Flex layout with consistent spacing */}
+      <div className="hidden lg:block w-full">
+        <div className="w-full overflow-x-auto py-6">
+          <div className="flex space-x-6 w-full">
+            {players.slice(0, 6).map((player) => ({
+              ...player,
+              astro_influence: player.astro_influence_score
+            })).map((player) => (
+              <div key={player.id} className="flex-shrink-0">
+                <PlayerCardNew {...player} className="w-[280px]" hideImpactScore={true} />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

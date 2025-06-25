@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+
 import { Flame, Droplets, Wind, Mountain } from "lucide-react";
 import { getElementColor, getSignElement } from "@/utils/astroUtils/index";
 
@@ -105,21 +100,21 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
   };
 
   return (
-    <div className="border border-slate-200/50 bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden">
-      <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
-        <CardTitle className="text-base sm:text-lg font-semibold text-slate-800 flex items-center">
+    <div className="bg-white rounded-xl">
+      <div className="pb-3 sm:pb-4 px-4 sm:px-6">
+        <h3 className="text-base sm:text-lg font-semibold text-slate-800 flex items-center">
           <div className="flex space-x-1 mr-2">
             <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
             <Droplets className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
           </div>
           Elemental Balance
-        </CardTitle>
-        <CardDescription className="text-xs sm:text-sm text-slate-600">
+        </h3>
+        <p className="text-xs sm:text-sm text-slate-600">
           Current Elemental Distribution - Distribution of astrological elements affecting today's games
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-2 sm:py-4">
+      <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-2 sm:py-4">
         {/* Elemental Distribution */}
         <section>
           <div className="h-2"></div> {/* Spacer for consistent layout */}
@@ -200,7 +195,7 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
             <h4 className="text-[10px] xs:text-xs font-medium text-slate-500 mb-1 sm:mb-2">
               Planets by Element
             </h4>
-            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               {["fire", "earth", "air", "water"].map((element) => (
                 <div 
                   key={element} 
@@ -223,7 +218,7 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
             </div>
           </div>
         </section>
-      </CardContent>
+      </div>
     </div>
   );
 };

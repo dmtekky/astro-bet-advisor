@@ -1068,7 +1068,7 @@ const Dashboard: React.FC = () => {
         exit="hidden"
         className="space-y-8"
       >
-        <div className="container mx-auto px-4 md:px-6 lg:px-8 space-y-8 bg-white">
+        <div className="space-y-8">
           {/* Main Content */}
           {astroError ? (
             <div className="text-center py-8">
@@ -1080,21 +1080,19 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             // No global error, proceed to render the main layout with individual section loading
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1">
               {/* Upcoming Games Section (Full width) */}
               <motion.div
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="space-y-8"
+                className="space-y-4 bg-white"
               >
                 {gamesLoading && (!games || games.length === 0) ? (
                   // Skeletons for Games section
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <Skeleton className="h-8 w-48" />
-                    </CardHeader>
-                    <CardContent>
+                  <div className="px-6 pt-6 bg-white">
+                    <Skeleton className="h-8 w-48 mb-6" />
+                    <div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {Array.from({ length: 6 }).map((_, i) => (
                           <Skeleton
@@ -1103,17 +1101,15 @@ const Dashboard: React.FC = () => {
                           />
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ) : games && games.length > 0 ? (
                   // Actual Games content
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl font-semibold text-gray-900">
-                        Upcoming Games
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  <div className="px-6 pt-6 bg-white">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                      Upcoming Games
+                    </h2>
+                    <div>
                       {groupedGames.map((group) => (
                         <div key={group.date.toString()} className="mb-6">
                           <h3 className="text-lg font-semibold text-gray-800 mb-3 sticky top-0 bg-white py-2 z-10">
@@ -1260,20 +1256,14 @@ const Dashboard: React.FC = () => {
                           </Button>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ) : !gamesLoading && (!games || games.length === 0) ? (
                   // No games found message
-                  <Card className="overflow-hidden border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>Upcoming Games</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-center text-slate-500 py-8">
-                        No upcoming games found.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <div className="px-6 pt-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Games</h2>
+                    <p className="text-gray-500">No upcoming games found.</p>
+                  </div>
                 ) : null}
               </motion.div>
 
@@ -1282,15 +1272,16 @@ const Dashboard: React.FC = () => {
                 variants={slideUp}
                 initial="hidden"
                 animate="show"
-                className="mt-12"
+                className="bg-white p-6 rounded-t-none"
               >
-                <div className="flex items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Astrological Insights
-                  </h2>
-                  <span className="ml-3 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
-                    {format(selectedDate, "MMMM d, yyyy")}
-                  </span>
+                {/* Astrological Insights Full-Width Banner */}
+                <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-12 py-8 bg-black text-white overflow-hidden">
+                  {/* Starry background overlay */}
+                  <div className="absolute inset-0 bg-[url('/stars.svg')] bg-center bg-cover opacity-20"></div>
+                  <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center space-x-6">
+                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-wide">Astrological Insights</h2>
+                    <span className="text-lg md:text-xl font-semibold text-indigo-300 bg-gray-800 bg-opacity-50 px-4 py-2 rounded-lg">{format(selectedDate, "MMMM d, yyyy")}</span>
+                  </div>
                 </div>
                 {/* Elemental Balance Full-Width Card */}
                 <motion.div
@@ -1303,41 +1294,49 @@ const Dashboard: React.FC = () => {
                     planets={astroData?.planets} 
                   />
                   
-                  {/* Daily Astro Tip - Moved outside ElementalBalance component */}
-                  <div className="mt-4 p-4 border border-gray-200 bg-white shadow-sm rounded-lg">
-                    <h3 className="text-md font-medium text-slate-800 flex items-center">
-                      <Lightbulb className="h-4 w-4 mr-2 text-amber-500" />
-                      Daily Astro Tip
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-600">
-                      {dailyRecommendation ||
-                        "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence benefits teams with superior passing, communication, and strategic adaptability."}
-                    </p>
+                  {/* Daily Astro Tip - Enhanced Full Width Section */}
+                  <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-12 py-12 bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
+                    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="max-w-4xl mx-auto text-center">
+                        <div className="flex flex-col items-center mb-6">
+                          <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-3 rounded-xl shadow-lg w-14 h-14 flex items-center justify-center mb-4">
+                            <Lightbulb className="h-7 w-7 text-white" />
+                          </div>
+                          <div className="text-center">
+                            <h3 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 to-amber-100">
+                              Daily Astro Tip
+                            </h3>
+                            <div className="h-1 w-16 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full mt-2 mx-auto"></div>
+                          </div>
+                        </div>
+                        <p className="text-slate-100 text-lg leading-relaxed font-light max-w-3xl mx-auto">
+                          {dailyRecommendation ||
+                            "Versatile teams with good passing and communication will perform well. Rest and recovery strategies will be particularly important. Air's strong influence benefits teams with superior passing, communication, and strategic adaptability."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Top Players Carousel */}
-                  <div className="mt-4 border border-gray-200 bg-white shadow-sm rounded-lg overflow-visible">
-                    <div className="px-4 pt-4">
-                      <h3 className="text-xl font-bold text-slate-800 flex items-center">
-                        <Trophy className="h-5 w-5 mr-3 text-amber-500" />
-                        This Weeks' Astro Allstars
-                      </h3>
-                    </div>
-                    <div className="relative -mt-2">
-                      <TopPlayersCarousel 
-                        players={topPlayers}
-                        loading={topPlayersLoading}
-                        error={topPlayersError}
-                      />
-                    </div>
+                  <div className="px-4 pt-6">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                      <Trophy className="h-5 w-5 mr-3 text-amber-500" />
+                      This Weeks' Astro Allstars
+                    </h3>
                   </div>
+                  <TopPlayersCarousel 
+                    players={topPlayers}
+                    loading={topPlayersLoading}
+                    error={topPlayersError}
+                    />
                 </motion.div>
                 {/* Other astrology cards below */}
                 <motion.div
                   variants={container}
                   initial="hidden"
                   animate="show"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  className="space-y-6"
                 >
                   {astroLoading && !astroData ? (
                     // Skeletons for Astro section
@@ -1351,7 +1350,6 @@ const Dashboard: React.FC = () => {
                     <>
                       <motion.div 
                         variants={item}
-                        className="md:col-span-2"
                       >
                         <SolarInfluenceInsights 
                           sun={astroData?.planets?.sun} 
@@ -1370,7 +1368,7 @@ const Dashboard: React.FC = () => {
 
                       <motion.div
                         variants={item}
-                        className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 md:col-span-2"
+                        className="bg-white shadow-sm rounded-lg w-full"
                       >
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
@@ -1385,9 +1383,8 @@ const Dashboard: React.FC = () => {
                               : ""}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-3 pt-2">
-                          {/* Moon Phase Section with Visualization */}
-                          <div className="w-full bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
+                        {/* Moon Phase Section with Visualization - Removed CardContent for full width */}
+                        <div className="w-full bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
                             <div className="flex flex-col items-center lg:flex-row lg:items-start">
                               <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 rounded-full overflow-hidden mb-6 lg:mb-0 lg:mr-8 flex-shrink-0 border-[10px] border-indigo-600/90 shadow-xl transform hover:scale-[1.02] transition-transform duration-500">
                                 {/* Moon phase visualization */}
@@ -1441,7 +1438,7 @@ const Dashboard: React.FC = () => {
                                   </div>
                                 </div>
 
-                                <div className="bg-white p-5 rounded-xl border border-indigo-50 shadow-sm mb-6">
+                                <div className="bg-white p-5 rounded-xl mb-6">
                                   <p className="text-base text-slate-700 leading-relaxed">
                                     {astroData?.moonPhase?.name &&
                                       getMoonPhaseImpact(
@@ -1451,13 +1448,13 @@ const Dashboard: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-row flex-wrap items-stretch justify-between gap-3 mb-6">
-                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                  <div className="bg-white p-3 rounded-lg flex flex-col flex-1 min-w-[120px]">
                                     <div className="text-xs uppercase text-slate-500 font-medium mb-1">Moon Sign</div>
                                     <div className="font-semibold text-indigo-700 text-lg">
                                       {astroData?.planets?.moon?.sign || "—"}
                                     </div>
                                   </div>
-                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                  <div className="bg-white p-3 rounded-lg flex flex-col flex-1 min-w-[120px]">
                                     <div className="text-xs uppercase text-slate-500 font-medium mb-1">
                                       Next Full Moon
                                     </div>
@@ -1473,7 +1470,7 @@ const Dashboard: React.FC = () => {
                                         : "—"}
                                     </div>
                                   </div>
-                                  <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col flex-1 min-w-[120px]">
+                                  <div className="bg-white p-3 rounded-lg flex flex-col flex-1 min-w-[120px]">
                                     <div className="text-xs uppercase text-slate-500 font-medium mb-1">
                                       Zodiac Degree
                                     </div>
@@ -1486,8 +1483,8 @@ const Dashboard: React.FC = () => {
                                 </div>
 
                                 {/* Void of Course Status */}
-                                <div className="w-full bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden">
-                                  <div className="p-3 border-b border-amber-100">
+                                <div className="w-full bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl overflow-hidden">
+                                  <div className="p-3">
                                     <div className="flex items-center justify-between">
                                       <h4 className="font-medium text-slate-800 flex items-center text-sm">
                                         <div
@@ -1511,7 +1508,6 @@ const Dashboard: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                        </CardContent>
                       </motion.div>
 
                       {astroData && astroData.aspects && astroData.planets && (
@@ -1530,7 +1526,7 @@ const Dashboard: React.FC = () => {
                     </>
                   ) : !astroLoading && !astroData ? (
                     // No Astro data message
-                    <Card className="border border-slate-200/50 bg-white/50 backdrop-blur-sm">
+                    <Card className="bg-white backdrop-blur-sm shadow-none">
                       <CardHeader>
                         <CardTitle>Astrological Insights</CardTitle>
                       </CardHeader>

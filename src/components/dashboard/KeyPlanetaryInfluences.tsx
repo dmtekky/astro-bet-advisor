@@ -42,8 +42,8 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
   );
 
   return (
-    <div className="w-full border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-      <CardHeader className="pb-2">
+    <>
+      <CardHeader className="pb-2 px-0 pt-0">
         <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
           <Globe className="h-5 w-5 mr-2 text-blue-500" /> Key Planetary Influences
         </CardTitle>
@@ -53,8 +53,8 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
       </CardHeader>
       <CardContent className="space-y-3 pt-2">
         {/* Prominent Aspects Section */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-          <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
+        <div className="space-y-3">
+          <h5 className="text-sm font-semibold text-blue-700 flex items-center">
             <Activity className="h-4 w-4 mr-1.5 text-blue-500" />
             Prominent Aspects
           </h5>
@@ -69,7 +69,7 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
               const planet2Name = aspect.planets?.[1]?.name || 'Unknown';
               
               return (
-                <div key={index} className="bg-slate-50 p-2.5 rounded-lg">
+                <div key={index} className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5 text-sm font-medium">
                       {getPlanetIcon(planet1Name)}
@@ -158,7 +158,7 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
           )}
         </div>
       </CardContent>
-    </div>
+    </>
   );
 };
 
