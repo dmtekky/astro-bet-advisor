@@ -132,18 +132,24 @@ const PlayerCardNew: React.FC<PlayerCardProps> = ({
       animate="animate"
       whileHover="hover"
       onClick={handleCardClick}
-      className={`relative w-[${cardWidth}px] h-[${cardHeight * scale}px] sm:w-[${cardWidth * 1.1}px] sm:h-[${cardHeight * scale}px] rounded-xl overflow-hidden bg-white cursor-pointer group transition-all duration-300 flex-shrink-0 shadow-sm
+      className={`relative rounded-xl overflow-hidden bg-white cursor-pointer group transition-all duration-300 flex-shrink-0 shadow-sm
         ${isHighAstro 
           ? 'border border-purple-300 hover:border-purple-400 hover:shadow-purple-100' 
           : isAboveAverage 
           ? 'border border-blue-300 hover:border-blue-400 hover:shadow-blue-100' 
           : 'border border-gray-200 hover:border-gray-300 hover:shadow-gray-100'}
-        hover:scale-[1.03] hover:shadow-lg ${className}`}
+        ${className || ''}`}
       style={{
         '--scale': scale,
-        '--text-scale': scale,
-        '--spacing-scale': scale,
+        '--text-scale': 1 / scale,
+        '--spacing-scale': 1 / scale,
         '--size-scale': scale,
+        width: `${cardWidth * scale}px`,
+        height: `${cardHeight * scale}px`,
+        ...(window.innerWidth >= 640 && {
+          width: `${cardWidth * 1.1 * scale}px`,
+          height: `${cardHeight * scale}px`
+        })
       } as React.CSSProperties}
       aria-label={`Player card for ${full_name}`}
     >
