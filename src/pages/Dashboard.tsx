@@ -1275,12 +1275,87 @@ const Dashboard: React.FC = () => {
                 className="bg-white p-6 rounded-t-none"
               >
                 {/* Astrological Insights Full-Width Banner */}
-                <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-12 py-8 bg-black text-white overflow-hidden">
-                  {/* Starry background overlay */}
-                  <div className="absolute inset-0 bg-[url('/stars.svg')] bg-center bg-cover opacity-20"></div>
-                  <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center space-x-6">
-                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-wide">Astrological Insights</h2>
-                    <span className="text-lg md:text-xl font-semibold text-indigo-300 bg-gray-800 bg-opacity-50 px-4 py-2 rounded-lg">{format(selectedDate, "MMMM d, yyyy")}</span>
+                <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-16 py-20 bg-gradient-to-b from-[#0c0a1d] via-[#1a1339] to-[#1d1a3d] text-white overflow-hidden">
+                  {/* Deep space background with multiple layers */}
+                  <div className="absolute inset-0 bg-[url('/stars.svg')] bg-repeat opacity-60"></div>
+                  <div className="absolute inset-0 bg-[url('/galaxy.svg')] bg-center bg-no-repeat opacity-40 scale-150"></div>
+                  
+                  {/* Animated stars */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    {/* Large bright star */}
+                    <motion.div 
+                      className="absolute w-1 h-1 bg-white rounded-full shadow-[0_0_10px_2px_rgba(255,255,255,0.8)]" 
+                      style={{ top: '15%', left: '10%' }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div 
+                      className="absolute w-2 h-2 bg-blue-200 rounded-full shadow-[0_0_15px_5px_rgba(147,197,253,0.8)]" 
+                      style={{ top: '25%', right: '15%' }}
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    />
+                    <motion.div 
+                      className="absolute w-1.5 h-1.5 bg-amber-100 rounded-full shadow-[0_0_12px_4px_rgba(254,243,199,0.8)]" 
+                      style={{ bottom: '30%', left: '25%' }}
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                    />
+                    <motion.div 
+                      className="absolute w-1 h-1 bg-purple-200 rounded-full shadow-[0_0_8px_2px_rgba(233,213,255,0.8)]" 
+                      style={{ bottom: '20%', right: '30%' }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.8, 0.4] }}
+                      transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                    />
+                  </div>
+                  
+                  {/* Subtle nebula effect */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-900/20 via-transparent to-blue-900/20"></div>
+                  
+                  {/* Content with enhanced animations */}
+                  <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+                    <motion.div
+                      initial={{ opacity: 0, y: 50 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      viewport={{ once: true, margin: "-100px" }}
+                    >
+                      <h2 className="text-6xl md:text-8xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 [text-shadow:0_0_20px_rgba(255,165,0,0.5)]">
+                        Astrological Insights
+                      </h2>
+                      
+                      {/* Animated underline */}
+                      <motion.div 
+                        className="h-1 bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 rounded-full mx-auto mt-2"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "70%" }}
+                        transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+                        viewport={{ once: true, margin: "-100px" }}
+                      />
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+                      viewport={{ once: true, margin: "-100px" }}
+                    >
+                      <p className="mt-6 text-2xl md:text-3xl font-bold text-indigo-200 tracking-wide">
+                        {format(selectedDate, "MMMM d, yyyy")}
+                      </p>
+                    </motion.div>
+                    
+                    {/* Constellation line connecting to content below */}
+                    <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1/2">
+                      <motion.div 
+                        className="w-px h-16 bg-gradient-to-b from-amber-400/80 to-transparent"
+                        initial={{ height: 0, opacity: 0 }}
+                        whileInView={{ height: 64, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+                        viewport={{ once: true, margin: "-100px" }}
+                      />
+                      <div className="w-2 h-2 rounded-full bg-amber-400 absolute -bottom-1 -left-1 shadow-[0_0_10px_2px_rgba(251,191,36,0.8)]"></div>
+                    </div>
                   </div>
                 </div>
                 {/* Elemental Balance Full-Width Card */}
