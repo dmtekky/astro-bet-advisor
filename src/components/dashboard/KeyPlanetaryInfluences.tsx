@@ -5,7 +5,7 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { Activity, Globe } from "lucide-react";
+import { Activity, Globe, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import CosmicWaveProgress from "@/components/CosmicWaveProgress";
 import { getElementColor } from "@/utils/astroUtils/index";
 import { getPlanetIcon } from "@/utils/astroIcons";
@@ -36,6 +36,24 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
   aspects = [],
   planets = {},
 }) => {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [showAllPlanets, setShowAllPlanets] = React.useState(false);
+  
+  // Convert planets object to array
+  const planetEntries = Object.entries(planets);
+  
+  // For mobile: 2 planets per page
+  const planetsPerPage = 2;
+  const totalPages = Math.ceil(planetEntries.length / planetsPerPage);
+  
+  // For desktop: show all planets in 5-column grid
+  const visiblePlanets = showAllPlanets 
+    ? planetEntries 
+    : planetEntries.slice(0, 10); // 2 rows of 5 by default
+    
+  // For mobile: get current page's planets
+  const startIndex = (currentPage - 1) * planetsPerPage;
+  const currentPlanets = planetEntries.slice(startIndex, startIndex + planetsPerPage);
   // Filter out aspects with missing data
   const validAspects = aspects.filter(
     (aspect) => aspect.planets && aspect.planets.length >= 2 && aspect.planets[0] && aspect.planets[1]
@@ -103,32 +121,121 @@ const KeyPlanetaryInfluences: React.FC<KeyPlanetaryInfluencesProps> = ({
         </div>
         
         {/* Planet Position Visualization */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-100">
           <h5 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
-            <Globe className="h-4 w-4 mr-1.5 text-blue-500" />
-            Planet Positions
+            <Globe className="h-4 w-4 mr-1.5 text-blue-500 flex-shrink-0" />
+            <span>Planet Positions</span>
           </h5>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-            {planets && typeof planets === 'object' && Object.entries(planets).map(([planet, data]) => {
+          {/* Desktop View - 5 column grid */}
+          <div className="hidden sm:grid grid-cols-5 gap-1.5 sm:gap-2">
+            {visiblePlanets.map(([planet, data]) => {
               const sign = data?.sign || 'Unknown';
               const elementColor = getElementColor(sign);
+              const planetIcon = getPlanetIcon(planet, 12);
               return (
-                <div key={planet} className="bg-slate-50 p-2 rounded-lg border border-slate-100 hover:shadow-md transition-shadow duration-200">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    {getPlanetIcon(planet)}
-                    <span className="text-sm font-medium capitalize text-slate-700">{planet}</span>
+                <div 
+                  key={planet} 
+                  className="bg-slate-50 p-1.5 sm:p-2 rounded-lg border border-slate-100 hover:shadow-md transition-shadow duration-200 active:scale-95"
+                >
+                  <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
+                    <span className="flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4">
+                      {planetIcon}
+                    </span>
+                    <span className="text-xs sm:text-sm font-medium capitalize text-slate-700 truncate">
+                      {planet}
+                    </span>
                   </div>
-                  <div className={`${elementColor} text-white text-xs font-medium px-2 py-1 rounded-md flex items-center justify-between`}>
-                    <span>{sign}</span>
-                    <span>{typeof data?.degree === 'number' ? data.degree.toFixed(2) + '°' : 'N/A'}</span>
+                  <div className={`${elementColor} text-white text-[10px] sm:text-xs font-medium px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md flex items-center justify-between`}>
+                    <span className="truncate">{sign}</span>
+                    <span className="ml-1 whitespace-nowrap">
+                      {typeof data?.degree === 'number' ? data.degree.toFixed(1) + '°' : 'N/A'}
+                    </span>
                   </div>
                 </div>
               );
             })}
-            {Object.keys(planets).length === 0 && (
-              <div className="col-span-full text-center text-slate-500 py-4">
+            {planetEntries.length === 0 && (
+              <div className="col-span-full text-center text-slate-500 py-4 text-sm">
                 No planetary data available
               </div>
+            )}
+          </div>
+          
+          {/* Mobile View - Same as desktop but with pagination */}
+          <div className="sm:hidden">
+            <div className="grid grid-cols-2 gap-1.5 max-w-[240px] mx-auto">
+              {currentPlanets.map(([planet, data]) => {
+                const sign = data?.sign || 'Unknown';
+                const elementColor = getElementColor(sign);
+                const planetIcon = getPlanetIcon(planet, 12);
+                return (
+                  <div 
+                    key={planet} 
+                    className="bg-slate-50 p-1.5 rounded-lg border border-slate-100 hover:shadow-md transition-shadow duration-200 active:scale-95"
+                  >
+                    <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
+                      <span className="flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4">
+                        {planetIcon}
+                      </span>
+                      <span className="text-xs sm:text-sm font-medium capitalize text-slate-700 truncate">
+                        {planet}
+                      </span>
+                    </div>
+                    <div className={`${elementColor} text-white text-[10px] sm:text-xs font-medium px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md flex items-center justify-between`}>
+                      <span className="truncate">{sign}</span>
+                      <span className="ml-1 whitespace-nowrap">
+                        {typeof data?.degree === 'number' ? data.degree.toFixed(1) + '°' : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-3">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-full bg-slate-100 text-slate-600 disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                
+                <div className="text-xs font-medium text-slate-600">
+                  {currentPage} / {totalPages}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 rounded-full bg-slate-100 text-slate-600 disabled:opacity-30"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Show More/Less for Desktop */}
+          <div className="hidden sm:block">
+            {planetEntries.length > 10 && (
+              <button
+                onClick={() => setShowAllPlanets(!showAllPlanets)}
+                className="mt-2 flex items-center justify-center text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mx-auto"
+              >
+                {showAllPlanets ? (
+                  <>
+                    <span>Show Less</span>
+                    <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                  </>
+                ) : (
+                  <>
+                    <span>Show All {planetEntries.length} Planets</span>
+                    <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
             )}
           </div>
         </div>

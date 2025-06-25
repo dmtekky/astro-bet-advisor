@@ -896,7 +896,8 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 overflow-x-hidden">
+      <div className="w-full max-w-[100vw] mx-auto px-4 sm:px-6 lg:px-8">
       {featuredArticle && (
         <Link
           to={`/news/${featuredArticle.slug}`}
@@ -1372,7 +1373,7 @@ const Dashboard: React.FC = () => {
                   {/* Daily Astro Tip - Enhanced Full Width Section */}
                   <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-12 py-12 bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
-                    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="w-full max-w-[100vw] px-4 sm:px-6 lg:px-8 py-8 mx-auto">
                       <div className="max-w-4xl mx-auto text-center">
                         <div className="flex flex-col items-center mb-6">
                           <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-3 rounded-xl shadow-lg w-14 h-14 flex items-center justify-center mb-4">
@@ -1619,6 +1620,7 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };

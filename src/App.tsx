@@ -92,7 +92,7 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-white">
       <ScrollToTop />
       <Header />
-      <div className="w-full mt-20">
+      <div className="w-full mt-12 sm:mt-16 md:mt-20">
         <AmazonAffiliateBanner />
       </div>
       <FloatingBackButton />
