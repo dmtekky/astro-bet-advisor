@@ -1,0 +1,31 @@
+// ... (previous imports remain the same)
+  const topAwayPlayers = getTopPlayers(awayPlayers);
+  
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-950 to-blue-950">
+      <StarField />
+      <div className="container mx-auto px-4 py-8 relative z-10 bg-black/20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)} 
+            className="mb-6 text-white hover:bg-white/10 transition-all"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> 
+            Back to Games
+          </Button>
+          
+          {/* Rest of the component remains the same */}
+          {/* ... */}
+          
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+export default GamePage;

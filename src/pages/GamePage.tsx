@@ -415,8 +415,15 @@ const GamePage: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <h2 className="text-xl font-bold text-center group-hover:text-primary transition-colors">
-                    {home_team?.name || 'Home Team'}
+                  <h2 className="text-4xl font-bold text-center text-indigo-900 transition-all duration-300" style={{ 
+                    fontFamily: '"Arial Black", Impact, "Arial Narrow", Arial, sans-serif',
+                    textTransform: 'uppercase',
+                    letterSpacing: '-1px',
+                    WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                    textShadow: '2px 2px 0 rgba(0,0,0,0.15), -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
+                    fontWeight: '900'
+                  }}>
+                    {home_team?.name || 'HOME'}
                   </h2>
                   <p className="text-muted-foreground text-sm text-center">
                     {home_team?.record || '0-0'}
@@ -455,8 +462,15 @@ const GamePage: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <h2 className="text-xl font-bold text-center group-hover:text-purple-500 transition-colors">
-                    {away_team?.name || 'Away Team'}
+                  <h2 className="text-4xl font-bold text-center text-indigo-900 transition-all duration-300" style={{ 
+                    fontFamily: '"Arial Black", Impact, "Arial Narrow", Arial, sans-serif',
+                    textTransform: 'uppercase',
+                    letterSpacing: '-1px',
+                    WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                    textShadow: '2px 2px 0 rgba(0,0,0,0.15), -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
+                    fontWeight: '900'
+                  }}>
+                    {away_team?.name || 'AWAY'}
                   </h2>
                   <p className="text-muted-foreground text-sm text-center">
                     {away_team?.record || '0-0'}
