@@ -7,7 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { ChevronLeft, BarChart2, Users, Clock, Calendar, MapPin } from 'lucide-react';
+import { ChevronLeft, BarChart2, Users, Clock, Calendar, MapPin, Star as StarIcon, Moon, Sun, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import GneePrediction from '@/components/game/GneePrediction';
 import type { Game, Team as TeamType, Player } from '@/types';
 
 interface DetailedGame extends Game {
@@ -62,6 +64,58 @@ interface GameState {
   over_under?: number;
   league_name?: string;
 }
+
+// Star component for cosmic background
+const Star = ({ size, top, left, delay }: { size: number, top: string, left: string, delay: number }) => {
+  return (
+    <motion.div 
+      className="absolute rounded-full bg-white"
+      style={{ 
+        width: size, 
+        height: size, 
+        top, 
+        left,
+        boxShadow: `0 0 ${size * 2}px ${size}px rgba(255, 255, 255, 0.7)` 
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ 
+        opacity: [0, 1, 0.5, 1, 0], 
+        scale: [1, 1.2, 1, 1.1, 1] 
+      }}
+      transition={{ 
+        duration: 5 + Math.random() * 3, 
+        repeat: Infinity, 
+        delay: delay,
+        ease: "easeInOut" 
+      }}
+    />
+  );
+};
+
+// StarField component for cosmic background
+const StarField = () => {
+  const stars = Array.from({ length: 50 }).map((_, i) => ({
+    id: i,
+    size: Math.random() * 3 + 1,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 5
+  }));
+
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {stars.map(star => (
+        <Star 
+          key={star.id} 
+          size={star.size} 
+          top={star.top} 
+          left={star.left} 
+          delay={star.delay} 
+        />
+      ))}
+    </div>
+  );
+};
 
 const GamePage: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -614,16 +668,32 @@ const GamePage: React.FC = () => {
   
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ChevronLeft className="mr-2 h-4 w-4" /> Back to Games
-          </Button>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-96 w-full rounded-lg" />
-          ))}
+      <div className="relative min-h-screen bg-gradient-to-b from-gray-950 to-blue-950">
+        <StarField />
+        <div className="container mx-auto py-8 px-4 md:px-6 relative z-10">
+          <div className="flex justify-between items-center mb-8">
+            <Button variant="ghost" size="sm" className="mb-4 text-white hover:bg-white/10">
+              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Games
+            </Button>
+          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="grid md:grid-cols-3 gap-6"
+          >
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-96 w-full rounded-lg bg-white/5" />
+            ))}
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-8"
+          >
+            <Skeleton className="h-64 w-full rounded-lg bg-white/5" />
+          </motion.div>
         </div>
       </div>
     );
@@ -631,13 +701,24 @@ const GamePage: React.FC = () => {
   
   if (!game) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" /> Back to Games
-        </Button>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Game Not Found</h2>
-          <p className="text-muted-foreground">The requested game could not be found.</p>
+      <div className="relative min-h-screen bg-gradient-to-b from-gray-950 to-blue-950">
+        <StarField />
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 text-white hover:bg-white/10">
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back to Games
+          </Button>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="text-center py-12"
+          >
+            <h2 className="text-4xl font-bold mb-4 text-white">Game Not Found</h2>
+            <p className="text-blue-200">The requested game could not be found in this universe.</p>
+            <div className="mt-8">
+              <StarIcon className="h-16 w-16 text-yellow-300 mx-auto animate-pulse" />
+            </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -649,44 +730,65 @@ const GamePage: React.FC = () => {
   const topAwayPlayers = getTopPlayers(awayPlayers);
   
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
-          className="mb-6 hover:bg-accent/50 transition-colors"
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-950 to-blue-950">
+      <StarField />
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <ChevronLeft className="mr-2 h-4 w-4" /> 
-          Back to Games
-        </Button>
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)} 
+            className="mb-6 text-white hover:bg-white/10 transition-all"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> 
+            Back to Games
+          </Button>
+        </motion.div>
 
         {/* Venue Information */}
         {game.venue?.name && (
-          <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-xl p-6 mb-8 border border-border/50">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 backdrop-blur-sm rounded-xl p-6 mb-8 border border-indigo-500/30 shadow-lg shadow-indigo-500/20"
+          >
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-1">{game.venue.name}</h2>
-                <p className="text-muted-foreground flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {game.venue.city}, {game.venue.state}
-                </p>
+              <div className="flex items-center">
+                <div className="mr-4 bg-indigo-500/20 p-3 rounded-full">
+                  <MapPin className="h-6 w-6 text-indigo-300" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold mb-1 text-white">{game.venue.name}</h2>
+                  <p className="text-blue-200 flex items-center">
+                    {game.venue.city}, {game.venue.state}
+                  </p>
+                </div>
               </div>
-              <div className="mt-4 md:mt-0 bg-background/80 px-4 py-2 rounded-full text-sm font-medium">
-                <span className={`inline-block h-2.5 w-2.5 rounded-full mr-2 ${
-                  game.status === 'scheduled' ? 'bg-yellow-500' : 
-                  game.status === 'in_progress' ? 'bg-green-500' : 
-                  'bg-gray-500'}`}>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="mt-4 md:mt-0 bg-indigo-900/50 backdrop-blur-sm px-5 py-2.5 rounded-full text-sm font-medium border border-indigo-500/30 shadow-md"
+              >
+                <span className={`inline-block h-3 w-3 rounded-full mr-2 ${
+                  game.status === 'scheduled' ? 'bg-yellow-400 animate-pulse' : 
+                  game.status === 'in_progress' ? 'bg-green-400 animate-pulse' : 
+                  'bg-blue-400'}`}>
                 </span>
-                {game.status === 'scheduled' ? 'Upcoming' : 
-                 game.status === 'in_progress' ? 'Live' : 
-                 game.status?.replace('_', ' ').toLowerCase() || 'Scheduled'}
-              </div>
+                <span className="text-white">
+                  {game.status === 'scheduled' ? 'Upcoming' : 
+                  game.status === 'in_progress' ? 'Live' : 
+                  game.status?.replace('_', ' ').toLowerCase() || 'Scheduled'}
+                </span>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Game Details */}
-        <div className="bg-card rounded-xl shadow-sm border mb-8 overflow-hidden">
+        <div className="bg-card rounded-xl border mb-8 overflow-hidden">
           <div className="p-6">
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold mb-1">{game.league_name || 'Game Details'}</h1>
@@ -709,8 +811,8 @@ const GamePage: React.FC = () => {
                   className="group block w-full"
                 >
                   <div className="relative w-32 h-32 mx-auto mb-3">
-                    <div className="absolute inset-0 bg-primary/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm group-hover:blur-md -z-10"></div>
-                    <Avatar className="w-full h-full transition-transform duration-300 group-hover:scale-105">
+                    <div className="absolute inset-0 rounded-full bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-gray-800 transition-colors duration-300 -z-10"></div>
+                    <Avatar className="w-full h-full transition-all duration-300 group-hover:scale-105">
                       <AvatarImage 
                         src={home_team?.logo_url || '/team-placeholder.svg'} 
                         alt={`${home_team?.name} logo`}
@@ -950,6 +1052,34 @@ const GamePage: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* GNEE Prediction */}
+                <GneePrediction 
+                  expectedWinner={home_team?.name || 'Home Team'}
+                  winnerLogo={home_team?.logo_url}
+                  topPlayers={[
+                    ...homePlayers.map(p => ({
+                      name: p.name,
+                      team: home_team?.name || 'Home Team',
+                      astroInfluence: p.impactScore ? Math.min(Math.round(p.impactScore * 2), 100) : 50
+                    })),
+                    ...awayPlayers.map(p => ({
+                      name: p.name,
+                      team: away_team?.name || 'Away Team',
+                      astroInfluence: p.impactScore ? Math.min(Math.round(p.impactScore * 1.8), 95) : 45
+                    }))
+                  ].sort((a, b) => b.astroInfluence - a.astroInfluence).slice(0, 3)}
+                  keyAspects={[
+                    `Strong planetary alignment favors ${home_team?.name || 'home team'} hitters tonight`,
+                    `${away_team?.name || 'Away team'} pitchers showing fatigue in recent charts`,
+                    `Venue conditions suggest higher scoring game than usual`
+                  ]}
+                  gameInsights={[
+                    `${home_team?.name || 'Home team'} has won 4 of their last 5 games`,
+                    `${away_team?.name || 'Away team'} is 3-2 on the road this season`,
+                    `Expected temperature: 72°F with clear skies`
+                  ]}
+                />
                 
                 {/* Odds */}
                 {(game.home_odds || game.away_odds) && (

@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
@@ -15,6 +16,7 @@ import { calculatePlayerImpactScore } from '@/utils/playerAnalysis';
 import { GamePredictionData, createDefaultPredictionData, createDefaultCelestialBody } from '@/types/gamePredictions';
 import { predictGameOutcome } from '@/utils/sportsPredictions';
 import type { AstroData, ZodiacSign } from '@/types/astrology';
+import GneePrediction from '@/components/game/GneePrediction';
 
 interface DetailedGame extends Omit<Game, 'league'> {
   home_team: Team | null;
@@ -45,7 +47,7 @@ const GameDetails: React.FC = () => {
   const [awayPlayerStats, setAwayPlayerStats] = useState<Record<string, PlayerSeasonStats>>({}); 
   const [rostersLoading, setRostersLoading] = useState<boolean>(true);
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
-  const [dataFetchError, setDataFetchError] = useState<string | null>(null); // For new data fetching errors
+  const [dataFetchError, setDataFetchError] = useState<Error | null>(null); // For new data fetching errors
 
   const TARGET_SEASON = 2025;
   
@@ -97,7 +99,7 @@ const GameDetails: React.FC = () => {
       if (!game || !game.home_team_id || !game.away_team_id) {
         if (game && (!game.home_team_id || !game.away_team_id)) {
             // Game loaded but team IDs are missing
-            setDataFetchError('Game data is missing team IDs for roster fetching.');
+            setDataFetchError(new Error("Game data is missing team IDs for roster fetching."));
             setRostersLoading(false);
         }
         // If game is null, main loading is still in progress or gameId was invalid
@@ -116,8 +118,8 @@ const GameDetails: React.FC = () => {
         if (homeRosterResult.error) throw new Error(`Home roster: ${homeRosterResult.error.message}`);
         if (awayRosterResult.error) throw new Error(`Away roster: ${awayRosterResult.error.message}`);
 
-        setHomeTeamRoster(homeRosterResult.data as PlayerDisplayData[]);
-        setAwayTeamRoster(awayRosterResult.data as PlayerDisplayData[]);
+        setHomeTeamRoster(homeRosterResult.data as unknown as PlayerDisplayData[]);
+        setAwayTeamRoster(awayRosterResult.data as unknown as PlayerDisplayData[]);
         // console.log('Rosters fetched:', homeRosterResult.data, awayRosterResult.data);
       } catch (err: any) {
         console.error('Error fetching team rosters:', err);
@@ -134,7 +136,7 @@ const GameDetails: React.FC = () => {
 
   // Effect to fetch player season stats
   useEffect(() => {
-    const fetchPlayerStats = async () => {
+    const fetchPlayerSeasonStats = async () => {
       if (rostersLoading || (homeTeamRoster.length === 0 && awayTeamRoster.length === 0)) {
         // If rosters are still loading, wait.
         // If rosters are done loading (rostersLoading is false) and both are empty, then no stats to fetch.
@@ -147,22 +149,25 @@ const GameDetails: React.FC = () => {
       setStatsLoading(true);
       setDataFetchError(null); // Clear previous specific errors
       try {
-        const playerIds = [...homeTeamRoster, ...awayTeamRoster].map(p => p.id).filter(id => id); // Ensure IDs are valid
+        // Combine team player IDs
+        const playerIds = [...homeTeamRoster.map(p => p.id), ...awayTeamRoster.map(p => p.id)];
+        
         if (playerIds.length === 0) {
-          // console.log('No player IDs to fetch stats for.');
+          console.warn('No player IDs to fetch stats for');
           setStatsLoading(false);
           return;
         }
-        // console.log(`Fetching stats for ${playerIds.length} players for season ${TARGET_SEASON}`);
-
-        const { data: statsData, error: statsError } = await supabase
-          .from('player_season_stats')
+        
+        // Fetch stats for all players in one query
+        const response = await supabase
+          .from('player_stats_view')
           .select('*')
           .in('player_id', playerIds)
           .eq('season', TARGET_SEASON);
 
-        if (statsError) throw statsError;
+        if (response.error) throw response.error;
 
+        const statsData = response.data || [];
         const statsMapHome: Record<string, PlayerSeasonStats> = {};
         const statsMapAway: Record<string, PlayerSeasonStats> = {};
 
@@ -198,7 +203,7 @@ const GameDetails: React.FC = () => {
       }
     };
 
-    fetchPlayerStats();
+    fetchPlayerSeasonStats();
   }, [homeTeamRoster, awayTeamRoster, rostersLoading, TARGET_SEASON]); // Depends on rosters and their loading state
   
   // Fetch astrological data
@@ -369,21 +374,13 @@ const GameDetails: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <LoadingScreen fullScreen={false} message="Loading game details..." />
-      </DashboardLayout>
-    );
-  }
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-          </div>
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-64 rounded-xl bg-slate-700" />
-            <Skeleton className="h-64 rounded-xl bg-slate-700" />
-          </div>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <Spinner size="lg" />
+          <p className="mt-4 text-slate-500">Loading game details...</p>
         </div>
       </DashboardLayout>
     );
+  }
   }
   
   // Handle error state
@@ -476,8 +473,7 @@ const GameDetails: React.FC = () => {
       .slice(0, count);
   };
 
-  const topHomePlayers = getTopPlayers(homeTeamRoster);
-  const topAwayPlayers = getTopPlayers(awayTeamRoster);
+  // Gnee prediction will use mock data for now
 
   // Main render
   return (
@@ -623,7 +619,7 @@ const GameDetails: React.FC = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-600 font-medium">League:</span>
-                        <span className="text-slate-800">{game.league?.name || 'MLB'}</span>
+                        <span className="text-slate-800">MLB</span>
                       </div>
                     </div>
                   </div>
@@ -661,6 +657,40 @@ const GameDetails: React.FC = () => {
           </div>
         )}
         
+        {/* Gnee AI Prediction Section - Mock Data */}
+        <div className="my-8">
+          <h2 className="text-2xl font-bold text-indigo-900 mb-4 flex items-center">
+            <Zap className="h-6 w-6 mr-2 text-amber-500" />
+            GNEE Prediction
+          </h2>
+          <GneePrediction
+            expectedWinner={game?.home_team?.name || 'Home Team'}
+            winnerLogo={game?.home_team?.logo_url}
+            topPlayers={[
+              {
+                name: 'Elite Player',
+                team: game?.home_team?.name || 'Home',
+                astroInfluence: 92
+              },
+              {
+                name: 'Star Performer',
+                team: game?.away_team?.name || 'Away',
+                astroInfluence: 88
+              },
+              {
+                name: 'Rising Talent',
+                team: game?.home_team?.name || 'Home',
+                astroInfluence: 84
+              }
+            ]}
+            keyAspects={[
+              'Moon in Taurus favors the home team\'s pitcher',
+              'Mercury-Venus conjunction enhances team communication',
+              'Mars-Jupiter square suggests an intense, high-scoring game'
+            ]}
+          />
+        </div>
+
         {/* Game Info and Team Matchup Section */} 
         {game && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
