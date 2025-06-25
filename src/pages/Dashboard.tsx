@@ -1115,7 +1115,7 @@ const Dashboard: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-800 mb-3 sticky top-0 bg-white py-2 z-10">
                             {format(group.date, "EEEE, MMMM d")}
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                          <div className="flex overflow-x-auto pb-4 gap-4 hide-scrollbar px-4">
                             {group.games.map((game) => {
                               // Get team data with proper fallbacks
                               const homeTeam =
@@ -1446,17 +1446,18 @@ const Dashboard: React.FC = () => {
                         className="bg-white shadow-sm rounded-lg w-full"
                       >
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-                            <Moon className="h-5 w-5 mr-2 text-indigo-500" />{" "}
-                            Lunar & Void Status
-                          </CardTitle>
-                          <CardDescription className="text-slate-600">
-                            {astroData?.voidMoon
-                              ? astroData?.voidMoon?.isVoid
-                                ? " • Void of Course"
-                                : " • Not Void of Course"
-                              : ""}
-                          </CardDescription>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <Moon className="h-5 w-5 text-indigo-500" />
+                            </div>
+                            <CardDescription className="text-slate-600">
+                              {astroData?.voidMoon
+                                ? astroData.voidMoon.isVoid
+                                  ? "Void of Course"
+                                  : "Not Void of Course"
+                                : ""}
+                            </CardDescription>
+                          </div>
                         </CardHeader>
                         {/* Moon Phase Section with Visualization - Removed CardContent for full width */}
                         <div className="w-full bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm">
