@@ -1,198 +1,437 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Chart, registerables } from 'chart.js';
+import { motion } from 'framer-motion';
+import zodiacGlyphs from '@/data/zodiacGlyphs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 // Register Chart.js components
 Chart.register(...registerables);
 
-const NatalChartProfile: React.FC = () => {
+interface BirthDataProps {
+  date: string;
+  time: string;
+  timeUnknown: boolean;
+  city: string;
+}
+
+interface NatalChartProfileProps {
+  birthData?: BirthDataProps;
+}
+
+const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBirthData }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
-  const [chartInstance, setChartInstance] = useState<Chart | null>(null);
-  const [birthData, setBirthData] = useState({
-    date: '',
-    time: '',
-    timeUnknown: false,
-    city: ''
-  });
+  const chartInstanceRef = useRef<Chart | null>(null);
+  const [internalBirthData, setInternalBirthData] = useState<BirthDataProps>({ date: '', time: '', timeUnknown: false, city: '' });
+  const actualBirthData = propBirthData || internalBirthData;
+  const [planetCounts, setPlanetCounts] = useState<number[] | null>(null);
+  const [planetsPerSign, setPlanetsPerSign] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    const fetchPlanetaryPositions = async () => {
+      if (!actualBirthData.date) return;
+
+      try {
+        const response = await fetch('/api/astrology/positions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: actualBirthData.date,
+            time: actualBirthData.time,
+            city: actualBirthData.city
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch planetary positions');
+
+        const data = await response.json();
+        // Count planets in each sign
+        const counts = new Array(12).fill(0);
+        const planetsBySign: Record<string, string[]> = {};
+        
+        data.planets.forEach((planet: { name: string, sign: string }) => {
+          const signIndex = signToIndex(planet.sign);
+          if (signIndex !== -1) counts[signIndex]++;
+          
+          if (!planetsBySign[planet.sign]) {
+            planetsBySign[planet.sign] = [];
+          }
+          planetsBySign[planet.sign].push(planet.name);
+        });
+        
+        setPlanetCounts(counts);
+        setPlanetsPerSign(planetsBySign);
+      } catch (error) {
+        console.error('Error fetching planetary positions:', error);
+        // Fallback to mock data
+        setPlanetCounts([3, 0, 2, 1, 1, 0, 2, 1, 0, 1, 1, 1]);
+        setPlanetsPerSign({
+          'Aries': ['Mars', 'Sun', 'Mercury'],
+          'Gemini': ['Venus', 'Jupiter'],
+          'Cancer': ['Moon'],
+          'Leo': ['Saturn'],
+          'Libra': ['Uranus', 'Neptune'],
+          'Scorpio': ['Pluto'],
+          'Capricorn': ['Chiron'],
+          'Aquarius': ['Lilith'],
+          'Pisces': ['Node']
+        });
+      }
+    };
+
+    fetchPlanetaryPositions();
+  }, [actualBirthData]);
+
+  useEffect(() => {
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+      chartInstanceRef.current = null;
+    }
+    if (chartRef.current && planetCounts) {
+      const ctx = chartRef.current.getContext('2d');
+      if (ctx) {
+        const newChartInstance = new Chart(ctx, {
+          type: 'polarArea',
+          data: {
+            labels: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'],
+            datasets: [{
+              label: 'Zodiac Signs',
+              data: planetCounts,
+              backgroundColor: (context) => {
+                const value = context.dataset.data[context.dataIndex] as number;
+                const minStrength = 0;
+                const maxStrength = Math.max(...planetCounts);
+                const normalized = (value - minStrength) / (maxStrength - minStrength);
+                
+                // Cosmic gradient: deep blue -> purple -> magenta
+                const r = Math.floor(100 + 155 * normalized);
+                const g = Math.floor(115 - 35 * normalized);
+                const b = Math.floor(255 - 75 * normalized);
+                return `rgba(${r}, ${g}, ${b}, 0.9)`;
+              },
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: { 
+                display: true, 
+                text: 'Planetary Count', 
+                color: 'white',
+                font: { size: 16 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const signIndex = context.dataIndex;
+                    const sign = context.chart.data.labels?.[signIndex] || '';
+                    const count = context.dataset.data[signIndex] as number;
+                    return `${sign}: ${count} planet${count !== 1 ? 's' : ''}`;
+                  },
+                  afterLabel: (context) => {
+                    const signIndex = context.dataIndex;
+                    const sign = context.chart.data.labels?.[signIndex] || '';
+                    const planets = planetsPerSign[sign] || [];
+                    return planets.length > 0 
+                      ? `Planets: ${planets.join(', ')}` 
+                      : 'No planets';
+                  }
+                },
+                backgroundColor: 'rgba(10, 15, 40, 0.9)',
+                titleColor: '#d1d5db',
+                bodyColor: '#e5e7eb',
+                borderColor: 'rgba(125, 100, 255, 0.5)',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: false
+              }
+            },
+            scales: {
+              r: {
+                beginAtZero: true,
+                grid: { 
+                  color: 'rgba(255, 255, 255, 0.5)', 
+                  lineWidth: 1,
+                  circular: true 
+                },
+                ticks: { 
+                  color: 'white', 
+                  backdropColor: 'rgba(0, 0, 0, 0.5)', 
+                  backdropPadding: 4 
+                },
+                pointLabels: { 
+                  display: true, 
+                  color: 'white', 
+                  font: { 
+                    size: 12, 
+                    weight: 'bold' 
+                  }, 
+                  backdropColor: 'rgba(0, 0, 0, 0.7)', 
+                  backdropPadding: 4 
+                },
+                angleLines: { 
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  lineWidth: 2 
+                }
+              }
+            },
+            animation: {
+              animateRotate: true,
+              animateScale: true,
+              duration: 2000,
+              onProgress: (context) => {
+                const chart = context.chart;
+                chart.ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                chart.ctx.shadowBlur = 10;
+                chart.ctx.shadowOffsetX = 0;
+                chart.ctx.shadowOffsetY = 0;
+              }
+            },
+            onHover: (event, elements) => {
+              if (chartRef.current) {
+                chartRef.current.style.cursor = elements.length ? 'pointer' : 'default';
+              }
+            }
+          }
+        });
+        chartInstanceRef.current = newChartInstance;
+      }
+    }
+  }, [planetCounts, planetsPerSign]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (propBirthData) return; // Don't handle changes if using prop data
+    
     const { name, value, type, checked } = e.target;
-    setBirthData(prev => ({
+    setInternalBirthData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  useEffect(() => {
-    // Cleanup chart on unmount
-    return () => {
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-    };
-  }, [chartInstance]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Destroy existing chart if it exists
-    if (chartInstance) {
-      chartInstance.destroy();
-    }
+  };
 
-    if (chartRef.current) {
-      const ctx = chartRef.current.getContext('2d');
-      if (ctx) {
-        // Create mock chart data
-        const newChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'],
-            datasets: [{
-              data: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-              backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)',
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-              ],
-              borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)',
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-              ],
-              borderWidth: 1,
-            }]
-          },
-          options: {
-            responsive: true,
-            cutout: '60%',
-            plugins: {
-              legend: {
-                position: 'right',
-                labels: {
-                  boxWidth: 12,
-                  padding: 10
-                }
-              }
-            },
-            animation: {
-              animateScale: true,
-              animateRotate: true
-            }
-          }
-        });
+  // Helper function to convert sign name to index
+  const signToIndex = (sign: string): number => {
+    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    return signs.indexOf(sign);
+  };
+
+  const generateAspectLines = (counts: number[]): JSX.Element[] => {
+    const strongSigns = counts
+      .map((count, i) => ({count, index: i}))
+      .filter(item => item.count > 1)
+      .sort((a, b) => b.count - a.count);
+    
+    const lines = [];
+    
+    for (let i = 0; i < Math.min(strongSigns.length, 4); i++) {
+      for (let j = i + 1; j < Math.min(strongSigns.length, 4); j++) {
+        const angle1 = strongSigns[i].index * 30;
+        const angle2 = strongSigns[j].index * 30;
+        const diff = Math.abs(angle1 - angle2);
         
-        setChartInstance(newChartInstance);
+        // Only draw aspects for significant angular relationships
+        if ([0, 30, 60, 90, 120, 150, 180].includes(diff % 180)) {
+          const x1 = 50 + 40 * Math.cos((angle1 - 90) * Math.PI / 180);
+          const y1 = 50 + 40 * Math.sin((angle1 - 90) * Math.PI / 180);
+          const x2 = 50 + 40 * Math.cos((angle2 - 90) * Math.PI / 180);
+          const y2 = 50 + 40 * Math.sin((angle2 - 90) * Math.PI / 180);
+          
+          lines.push(
+            <line 
+              key={`${i}-${j}`}
+              x1={x1} 
+              y1={y1} 
+              x2={x2} 
+              y2={y2} 
+              stroke="rgba(255, 215, 0, 0.7)" 
+              strokeWidth="0.5" 
+              strokeDasharray={diff % 30 === 0 ? '0' : '2,2'}
+            />
+          );
+        }
       }
     }
+    
+    return lines;
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Natal Chart</h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Birth Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={birthData.date}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Birth Time
-            </label>
-            <div className="flex items-center space-x-2">
+    <div className="p-4 max-w-4xl mx-auto">
+      {!propBirthData && (
+        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-slate-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+              <input
+                type="date"
+                name="date"
+                value={actualBirthData.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-slate-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Time of Birth</label>
               <input
                 type="time"
                 name="time"
-                value={birthData.time}
+                value={actualBirthData.time}
                 onChange={handleInputChange}
-                disabled={birthData.timeUnknown}
-                className="flex-1 p-2 border rounded"
+                disabled={actualBirthData.timeUnknown}
+                className="w-full p-2 border border-slate-300 rounded-md disabled:bg-slate-100"
               />
-              <label className="flex items-center space-x-2">
+              <div className="flex items-center mt-2">
                 <input
                   type="checkbox"
+                  id="timeUnknown"
                   name="timeUnknown"
-                  checked={birthData.timeUnknown}
+                  checked={actualBirthData.timeUnknown}
                   onChange={handleInputChange}
-                  className="rounded"
+                  className="mr-2"
                 />
-                <span className="text-sm">Unknown</span>
-              </label>
-            </div>
-          </div>
-          
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">
-              Birth City <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="city"
-              value={birthData.city}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              placeholder="Enter city name"
-              required
-            />
-          </div>
-        </div>
-        
-        <div className="pt-2">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Generate Chart
-          </button>
-        </div>
-      </form>
-      
-      <div className="mt-8">
-        <div className="relative">
-          <canvas ref={chartRef}></canvas>
-          {!chartInstance && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 rounded">
-              <div className="text-center p-6">
-                <p className="text-gray-600 mb-4">
-                  Enter your birth information to generate your natal chart
-                </p>
-                <div className="w-32 h-32 mx-auto rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center">
-                  <span className="text-4xl text-gray-400">♋</span>
-                </div>
+                <label htmlFor="timeUnknown" className="text-sm text-slate-700">I don't know my birth time</label>
               </div>
             </div>
-          )}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Place of Birth</label>
+              <input
+                type="text"
+                name="city"
+                value={actualBirthData.city}
+                onChange={handleInputChange}
+                placeholder="City, Country"
+                className="w-full p-2 border border-slate-300 rounded-md"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Generate Chart
+            </button>
+          </div>
+        </form>
+      )}
+      
+      {!planetCounts ? (
+        <div className="relative p-4 rounded-lg overflow-hidden min-h-[400px] flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900"></div>
+          <Skeleton className="w-full h-full rounded-lg" />
         </div>
-      </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative p-4 rounded-lg overflow-hidden"
+          style={{
+            background: 'radial-gradient(circle at center, #0c1445 0%, #05071f 100%)',
+          }}
+        >
+          <div className="absolute top-4 right-4 z-30">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 text-slate-400 hover:text-white cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs bg-slate-800 border-slate-700 text-white">
+                  <p>This natal chart shows the number of planets in each zodiac sign at your birth time. The length of each bar represents the planetary density in that sign.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          {/* Starry background effect */}
+          <div className="absolute inset-0 z-0">
+            {Array.from({ length: 50 }).map((_, i) => (
+              <div 
+                key={i}
+                className="absolute rounded-full bg-white"
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  width: `${Math.random() * 3}px`,
+                  height: `${Math.random() * 3}px`,
+                  opacity: Math.random() * 0.7 + 0.3
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10 group">
+            {/* Constellation patterns */}
+            <div className="absolute inset-0 z-0 opacity-20">
+              {['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'].map((sign, index) => {
+                const angle = (index * 30) - 15; // 30° per sign
+                const radius = 40; // % from center
+                return (
+                  <div 
+                    key={sign}
+                    className="absolute text-white text-opacity-30"
+                    style={{
+                      top: '50%',
+                      left: '50%',
+                      transform: `translate(-50%, -50%) rotate(${angle}deg) translate(${radius}%) rotate(-${angle}deg)`,
+                      transformOrigin: 'center'
+                    }}
+                  >
+                    <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: zodiacGlyphs[sign] }} />
+                  </div>
+                );
+              })}
+            </div>
+
+            <canvas ref={chartRef} className="relative z-20 transition-all duration-500 ease-in-out" />
+            
+            {/* Aspect lines */}
+            {planetCounts && (
+              <div className="absolute inset-0 z-10">
+                <svg width="100%" height="100%" viewBox="0 0 100 100" className="absolute top-0 left-0">
+                  {generateAspectLines(planetCounts)}
+                </svg>
+              </div>
+            )}
+            
+            {/* Contextual help */}
+            <div className="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="text-xs text-slate-400 bg-slate-900/80 px-2 py-1 rounded">
+                Hover segments for details
+              </div>
+            </div>
+            
+            {/* Depth effect */}
+            <div className="absolute inset-0 rounded-lg shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] pointer-events-none z-20"></div>
+          </div>
+
+          {/* Custom Strength Legend */}
+          <div className="mt-6 p-4 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 relative z-10">
+            <h2 className="text-3xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+              Planetary Count
+            </h2>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-300">Sparse</span>
+              <div className="flex-grow h-4 mx-4 rounded-full overflow-hidden">
+                <div 
+                  className="h-full w-full"
+                  style={{ 
+                    background: 'linear-gradient(to right, rgba(100, 115, 255, 0.8), rgba(180, 80, 220, 0.8), rgba(255, 105, 180, 0.8))' 
+                  }}
+                />
+              </div>
+              <span className="text-sm text-slate-300">Dense</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

@@ -164,35 +164,35 @@ const ElementalBalance: React.FC<ElementalBalanceProps> = ({ planets = {} }) => 
         </section>
 
         {/* Element Influence */}
-        <section className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-100">
-          <h3 className="text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3">
+        <section>
+          <h3 className="text-sm sm:text-base font-semibold text-slate-800 mb-3 sm:mb-4">
             Element Influence Insights
           </h3>
           
           {dominantElement ? (
-            <div className={`p-2 sm:p-3 rounded-lg ${elementInfo[dominantElement].lightBgColor}`}>
-              <div className="flex items-center mb-1 sm:mb-2">
-                <div className={`p-1 sm:p-1.5 rounded-full ${elementInfo[dominantElement].bgColor} text-white mr-2`}>
-                  {elementInfo[dominantElement].icon}
+            <div className={`p-3 sm:p-4 rounded-lg ${elementInfo[dominantElement].lightBgColor}`}>
+              <div className="flex items-center mb-2 sm:mb-3">
+                <div className={`p-1.5 sm:p-2 rounded-full ${elementInfo[dominantElement].bgColor} text-white mr-3`}>
+                  {React.cloneElement(elementInfo[dominantElement].icon, { className: 'h-4 w-4 sm:h-5 sm:w-5' })}
                 </div>
-                <h4 className={`text-sm font-medium ${elementInfo[dominantElement].color}`}>
+                <h4 className={`text-sm sm:text-base font-semibold ${elementInfo[dominantElement].color}`}>
                   {dominantElement.charAt(0).toUpperCase() + dominantElement.slice(1)} Dominant
                 </h4>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700">
+              <p className="text-sm sm:text-base text-slate-800 leading-relaxed">
                 {elementInfo[dominantElement].description}
               </p>
             </div>
           ) : (
-            <div className="p-2 sm:p-3 rounded-lg bg-slate-50">
-              <p className="text-xs sm:text-sm text-slate-700">
+            <div className="p-3 sm:p-4 rounded-lg bg-slate-50">
+              <p className="text-sm sm:text-base text-slate-800">
                 No dominant element detected or insufficient planetary data available.
               </p>
             </div>
           )}
 
-          <div className="mt-3 sm:mt-4">
-            <h4 className="text-[10px] xs:text-xs font-medium text-slate-500 mb-1 sm:mb-2">
+          <div className="mt-4 sm:mt-5">
+            <h4 className="text-xs sm:text-sm font-medium text-slate-600 mb-2 sm:mb-3">
               Planets by Element
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">

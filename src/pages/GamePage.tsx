@@ -395,14 +395,14 @@ const GamePage: React.FC = () => {
             </div>
 
             {/* Teams */}
-            <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-8 my-8">
+            <div className="grid grid-cols-3 items-center gap-2 sm:gap-4 my-4 sm:my-8">
               {/* Home Team */}
               <div className="flex flex-col items-center">
                 <Link 
                   to={`/teams/${home_team?.id}`}
                   className="group block w-full"
                 >
-                  <div className="relative w-32 h-32 mx-auto mb-3">
+                  <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 mx-auto mb-2 sm:mb-3">
                     <div className="absolute inset-0 rounded-full bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-gray-800 transition-colors duration-300 -z-10"></div>
                     <div className="w-full h-full transition-all duration-300 group-hover:scale-105">
                       <img 
@@ -437,9 +437,9 @@ const GamePage: React.FC = () => {
               </div>
               
               {/* VS */}
-              <div className="my-6 md:my-0">
-                <div className="bg-muted/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-                  <span className="text-2xl font-bold">VS</span>
+              <div className="my-0">
+                <div className="bg-muted/50 rounded-full w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 flex items-center justify-center mx-auto">
+                  <span className="text-lg sm:text-xl md:text-2xl font-bold">VS</span>
                 </div>
               </div>
               
@@ -449,7 +449,7 @@ const GamePage: React.FC = () => {
                   to={`/teams/${away_team?.id}`}
                   className="group block w-full"
                 >
-                  <div className="relative w-32 h-32 mx-auto mb-3">
+                  <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 mx-auto mb-2 sm:mb-3">
                     <div className="absolute inset-0 rounded-full bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-gray-800 transition-colors duration-300 -z-10"></div>
                     <div className="w-full h-full transition-all duration-300 group-hover:scale-105">
                       <img 

@@ -1370,20 +1370,20 @@ const Dashboard: React.FC = () => {
                     planets={astroData?.planets} 
                   />
                   
-                  {/* Daily Astro Tip - Enhanced Full Width Section */}
-                  <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-12 py-12 bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900">
+                  {/* Daily Astro Tip - Compact */}
+                  <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] my-6 py-6 bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
-                    <div className="w-full max-w-[100vw] px-4 sm:px-6 lg:px-8 py-8 mx-auto">
+                    <div className="w-full max-w-[100vw] px-4 sm:px-6 lg:px-8 py-4 mx-auto">
                       <div className="max-w-4xl mx-auto text-center">
-                        <div className="flex flex-col items-center mb-6">
-                          <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-3 rounded-xl shadow-lg w-14 h-14 flex items-center justify-center mb-4">
-                            <Lightbulb className="h-7 w-7 text-white" />
+                        <div className="flex flex-col items-center mb-2">
+                          <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-1.5 rounded-lg shadow-md w-9 h-9 flex items-center justify-center mb-1.5">
+                            <Lightbulb className="h-4 w-4 text-white" />
                           </div>
                           <div className="text-center">
                             <h3 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 to-amber-100">
                               Daily Astro Tip
                             </h3>
-                            <div className="h-1 w-16 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full mt-2 mx-auto"></div>
+                            <div className="h-0.5 w-12 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full mt-1 mx-auto"></div>
                           </div>
                         </div>
                         <p className="text-slate-100 text-lg leading-relaxed font-light max-w-3xl mx-auto">

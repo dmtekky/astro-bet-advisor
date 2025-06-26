@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import {
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
+import { Badge } from '@/components/ui/badge'; // Added for demo badge
 
 // Dynamically import the NatalChartProfile component with SSR disabled
 const NatalChartProfile = dynamic(
@@ -121,6 +122,14 @@ const ExampleProfilePage: React.FC = () => {
     setShowAddSports(false);
   };
 
+  // Hardcoded demo birth data for the natal chart
+  const demoBirthData = {
+    date: '1990-06-15',
+    time: '14:30',
+    timeUnknown: false,
+    city: 'New York, NY'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -199,53 +208,29 @@ const ExampleProfilePage: React.FC = () => {
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 className="overflow-hidden"
               >
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {availableSports.map((sport, index) => (
-                    <motion.button
+                <div className="flex flex-wrap gap-2">
+                  {availableSports.map((sport) => (
+                    <Button
                       key={sport.id}
-                      custom={index}
-                      initial="hidden"
-                      animate="visible"
-                      whileHover="hover"
-                      whileTap="tap"
-                      variants={itemVariants}
-                      onClick={() => toggleSport(sport.id)}
+                      variant="outline"
                       className={`${SPORT_PILL} ${SPORT_STYLE}`}
+                      onClick={() => toggleSport(sport.id)}
                     >
                       {sport.name}
-                    </motion.button>
+                    </Button>
                   ))}
                 </div>
-                
-                <div className="flex justify-end mt-3 pt-3 border-t border-slate-100">
-                  <Button 
-                    size="sm"
-                    onClick={saveSports}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Done
+                <div className="flex justify-end mt-4 space-x-2">
+                  <Button variant="outline" onClick={toggleAddSports}>
+                    Cancel
                   </Button>
+                  <Button onClick={saveSports}>Save</Button>
                 </div>
               </motion.div>
             )}
           </div>
-          
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <h3 className="text-sm font-medium text-slate-900 mb-2">Notification Email</h3>
-            <div className="flex items-center">
-              <p className="text-sm text-slate-900">{user.preferences.notificationEmail}</p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-auto text-blue-600 hover:text-blue-700"
-                onClick={() => {/* Open email change modal */}}
-              >
-                Change
-              </Button>
-            </div>
-          </div>
         </div>
-
+        
         {/* Main Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left Column - Personal Info */}
@@ -257,154 +242,126 @@ const ExampleProfilePage: React.FC = () => {
                 <CardDescription className="text-slate-500">Your personal and subscription details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium text-slate-700">Full Name</Label>
-                      <Input type="text" defaultValue={user.name} className="mt-1 bg-white" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-slate-700">Email Address</Label>
-                      <Input type="email" defaultValue={user.email} className="mt-1 bg-white" />
-                    </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700">Account Type</Label>
+                    <p className="text-sm text-slate-900">{user.accountType}</p>
                   </div>
-
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-slate-900">Birth Information</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <Label className="text-xs font-medium text-slate-500">Date of Birth</Label>
-                        <Input type="date" className="mt-1 bg-white" />
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium text-slate-500">Time of Birth</Label>
-                        <Input type="time" className="mt-1 bg-white" />
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium text-slate-500">Place of Birth</Label>
-                        <Input placeholder="City, Country" className="mt-1 bg-white" />
-                      </div>
-                    </div>
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700">Member Since</Label>
+                    <p className="text-sm text-slate-900">{user.memberSince}</p>
                   </div>
-
-                  <div className="pt-4 border-t border-slate-100">
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                      Save Changes
-                    </Button>
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700">Last Login</Label>
+                    <p className="text-sm text-slate-900">{user.lastLogin}</p>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="flex justify-between border-t border-slate-100 px-6 py-4">
+                <Button variant="outline">Manage Subscription</Button>
+                <Button>Upgrade</Button>
+              </CardFooter>
             </Card>
 
-          </div>
-
-          {/* Right Column - Settings */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Astrological Profile */}
+            {/* Preferences */}
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Astrological Profile</CardTitle>
-                <CardDescription className="text-slate-500">Your astrological placements and insights</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                    <p className="text-xs font-medium text-blue-700 mb-1">SUN SIGN</p>
-                    <p className="font-semibold text-slate-900">Gemini</p>
-                    <p className="text-xs text-slate-500 mt-1">Communication, Intellect</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
-                    <p className="text-xs font-medium text-purple-700 mb-1">MOON SIGN</p>
-                    <p className="font-semibold text-slate-900">Libra</p>
-                    <p className="text-xs text-slate-500 mt-1">Emotions, Instincts</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
-                    <p className="text-xs font-medium text-indigo-700 mb-1">RISING SIGN</p>
-                    <p className="font-semibold text-slate-900">Aries</p>
-                    <p className="text-xs text-slate-500 mt-1">First Impressions</p>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50">
-                    View Detailed Birth Chart
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Notification Settings */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Notification Preferences</CardTitle>
-                <CardDescription className="text-slate-500">Manage how you receive notifications</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900">Preferences</CardTitle>
+                <CardDescription className="text-slate-500">Customize your experience</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50">
-                    <div>
-                      <h4 className="font-medium text-slate-900">Email Notifications</h4>
-                      <p className="text-sm text-slate-500">Receive important account notifications</p>
-                    </div>
-                    <Switch defaultChecked />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="theme-mode" className="text-sm font-medium text-slate-700">
+                      Dark Mode
+                    </Label>
+                    <Switch id="theme-mode" />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50">
-                    <div>
-                      <h4 className="font-medium text-slate-900">Push Notifications</h4>
-                      <p className="text-sm text-slate-500">Get real-time updates in your browser</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50">
-                    <div>
-                      <h4 className="font-medium text-slate-900">SMS Alerts</h4>
-                      <p className="text-sm text-slate-500">Important updates via text message</p>
-                    </div>
-                    <Switch />
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700 mb-2">Timezone</Label>
+                    <Select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select timezone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
+                        <SelectItem value="cst">Central Standard Time (CST)</SelectItem>
+                        <SelectItem value="mst">Mountain Standard Time (MST)</SelectItem>
+                        <SelectItem value="pst">Pacific Standard Time (PST)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Security */}
+          </div>
+          
+          {/* Middle Column - Stats */}
+          <div className="space-y-6">
+            {/* Stats Overview */}
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Security</CardTitle>
-                <CardDescription className="text-slate-500">Manage your account security settings</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900">Your Stats</CardTitle>
+                <CardDescription className="text-slate-500">Performance and activity metrics</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-3">Change Password</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-sm font-medium text-slate-700">Current Password</Label>
-                        <Input type="password" className="mt-1 bg-white" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-slate-700">New Password</Label>
-                        <Input type="password" className="mt-1 bg-white" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-slate-700">Confirm New Password</Label>
-                        <Input type="password" className="mt-1 bg-white" />
-                      </div>
-                      <div className="flex justify-end pt-2">
-                        <Button className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
-                          Update Password
-                        </Button>
-                      </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-700">{user.stats.predictions}</p>
+                    <p className="text-sm text-blue-600">Predictions</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-green-700">{user.stats.accuracy}</p>
+                    <p className="text-sm text-green-600">Accuracy</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-purple-700">{user.stats.followers}</p>
+                    <p className="text-sm text-purple-600">Followers</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-amber-700">{user.stats.following}</p>
+                    <p className="text-sm text-amber-600">Following</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Right Column - Security and More */}
+          <div className="space-y-6">
+            {/* Recent Activity */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Recent Activity</CardTitle>
+                <CardDescription className="text-slate-500">Your latest actions and events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <div className="bg-green-100 p-2 rounded-full mr-3">
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Prediction submitted</p>
+                      <p className="text-xs text-slate-500">Lakers vs Celtics - 2 hours ago</p>
                     </div>
                   </div>
-
-                  <div className="border-t border-slate-100 pt-6">
-                    <h4 className="font-medium text-slate-900 mb-3">Two-Factor Authentication</h4>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-500">Add an extra layer of security to your account</p>
-                      </div>
-                      <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50">
-                        Enable 2FA
-                      </Button>
+                  <div className="flex items-start">
+                    <div className="bg-blue-100 p-2 rounded-full mr-3">
+                      <ChevronsUpDown className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Updated profile</p>
+                      <p className="text-xs text-slate-500">Added favorite sports - Yesterday</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-amber-100 p-2 rounded-full mr-3">
+                      <Check className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Prediction won</p>
+                      <p className="text-xs text-slate-500">Yankees vs Red Sox - 2 days ago</p>
                     </div>
                   </div>
                 </div>
@@ -412,25 +369,23 @@ const ExampleProfilePage: React.FC = () => {
             </Card>
           </div>
         </div>
-      </div>
-      
-      {/* Natal Chart Section */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">Your Astrological Profile</h2>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <NatalChartProfile />
+        
+        {/* Natal Chart Section */}
+        <div className="mt-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Your Astrological Profile</h2>
+            <Badge variant="secondary">Demo Version</Badge>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-4 text-sm text-slate-600">
+              <p><strong>Demo Birth Data:</strong> {demoBirthData.date} at {demoBirthData.time} in {demoBirthData.city}</p>
+            </div>
+            <NatalChartProfile birthData={demoBirthData} />
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-// Helper Components
-const StatCard = ({ label, value }: { label: string; value: string | number }) => (
-  <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm text-center">
-    <div className="text-2xl font-bold text-purple-600">{value}</div>
-    <div className="text-sm text-slate-500 mt-1">{label}</div>
-  </div>
-);
 
 export default ExampleProfilePage;
