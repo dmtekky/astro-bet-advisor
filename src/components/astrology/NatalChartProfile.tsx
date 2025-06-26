@@ -5,6 +5,8 @@ import zodiacGlyphs from '@/data/zodiacGlyphs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import html2canvas from 'html2canvas';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -23,10 +25,12 @@ interface NatalChartProfileProps {
 const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBirthData }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [internalBirthData, setInternalBirthData] = useState<BirthDataProps>({ date: '', time: '', timeUnknown: false, city: '' });
   const actualBirthData = propBirthData || internalBirthData;
   const [planetCounts, setPlanetCounts] = useState<number[] | null>(null);
   const [planetsPerSign, setPlanetsPerSign] = useState<Record<string, string[]>>({});
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const fetchPlanetaryPositions = async () => {
@@ -216,10 +220,139 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
     e.preventDefault();
   };
 
-  // Helper function to convert sign name to index
-  const signToIndex = (sign: string): number => {
-    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-    return signs.indexOf(sign);
+  const handleDownload = () => {
+    if (!containerRef.current) return;
+    
+    setIsDownloading(true);
+    
+    // Get the parent container that has the full chart
+    const chartContainer = containerRef.current.closest('.relative.p-4.rounded-lg.overflow-hidden') as HTMLElement;
+    if (!chartContainer) return;
+    
+    // Add a small delay to ensure everything is rendered
+    setTimeout(() => {
+      const captureElement = (element: HTMLElement) => {
+        return html2canvas(element, {
+          backgroundColor: null,
+          scale: 2,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+          useCORS: true,
+          logging: true,
+          allowTaint: true,
+          scrollX: -window.scrollX,
+          scrollY: -window.scrollY,
+          x: 0,
+          y: 0,
+          onclone: (clonedDoc) => {
+            // Ensure the cloned element is visible for capture
+            const clonedContainer = clonedDoc.querySelector('.relative.p-4.rounded-lg.overflow-hidden') as HTMLElement;
+            if (clonedContainer) {
+              clonedContainer.style.overflow = 'visible';
+              clonedContainer.style.position = 'static';
+            }
+          }
+        });
+      };
+      
+      captureElement(chartContainer).then(canvas => {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Add watermark
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Full Moon Odds', canvas.width/2, canvas.height - 30);
+      }
+      
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'natal-chart.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setIsDownloading(false);
+      }).catch(error => {
+        console.error('Error capturing chart:', error);
+        setIsDownloading(false);
+      });
+    });
+  };
+
+  const handleShare = async () => {
+    if (!containerRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      // Get the parent container that has the full chart
+      const chartContainer = containerRef.current.closest('.relative.p-4.rounded-lg.overflow-hidden') as HTMLElement;
+      if (!chartContainer) return;
+      
+      const captureElement = (element: HTMLElement) => {
+        return html2canvas(element, {
+          backgroundColor: null,
+          scale: 2,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+          useCORS: true,
+          logging: true,
+          allowTaint: true,
+          scrollX: -window.scrollX,
+          scrollY: -window.scrollY,
+          x: 0,
+          y: 0,
+          onclone: (clonedDoc) => {
+            // Ensure the cloned element is visible for capture
+            const clonedContainer = clonedDoc.querySelector('.relative.p-4.rounded-lg.overflow-hidden') as HTMLElement;
+            if (clonedContainer) {
+              clonedContainer.style.overflow = 'visible';
+              clonedContainer.style.position = 'static';
+            }
+          }
+        });
+      };
+      
+      const canvas = await captureElement(chartContainer);
+      
+      // Add watermark
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Full Moon Odds', canvas.width/2, canvas.height - 30);
+      }
+      
+      const image = canvas.toDataURL('image/png');
+      const blob = await (await fetch(image)).blob();
+      const file = new File([blob], 'natal-chart.png', { type: 'image/png' });
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My Natal Chart',
+          files: [file]
+        });
+      } else {
+        // Fallback to download
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'natal-chart.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const generateAspectLines = (counts: number[]): JSX.Element[] => {
@@ -228,7 +361,7 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
       .filter(item => item.count > 1)
       .sort((a, b) => b.count - a.count);
     
-    const lines = [];
+    const lines: JSX.Element[] = [];
     
     for (let i = 0; i < Math.min(strongSigns.length, 4); i++) {
       for (let j = i + 1; j < Math.min(strongSigns.length, 4); j++) {
@@ -260,6 +393,11 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
     }
     
     return lines;
+  };
+
+  const signToIndex = (sign: string): number => {
+    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    return signs.indexOf(sign);
   };
 
   return (
@@ -337,7 +475,7 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
             background: 'radial-gradient(circle at center, #0c1445 0%, #05071f 100%)',
           }}
         >
-          <div className="absolute top-4 right-4 z-30">
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -348,6 +486,22 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <Button 
+              variant="outline" 
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleDownload()}
+              disabled={isDownloading}
+              className="text-white bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600"
+            >
+              {isDownloading ? 'Downloading...' : 'Download'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleShare()}
+              disabled={isDownloading}
+              className="text-white bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600"
+            >
+              Share
+            </Button>
           </div>
           
           {/* Starry background effect */}
@@ -367,7 +521,7 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({ birthData: propBi
             ))}
           </div>
 
-          <div className="relative z-10 group">
+          <div ref={containerRef} className="relative z-10 group w-full" style={{ minHeight: '500px' }}>
             {/* Constellation patterns */}
             <div className="absolute inset-0 z-0 opacity-20">
               {['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'].map((sign, index) => {
