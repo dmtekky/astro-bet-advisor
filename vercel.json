@@ -43,6 +43,7 @@
     { "source": "/api/test-update", "destination": "/api/test-update.ts" },
     { "source": "/api/health-check", "destination": "/api/health-check.ts" },
     { "source": "/api/teams", "destination": "/api/teams.js" },
+    { "source": "/api/astrology/positions", "destination": "/api/astrology/positions.ts" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/ads.txt", "destination": "/ads.txt" },

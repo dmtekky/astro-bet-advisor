@@ -1,6 +1,7 @@
 import express from 'express';
 import { getMoonPhase, getPlanetPositions, getZodiacSign } from './src/lib/astroCalculations.js';
 import unifiedAstroHandler from './api/unified-astro.js';
+import { calculatePlanetaryPositions } from './src/lib/astrologyCalculations.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,6 +15,10 @@ const NEWS_DATA_DIR = path.join(__dirname, 'public/news/data');
 
 const app = express();
 const port = 3001; // Changed to match Vite proxy configuration
+
+// Configure middleware to parse JSON request bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // DEPRECATED: /astro-date endpoint removed. Use /api/astro/:date instead.
 /*
@@ -49,9 +54,35 @@ app.get('/', (req, res) => {
 // Add CORS headers to all responses
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
+});
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// API endpoint for planetary positions
+app.post('/api/astrology/positions', async (req, res) => {
+  try {
+    const birthData = req.body;
+    
+    // Validate birth data
+    if (!birthData || !birthData.year || !birthData.month || !birthData.day || !birthData.hour || !birthData.minute) {
+      return res.status(400).json({ error: 'Invalid birth data' });
+    }
+    
+    // Calculate planetary positions
+    const positions = await calculatePlanetaryPositions(birthData);
+    
+    res.status(200).json(positions);
+  } catch (error) {
+    console.error('Error calculating positions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Unified astrology endpoint - serves both Dashboard and Players pages

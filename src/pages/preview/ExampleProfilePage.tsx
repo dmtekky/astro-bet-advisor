@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -17,11 +17,20 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge'; // Added for demo badge
+import { User, Star, Activity, Share2, Download, Printer, Info, Loader2 } from 'lucide-react';
 
-// Dynamically import the NatalChartProfile component with SSR disabled
+import { customSupabase } from '@/lib/custom-supabase';
+import UserBirthDataForm from '@/components/forms/UserBirthDataForm';
+
+// Dynamically import the chart components with SSR disabled
 const NatalChartProfile = dynamic(
   () => import('@/components/astrology/NatalChartProfile'),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading natal chart...</div> }
+);
+
+const PlanetaryCountChart = dynamic(
+  () => import('@/components/astrology/PlanetaryCountChart'),
+  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading planetary chart...</div> }
 );
 
 // Define sport type
@@ -72,29 +81,96 @@ const itemVariants = {
 };
 
 const ExampleProfilePage: React.FC = () => {
-  // In a real app, this data would come from your backend/API
-  const [user, setUser] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
+  // State for user data from Supabase
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [showAddSports, setShowAddSports] = useState(false);
+  
+  // Default user data when no Supabase data is available
+  const defaultUser = {
+    name: 'New User',
+    email: 'user@example.com',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    memberSince: 'January 15, 2023',
-    lastLogin: 'Today at 2:45 PM',
-    accountType: 'Premium',
+    memberSince: new Date().toLocaleDateString(),
+    lastLogin: 'Today',
+    accountType: 'Standard',
     preferences: {
-      favoriteSports: ['basketball', 'baseball', 'football'],
-      notificationEmail: 'alex.johnson@example.com',
-      theme: 'Dark Mode'
+      favoriteSports: [] as string[],
+      notificationEmail: 'user@example.com',
+      theme: 'Light Mode'
     },
     stats: {
-      predictions: 128,
-      accuracy: '74%',
-      followers: 245,
-      following: 156,
+      predictions: 0,
+      accuracy: '0%',
+      followers: 0,
+      following: 0,
     },
-  });
-
-  const [showAddSports, setShowAddSports] = useState(false);
+  };
+  
+  // Current user data (from Supabase or default)
+  const user = userData || defaultUser;
+  
+  // Initialize sports selection with user preferences
   const [selectedSports, setSelectedSports] = useState<string[]>(user.preferences.favoriteSports);
+  
+  // Fetch user data from Supabase
+  useEffect(() => {
+    const fetchSpecificUser = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch data for the specific user ID
+        const specificUserId = '9245f829-40d5-44ee-9ea7-182d4d23d0b6';
+        const data = await customSupabase.userData.getById(specificUserId);
+        
+        if (data) {
+          setUserId(data.id);
+          
+          // Transform the data to match our UI expectations
+          setUserData({
+            name: data.name || 'User',
+            email: data.email || 'user@example.com',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+            memberSince: new Date(data.created_at).toLocaleDateString(),
+            lastLogin: 'Today',
+            accountType: 'Premium',
+            preferences: {
+              favoriteSports: data.favorite_sports || [],
+              notificationEmail: data.email || 'user@example.com',
+              theme: 'Dark Mode'
+            },
+            stats: {
+              predictions: Math.floor(Math.random() * 100),
+              accuracy: `${Math.floor(Math.random() * 30) + 70}%`,
+              followers: Math.floor(Math.random() * 200) + 50,
+              following: Math.floor(Math.random() * 100) + 50,
+            },
+            birthData: {
+              date: data.birth_date,
+              time: data.birth_time || '',
+              city: data.birth_city,
+              timeUnknown: data.time_unknown
+            }
+          });
+          
+          // Update selected sports
+          if (data.favorite_sports && Array.isArray(data.favorite_sports)) {
+            setSelectedSports(data.favorite_sports);
+          }
+        } else {
+          console.error('No data found for the specific user ID');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSpecificUser();
+  }, []);
   
   const availableSports = SPORTS.filter(sport => !selectedSports.includes(sport.id));
   const selectedSportData = SPORTS.filter(sport => selectedSports.includes(sport.id));
@@ -111,28 +187,108 @@ const ExampleProfilePage: React.FC = () => {
     setShowAddSports(prev => !prev);
   };
   
-  const saveSports = () => {
-    setUser(prev => ({
-      ...prev,
-      preferences: {
-        ...prev.preferences,
-        favoriteSports: [...selectedSports]
+  const saveSports = async () => {
+    if (userId) {
+      try {
+        // Update the user's favorite sports in the unified user_data table
+        await customSupabase.userData.update(userId, {
+          favorite_sports: selectedSports
+        });
+        
+        // Update local state
+        if (userData) {
+          setUserData(prev => ({
+            ...prev,
+            preferences: {
+              ...prev.preferences,
+              favoriteSports: [...selectedSports]
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error updating favorite sports:', error);
       }
-    }));
+    } else {
+      // If no user ID, just update local state
+      if (userData) {
+        setUserData(prev => ({
+          ...prev,
+          preferences: {
+            ...prev.preferences,
+            favoriteSports: [...selectedSports]
+          }
+        }));
+      }
+    }
+    
     setShowAddSports(false);
   };
+  
+  // Handle form submission success
+  const handleFormSuccess = (newUserData: any) => {
+    setUserId(newUserData.id);
+    setShowForm(false);
+    
+    // Refresh the page to show the new data
+    window.location.reload();
+  };
 
-  // Hardcoded demo birth data for the natal chart
-  const demoBirthData = {
+  // Birth data from user data or fallback to demo data
+  const birthData = userData?.birthData || {
     date: '1990-06-15',
     time: '14:30',
     timeUnknown: false,
-    city: 'New York, NY'
+    city: 'New York, NY',
+    latitude: 40.7128,
+    longitude: -74.0060
   };
+  
+  // State for chart data sharing
+  const [chartData, setChartData] = useState<{
+    natalChartData?: any;
+    planetaryCounts?: number[];
+    planetsPerSign?: Record<string, string[]>;
+  }>({});
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Loading state */}
+        {loading && (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-2 text-lg text-gray-700">Loading user data...</span>
+          </div>
+        )}
+        
+        {/* User Birth Data Form */}
+        {showForm && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Enter Your Birth Information</CardTitle>
+                <CardDescription>
+                  This information will be used to generate your astrological chart
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserBirthDataForm onSuccess={handleFormSuccess} />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
+        {/* Button to show form if no user data */}
+        {!loading && !userData && !showForm && (
+          <div className="flex justify-center mb-8">
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            >
+              Enter Your Birth Information
+            </Button>
+          </div>
+        )}
         {/* Profile Header */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
@@ -301,19 +457,11 @@ const ExampleProfilePage: React.FC = () => {
             {/* Stats Overview */}
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Your Stats</CardTitle>
-                <CardDescription className="text-slate-500">Performance and activity metrics</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900">Stats Overview</CardTitle>
+                <CardDescription className="text-slate-500">Your activity statistics</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-blue-700">{user.stats.predictions}</p>
-                    <p className="text-sm text-blue-600">Predictions</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-green-700">{user.stats.accuracy}</p>
-                    <p className="text-sm text-green-600">Accuracy</p>
-                  </div>
                   <div className="bg-purple-50 rounded-lg p-4 text-center">
                     <p className="text-2xl font-bold text-purple-700">{user.stats.followers}</p>
                     <p className="text-sm text-purple-600">Followers</p>
@@ -370,17 +518,114 @@ const ExampleProfilePage: React.FC = () => {
           </div>
         </div>
         
-        {/* Natal Chart Section */}
+        {/* Astrological Charts Section */}
         <div className="mt-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Your Astrological Profile</h2>
             <Badge variant="secondary">Demo Version</Badge>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-4 text-sm text-slate-600">
-              <p><strong>Demo Birth Data:</strong> {demoBirthData.date} at {demoBirthData.time} in {demoBirthData.city}</p>
+          
+          {/* Birth data info */}
+          <div className="bg-gradient-to-b from-slate-900 to-indigo-900 rounded-lg shadow-xl p-6 mb-6">
+            <div className="text-sm text-slate-300">
+              <p><strong>Birth Data:</strong> {birthData.date} at {birthData.time} in {birthData.city}</p>
+              {birthData.latitude && birthData.longitude && (
+                <p className="text-xs opacity-75 mt-1">
+                  Coordinates: {birthData.latitude.toFixed(4)}°N, {Math.abs(birthData.longitude).toFixed(4)}°W
+                </p>
+              )}
             </div>
-            <NatalChartProfile birthData={demoBirthData} />
+          </div>
+          
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Natal Chart */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-xl shadow-xl overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-white mb-4">Natal Chart</h2>
+                <div className="bg-opacity-30 bg-slate-800 backdrop-blur-sm rounded-xl border border-slate-700 p-4 h-[500px] relative">
+                  {/* Cosmic background effect */}
+                  <div className="absolute inset-0 z-0 opacity-20">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div 
+                        key={`star-${i}`}
+                        className="absolute rounded-full bg-white" 
+                        style={{
+                          width: `${Math.random() * 2 + 1}px`,
+                          height: `${Math.random() * 2 + 1}px`,
+                          top: `${Math.random() * 100}%`,
+                          left: `${Math.random() * 100}%`,
+                          opacity: Math.random() * 0.8
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Natal Chart */}
+                  <div className="relative z-10 h-full">
+                    {userId ? (
+                      <NatalChartProfile 
+                        userId={userId} 
+                        onDataLoad={setChartData}
+                        className="h-full"
+                      />
+                    ) : (
+                      <NatalChartProfile 
+                        birthData={birthData} 
+                        onDataLoad={setChartData}
+                        className="h-full"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Planetary Count Chart */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-xl shadow-xl overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-white mb-4">Planetary Distribution</h2>
+                <div className="bg-opacity-30 bg-slate-800 backdrop-blur-sm rounded-xl border border-slate-700 p-4 h-[500px] relative">
+                  {/* Cosmic background effect */}
+                  <div className="absolute inset-0 z-0 opacity-20">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div 
+                        key={`star-${i}`}
+                        className="absolute rounded-full bg-white" 
+                        style={{
+                          width: `${Math.random() * 2 + 1}px`,
+                          height: `${Math.random() * 2 + 1}px`,
+                          top: `${Math.random() * 100}%`,
+                          left: `${Math.random() * 100}%`,
+                          opacity: Math.random() * 0.8
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Planetary Count Chart */}
+                  <div className="relative z-10 h-full">
+                    <PlanetaryCountChart 
+                      planetCounts={chartData.planetaryCounts || null}
+                      planetsPerSign={chartData.planetsPerSign || {}}
+                      className="h-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Chart Description */}
+          <div className="mt-6 bg-slate-900/50 rounded-lg p-4 text-sm text-slate-300">
+            <h3 className="font-semibold text-slate-200 mb-2">About Your Charts</h3>
+            <p className="mb-2">
+              Your <span className="text-blue-400">Natal Chart</span> shows the positions of celestial bodies at your exact time of birth, 
+              while the <span className="text-purple-400">Planetary Distribution</span> chart visualizes how many planets are in each zodiac sign.
+            </p>
+            <p className="text-xs opacity-75">
+              For the most accurate reading, ensure your birth time and location are precise.
+            </p>
           </div>
         </div>
       </div>

@@ -1,0 +1,156 @@
+/**
+ * Utility functions for astrological chart components
+ */
+import { ZODIAC_SIGNS } from './types';
+
+/**
+ * Calculate the number of planets in each zodiac sign
+ * @param planetaryData - The planetary data from API or Supabase
+ * @returns Record mapping zodiac sign names to counts
+ */
+export const calculatePlanetaryCounts = (planetaryData: any): Record<string, number> => {
+  if (!planetaryData || !planetaryData.planets) {
+    return ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: 0 }), {});
+  }
+
+  // Initialize counts for each sign
+  const counts: Record<string, number> = ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: 0 }), {});
+
+  // Count planets in each sign
+  Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
+    if (data && typeof data.lon === 'number') {
+      const signIndex = Math.floor(data.lon / 30) % 12;
+      const sign = ZODIAC_SIGNS[signIndex];
+      counts[sign]++;
+    }
+  });
+
+  return counts;
+};
+
+/**
+ * Process planets per sign to get a mapping of which planets are in each sign
+ * @param planetaryData - The planetary data from API or Supabase
+ * @returns Record mapping zodiac sign names to arrays of planet names
+ */
+export const processPlanetsPerSign = (planetaryData: any): Record<string, string[]> => {
+  if (!planetaryData || !planetaryData.planets) {
+    return ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: [] }), {});
+  }
+
+  // Initialize empty arrays for each sign
+  const planetsPerSign: Record<string, string[]> = ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: [] }), {});
+
+  // Assign planets to their respective signs
+  Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
+    if (data && typeof data.lon === 'number') {
+      const signIndex = Math.floor(data.lon / 30) % 12;
+      const sign = ZODIAC_SIGNS[signIndex];
+      planetsPerSign[sign].push(planet);
+    }
+  });
+
+  return planetsPerSign;
+};
+
+/**
+ * Convert planetary counts object to array format for Chart.js
+ * @param counts - Record mapping zodiac sign names to counts
+ * @returns Array of counts in zodiac sign order
+ */
+export const countsToArray = (counts: Record<string, number>): number[] => {
+  return ZODIAC_SIGNS.map(sign => counts[sign] || 0);
+};
+
+/**
+ * Generate aspect lines data for SVG visualization
+ * @param counts - Array of planetary counts by zodiac sign
+ * @returns Array of line data objects
+ */
+export interface AspectLineData {
+  key: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  stroke: string;
+  strokeWidth: string;
+  strokeDasharray: string;
+}
+
+export const generateAspectLines = (counts: number[]): AspectLineData[] => {
+  const strongSigns = counts
+    .map((count, i) => ({count, index: i}))
+    .filter(item => item.count > 1)
+    .sort((a, b) => b.count - a.count);
+
+  const lines: AspectLineData[] = [];
+
+  for (let i = 0; i < Math.min(strongSigns.length, 4); i++) {
+    for (let j = i + 1; j < Math.min(strongSigns.length, 4); j++) {
+      const angle1 = strongSigns[i].index * 30;
+      const angle2 = strongSigns[j].index * 30;
+      const diff = Math.abs(angle1 - angle2);
+
+      // Only draw aspects for significant angular relationships
+      if ([0, 30, 60, 90, 120, 150, 180].includes(diff % 180)) {
+        const x1 = 50 + 40 * Math.cos((angle1 - 90) * Math.PI / 180);
+        const y1 = 50 + 40 * Math.sin((angle1 - 90) * Math.PI / 180);
+        const x2 = 50 + 40 * Math.cos((angle2 - 90) * Math.PI / 180);
+        const y2 = 50 + 40 * Math.sin((angle2 - 90) * Math.PI / 180);
+
+        lines.push({
+          key: `${i}-${j}`,
+          x1,
+          y1,
+          x2,
+          y2,
+          stroke: "rgba(255, 215, 0, 0.7)",
+          strokeWidth: "0.5",
+          strokeDasharray: diff % 30 === 0 ? '0' : '2,2'
+        });
+      }
+    }
+  }
+  
+  return lines;
+};
+
+/**
+ * Clean up Chart.js instance safely
+ * @param chartInstance - The Chart.js instance to destroy
+ */
+export const cleanupChartInstance = (chartInstance: any): void => {
+  if (!chartInstance) return;
+  
+  try {
+    if (typeof chartInstance.destroy === 'function') {
+      chartInstance.destroy();
+    }
+  } catch (error) {
+    console.error('Error destroying chart instance:', error);
+  }
+};
+
+/**
+ * Format data for AstroChart library
+ * @param astroData - The astrological data
+ * @returns Formatted data for AstroChart
+ */
+export const formatAstroChartData = (astroData: any): { planets: Record<string, number[]>; cusps: number[] } => {
+  const chartData: { planets: Record<string, number[]>; cusps: number[] } = {
+    planets: {},
+    cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+  };
+
+  // Convert planet data to the format expected by AstroChart
+  if (astroData && astroData.planets) {
+    Object.entries(astroData.planets).forEach(([name, planetData]: [string, any]) => {
+      if (planetData && typeof planetData.lon === 'number') {
+        chartData.planets[name] = [planetData.lon, 0, 0, 0]; // Adding fourth parameter for complete argument list
+      }
+    });
+  }
+
+  return chartData;
+};
