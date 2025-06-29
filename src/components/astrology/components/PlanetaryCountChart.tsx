@@ -20,7 +20,8 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
   error,
   onDownload,
   onShare,
-  isDownloading
+  isDownloading,
+  className = ''
 }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
@@ -133,7 +134,7 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
   }
 
   return (
-    <div className="planetary-count-container relative p-4 rounded-lg overflow-hidden" ref={containerRef}>
+    <div className={`relative w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg shadow-lg overflow-hidden ${className}`} ref={containerRef}>
       <div 
         style={{
           background: 'radial-gradient(circle at center, #0c1445 0%, #05071f 100%)',

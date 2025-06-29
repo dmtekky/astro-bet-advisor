@@ -44,6 +44,7 @@ export interface PlanetaryCountChartProps {
   onDownload: () => Promise<void>;
   onShare: () => Promise<void>;
   isDownloading: boolean;
+  className?: string;
 }
 
 // Props for placeholder components

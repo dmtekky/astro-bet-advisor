@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { customSupabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAstroData } from '@/hooks/useAstroData';
 import { 
   BirthDataProps, 

@@ -30,41 +30,44 @@ export interface UserAstrologyData {
 }
 
 // Extend the Database interface to include our custom tables
-export interface Database extends OriginalDatabase {
-  public: {
-    Tables: {
-      // Include all original tables
-      ...OriginalDatabase['public']['Tables'],
-      
-      // Add our unified user_data table
-      user_data: {
-        Row: UserData;
-        Insert: Partial<UserData> & { birth_date: string; birth_city: string };
-        Update: Partial<UserData>;
-        Relationships: [];
-      };
-      
-      // Keep the old tables for backward compatibility during migration
-      user_test: {
-        Row: UserTest;
-        Insert: Partial<UserTest> & { birth_date: string; birth_city: string };
-        Update: Partial<UserTest>;
-        Relationships: [];
-      };
-      user_astrology_data: {
-        Row: UserAstrologyData;
-        Insert: Partial<UserAstrologyData> & { user_id: string; planetary_data: any };
-        Update: Partial<UserAstrologyData>;
-        Relationships: [
-          {
-            foreignKeyName: "user_astrology_data_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "user_test";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
+type ExtendedTables = OriginalDatabase['public']['Tables'] & {
+  user_data: {
+    Row: UserData;
+    Insert: Omit<Partial<UserData>, 'birth_date' | 'birth_city'> & { 
+      birth_date: string; 
+      birth_city: string;
     };
+    Update: Partial<UserData>;
+    Relationships: [];
+  };
+  user_test: {
+    Row: UserTest;
+    Insert: Omit<Partial<UserTest>, 'birth_date' | 'birth_city'> & { 
+      birth_date: string; 
+      birth_city: string;
+    };
+    Update: Partial<UserTest>;
+    Relationships: [];
+  };
+  user_astrology_data: {
+    Row: UserAstrologyData;
+    Insert: Omit<Partial<UserAstrologyData>, 'user_id' | 'planetary_data'> & { 
+      user_id: string; 
+      planetary_data: any;
+    };
+    Update: Partial<UserAstrologyData>;
+    Relationships: Array<{
+      foreignKeyName: "user_astrology_data_user_id_fkey";
+      columns: ["user_id"];
+      referencedRelation: "user_test";
+      referencedColumns: ["id"];
+    }>;
+  };
+};
+
+export interface ExtendedDatabase extends OriginalDatabase {
+  public: {
+    Tables: ExtendedTables;
     Views: OriginalDatabase['public']['Views'];
     Functions: OriginalDatabase['public']['Functions'];
     Enums: OriginalDatabase['public']['Enums'];
@@ -74,5 +77,14 @@ export interface Database extends OriginalDatabase {
 
 // Export the extended Database type
 declare module '@/integrations/supabase/types' {
-  export interface Database extends Database {}
+  // This extends the original Database interface with our custom types
+  export interface Database {
+    public: {
+      Tables: OriginalDatabase['public']['Tables'] & ExtendedDatabase['public']['Tables'];
+      Views: OriginalDatabase['public']['Views'];
+      Functions: OriginalDatabase['public']['Functions'];
+      Enums: OriginalDatabase['public']['Enums'];
+      CompositeTypes: OriginalDatabase['public']['CompositeTypes'];
+    };
+  }
 }
