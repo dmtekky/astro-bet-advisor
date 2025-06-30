@@ -6,25 +6,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { customSupabase } from '@/lib/custom-supabase';
 import { supabase } from '@/lib/supabase';
-import { calculatePlanetaryCounts } from '@/lib/astrologyUtils';
-import cities from '@/data/cities.json';
+import { calculatePlanetaryCounts, processPlanetsPerSign, countsToArray } from '@/components/astrology/utils/chartUtils';
+import cities from '@/data/cities-clean.json';
 import { useEffect, useMemo } from 'react';
 
 interface UserBirthDataFormProps {
+  userId: string;
   onSuccess?: (userData: any) => void;
   defaultValues?: {
     birthDate?: string;
     birthTime?: string;
     birthCity?: string;
     timeUnknown?: boolean;
-    birthLatitude?: number | null;
-    birthLongitude?: number | null;
+    birthLatitude?: number;
+    birthLongitude?: number;
   };
 }
 
 const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({ 
+  userId,
   onSuccess,
   defaultValues = {}
 }) => {
@@ -33,27 +34,19 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
   const [formData, setFormData] = useState({
     birthDate: defaultValues?.birthDate || '',
     birthTime: defaultValues?.birthTime || '',
-    birthCity: defaultValues?.birthCity || '',
-    timeUnknown: defaultValues?.timeUnknown || false,
-    birthLatitude: defaultValues?.birthLatitude || null,
-    birthLongitude: defaultValues?.birthLongitude || null
+    birthCity: defaultValues?.birthCity || ''
   });
+  const [selectedCity, setSelectedCity] = useState<any>(null);
+  const [timeUnknown, setTimeUnknown] = useState(defaultValues?.timeUnknown || false);
   const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
   const [cityError, setCityError] = useState<string | null>(null);
-  const [cityTouched, setCityTouched] = useState(false);
 
   // Memoize city data for fast lookup
-  const cityData = useMemo(() => cities, []);
+  const cityData = cities;
 
   // Find city by name (case insensitive)
   const findCityData = (cityName: string) => {
     return cityData.find(c => c.name.toLowerCase() === cityName.toLowerCase());
-  };
-
-  // Get display name for city (City, State)
-  const getCityDisplayName = (cityName: string) => {
-    const city = findCityData(cityName);
-    return city ? `${city.name}, ${city.admin1}` : cityName;
   };
 
   // Suggest cities as user types
@@ -64,9 +57,19 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         .filter(city => 
           city.name.toLowerCase().includes(searchTerm) ||
           (city.admin1 && city.admin1.toLowerCase().includes(searchTerm))
-        )
-        .slice(0, 8);
-      setCitySuggestions(filtered);
+        );
+
+      // De-duplicate the suggestions to prevent key errors
+      const uniqueSuggestions: any[] = [];
+      const seen = new Set();
+      for (const city of filtered) {
+        const key = `${city.name}-${city.admin1}`; // Use a consistent key for de-duplication
+        if (!seen.has(key)) {
+          uniqueSuggestions.push(city);
+          seen.add(key);
+        }
+      }
+      setCitySuggestions(uniqueSuggestions.slice(0, 8)); // Show a limited number of unique suggestions
     } else {
       setCitySuggestions([]);
     }
@@ -90,22 +93,10 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
   
   // Handle city selection from dropdown
   const handleCitySelect = (city: any) => {
-    const newFormData = {
-      ...formData,
-      birthCity: city.name,
-      birthLatitude: parseFloat(city.lat),
-      birthLongitude: parseFloat(city.lng)
-    };
-    
-    setFormData(newFormData);
-    setCityTouched(true);
+    setFormData(prev => ({ ...prev, birthCity: city.name }));
+    setSelectedCity(city); // Store the full city object with coordinates
     setCityError(null);
-    
-    // Close the suggestions after selection
     setCitySuggestions([]);
-    
-    // Trigger validation
-    validateCity(city.name);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,45 +107,52 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
     }));
   };
 
+  useEffect(() => {
+    if (defaultValues?.birthCity) {
+      const city = findCityData(defaultValues.birthCity);
+      if (city) {
+        setSelectedCity(city);
+        validateCity(defaultValues.birthCity);
+      }
+    }
+  }, [defaultValues]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    // Check if a city has been selected
+    if (!selectedCity) {
+      setCityError('Please select a valid city from the suggestions.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // Validate city before submission
-      if (!validateCity(formData.birthCity)) {
-        setCityTouched(true);
-        setIsLoading(false);
-        return;
+      // Validate required fields
+      if (!formData.birthDate) {
+        throw new Error('Birth date is required');
       }
-      // Set lat/lng from city
-      const cityObj = cities.find((c: any) => c.name.toLowerCase() === formData.birthCity.toLowerCase());
-      const submissionData = {
-        birthDate: formData.birthDate,
-        birthTime: formData.timeUnknown ? null : formData.birthTime,
-        birthCity: formData.birthCity,
-        birthLatitude: cityObj ? parseFloat(cityObj.lat) : null,
-        birthLongitude: cityObj ? parseFloat(cityObj.lng) : null,
-        timeUnknown: formData.timeUnknown
-      };
 
       // Transform birth data into the format expected by the API
       const [year, month, day] = formData.birthDate.split('-').map(Number);
       let hour = 12, minute = 0; // Default to noon if time is unknown
-      
-      if (!formData.timeUnknown && formData.birthTime) {
+
+      if (!timeUnknown && formData.birthTime) {
         const [hourStr, minuteStr] = formData.birthTime.split(':');
         hour = parseInt(hourStr, 10);
-        minute = parseInt(minuteStr, 10);
+        minute = parseInt(minuteStr, 10) || 0;
       }
-      
+
       const apiData = {
         year,
         month,
         day,
         hour,
         minute,
-        city: formData.birthCity
+        city: formData.birthCity,
+        latitude: parseFloat(selectedCity.lat),
+        longitude: parseFloat(selectedCity.lng)
       };
       
       console.log('Calling astrology API with data:', apiData);
@@ -173,21 +171,24 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       const planetaryData = await positionsResponse.json();
       console.log('Received planetary data:', planetaryData);
 
-      // Calculate planetary counts
-      const planetaryCounts = calculatePlanetaryCounts(planetaryData);
+      // Calculate derived astrological data
+      const planetsPerSign = processPlanetsPerSign(planetaryData);
+      const planetaryCounts = countsToArray(calculatePlanetaryCounts(planetaryData));
+      console.log('Calculated planets per sign:', planetsPerSign);
       console.log('Calculated planetary counts:', planetaryCounts);
 
       // Save birth data to the database using the customSupabase client
-      const { data, error } = await customSupabase.userData.upsert({
-        id: 'anonymous', // Use a default ID for unauthenticated users
+      const { data, error } = await supabase.from('user_data').upsert({
+        id: userId,
         birth_date: formData.birthDate,
-        birth_time: formData.timeUnknown ? null : formData.birthTime,
+        birth_time: timeUnknown ? null : formData.birthTime,
         birth_city: formData.birthCity,
-        birth_latitude: cityObj ? parseFloat(cityObj.lat) : null,
-        birth_longitude: cityObj ? parseFloat(cityObj.lng) : null,
-        time_unknown: formData.timeUnknown,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        planetary_data: planetaryData,
+        planets_per_sign: planetsPerSign,
+        planetary_count: planetaryCounts,
+        birth_latitude: parseFloat(selectedCity.lat),
+        birth_longitude: parseFloat(selectedCity.lng),
+        time_unknown: timeUnknown
       });
 
       if (error) {
@@ -195,18 +196,9 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         throw new Error(error.message || 'Failed to save user data');
       }
 
-      if (onSuccess && data) {
-        onSuccess({
-          ...data,
-          birthData: {
-            birthDate: formData.birthDate,
-            birthTime: formData.timeUnknown ? null : formData.birthTime,
-            birthCity: formData.birthCity,
-            timeUnknown: formData.timeUnknown,
-            birthLatitude: formData.birthLatitude,
-            birthLongitude: formData.birthLongitude
-          }
-        });
+      if (onSuccess) {
+        // Simply signal success; the parent page will re-fetch.
+        onSuccess(data);
       }
 
       toast({
@@ -256,13 +248,13 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
               type="time" 
               value={formData.birthTime} 
               onChange={handleInputChange} 
-              disabled={formData.timeUnknown} 
+              disabled={timeUnknown} 
             />
             <div className="flex items-center gap-2 mt-1">
               <Switch 
                 id="timeUnknown" 
-                checked={formData.timeUnknown} 
-                onCheckedChange={(checked) => setFormData(f => ({ ...f, timeUnknown: checked }))} 
+                checked={timeUnknown} 
+                onCheckedChange={setTimeUnknown} 
               />
               <Label htmlFor="timeUnknown" className="text-xs">Time unknown</Label>
             </div>
@@ -277,12 +269,7 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
                     placeholder="Start typing city or state..."
                     autoComplete="off"
                     value={formData.birthCity}
-                    onChange={e => {
-                      const value = e.target.value;
-                      setFormData(f => ({ ...f, birthCity: value }));
-                      setCityTouched(true);
-                    }}
-                    onFocus={() => setCityTouched(true)}
+                    onChange={e => setFormData(f => ({ ...f, birthCity: e.target.value }))}
                     onBlur={() => {
                       // Small delay to allow click on suggestions
                       setTimeout(() => {
@@ -300,25 +287,29 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
                   )}
                 </div>
                 
-                {cityTouched && cityError && (
+                {cityError && (
                   <div className="text-red-500 text-xs mt-1">{cityError}</div>
                 )}
                 
                 {citySuggestions.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-60 overflow-y-auto">
-                    {citySuggestions.map((city) => (
-                      <div
-                        key={`${city.name}-${city.admin1}`}
-                        className="px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-slate-100 last:border-b-0"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleCitySelect(city);
-                        }}
-                      >
-                        <div className="font-medium">{city.name}</div>
-                        <div className="text-xs text-slate-500">{city.admin1}, {city.country}</div>
-                      </div>
-                    ))}
+                    {citySuggestions.map((city) => {
+                      // Create a unique key using all identifying information
+                      const uniqueKey = `${city.name}-${city.admin1}-${city.lat.toFixed(4)}-${city.lng.toFixed(4)}`;
+                      return (
+                        <div
+                          key={uniqueKey}
+                          className="px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-slate-100 last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleCitySelect(city);
+                          }}
+                        >
+                          <div className="font-medium">{city.name}, {city.admin1}</div>
+                          <div className="text-xs text-slate-500">{city.country}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
