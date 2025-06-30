@@ -23,13 +23,50 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
   isDownloading,
   className = ''
 }) => {
+  // Convert planetCounts from object format to array format if needed
+  const normalizedPlanetCounts = React.useMemo(() => {
+    console.log('Planet counts received:', planetCounts);
+    
+    if (!planetCounts) return null;
+    
+    // If planetCounts is already an array, use it directly
+    if (Array.isArray(planetCounts)) {
+      return planetCounts;
+    }
+    
+    // If planetCounts is an object, convert it to an array based on ZODIAC_SIGNS order
+    if (typeof planetCounts === 'object') {
+      return ZODIAC_SIGNS.map(sign => planetCounts[sign] || 0);
+    }
+    
+    return null;
+  }, [planetCounts]);
+  
+  // Normalize planetsPerSign to ensure it's in the expected format
+  const normalizedPlanetsPerSign = React.useMemo(() => {
+    console.log('Planets per sign received:', planetsPerSign);
+    
+    if (!planetsPerSign) return null;
+    
+    // Ensure planetsPerSign is in the expected format
+    if (typeof planetsPerSign === 'object' && !Array.isArray(planetsPerSign)) {
+      // Check if values are arrays of strings
+      const isValid = Object.values(planetsPerSign).every(value => 
+        Array.isArray(value) && value.every(item => typeof item === 'string')
+      );
+      
+      if (isValid) return planetsPerSign;
+    }
+    
+    return null;
+  }, [planetsPerSign]);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize and cleanup Chart.js instance
   useEffect(() => {
-    if (!chartRef.current || !planetCounts || !planetsPerSign) return;
+    if (!chartRef.current || !normalizedPlanetCounts || !normalizedPlanetsPerSign) return;
 
     // Destroy existing chart instance if it exists
     cleanupChartInstance(chartInstanceRef.current);
@@ -45,11 +82,11 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
           labels: ZODIAC_SIGNS,
           datasets: [{
             label: 'Zodiac Signs',
-            data: planetCounts,
+            data: normalizedPlanetCounts,
             backgroundColor: (context) => {
               const value = context.dataset.data[context.dataIndex] as number;
               const minStrength = 0;
-              const maxStrength = Math.max(...planetCounts);
+              const maxStrength = Math.max(...normalizedPlanetCounts);
               const normalized = (value - minStrength) / (maxStrength - minStrength || 1);
               
               // Cosmic gradient: deep blue -> purple -> magenta
@@ -77,7 +114,7 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
                   const sign = ZODIAC_SIGNS[index];
                   
                   // Get planets in this sign
-                  const planets = planetsPerSign[sign] || [];
+                  const planets = normalizedPlanetsPerSign[sign] || [];
                   
                   if (planets.length === 0) {
                     return `No planets in ${sign}`;
@@ -118,7 +155,7 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
       cleanupChartInstance(chartInstanceRef.current);
       chartInstanceRef.current = null;
     };
-  }, [planetCounts, planetsPerSign]);
+  }, [normalizedPlanetCounts, normalizedPlanetsPerSign]);
 
   // Render appropriate state
   if (isLoading) {
@@ -129,7 +166,8 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
     return <ChartError />;
   }
 
-  if (!planetCounts || !planetsPerSign) {
+  if (!normalizedPlanetCounts || !normalizedPlanetsPerSign) {
+    console.log('Rendering placeholder due to missing data');
     return <ChartPlaceholder />;
   }
 

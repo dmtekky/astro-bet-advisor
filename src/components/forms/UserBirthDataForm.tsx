@@ -79,14 +79,18 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
   const validateCity = (cityName: string) => {
     if (!cityName) {
       setCityError('Please enter a city');
+      setSelectedCity(null);
       return false;
     }
     
     const found = findCityData(cityName);
     if (!found) {
       setCityError('Please select a valid city from the suggestions.');
+      setSelectedCity(null);
       return false;
     }
+    // If a valid city is found, update the selected city state
+    setSelectedCity(found);
     setCityError(null);
     return true;
   };
@@ -139,9 +143,19 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       let hour = 12, minute = 0; // Default to noon if time is unknown
 
       if (!timeUnknown && formData.birthTime) {
-        const [hourStr, minuteStr] = formData.birthTime.split(':');
-        hour = parseInt(hourStr, 10);
-        minute = parseInt(minuteStr, 10) || 0;
+        const timeParts = formData.birthTime.split(':');
+        const parsedHour = parseInt(timeParts[0], 10);
+        const parsedMinute = parseInt(timeParts[1], 10);
+        if (!isNaN(parsedHour)) hour = parsedHour;
+        if (!isNaN(parsedMinute)) minute = parsedMinute;
+      }
+
+      const lat = parseFloat(selectedCity.lat);
+      const lng = parseFloat(selectedCity.lng);
+
+      // Add validation to ensure coordinates are valid numbers
+      if (isNaN(lat) || isNaN(lng)) {
+        throw new Error('The selected city has invalid location data. Please try another city.');
       }
 
       const apiData = {
@@ -151,24 +165,33 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         hour,
         minute,
         city: formData.birthCity,
-        latitude: parseFloat(selectedCity.lat),
-        longitude: parseFloat(selectedCity.lng)
+        latitude: lat,
+        longitude: lng
       };
       
       console.log('Calling astrology API with data:', apiData);
       
-      // Get the API base URL from environment variables or use a default
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      
+      // Add a timeout to the API call to prevent it from hanging indefinitely
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
+
       // Call the astrology API
-      const positionsResponse = await fetch(`${apiBaseUrl}/api/astrology/positions`, {
+      const positionsResponse = await fetch(`/api/astrology/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiData)
+        body: JSON.stringify(apiData),
+        signal: controller.signal,
       });
+
+      // If the request completes, clear the timeout
+      clearTimeout(timeoutId);
       
       if (!positionsResponse.ok) {
-        throw new Error('Failed to fetch planetary positions');
+        // Attempt to read the detailed error message from the server's response
+        const errorBody = await positionsResponse.json().catch(() => null);
+        const serverMessage = errorBody?.message || errorBody?.error || `Server responded with status ${positionsResponse.status}`;
+        console.error('API Error Response:', errorBody); // Log the full error for debugging
+        throw new Error(serverMessage);
       }
       
       const planetaryData = await positionsResponse.json();
@@ -189,8 +212,8 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         planetary_data: planetaryData,
         planets_per_sign: planetsPerSign,
         planetary_count: planetaryCounts,
-        birth_latitude: parseFloat(selectedCity.lat),
-        birth_longitude: parseFloat(selectedCity.lng),
+        birth_latitude: lat,
+        birth_longitude: lng,
         time_unknown: timeUnknown,
         updated_at: new Date().toISOString()
       };
@@ -225,12 +248,21 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         variant: "default",
       });
     } catch (error: any) {
-      console.error('Error saving user data:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save your data. Please try again.",
-        variant: "destructive",
-      });
+      if (error.name === 'AbortError') {
+        console.error('API call timed out:', error);
+        toast({
+          title: "Request Timed Out",
+          description: "The server took too long to respond. Please try again later.",
+          variant: "destructive",
+        });
+      } else {
+        console.error('Error saving user data:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to save your data. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

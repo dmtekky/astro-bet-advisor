@@ -9,22 +9,36 @@ import { ZODIAC_SIGNS } from './types';
  * @returns Record mapping zodiac sign names to counts
  */
 export const calculatePlanetaryCounts = (planetaryData: any): Record<string, number> => {
+  console.log('calculatePlanetaryCounts received data:', planetaryData);
+  
   if (!planetaryData || !planetaryData.planets) {
+    console.log('No planetary data or planets array found');
     return ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: 0 }), {});
   }
 
   // Initialize counts for each sign
   const counts: Record<string, number> = ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: 0 }), {});
 
-  // Count planets in each sign
-  Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
-    if (data && typeof data.lon === 'number') {
-      const signIndex = Math.floor(data.lon / 30) % 12;
-      const sign = ZODIAC_SIGNS[signIndex];
-      counts[sign]++;
-    }
-  });
+  // Handle both array and object formats
+  if (Array.isArray(planetaryData.planets)) {
+    // New API format: planets is an array of objects with { name, sign, angle, etc. }
+    planetaryData.planets.forEach((planet: any) => {
+      if (planet && planet.sign && ZODIAC_SIGNS.includes(planet.sign)) {
+        counts[planet.sign]++;
+      }
+    });
+  } else {
+    // Legacy format: planets is an object with planet names as keys
+    Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
+      if (data && typeof data.lon === 'number') {
+        const signIndex = Math.floor(data.lon / 30) % 12;
+        const sign = ZODIAC_SIGNS[signIndex];
+        counts[sign]++;
+      }
+    });
+  }
 
+  console.log('Calculated planetary counts:', counts);
   return counts;
 };
 
@@ -34,22 +48,36 @@ export const calculatePlanetaryCounts = (planetaryData: any): Record<string, num
  * @returns Record mapping zodiac sign names to arrays of planet names
  */
 export const processPlanetsPerSign = (planetaryData: any): Record<string, string[]> => {
+  console.log('processPlanetsPerSign received data:', planetaryData);
+  
   if (!planetaryData || !planetaryData.planets) {
+    console.log('No planetary data or planets array found');
     return ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: [] }), {});
   }
 
   // Initialize empty arrays for each sign
   const planetsPerSign: Record<string, string[]> = ZODIAC_SIGNS.reduce((acc, sign) => ({ ...acc, [sign]: [] }), {});
 
-  // Assign planets to their respective signs
-  Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
-    if (data && typeof data.lon === 'number') {
-      const signIndex = Math.floor(data.lon / 30) % 12;
-      const sign = ZODIAC_SIGNS[signIndex];
-      planetsPerSign[sign].push(planet);
-    }
-  });
+  // Handle both array and object formats
+  if (Array.isArray(planetaryData.planets)) {
+    // New API format: planets is an array of objects with { name, sign, angle, etc. }
+    planetaryData.planets.forEach((planet: any) => {
+      if (planet && planet.name && planet.sign && ZODIAC_SIGNS.includes(planet.sign)) {
+        planetsPerSign[planet.sign].push(planet.name);
+      }
+    });
+  } else {
+    // Legacy format: planets is an object with planet names as keys
+    Object.entries(planetaryData.planets).forEach(([planet, data]: [string, any]) => {
+      if (data && typeof data.lon === 'number') {
+        const signIndex = Math.floor(data.lon / 30) % 12;
+        const sign = ZODIAC_SIGNS[signIndex];
+        planetsPerSign[sign].push(planet);
+      }
+    });
+  }
 
+  console.log('Processed planets per sign:', planetsPerSign);
   return planetsPerSign;
 };
 
@@ -138,19 +166,32 @@ export const cleanupChartInstance = (chartInstance: any): void => {
  * @returns Formatted data for AstroChart
  */
 export const formatAstroChartData = (astroData: any): { planets: Record<string, number[]>; cusps: number[] } => {
+  console.log('formatAstroChartData received data:', astroData);
+  
   const chartData: { planets: Record<string, number[]>; cusps: number[] } = {
     planets: {},
-    cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+    cusps: astroData?.houses?.map((house: any) => house.cusp) || [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
   };
 
   // Convert planet data to the format expected by AstroChart
   if (astroData && astroData.planets) {
-    Object.entries(astroData.planets).forEach(([name, planetData]: [string, any]) => {
-      if (planetData && typeof planetData.lon === 'number') {
-        chartData.planets[name] = [planetData.lon, 0, 0, 0]; // Adding fourth parameter for complete argument list
-      }
-    });
+    if (Array.isArray(astroData.planets)) {
+      // New API format: planets is an array of objects
+      astroData.planets.forEach((planet: any) => {
+        if (planet && planet.name && typeof planet.angle === 'number') {
+          chartData.planets[planet.name] = [planet.angle, 0, 0, 0];
+        }
+      });
+    } else {
+      // Legacy format: planets is an object with planet names as keys
+      Object.entries(astroData.planets).forEach(([name, planetData]: [string, any]) => {
+        if (planetData && typeof planetData.lon === 'number') {
+          chartData.planets[name] = [planetData.lon, 0, 0, 0];
+        }
+      });
+    }
   }
 
+  console.log('Formatted chart data:', chartData);
   return chartData;
 };

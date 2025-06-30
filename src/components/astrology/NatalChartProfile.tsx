@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { NatalChartProfileProps } from './utils/types';
+import { NatalChartProfileProps, NatalChartProps, PlanetaryCountChartProps } from './utils/types';
 import NatalChart from './components/NatalChart';
 import PlanetaryCountChart from './components/PlanetaryCountChart';
 import ChartLoading from './components/ChartLoading';
@@ -9,23 +9,55 @@ import ChartError from './components/ChartError';
 
 /**
  * NatalChartProfile component that renders both a natal chart and planetary count chart
- * based on a user's profile data.
+ * based on a user's birth data or planetary data.
  */
 export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
-  profile,
+  birthData,
+  natalChartData,
+  planetaryCounts,
+  planetsPerSign,
   className = ''
 }) => {
   // State for UI controls
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isDownloadingPlanets, setIsDownloadingPlanets] = useState<boolean>(false);
   
-  if (!profile) {
-    return <ChartLoading />;
+  // State for loading and error handling
+  const [isLoading, setIsLoading] = useState<boolean>(!natalChartData);
+  const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
+
+  // Handle retry logic
+  const handleRetry = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    setIsLoading(true);
+    setError(null);
+  }, []);
+
+  // Effect to simulate loading completion or detect errors
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        if (!natalChartData) {
+          setError(new Error('Astrological profile data not found. Please enter your birth data.'));
+        }
+        setIsLoading(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [natalChartData, isLoading, retryCount]);
+
+  if (isLoading) {
+    return <ChartLoading onRetry={handleRetry} />;
   }
   
-  if (!profile.planetary_data) {
+  if (error || !natalChartData) {
     return (
-      <ChartError error={new Error('Astrological profile data not found. Please enter your birth data.')} />
+      <ChartError 
+        error={error || new Error('Astrological profile data not found. Please enter your birth data.')} 
+        actionText="Update Birth Data"
+        onAction={handleRetry}
+      />
     );
   }
   // Handle download for natal chart
@@ -190,7 +222,9 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         {/* Natal Chart */}
         <div className="w-full planetary-count-container">
           <NatalChart 
-            astroData={profile?.planetary_data}
+            astroData={natalChartData}
+            isLoading={isLoading}
+            error={error}
             onDownload={handleDownloadNatalChart}
             onShare={handleShareNatalChart}
             isDownloading={isDownloading}
@@ -200,13 +234,13 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         {/* Planetary Count Chart */}
         <div className="w-full planetary-count-container">
           <PlanetaryCountChart 
-            planetCounts={profile?.planetary_count || null}
-            planetsPerSign={profile?.planets_per_sign || {}}
+            planetCounts={planetaryCounts || null}
+            planetsPerSign={planetsPerSign || null}
+            isLoading={isLoading}
+            error={error}
             onDownload={handleDownloadPlanetaryCount}
             onShare={handleSharePlanetaryCount}
             isDownloading={isDownloadingPlanets}
-            isLoading={false}
-            error={null}
           />
         </div>
       </motion.div>

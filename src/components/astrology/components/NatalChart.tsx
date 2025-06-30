@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -8,11 +8,19 @@ import ChartLoading from './ChartLoading';
 import ChartError from './ChartError';
 import ChartPlaceholder from './ChartPlaceholder';
 
-// Declare AstroChart as a global variable since it's loaded via script tag
+// Import AstroChart directly
+import AstroChart from '@astrodraw/astrochart';
+
+// Ensure AstroChart is available globally for compatibility
 declare global {
   interface Window {
     AstroChart: any;
   }
+}
+
+// Make AstroChart available globally
+if (typeof window !== 'undefined' && !window.AstroChart) {
+  window.AstroChart = AstroChart;
 }
 
 /**
@@ -27,14 +35,16 @@ export const NatalChart: React.FC<NatalChartProps> = ({
   isDownloading
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<HTMLCanvasElement>(null);
   const astroChartRef = useRef<AstroChartInstance | null>(null);
 
-  // Initialize and cleanup AstroChart instance
   useEffect(() => {
-    if (!containerRef.current || !astroData || !astroData.planets) return;
+    console.log('%c[NatalChart] Direct Import Logic Active', 'color: #00ff00; font-weight: bold;', 'Received astroData:', astroData);
 
-    // Create a dedicated div for AstroChart
+    if (!containerRef.current || !astroData || !astroData.planets) {
+      console.log('Missing required data for chart initialization');
+      return;
+    }
+
     const container = containerRef.current;
     const existingChart = container.querySelector('#natal-chart-astro');
     
@@ -52,36 +62,38 @@ export const NatalChart: React.FC<NatalChartProps> = ({
     astroChartDiv.style.zIndex = '25';
     container.appendChild(astroChartDiv);
 
-    try {
-      // Initialize AstroChart with proper settings
-      const chartSize = Math.min(container.offsetWidth, container.offsetHeight);
-      const chartSettings = {
-        COLORS: {
-          background: 'transparent',
-          aspects: {
-            stroke: {
-              conjunction: '#FF0000',
-              opposition: '#0000FF',
-              trine: '#00FF00',
-              square: '#FF9900',
-              sextile: '#00FFFF',
-            }
-          },
-        },
-        ASPECTS: {
-          conjunction: { degree: 0, orbit: 8, display: true, color: '#FF0000' },
-          opposition: { degree: 180, orbit: 8, display: true, color: '#0000FF' },
-          trine: { degree: 120, orbit: 8, display: true, color: '#00FF00' },
-          square: { degree: 90, orbit: 8, display: true, color: '#FF9900' },
-          sextile: { degree: 60, orbit: 6, display: true, color: '#00FFFF' }
-        },
-        SHOW_ASPECTS: true,
-        SHOW_POINTS: true,
-        SHOW_DIGNITIES: true
-      };
+    const initializeChart = () => {
+      try {
+        // AstroChart should always be available now since we're importing it directly
+        console.log('Initializing chart with direct import...');
 
-      // Create the chart instance
-      if (window.AstroChart) {
+        const chartSize = Math.min(container.offsetWidth, container.offsetHeight);
+        const chartSettings = {
+          COLORS: {
+            background: 'transparent',
+            aspects: {
+              stroke: {
+                conjunction: '#FF0000',
+                opposition: '#0000FF',
+                trine: '#00FF00',
+                square: '#FF9900',
+                sextile: '#00FFFF',
+              }
+            },
+          },
+          ASPECTS: {
+            conjunction: { degree: 0, orbit: 8, display: true, color: '#FF0000' },
+            opposition: { degree: 180, orbit: 8, display: true, color: '#0000FF' },
+            trine: { degree: 120, orbit: 8, display: true, color: '#00FF00' },
+            square: { degree: 90, orbit: 8, display: true, color: '#FF9900' },
+            sextile: { degree: 60, orbit: 6, display: true, color: '#00FFFF' }
+          },
+          SHOW_ASPECTS: true,
+          SHOW_POINTS: true,
+          SHOW_DIGNITIES: true
+        };
+
+        // Create the chart instance
         astroChartRef.current = new window.AstroChart('natal-chart-astro', chartSize, chartSize, chartSettings);
 
         // Format data for AstroChart
@@ -90,43 +102,41 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         // Render the chart
         astroChartRef.current.radix(chartData);
 
-        // Log for debugging
+        console.log('AstroChart successfully initialized and rendered');
         console.log('Rendering AstroChart with data:', chartData);
         console.log('Geo data from astroData:', {
           latitude: astroData.latitude,
           longitude: astroData.longitude,
           location: astroData.location
         });
-      } else {
-        console.error('AstroChart library not loaded');
+      } catch (err) {
+        console.error('Error initializing AstroChart:', err);
       }
-    } catch (error) {
-      console.error('Error initializing AstroChart:', error);
-    }
+    };
 
-    // Cleanup on unmount
-    return () => {
-      if (astroChartRef.current && typeof astroChartRef.current.destroy === 'function') {
-        try {
-          astroChartRef.current.destroy();
-        } catch (error) {
-          console.error('Error destroying AstroChart:', error);
-        }
+    // Initialize chart immediately since we have direct access to AstroChart
+    initializeChart();
+
+    // Cleanup function
+    return () => {      
+      if (astroChartRef.current) {
+        console.log('[NatalChart] Cleaning up AstroChart instance');
+        astroChartRef.current = null;
       }
-      
-      if (astroChartDiv && astroChartDiv.parentNode) {
-        astroChartDiv.parentNode.removeChild(astroChartDiv);
+
+      if (container.querySelector('#natal-chart-astro')) {
+        container.querySelector('#natal-chart-astro')?.remove();
       }
     };
   }, [astroData]);
 
-  // Render appropriate state
-  if (isLoading) {
+  // Render appropriate state based on props
+  if (isLoading === true) {
     return <ChartLoading />;
   }
 
   if (error) {
-    return <ChartError />;
+    return <ChartError error={error} message="Failed to load chart" actionText="Retry" onAction={() => {}} />;
   }
 
   if (!astroData || !astroData.planets) {
@@ -198,9 +208,7 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         ref={containerRef} 
         className="relative z-10 aspect-square"
         style={{ minHeight: '300px' }}
-      >
-        <canvas ref={chartRef} className="w-full h-full" />
-      </div>
+      />
       
       <div className="mt-4 text-center text-sm text-slate-300">
         <p>Natal Chart - {astroData.location || 'Unknown Location'}</p>

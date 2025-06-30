@@ -35,6 +35,34 @@
     <link rel="icon" href="/favicon-32x32.ico" type="image/x-icon" sizes="32x32">
     <link rel="icon" href="/favicon-48x48.ico" type="image/x-icon" sizes="48x48">
     <link rel="icon" href="/favicon-64x64.ico" type="image/x-icon" sizes="64x64">
+    
+    <!-- AstroChart Library - Local Version -->
+    <script src="/astrochart.min.js" id="astrochart-script"></script>
+    <script>
+      // Simple script to check if AstroChart is loaded and dispatch event
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check immediately if AstroChart is already loaded
+        if (typeof window.AstroChart !== 'undefined') {
+          console.log('AstroChart loaded successfully from local file');
+          window.dispatchEvent(new CustomEvent('astrochart-loaded'));
+          return;
+        }
+        
+        // If not loaded yet, set up a listener for the script
+        document.getElementById('astrochart-script').onload = function() {
+          console.log('AstroChart loaded successfully from local file');
+          window.dispatchEvent(new CustomEvent('astrochart-loaded'));
+        };
+        
+        // Set a timeout to check if loading failed
+        setTimeout(function() {
+          if (typeof window.AstroChart === 'undefined') {
+            console.error('Failed to load AstroChart from local file');
+          }
+        }, 3000);
+      });
+    </script>
+    
     <!-- impact.com STAT Tag -->
     <script>
       (function(i,m,p,a,c,t){c.ire_o=p;c[p]=c[p]||function(){(c[p].a=c[p].a||[]).push(arguments)};t=a.createElement(m);var z=a.getElementsByTagName(m)[0];t.async=1;t.src=i;z.parentNode.insertBefore(t,z)})('https://utt.impactcdn.com/P-A6308774-523f-47ee-acb8-457213d27fb91.js','script','impactStat',document,window);impactStat('transformLinks');impactStat('trackImpression');

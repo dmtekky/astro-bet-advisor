@@ -142,7 +142,7 @@ const ExampleProfilePage: React.FC = () => {
   };
   
   // Current user data (from Supabase or default)
-  const user = userData || defaultUser;
+  const user = userData || { ...defaultUser, birthData: null, planetary_data: null, planetary_count: null, planets_per_sign: null } as UserProfile;
 
   const fetchSpecificUser = useCallback(async () => {
     try {
@@ -700,12 +700,22 @@ const ExampleProfilePage: React.FC = () => {
                     timeUnknown: user.birthData.timeUnknown || false
                   }}
                   natalChartData={user.planetary_data}
+                  planetaryCounts={user.planetary_count}
+                  planetsPerSign={user.planets_per_sign}
                 />
               ) : (
                 <div className="text-center py-20">
-                  <h3 className="text-2xl font-bold text-white mb-4">Unlock Your Astrological Profile</h3>
-                  <p className="text-slate-300 mb-6">Enter your birth information to generate your personalized charts.</p>
-                  <Button onClick={() => setShowForm(true)} size="lg">Add Birth Data</Button>
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {user.birthData ? 'Generate Your Astrological Profile' : 'Unlock Your Astrological Profile'}
+                  </h3>
+                  <p className="text-slate-300 mb-6 max-w-md mx-auto">
+                    {user.birthData 
+                      ? 'Your charts haven\'t been generated yet. Open the form and click "Save" to create them.' 
+                      : 'Enter your birth information to generate your personalized charts.'}
+                  </p>
+                  <Button onClick={() => setShowForm(true)} size="lg">
+                    {user.birthData ? 'Generate Charts' : 'Add Birth Data'}
+                  </Button>
                 </div>
               )}
             </div>
@@ -725,7 +735,7 @@ const ExampleProfilePage: React.FC = () => {
         </div>
 
         {/* Key Placement Interpretations */}
-        {user.planetary_data && (
+        {user.planetary_data ? (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 text-slate-800">Key Placements</h2>
             {interpretationsLoading ? (
@@ -766,7 +776,7 @@ const ExampleProfilePage: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Planetary Aspects */}
         {user?.planetary_data?.aspects && Array.isArray(user.planetary_data.aspects) && user.planetary_data.aspects.length > 0 && (
