@@ -51,6 +51,38 @@ const SPORTS: Sport[] = [
   { id: 'rugby', name: 'Rugby' },
 ];
 
+// Define a type for the user profile data structure used in the UI
+interface UserProfile {
+  name: string;
+  email: string;
+  avatar: string;
+  memberSince: string;
+  lastLogin: string;
+  accountType: string;
+  preferences: {
+    favoriteSports: string[];
+    notificationEmail: string;
+    theme: string;
+  };
+  stats: {
+    predictions: number;
+    accuracy: string;
+    followers: number;
+    following: number;
+  };
+  birthData: {
+    birthDate: string;
+    birthTime: string;
+    birthCity: string;
+    timeUnknown: boolean;
+    birthLatitude: number;
+    birthLongitude: number;
+  } | null;
+  planetary_data: any | null; // These can be typed more strictly later
+  planetary_count: any | null;
+  planets_per_sign: any | null;
+}
+
 // Consistent styling for all sports
 const SPORT_STYLE = 'bg-blue-50 text-blue-700 hover:bg-blue-100';
 const SPORT_PILL = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border border-transparent hover:shadow-sm';
@@ -80,12 +112,12 @@ const itemVariants = {
 
 const ExampleProfilePage: React.FC = () => {
   // State for user data from Supabase
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showAddSports, setShowAddSports] = useState(false);
-  const [interpretations, setInterpretations] = useState<any>({ sun: {}, moon: {}, rising: {}, aspects: {} });
+  const [interpretations, setInterpretations] = useState<Record<string, Record<string, string>>>({ sun: {}, moon: {}, rising: {}, aspects: {} });
   const [interpretationsLoading, setInterpretationsLoading] = useState(true);
   
   // Default user data when no Supabase data is available
@@ -118,10 +150,9 @@ const ExampleProfilePage: React.FC = () => {
       
       // Fetch data for the specific user ID
       const specificUserId = '9245f829-40d5-44ee-9ea7-182d4d23d0b6';
-      // Get user data directly from supabase
-      // Use type assertion to bypass TypeScript errors since user_data table might not be in the schema
-      const { data, error } = await (supabase as any)
-        .from('user_data')
+      // With a typed Supabase client, this call becomes fully type-safe.
+      const { data, error } = await supabase
+        .from('user_data') // No more `(supabase as any)` needed!
         .select('*')
         .eq('id', specificUserId)
         .single();
@@ -133,23 +164,20 @@ const ExampleProfilePage: React.FC = () => {
       
       if (data) {
         try {
-          // Use type assertion to avoid TypeScript errors
-          const userData = data as any;
-          
           // Add null check for userData.id
-          setUserId(userData?.id || specificUserId);
+          setUserId(data?.id || specificUserId);
           
           // Transform the data to match our UI expectations
           setUserData({
-          name: userData.name || 'User',
-          email: userData.email || 'user@example.com',
+          name: data.name || 'User',
+          email: data.email || 'user@example.com',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          memberSince: new Date(userData.created_at).toLocaleDateString(),
+          memberSince: new Date(data.created_at).toLocaleDateString(),
           lastLogin: 'Today',
           accountType: 'Premium',
           preferences: {
-            favoriteSports: userData.favorite_sports || [],
-            notificationEmail: userData.email || 'user@example.com',
+            favoriteSports: data.favorite_sports || [],
+            notificationEmail: data.email || 'user@example.com',
             theme: 'Dark Mode'
           },
           stats: {
@@ -158,22 +186,22 @@ const ExampleProfilePage: React.FC = () => {
             followers: Math.floor(Math.random() * 200) + 50,
             following: Math.floor(Math.random() * 100) + 50,
           },
-          birthData: userData.birth_date ? {
-            birthDate: userData.birth_date,
-            birthTime: userData.birth_time || '',
-            birthCity: userData.birth_city,
-            timeUnknown: userData.time_unknown,
-            birthLatitude: userData.birth_latitude,
-            birthLongitude: userData.birth_longitude,
+          birthData: data.birth_date ? {
+            birthDate: data.birth_date,
+            birthTime: data.birth_time || '',
+            birthCity: data.birth_city,
+            timeUnknown: !!data.time_unknown, // Ensure it's a boolean
+            birthLatitude: data.birth_latitude,
+            birthLongitude: data.birth_longitude,
           } : null,
-          planetary_data: userData.planetary_data || null,
-          planetary_count: userData.planetary_count || null,
-          planets_per_sign: userData.planets_per_sign || null,
+          planetary_data: data.planetary_data || null,
+          planetary_count: data.planetary_count || null,
+          planets_per_sign: data.planets_per_sign || null,
         });
         
         // Update selected sports
-        if (userData.favorite_sports && Array.isArray(userData.favorite_sports)) {
-          setSelectedSports(userData.favorite_sports);
+        if (data.favorite_sports && Array.isArray(data.favorite_sports)) {
+          setSelectedSports(data.favorite_sports);
         }
         } catch (error) {
           console.error('Error processing user data:', error);
@@ -202,13 +230,13 @@ const ExampleProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchInterpretations = async () => {
       setInterpretationsLoading(true);
-      const { data, error } = await (supabase as any).from('interpretations').select('type, key, text');
+      const { data, error } = await supabase.from('interpretations').select('type, key, text');
       if (error) {
         console.error('Error fetching interpretations:', error);
         return;
       }
 
-      const formattedInterpretations = data.reduce((acc: any, item: any) => {
+      const formattedInterpretations = data.reduce((acc: Record<string, Record<string, string>>, item) => {
         if (!acc[item.type]) {
           acc[item.type] = {};
         }
@@ -242,7 +270,7 @@ const ExampleProfilePage: React.FC = () => {
     if (userId) {
       try {
         // Update the user's favorite sports in the unified user_data table
-        const { data, error } = await (supabase as any).from('user_data').upsert({
+        const { data, error } = await supabase.from('user_data').upsert({
           id: userId,
           favorite_sports: selectedSports
         });
@@ -276,12 +304,25 @@ const ExampleProfilePage: React.FC = () => {
     fetchSpecificUser();
   };
 
-  const getMajorSigns = (planetaryData: any) => {
-    if (!planetaryData) return { sun: null, moon: null, rising: null };
-    const sun = planetaryData.planets?.Sun?.sign || null;
-    const moon = planetaryData.planets?.Moon?.sign || null;
-    const rising = planetaryData.houses?.[1]?.sign || null;
-    return { sun, moon, rising };
+  const getMajorSigns = (planetaryData: any): { sun: string | null; moon: string | null; rising: string | null } => {
+    if (!planetaryData || !Array.isArray(planetaryData.planets)) {
+      return { sun: null, moon: null, rising: null };
+    }
+
+    const findSign = (planetName: string): string | null =>
+      planetaryData.planets.find((p: any) => p.name.toLowerCase() === planetName.toLowerCase())?.sign || null;
+
+    const getSignFromDegree = (degree: number): string => {
+      const signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+      const signIndex = Math.floor(degree / 30) % 12;
+      return signs[signIndex];
+    };
+
+    return {
+      sun: findSign('Sun'),
+      moon: findSign('Moon'),
+      rising: planetaryData.ascendant !== undefined ? getSignFromDegree(planetaryData.ascendant) : null,
+    };
   };
 
   const majorSigns = getMajorSigns(user?.planetary_data);
@@ -650,7 +691,16 @@ const ExampleProfilePage: React.FC = () => {
 
             <div className="relative z-10">
               {user.birthData && userId ? (
-                <NatalChartProfile profile={user} />
+                <NatalChartProfile 
+                  userId={userId}
+                  birthData={{
+                    date: user.birthData.birthDate,
+                    time: user.birthData.birthTime,
+                    city: user.birthData.birthCity,
+                    timeUnknown: user.birthData.timeUnknown || false
+                  }}
+                  natalChartData={user.planetary_data}
+                />
               ) : (
                 <div className="text-center py-20">
                   <h3 className="text-2xl font-bold text-white mb-4">Unlock Your Astrological Profile</h3>
