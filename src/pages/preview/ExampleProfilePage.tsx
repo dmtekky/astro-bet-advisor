@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -19,18 +19,16 @@ import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge'; // Added for demo badge
 import { User, Star, Activity, Share2, Download, Printer, Info, Loader2 } from 'lucide-react';
 
-import { customSupabase } from '@/lib/custom-supabase';
+import { supabase } from '@/lib/supabase';
 import UserBirthDataForm from '@/components/forms/UserBirthDataForm';
+import SignInterpretation from '@/components/astrology/SignInterpretation';
+import AspectsGrid from '@/components/astrology/AspectsGrid';
+import SignInterpretationSkeleton from '@/components/astrology/SignInterpretationSkeleton';
 
 // Dynamically import the chart components with SSR disabled
 const NatalChartProfile = dynamic(
   () => import('@/components/astrology/NatalChartProfile'),
   { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading natal chart...</div> }
-);
-
-const PlanetaryCountChart = dynamic(
-  () => import('@/components/astrology/PlanetaryCountChart'),
-  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading planetary chart...</div> }
 );
 
 // Define sport type
@@ -87,6 +85,8 @@ const ExampleProfilePage: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showAddSports, setShowAddSports] = useState(false);
+  const [interpretations, setInterpretations] = useState<any>({ sun: {}, moon: {}, rising: {}, aspects: {} });
+  const [interpretationsLoading, setInterpretationsLoading] = useState(true);
   
   // Default user data when no Supabase data is available
   const defaultUser = {
@@ -111,67 +111,116 @@ const ExampleProfilePage: React.FC = () => {
   
   // Current user data (from Supabase or default)
   const user = userData || defaultUser;
+
+  const fetchSpecificUser = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch data for the specific user ID
+      const specificUserId = '9245f829-40d5-44ee-9ea7-182d4d23d0b6';
+      // Get user data directly from supabase
+      // Use type assertion to bypass TypeScript errors since user_data table might not be in the schema
+      const { data, error } = await (supabase as any)
+        .from('user_data')
+        .select('*')
+        .eq('id', specificUserId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching user data:', error);
+        return;
+      }
+      
+      if (data) {
+        try {
+          // Use type assertion to avoid TypeScript errors
+          const userData = data as any;
+          
+          // Add null check for userData.id
+          setUserId(userData?.id || specificUserId);
+          
+          // Transform the data to match our UI expectations
+          setUserData({
+          name: userData.name || 'User',
+          email: userData.email || 'user@example.com',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          memberSince: new Date(userData.created_at).toLocaleDateString(),
+          lastLogin: 'Today',
+          accountType: 'Premium',
+          preferences: {
+            favoriteSports: userData.favorite_sports || [],
+            notificationEmail: userData.email || 'user@example.com',
+            theme: 'Dark Mode'
+          },
+          stats: {
+            predictions: Math.floor(Math.random() * 100),
+            accuracy: `${Math.floor(Math.random() * 30) + 70}%`,
+            followers: Math.floor(Math.random() * 200) + 50,
+            following: Math.floor(Math.random() * 100) + 50,
+          },
+          birthData: userData.birth_date ? {
+            birthDate: userData.birth_date,
+            birthTime: userData.birth_time || '',
+            birthCity: userData.birth_city,
+            timeUnknown: userData.time_unknown,
+            birthLatitude: userData.birth_latitude,
+            birthLongitude: userData.birth_longitude,
+          } : null,
+          planetary_data: userData.planetary_data || null,
+          planetary_count: userData.planetary_count || null,
+          planets_per_sign: userData.planets_per_sign || null,
+        });
+        
+        // Update selected sports
+        if (userData.favorite_sports && Array.isArray(userData.favorite_sports)) {
+          setSelectedSports(userData.favorite_sports);
+        }
+        } catch (error) {
+          console.error('Error processing user data:', error);
+          // Use default user data as fallback
+          setUserData(defaultUser);
+        }
+      } else {
+        console.error('No data found for the specific user ID');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   
   // Initialize sports selection with user preferences
   const [selectedSports, setSelectedSports] = useState<string[]>(user.preferences.favoriteSports);
   
   // Fetch user data from Supabase
   useEffect(() => {
-    const fetchSpecificUser = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch data for the specific user ID
-        const specificUserId = '9245f829-40d5-44ee-9ea7-182d4d23d0b6';
-        const data = await customSupabase.userData.getById(specificUserId);
-        
-        if (data) {
-          setUserId(data.id);
-          
-          // Transform the data to match our UI expectations
-          setUserData({
-            name: data.name || 'User',
-            email: data.email || 'user@example.com',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            memberSince: new Date(data.created_at).toLocaleDateString(),
-            lastLogin: 'Today',
-            accountType: 'Premium',
-            preferences: {
-              favoriteSports: data.favorite_sports || [],
-              notificationEmail: data.email || 'user@example.com',
-              theme: 'Dark Mode'
-            },
-            stats: {
-              predictions: Math.floor(Math.random() * 100),
-              accuracy: `${Math.floor(Math.random() * 30) + 70}%`,
-              followers: Math.floor(Math.random() * 200) + 50,
-              following: Math.floor(Math.random() * 100) + 50,
-            },
-            birthData: {
-              birthDate: data.birth_date,
-              birthTime: data.birth_time || '',
-              birthCity: data.birth_city,
-              timeUnknown: data.time_unknown,
-              birthLatitude: data.birth_latitude,
-              birthLongitude: data.birth_longitude,
-            },
-          });
-          
-          // Update selected sports
-          if (data.favorite_sports && Array.isArray(data.favorite_sports)) {
-            setSelectedSports(data.favorite_sports);
-          }
-        } else {
-          console.error('No data found for the specific user ID');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchSpecificUser();
+  }, [fetchSpecificUser]);
+  
+  // Fetch interpretations from Supabase
+  useEffect(() => {
+    const fetchInterpretations = async () => {
+      setInterpretationsLoading(true);
+      const { data, error } = await (supabase as any).from('interpretations').select('type, key, text');
+      if (error) {
+        console.error('Error fetching interpretations:', error);
+        return;
+      }
+
+      const formattedInterpretations = data.reduce((acc: any, item: any) => {
+        if (!acc[item.type]) {
+          acc[item.type] = {};
+        }
+        acc[item.type][item.key] = item.text;
+        return acc;
+      }, {});
+
+      setInterpretations(formattedInterpretations);
+      setInterpretationsLoading(false);
+    };
+
+    fetchInterpretations();
   }, []);
   
   const availableSports = SPORTS.filter(sport => !selectedSports.includes(sport.id));
@@ -189,37 +238,31 @@ const ExampleProfilePage: React.FC = () => {
     setShowAddSports(prev => !prev);
   };
   
-  const saveSports = async () => {
+  const updateFavoriteSports = async () => {
     if (userId) {
       try {
         // Update the user's favorite sports in the unified user_data table
-        await customSupabase.userData.update(userId, {
+        const { data, error } = await (supabase as any).from('user_data').upsert({
+          id: userId,
           favorite_sports: selectedSports
         });
         
+        if (error) {
+          throw error;
+        }
+        
         // Update local state
         if (userData) {
-          setUserData(prev => ({
-            ...prev,
+          setUserData({
+            ...userData,
             preferences: {
-              ...prev.preferences,
-              favoriteSports: [...selectedSports]
+              ...userData.preferences,
+              favoriteSports: selectedSports
             }
-          }));
+          });
         }
       } catch (error) {
         console.error('Error updating favorite sports:', error);
-      }
-    } else {
-      // If no user ID, just update local state
-      if (userData) {
-        setUserData(prev => ({
-          ...prev,
-          preferences: {
-            ...prev.preferences,
-            favoriteSports: [...selectedSports]
-          }
-        }));
       }
     }
     
@@ -227,30 +270,36 @@ const ExampleProfilePage: React.FC = () => {
   };
   
   // Handle form submission success
-  const handleFormSuccess = (newUserData: any) => {
-    setUserId(newUserData.id);
+  const handleFormSuccess = () => {
     setShowForm(false);
-    
-    // Refresh the page to show the new data
-    window.location.reload();
+    // Re-fetch user data to show the new charts
+    fetchSpecificUser();
   };
 
-  // Birth data from user data or fallback to demo data
-  const birthData = userData?.birthData || {
-    date: '1990-06-15',
-    time: '14:30',
-    timeUnknown: false,
-    city: 'New York, NY',
-    latitude: 40.7128,
-    longitude: -74.0060
+  const getMajorSigns = (planetaryData: any) => {
+    if (!planetaryData) return { sun: null, moon: null, rising: null };
+    const sun = planetaryData.planets?.Sun?.sign || null;
+    const moon = planetaryData.planets?.Moon?.sign || null;
+    const rising = planetaryData.houses?.[1]?.sign || null;
+    return { sun, moon, rising };
   };
-  
-  // State for chart data sharing
-  const [chartData, setChartData] = useState<{
-    natalChartData?: any;
-    planetaryCounts?: number[];
-    planetsPerSign?: Record<string, string[]>;
-  }>({});
+
+  const majorSigns = getMajorSigns(user?.planetary_data);
+
+  const signDetails = {
+    sun: {
+      icon: '☀️',
+      colorClass: 'border-yellow-300',
+    },
+    moon: {
+      icon: '🌙',
+      colorClass: 'border-slate-300',
+    },
+    rising: {
+      icon: '🌅',
+      colorClass: 'border-rose-300',
+    },
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -281,6 +330,7 @@ const ExampleProfilePage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <UserBirthDataForm 
+                    userId={userId!}
                     onSuccess={handleFormSuccess} 
                     defaultValues={userData?.birthData}
                   />
@@ -324,15 +374,29 @@ const ExampleProfilePage: React.FC = () => {
               </div>
               <div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">{user.name}</h1>
-                  <div className="flex items-center space-x-2">
+                  <h1 className="text-3xl font-bold text-slate-900">{user.name}</h1>
+                  {user.planetary_data && (
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      {majorSigns.sun && (
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">☀️ Sun in {majorSigns.sun}</Badge>
+                      )}
+                      {majorSigns.moon && (
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-800 border-slate-200">🌙 Moon in {majorSigns.moon}</Badge>
+                      )}
+                      {majorSigns.rising && (
+                        <Badge variant="secondary" className="bg-rose-100 text-rose-800 border-rose-200">🌅 {majorSigns.rising} Rising</Badge>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2 mt-2">
                     <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2.5 py-0.5 rounded-full">
                       {user.accountType} Member
                     </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-xs text-slate-500">Last active: {user.lastLogin}</span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-xs text-slate-500">
+                      Member since {user.memberSince}
+                    </span>
                   </div>
-                  <p className="text-sm text-slate-600 mt-1">Member since {user.memberSince}</p>
                 </div>
               </div>
             </div>
@@ -397,7 +461,7 @@ const ExampleProfilePage: React.FC = () => {
                   <Button variant="outline" onClick={toggleAddSports}>
                     Cancel
                   </Button>
-                  <Button onClick={saveSports}>Save</Button>
+                  <Button onClick={updateFavoriteSports}>Save</Button>
                 </div>
               </motion.div>
             )}
@@ -544,12 +608,12 @@ const ExampleProfilePage: React.FC = () => {
           
           {/* Birth data info */}
           <div className="bg-gradient-to-b from-slate-900 to-indigo-900 rounded-lg shadow-xl p-6 mb-6">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="text-sm text-slate-300">
-                <p><strong>Birth Data:</strong> {birthData.date} at {birthData.time} in {birthData.city}</p>
-                {birthData.latitude && birthData.longitude && (
+                <p><strong>Birth Data:</strong> {user.birthData ? `${user.birthData.birthDate} at ${user.birthData.birthTime || '12:00'} in ${user.birthData.birthCity}` : 'Not provided'}</p>
+                {user.birthData?.birthLatitude && user.birthData?.birthLongitude && (
                   <p className="text-xs opacity-75 mt-1">
-                    Coordinates: {birthData.latitude.toFixed(4)}°N, {Math.abs(birthData.longitude).toFixed(4)}°W
+                    Coordinates: {user.birthData.birthLatitude.toFixed(4)}°N, {Math.abs(user.birthData.birthLongitude).toFixed(4)}°W
                   </p>
                 )}
               </div>
@@ -559,93 +623,41 @@ const ExampleProfilePage: React.FC = () => {
                 onClick={() => setShowForm(true)}
                 aria-label="Edit birth data"
               >
-                {userData ? 'Edit Birth Data' : 'Add Birth Data'}
+                {user.birthData ? 'Edit Birth Data' : 'Add Birth Data'}
               </Button>
             </div>
           </div>
           
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Natal Chart */}
-            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-xl shadow-xl overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Natal Chart</h2>
-                <div className="bg-opacity-30 bg-slate-800 backdrop-blur-sm rounded-xl border border-slate-700 p-4 h-[500px] relative">
-                  {/* Cosmic background effect */}
-                  <div className="absolute inset-0 z-0 opacity-20">
-                    {Array.from({ length: 30 }).map((_, i) => (
-                      <div 
-                        key={`star-${i}`}
-                        className="absolute rounded-full bg-white" 
-                        style={{
-                          width: `${Math.random() * 2 + 1}px`,
-                          height: `${Math.random() * 2 + 1}px`,
-                          top: `${Math.random() * 100}%`,
-                          left: `${Math.random() * 100}%`,
-                          opacity: Math.random() * 0.8
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Natal Chart */}
-                  <div className="relative z-10 h-full">
-                    {userId ? (
-                      <NatalChartProfile 
-                        userId={userId} 
-                        onDataLoad={setChartData}
-                        className="h-full"
-                      />
-                    ) : (
-                      <NatalChartProfile 
-                        birthData={birthData} 
-                        onDataLoad={setChartData}
-                        className="h-full"
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
+          {/* Astrological Charts Container */}
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-xl shadow-xl overflow-hidden p-6 relative">
+            {/* Cosmic background effect */}
+            <div className="absolute inset-0 z-0 opacity-20">
+              {Array.from({ length: 50 }).map((_, i) => (
+                <div 
+                  key={`star-${i}`}
+                  className="absolute rounded-full bg-white" 
+                  style={{
+                    width: `${Math.random() * 2 + 1}px`,
+                    height: `${Math.random() * 2 + 1}px`,
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                    opacity: Math.random() * 0.8,
+                    animation: `twinkle ${Math.random() * 5 + 3}s infinite alternate`
+                  }}
+                />
+              ))}
             </div>
-            
-            {/* Planetary Count Chart */}
-            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-xl shadow-xl overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Planetary Distribution</h2>
-                <div className="bg-opacity-30 bg-slate-800 backdrop-blur-sm rounded-xl border border-slate-700 p-4 h-[500px] relative">
-                  {/* Cosmic background effect */}
-                  <div className="absolute inset-0 z-0 opacity-20">
-                    {Array.from({ length: 30 }).map((_, i) => (
-                      <div 
-                        key={`star-${i}`}
-                        className="absolute rounded-full bg-white" 
-                        style={{
-                          width: `${Math.random() * 2 + 1}px`,
-                          height: `${Math.random() * 2 + 1}px`,
-                          top: `${Math.random() * 100}%`,
-                          left: `${Math.random() * 100}%`,
-                          opacity: Math.random() * 0.8
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Planetary Count Chart */}
-                  <div className="relative z-10 h-full">
-                    <PlanetaryCountChart 
-                      planetCounts={chartData.planetaryCounts || null}
-                      planetsPerSign={chartData.planetsPerSign || {}}
-                      isDownloading={false}
-                      onDownload={async () => {
-                        // Implement download functionality if needed
-                      }}
-                      onShare={async () => {
-                        // Implement share functionality if needed
-                      }}
-                    />
-                  </div>
+
+            <div className="relative z-10">
+              {user.birthData && userId ? (
+                <NatalChartProfile profile={user} />
+              ) : (
+                <div className="text-center py-20">
+                  <h3 className="text-2xl font-bold text-white mb-4">Unlock Your Astrological Profile</h3>
+                  <p className="text-slate-300 mb-6">Enter your birth information to generate your personalized charts.</p>
+                  <Button onClick={() => setShowForm(true)} size="lg">Add Birth Data</Button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           
@@ -661,6 +673,61 @@ const ExampleProfilePage: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Key Placement Interpretations */}
+        {user.planetary_data && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">Key Placements</h2>
+            {interpretationsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <SignInterpretationSkeleton />
+                <SignInterpretationSkeleton />
+                <SignInterpretationSkeleton />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {majorSigns.sun && interpretations.sun?.[majorSigns.sun] && (
+                  <SignInterpretation
+                    placement="Sun"
+                    sign={majorSigns.sun}
+                    interpretation={interpretations.sun[majorSigns.sun]}
+                    icon={signDetails.sun.icon}
+                    colorClass={signDetails.sun.colorClass}
+                  />
+                )}
+                {majorSigns.moon && interpretations.moon?.[majorSigns.moon] && (
+                  <SignInterpretation
+                    placement="Moon"
+                    sign={majorSigns.moon}
+                    interpretation={interpretations.moon[majorSigns.moon]}
+                    icon={signDetails.moon.icon}
+                    colorClass={signDetails.moon.colorClass}
+                  />
+                )}
+                {majorSigns.rising && interpretations.rising?.[majorSigns.rising] && (
+                  <SignInterpretation
+                    placement="Rising"
+                    sign={majorSigns.rising}
+                    interpretation={interpretations.rising[majorSigns.rising]}
+                    icon={signDetails.rising.icon}
+                    colorClass={signDetails.rising.colorClass}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Planetary Aspects */}
+        {user?.planetary_data?.aspects && Array.isArray(user.planetary_data.aspects) && user.planetary_data.aspects.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">Deeper Insights</h2>
+            <AspectsGrid 
+              aspects={user.planetary_data.aspects} 
+              interpretations={interpretations?.aspects || {}} 
+            />
+          </div>
+        )}
       </div>
     </div>
   );

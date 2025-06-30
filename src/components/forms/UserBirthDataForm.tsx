@@ -177,7 +177,7 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       console.log('Calculated planets per sign:', planetsPerSign);
       console.log('Calculated planetary counts:', planetaryCounts);
 
-      // Save birth data to the database using the customSupabase client
+      // Save birth data to the database using the supabase client
       const { data, error } = await supabase.from('user_data').upsert({
         id: userId,
         birth_date: formData.birthDate,
@@ -295,7 +295,10 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
                   <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-60 overflow-y-auto">
                     {citySuggestions.map((city) => {
                       // Create a unique key using all identifying information
-                      const uniqueKey = `${city.name}-${city.admin1}-${city.lat.toFixed(4)}-${city.lng.toFixed(4)}`;
+                      // Ensure lat/lng are numbers before calling toFixed
+                      const lat = typeof city.lat === 'string' ? parseFloat(city.lat) : (typeof city.lat === 'number' ? city.lat : 0);
+                      const lng = typeof city.lng === 'string' ? parseFloat(city.lng) : (typeof city.lng === 'number' ? city.lng : 0);
+                      const uniqueKey = `${city.name}-${city.admin1}-${lat.toFixed(4)}-${lng.toFixed(4)}`;
                       return (
                         <div
                           key={uniqueKey}

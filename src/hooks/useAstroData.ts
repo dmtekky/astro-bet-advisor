@@ -422,10 +422,14 @@ export const useAstroData = (
   }
 
   try {
-    dateStr =
-      typeof dateParam === "string"
-        ? dateParam
-        : dateParam.toISOString().split("T")[0];
+    if (typeof dateParam === "string") {
+      dateStr = dateParam;
+    } else if (dateParam instanceof Date && dateParam && typeof dateParam.toISOString === 'function') {
+      dateStr = dateParam.toISOString().split("T")[0];
+    } else {
+      // If dateParam is neither a string nor a valid Date, create a new Date
+      dateStr = new Date().toISOString().split("T")[0];
+    }
   } catch (err) {
     console.error("[useAstroData] Error formatting date:", err);
     dateStr = new Date().toISOString().split("T")[0]; // Fallback to current date

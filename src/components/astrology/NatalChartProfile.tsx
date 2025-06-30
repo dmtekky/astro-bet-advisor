@@ -1,189 +1,33 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { supabase } from '@/lib/supabase';
-import { useAstroData } from '@/hooks/useAstroData';
-import { 
-  BirthDataProps, 
-  NatalChartProfileProps, 
-  UserData 
-} from './utils/types';
-import { 
-  calculatePlanetaryCounts, 
-  processPlanetsPerSign, 
-  countsToArray 
-} from './utils/chartUtils';
+import { NatalChartProfileProps } from './utils/types';
 import NatalChart from './components/NatalChart';
 import PlanetaryCountChart from './components/PlanetaryCountChart';
-import ChartPlaceholder from './components/ChartPlaceholder';
 import ChartLoading from './components/ChartLoading';
 import ChartError from './components/ChartError';
-import BirthDataForm from './components/BirthDataForm';
 
 /**
  * NatalChartProfile component that renders both a natal chart and planetary count chart
- * based on birth data or user data from Supabase.
+ * based on a user's profile data.
  */
 export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
-  birthData: propBirthData,
-  userId,
-  onDataLoad,
-  natalChartData: propNatalChartData,
-  planetaryCounts: propPlanetaryCounts,
-  planetsPerSign: propPlanetsPerSign,
+  profile,
   className = ''
 }) => {
-  // State for birth data
-  const [internalBirthData, setInternalBirthData] = useState<BirthDataProps>({
-    date: '',
-    time: '',
-    timeUnknown: false,
-    city: ''
-  });
-
-  // Determine which birth data to use (props or internal)
-  const actualBirthData = useMemo(() => 
-    propBirthData || internalBirthData, 
-    [propBirthData, internalBirthData]
-  );
-
   // State for UI controls
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [isLoadingUserData, setIsLoadingUserData] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isDownloadingPlanets, setIsDownloadingPlanets] = useState<boolean>(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Get astro data from hook or props
-  const { 
-    data: astroData, 
-    loading: astroLoading, 
-    error: astroError 
-  } = useAstroData(actualBirthData);
-
-  // Derived state for chart data
-  const [natalChartData, setNatalChartData] = useState<any>(propNatalChartData || null);
-  const [planetCounts, setPlanetCounts] = useState<number[] | null>(propPlanetaryCounts || null);
-  const [planetsPerSign, setPlanetsPerSign] = useState<Record<string, string[]> | null>(
-    propPlanetsPerSign || null
-  );
   
-  // Stored planetary counts from Supabase
-  const [storedPlanetaryCounts, setStoredPlanetaryCounts] = useState<number[] | null>(null);
-  const [storedPlanetsPerSign, setStoredPlanetsPerSign] = useState<Record<string, string[]> | null>(null);
-
-  /**
-   * Fetch user data from Supabase
-   */
-  const fetchUserData = useCallback(async () => {
-    if (!userId && !actualBirthData.date) return;
-
-    setIsLoadingUserData(true);
-    setError(null);
-
-    try {
-      let query = customSupabase.from('user_data').select('*');
-      
-      if (userId) {
-        query = query.eq('id', userId);
-      } else if (actualBirthData.date) {
-        query = query.eq('birth_date', actualBirthData.date);
-      }
-
-      const { data, error } = await query.single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setUserData(data);
-        
-        // Extract planetary data from user data
-        if (data.planetary_data) {
-          setNatalChartData(data.planetary_data);
-        }
-        
-        // Use stored planetary counts if available
-        if (data.planetary_count) {
-          setStoredPlanetaryCounts(data.planetary_count);
-        }
-        
-        // Use stored planets per sign if available
-        if (data.planets_per_sign) {
-          setStoredPlanetsPerSign(data.planets_per_sign);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      setError(error as Error);
-    } finally {
-      setIsLoadingUserData(false);
-    }
-  }, [userId, actualBirthData.date]);
-
-  /**
-   * Process data from astroData or stored data
-   */
-  const processData = useCallback(() => {
-    // If we have stored planetary counts, use those
-    if (storedPlanetaryCounts && storedPlanetaryCounts.length === 12) {
-      setPlanetCounts(storedPlanetaryCounts);
-    } 
-    // Otherwise calculate from astroData
-    else if (astroData && astroData.planets) {
-      const counts = calculatePlanetaryCounts(astroData);
-      setPlanetCounts(countsToArray(counts));
-    }
-
-    // If we have stored planets per sign, use those
-    if (storedPlanetsPerSign) {
-      setPlanetsPerSign(storedPlanetsPerSign);
-    } 
-    // Otherwise calculate from astroData
-    else if (astroData && astroData.planets) {
-      const planetsInSigns = processPlanetsPerSign(astroData);
-      setPlanetsPerSign(planetsInSigns);
-    }
-
-    // Call onDataLoad callback if provided
-    if (onDataLoad) {
-      onDataLoad({
-        natalChartData: astroData,
-        planetaryCounts: planetCounts || undefined,
-        planetsPerSign: planetsPerSign || undefined
-      });
-    }
-  }, [astroData, storedPlanetaryCounts, storedPlanetsPerSign, planetCounts, planetsPerSign, onDataLoad]);
-
-  // Fetch user data when userId or birth date changes
-  useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
-
-  // Process data when astroData or stored counts change
-  useEffect(() => {
-    processData();
-  }, [processData]);
-
-  // Handle input changes for birth data form
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (propBirthData) return; // Don't handle changes if using prop data
-
-    const { name, value, type, checked } = e.target;
-    setInternalBirthData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  }, [propBirthData]);
-
-  // Handle form submission
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    // Form submission is handled by the useEffect that watches actualBirthData.date
-  }, []);
-
+  if (!profile) {
+    return <ChartLoading />;
+  }
+  
+  if (!profile.planetary_data) {
+    return (
+      <ChartError error={new Error('Astrological profile data not found. Please enter your birth data.')} />
+    );
+  }
   // Handle download for natal chart
   const handleDownloadNatalChart = useCallback(async () => {
     const natalChartElement = document.querySelector('.natal-chart-container') as HTMLElement;
@@ -334,41 +178,19 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
     }
   }, [handleDownloadPlanetaryCount]);
 
-  // If no birth data or no astro data, show no data state
-  if (!actualBirthData.date || (!astroData && !userData?.planetary_data)) {
-    return (
-      <ChartPlaceholder 
-        showForm={showForm} 
-        setShowForm={setShowForm} 
-        propBirthData={propBirthData} 
-      />
-    );
-  }
-
   return (
     <div className={`p-4 max-w-4xl mx-auto space-y-8 ${className}`}>
-      {/* Birth data form */}
-      {!propBirthData && showForm && (
-        <BirthDataForm 
-          birthData={internalBirthData}
-          onInputChange={handleInputChange}
-          onSubmit={handleSubmit}
-        />
-      )}
-
       {/* Charts container */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
         {/* Natal Chart */}
-        <div className="w-full">
+        <div className="w-full planetary-count-container">
           <NatalChart 
-            astroData={astroData || userData?.planetary_data}
-            isLoading={astroLoading || isLoadingUserData}
-            error={astroError || error}
+            astroData={profile?.planetary_data}
             onDownload={handleDownloadNatalChart}
             onShare={handleShareNatalChart}
             isDownloading={isDownloading}
@@ -376,15 +198,15 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         </div>
 
         {/* Planetary Count Chart */}
-        <div className="w-full">
+        <div className="w-full planetary-count-container">
           <PlanetaryCountChart 
-            planetCounts={planetCounts}
-            planetsPerSign={planetsPerSign}
-            isLoading={astroLoading || isLoadingUserData}
-            error={astroError || error}
+            planetCounts={profile?.planetary_count || null}
+            planetsPerSign={profile?.planets_per_sign || {}}
             onDownload={handleDownloadPlanetaryCount}
             onShare={handleSharePlanetaryCount}
             isDownloading={isDownloadingPlanets}
+            isLoading={false}
+            error={null}
           />
         </div>
       </motion.div>
