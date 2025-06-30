@@ -36,15 +36,6 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
               </div>
             ))}
           </div>
-          {!propBirthData && setShowForm && (
-            <Button 
-              variant="outline" 
-              className="text-white border-blue-400 hover:bg-blue-700/50"
-              onClick={() => setShowForm(true)}
-            >
-              Enter Birth Data
-            </Button>
-          )}
         </div>
       </div>
     </div>

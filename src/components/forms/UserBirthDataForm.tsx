@@ -9,17 +9,18 @@ import { useToast } from '@/components/ui/use-toast';
 import { customSupabase } from '@/lib/custom-supabase';
 import { supabase } from '@/lib/supabase';
 import { calculatePlanetaryCounts } from '@/lib/astrologyUtils';
+import cities from '@/data/cities.json';
+import { useEffect, useMemo } from 'react';
 
 interface UserBirthDataFormProps {
   onSuccess?: (userData: any) => void;
   defaultValues?: {
-    name?: string;
-    email?: string;
     birthDate?: string;
     birthTime?: string;
     birthCity?: string;
     timeUnknown?: boolean;
-    favoriteSports?: string[];
+    birthLatitude?: number | null;
+    birthLongitude?: number | null;
   };
 }
 
@@ -30,14 +31,82 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: defaultValues.name || '',
-    email: defaultValues.email || '',
-    birthDate: defaultValues.birthDate || '',
-    birthTime: defaultValues.birthTime || '',
-    birthCity: defaultValues.birthCity || '',
-    timeUnknown: defaultValues.timeUnknown || false,
-    favoriteSports: defaultValues.favoriteSports || []
+    birthDate: defaultValues?.birthDate || '',
+    birthTime: defaultValues?.birthTime || '',
+    birthCity: defaultValues?.birthCity || '',
+    timeUnknown: defaultValues?.timeUnknown || false,
+    birthLatitude: defaultValues?.birthLatitude || null,
+    birthLongitude: defaultValues?.birthLongitude || null
   });
+  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
+  const [cityError, setCityError] = useState<string | null>(null);
+  const [cityTouched, setCityTouched] = useState(false);
+
+  // Memoize city data for fast lookup
+  const cityData = useMemo(() => cities, []);
+
+  // Find city by name (case insensitive)
+  const findCityData = (cityName: string) => {
+    return cityData.find(c => c.name.toLowerCase() === cityName.toLowerCase());
+  };
+
+  // Get display name for city (City, State)
+  const getCityDisplayName = (cityName: string) => {
+    const city = findCityData(cityName);
+    return city ? `${city.name}, ${city.admin1}` : cityName;
+  };
+
+  // Suggest cities as user types
+  useEffect(() => {
+    if (formData.birthCity.length > 0) {
+      const searchTerm = formData.birthCity.toLowerCase();
+      const filtered = cityData
+        .filter(city => 
+          city.name.toLowerCase().includes(searchTerm) ||
+          (city.admin1 && city.admin1.toLowerCase().includes(searchTerm))
+        )
+        .slice(0, 8);
+      setCitySuggestions(filtered);
+    } else {
+      setCitySuggestions([]);
+    }
+  }, [formData.birthCity, cityData]);
+
+  // Validate city on blur or submit
+  const validateCity = (cityName: string) => {
+    if (!cityName) {
+      setCityError('Please enter a city');
+      return false;
+    }
+    
+    const found = findCityData(cityName);
+    if (!found) {
+      setCityError('Please select a valid city from the suggestions.');
+      return false;
+    }
+    setCityError(null);
+    return true;
+  };
+  
+  // Handle city selection from dropdown
+  const handleCitySelect = (city: any) => {
+    const newFormData = {
+      ...formData,
+      birthCity: city.name,
+      birthLatitude: parseFloat(city.lat),
+      birthLongitude: parseFloat(city.lng)
+    };
+    
+    setFormData(newFormData);
+    setCityTouched(true);
+    setCityError(null);
+    
+    // Close the suggestions after selection
+    setCitySuggestions([]);
+    
+    // Trigger validation
+    validateCity(city.name);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -52,11 +121,22 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
     setIsLoading(true);
 
     try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
+      // Validate city before submission
+      if (!validateCity(formData.birthCity)) {
+        setCityTouched(true);
+        setIsLoading(false);
+        return;
       }
+      // Set lat/lng from city
+      const cityObj = cities.find((c: any) => c.name.toLowerCase() === formData.birthCity.toLowerCase());
+      const submissionData = {
+        birthDate: formData.birthDate,
+        birthTime: formData.timeUnknown ? null : formData.birthTime,
+        birthCity: formData.birthCity,
+        birthLatitude: cityObj ? parseFloat(cityObj.lat) : null,
+        birthLongitude: cityObj ? parseFloat(cityObj.lng) : null,
+        timeUnknown: formData.timeUnknown
+      };
 
       // Transform birth data into the format expected by the API
       const [year, month, day] = formData.birthDate.split('-').map(Number);
@@ -97,41 +177,43 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       const planetaryCounts = calculatePlanetaryCounts(planetaryData);
       console.log('Calculated planetary counts:', planetaryCounts);
 
-      // Format data for Supabase with planetary data and counts included
-      const userUpdateData = {
-        id: user.id, // Include the user ID for upsert
-        name: formData.name,
-        email: formData.email,
+      // Save birth data to the database using the customSupabase client
+      const { data, error } = await customSupabase.userData.upsert({
+        id: 'anonymous', // Use a default ID for unauthenticated users
         birth_date: formData.birthDate,
         birth_time: formData.timeUnknown ? null : formData.birthTime,
         birth_city: formData.birthCity,
+        birth_latitude: cityObj ? parseFloat(cityObj.lat) : null,
+        birth_longitude: cityObj ? parseFloat(cityObj.lng) : null,
         time_unknown: formData.timeUnknown,
-        favorite_sports: formData.favoriteSports,
-        planetary_data: planetaryData,
-        planetary_count: planetaryCounts,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      });
 
-      // Upsert the user data - will update if user already exists
-      const upsertResponse = await customSupabase.userData.upsert(userUpdateData);
-
-      if (upsertResponse.error) {
-        console.error('Supabase error:', upsertResponse.error);
-        throw new Error(upsertResponse.error.message || 'Failed to save user data');
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message || 'Failed to save user data');
       }
-      
-      const savedData = upsertResponse.data;
+
+      if (onSuccess && data) {
+        onSuccess({
+          ...data,
+          birthData: {
+            birthDate: formData.birthDate,
+            birthTime: formData.timeUnknown ? null : formData.birthTime,
+            birthCity: formData.birthCity,
+            timeUnknown: formData.timeUnknown,
+            birthLatitude: formData.birthLatitude,
+            birthLongitude: formData.birthLongitude
+          }
+        });
+      }
 
       toast({
         title: "Success!",
         description: "Your birth data has been saved.",
         variant: "default",
       });
-
-      // Call onSuccess callback if provided
-      if (onSuccess && savedData) {
-        onSuccess(savedData);
-      }
     } catch (error: any) {
       console.error('Error saving user data:', error);
       toast({
@@ -144,9 +226,6 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
     }
   };
 
-  // No longer need a separate function to fetch and save astrology data
-  // as it's now handled directly in the handleSubmit function
-
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -158,81 +237,95 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Your name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Your email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
             <Label htmlFor="birthDate">Birth Date</Label>
-            <Input
-              id="birthDate"
-              name="birthDate"
-              type="date"
-              value={formData.birthDate}
-              onChange={handleInputChange}
-              required
+            <Input 
+              id="birthDate" 
+              name="birthDate" 
+              type="date" 
+              value={formData.birthDate} 
+              onChange={handleInputChange} 
+              required 
             />
           </div>
           
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="birthTime">Birth Time</Label>
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="timeUnknown" className="text-sm text-muted-foreground">
-                  Time unknown
-                </Label>
-                <Switch
-                  id="timeUnknown"
-                  name="timeUnknown"
-                  checked={formData.timeUnknown}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, timeUnknown: checked }))
-                  }
-                />
+            <Label htmlFor="birthTime">Birth Time</Label>
+            <Input 
+              id="birthTime" 
+              name="birthTime" 
+              type="time" 
+              value={formData.birthTime} 
+              onChange={handleInputChange} 
+              disabled={formData.timeUnknown} 
+            />
+            <div className="flex items-center gap-2 mt-1">
+              <Switch 
+                id="timeUnknown" 
+                checked={formData.timeUnknown} 
+                onCheckedChange={(checked) => setFormData(f => ({ ...f, timeUnknown: checked }))} 
+              />
+              <Label htmlFor="timeUnknown" className="text-xs">Time unknown</Label>
+            </div>
+          </div>
+                    <div className="space-y-2 relative">
+              <Label htmlFor="birthCity">Birth City</Label>
+              <div className="relative">
+                <div className="relative">
+                  <Input 
+                    id="birthCity" 
+                    name="birthCity" 
+                    placeholder="Start typing city or state..."
+                    autoComplete="off"
+                    value={formData.birthCity}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setFormData(f => ({ ...f, birthCity: value }));
+                      setCityTouched(true);
+                    }}
+                    onFocus={() => setCityTouched(true)}
+                    onBlur={() => {
+                      // Small delay to allow click on suggestions
+                      setTimeout(() => {
+                        validateCity(formData.birthCity);
+                        setCitySuggestions([]);
+                      }, 200);
+                    }}
+                    aria-autocomplete="list"
+                    aria-describedby="cityHelp"
+                    className="w-full pr-8"
+                    required
+                  />
+                  {isLoading && (
+                    <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                
+                {cityTouched && cityError && (
+                  <div className="text-red-500 text-xs mt-1">{cityError}</div>
+                )}
+                
+                {citySuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-60 overflow-y-auto">
+                    {citySuggestions.map((city) => (
+                      <div
+                        key={`${city.name}-${city.admin1}`}
+                        className="px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-slate-100 last:border-b-0"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleCitySelect(city);
+                        }}
+                      >
+                        <div className="font-medium">{city.name}</div>
+                        <div className="text-xs text-slate-500">{city.admin1}, {city.country}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div id="cityHelp" className="text-xs text-slate-500 mt-1">
+                Start typing a city or state name and select from the suggestions
               </div>
             </div>
-            <Input
-              id="birthTime"
-              name="birthTime"
-              type="time"
-              value={formData.birthTime}
-              onChange={handleInputChange}
-              disabled={formData.timeUnknown}
-              required={!formData.timeUnknown}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="birthCity">Birth City</Label>
-            <Input
-              id="birthCity"
-              name="birthCity"
-              placeholder="City, Country"
-              value={formData.birthCity}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
         </CardContent>
         
         <CardFooter>

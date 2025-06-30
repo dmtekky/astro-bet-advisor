@@ -10,6 +10,8 @@ export interface UserData {
   birth_date: string;
   birth_time: string | null;
   birth_city: string;
+  birth_latitude: number | null;
+  birth_longitude: number | null;
   time_unknown: boolean;
   favorite_sports: string[];
   planetary_data: any; // Using any for now as the structure may be complex
@@ -75,16 +77,24 @@ export interface ExtendedDatabase extends OriginalDatabase {
   };
 }
 
-// Export the extended Database type
+// Extend the Database type with our custom tables
 declare module '@/integrations/supabase/types' {
-  // This extends the original Database interface with our custom types
-  export interface Database {
+  interface Database {
     public: {
-      Tables: OriginalDatabase['public']['Tables'] & ExtendedDatabase['public']['Tables'];
-      Views: OriginalDatabase['public']['Views'];
-      Functions: OriginalDatabase['public']['Functions'];
-      Enums: OriginalDatabase['public']['Enums'];
-      CompositeTypes: OriginalDatabase['public']['CompositeTypes'];
+      Tables: {
+        user_data: {
+          Row: UserData;
+          Insert: Omit<Partial<UserData>, 'id' | 'created_at' | 'updated_at'> & { 
+            id: string;
+            birth_date: string;
+            birth_city: string;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: Partial<UserData>;
+          Relationships: [];
+        };
+      } & OriginalDatabase['public']['Tables'];
     };
   }
 }

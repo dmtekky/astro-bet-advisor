@@ -148,11 +148,13 @@ const ExampleProfilePage: React.FC = () => {
               following: Math.floor(Math.random() * 100) + 50,
             },
             birthData: {
-              date: data.birth_date,
-              time: data.birth_time || '',
-              city: data.birth_city,
-              timeUnknown: data.time_unknown
-            }
+              birthDate: data.birth_date,
+              birthTime: data.birth_time || '',
+              birthCity: data.birth_city,
+              timeUnknown: data.time_unknown,
+              birthLatitude: data.birth_latitude,
+              birthLongitude: data.birth_longitude,
+            },
           });
           
           // Update selected sports
@@ -261,20 +263,35 @@ const ExampleProfilePage: React.FC = () => {
           </div>
         )}
         
-        {/* User Birth Data Form */}
+        {/* User Birth Data Form Modal */}
         {showForm && (
-          <div className="mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Enter Your Birth Information</CardTitle>
-                <CardDescription>
-                  This information will be used to generate your astrological chart
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserBirthDataForm onSuccess={handleFormSuccess} />
-              </CardContent>
-            </Card>
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            >
+              <Card className="border-none shadow-none">
+                <CardHeader>
+                  <CardTitle>{userData ? 'Edit' : 'Enter'} Your Birth Information</CardTitle>
+                  <CardDescription>
+                    This information is used to generate your astrological profile.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <UserBirthDataForm 
+                    onSuccess={handleFormSuccess} 
+                    defaultValues={userData?.birthData}
+                  />
+                </CardContent>
+              </Card>
+              <button 
+                onClick={() => setShowForm(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                aria-label="Close form"
+              >✕</button>
+            </motion.div>
           </div>
         )}
         
@@ -527,13 +544,23 @@ const ExampleProfilePage: React.FC = () => {
           
           {/* Birth data info */}
           <div className="bg-gradient-to-b from-slate-900 to-indigo-900 rounded-lg shadow-xl p-6 mb-6">
-            <div className="text-sm text-slate-300">
-              <p><strong>Birth Data:</strong> {birthData.date} at {birthData.time} in {birthData.city}</p>
-              {birthData.latitude && birthData.longitude && (
-                <p className="text-xs opacity-75 mt-1">
-                  Coordinates: {birthData.latitude.toFixed(4)}°N, {Math.abs(birthData.longitude).toFixed(4)}°W
-                </p>
-              )}
+            <div className="flex justify-between items-start">
+              <div className="text-sm text-slate-300">
+                <p><strong>Birth Data:</strong> {birthData.date} at {birthData.time} in {birthData.city}</p>
+                {birthData.latitude && birthData.longitude && (
+                  <p className="text-xs opacity-75 mt-1">
+                    Coordinates: {birthData.latitude.toFixed(4)}°N, {Math.abs(birthData.longitude).toFixed(4)}°W
+                  </p>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                className="text-slate-900 bg-white/90 hover:bg-blue-700 hover:text-white border-blue-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-colors duration-200"
+                onClick={() => setShowForm(true)}
+                aria-label="Edit birth data"
+              >
+                {userData ? 'Edit Birth Data' : 'Add Birth Data'}
+              </Button>
             </div>
           </div>
           
@@ -608,7 +635,13 @@ const ExampleProfilePage: React.FC = () => {
                     <PlanetaryCountChart 
                       planetCounts={chartData.planetaryCounts || null}
                       planetsPerSign={chartData.planetsPerSign || {}}
-                      className="h-full"
+                      isDownloading={false}
+                      onDownload={async () => {
+                        // Implement download functionality if needed
+                      }}
+                      onShare={async () => {
+                        // Implement share functionality if needed
+                      }}
                     />
                   </div>
                 </div>
