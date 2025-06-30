@@ -158,6 +158,8 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         throw new Error('The selected city has invalid location data. Please try another city.');
       }
 
+      // Always include timezoneOffset in API payload for accurate UTC calculation
+      const timezoneOffset = new Date().getTimezoneOffset();
       const apiData = {
         year,
         month,
@@ -166,9 +168,10 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         minute,
         city: formData.birthCity,
         latitude: lat,
-        longitude: lng
+        longitude: lng,
+        timezoneOffset // IMPORTANT: ensures backend uses correct local-to-UTC conversion
       };
-      
+
       console.log('Calling astrology API with data:', apiData);
       
       // Add a timeout to the API call to prevent it from hanging indefinitely
@@ -204,6 +207,8 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       console.log('Calculated planetary counts:', planetaryCounts);
 
       // Log the data we're about to save
+      // Using the same timezoneOffset already detected above
+
       const userDataToSave = {
         id: userId,
         birth_date: formData.birthDate,
@@ -215,8 +220,13 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         birth_latitude: lat,
         birth_longitude: lng,
         time_unknown: timeUnknown,
+        timezone_offset: timezoneOffset, // Save for reference
         updated_at: new Date().toISOString()
       };
+
+      // Pass timezoneOffset in API call payload if needed (example)
+      // If you have an API call that sends birth data, include timezoneOffset as well
+      // Example: { ...birthData, timezoneOffset }
       
       console.log('Saving user data to Supabase:', userDataToSave);
       

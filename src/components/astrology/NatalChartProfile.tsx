@@ -220,7 +220,7 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
         {/* Natal Chart */}
-        <div className="w-full planetary-count-container">
+        <div className="w-full natal-chart-container">
           <NatalChart 
             astroData={natalChartData}
             isLoading={isLoading}

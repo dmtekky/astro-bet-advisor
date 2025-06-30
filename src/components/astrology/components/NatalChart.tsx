@@ -11,18 +11,6 @@ import ChartPlaceholder from './ChartPlaceholder';
 // Import AstroChart directly
 import AstroChart from '@astrodraw/astrochart';
 
-// Ensure AstroChart is available globally for compatibility
-declare global {
-  interface Window {
-    AstroChart: any;
-  }
-}
-
-// Make AstroChart available globally
-if (typeof window !== 'undefined' && !window.AstroChart) {
-  window.AstroChart = AstroChart;
-}
-
 /**
  * Component for rendering the natal chart using AstroChart library
  */
@@ -94,10 +82,11 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         };
 
         // Create the chart instance
-        astroChartRef.current = new window.AstroChart('natal-chart-astro', chartSize, chartSize, chartSettings);
+        astroChartRef.current = new AstroChart('natal-chart-astro', chartSize, chartSize, chartSettings);
 
         // Format data for AstroChart
         const chartData = formatAstroChartData(astroData);
+        console.log('Data formatted for AstroChart:', chartData);
 
         // Render the chart
         astroChartRef.current.radix(chartData);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -14,22 +14,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge'; // Added for demo badge
 import { User, Star, Activity, Share2, Download, Printer, Info, Loader2 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import UserBirthDataForm from '@/components/forms/UserBirthDataForm';
+import ChartLoading from '@/components/astrology/components/ChartLoading';
 import SignInterpretation from '@/components/astrology/SignInterpretation';
 import AspectsGrid from '@/components/astrology/AspectsGrid';
 import SignInterpretationSkeleton from '@/components/astrology/SignInterpretationSkeleton';
 
-// Dynamically import the chart components with SSR disabled
-const NatalChartProfile = dynamic(
-  () => import('@/components/astrology/NatalChartProfile'),
-  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading natal chart...</div> }
-);
+// Lazily import the chart components for code splitting
+const NatalChartProfile = lazy(() => import('@/components/astrology/NatalChartProfile'));
 
 // Define sport type
 type Sport = {
@@ -651,7 +647,7 @@ const ExampleProfilePage: React.FC = () => {
           <div className="bg-gradient-to-b from-slate-900 to-indigo-900 rounded-lg shadow-xl p-6 mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="text-sm text-slate-300">
-                <p><strong>Birth Data:</strong> {user.birthData ? `${user.birthData.birthDate} at ${user.birthData.birthTime || '12:00'} in ${user.birthData.birthCity}` : 'Not provided'}</p>
+                <p><strong>Birth Data:</strong> {user.birthData ? `${user.birthData.birthDate} at ${user.birthData.birthTime || '12:01'} in ${user.birthData.birthCity}` : 'Not provided'}</p>
                 {user.birthData?.birthLatitude && user.birthData?.birthLongitude && (
                   <p className="text-xs opacity-75 mt-1">
                     Coordinates: {user.birthData.birthLatitude.toFixed(4)}°N, {Math.abs(user.birthData.birthLongitude).toFixed(4)}°W
@@ -691,18 +687,20 @@ const ExampleProfilePage: React.FC = () => {
 
             <div className="relative z-10">
               {user.birthData && userId ? (
-                <NatalChartProfile 
-                  userId={userId}
-                  birthData={{
-                    date: user.birthData.birthDate,
-                    time: user.birthData.birthTime,
-                    city: user.birthData.birthCity,
-                    timeUnknown: user.birthData.timeUnknown || false
-                  }}
-                  natalChartData={user.planetary_data}
-                  planetaryCounts={user.planetary_count}
-                  planetsPerSign={user.planets_per_sign}
-                />
+                <Suspense fallback={<ChartLoading />}>
+                  <NatalChartProfile
+                    userId={userId}
+                    birthData={{
+                      date: user.birthData.birthDate,
+                      time: user.birthData.birthTime,
+                      city: user.birthData.birthCity,
+                      timeUnknown: user.birthData.timeUnknown || false
+                    }}
+                    natalChartData={user.planetary_data}
+                    planetaryCounts={user.planetary_count}
+                    planetsPerSign={user.planets_per_sign}
+                  />
+                </Suspense>
               ) : (
                 <div className="text-center py-20">
                   <h3 className="text-2xl font-bold text-white mb-4">

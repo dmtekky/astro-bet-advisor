@@ -12,6 +12,12 @@ export default async function handler(
   try {
     const birthData = req.body;
     console.log('API received birth data:', birthData);
+
+    // Enforce timezoneOffset presence for accuracy
+    if (typeof birthData.timezoneOffset !== 'number') {
+      console.warn('Missing timezoneOffset in birth data. Rejecting request for accuracy.');
+      return res.status(400).json({ error: 'timezoneOffset (minutes from UTC) is required for accurate planetary calculations.' });
+    }
     
     // Validate birth data with detailed error messages
     const missingFields: string[] = [];
@@ -48,9 +54,9 @@ export default async function handler(
     }
     
     // Calculate planetary positions
-    const positions = await calculatePlanetaryPositions(birthData);
+    const astroChartData = await calculatePlanetaryPositions(birthData);
     
-    res.status(200).json(positions);
+    res.status(200).json(astroChartData);
   } catch (error) {
     console.error('Error calculating positions:', error);
     res.status(500).json({ 
