@@ -228,10 +228,10 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Your Birth Information</CardTitle>
-        <CardDescription>
-          Enter your birth details to generate your personalized astrology chart
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Birth Details</CardTitle>
+        <CardDescription className="text-sm">
+          For your personalized astrological profile
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
