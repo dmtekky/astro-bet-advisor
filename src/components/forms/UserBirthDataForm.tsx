@@ -157,8 +157,11 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       
       console.log('Calling astrology API with data:', apiData);
       
+      // Get the API base URL from environment variables or use a default
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
       // Call the astrology API
-      const positionsResponse = await fetch('/api/astrology/positions', {
+      const positionsResponse = await fetch(`${apiBaseUrl}/api/astrology/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiData)
@@ -177,8 +180,8 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       console.log('Calculated planets per sign:', planetsPerSign);
       console.log('Calculated planetary counts:', planetaryCounts);
 
-      // Save birth data to the database using the supabase client
-      const { data, error } = await supabase.from('user_data').upsert({
+      // Log the data we're about to save
+      const userDataToSave = {
         id: userId,
         birth_date: formData.birthDate,
         birth_time: timeUnknown ? null : formData.birthTime,
@@ -188,13 +191,28 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
         planetary_count: planetaryCounts,
         birth_latitude: parseFloat(selectedCity.lat),
         birth_longitude: parseFloat(selectedCity.lng),
-        time_unknown: timeUnknown
-      });
+        time_unknown: timeUnknown,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Saving user data to Supabase:', userDataToSave);
+      
+      // Save birth data to the database using the supabase client
+      const { data, error } = await supabase
+        .from('user_data')
+        .upsert(userDataToSave, {
+          onConflict: 'id',
+          returning: 'representation' // This ensures we get the updated record back
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Supabase error:', error);
         throw new Error(error.message || 'Failed to save user data');
       }
+      
+      console.log('Successfully saved user data:', data);
 
       if (onSuccess) {
         // Simply signal success; the parent page will re-fetch.

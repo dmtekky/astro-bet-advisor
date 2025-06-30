@@ -28,18 +28,37 @@ const ZODIAC_SIGNS = [
   'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
-export async function calculatePlanetaryPositions(
-  birthDate: string,
-  birthTime: string = '12:00',
-  birthLocation: string = 'Unknown'
-): Promise<PlanetPosition[]> {
-  // Parse birth date
-  const date = new Date(birthDate);
+// Define the birth data interface to match the API request
+interface BirthData {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  latitude: number;
+  longitude: number;
+  city?: string;
+}
+
+export async function calculatePlanetaryPositions(birthData: BirthData): Promise<any> {
+  // Log the received birth data
+  console.log('Calculating planetary positions for:', birthData);
   
-  // Calculate positions based on birth date
-  return PLANETS.map(planet => {
-    // Simplified calculation: random position for demo
-    const angle = Math.floor(Math.random() * 360);
+  // Create a date object from the birth data
+  const date = new Date(
+    birthData.year,
+    birthData.month - 1, // Month is 0-indexed in JavaScript Date
+    birthData.day,
+    birthData.hour,
+    birthData.minute
+  );
+  
+  // Calculate positions based on birth date and location
+  const positions = PLANETS.map(planet => {
+    // Simplified calculation: deterministic position based on birth data
+    // This ensures consistent results for the same birth data
+    const seed = date.getTime() + planet.name.charCodeAt(0);
+    const angle = (seed % 360 + 360) % 360; // Ensure positive angle
     const signIndex = Math.floor(angle / 30);
     const house = (Math.floor(angle / 30) + 1) % 12 || 12;
     
@@ -51,4 +70,18 @@ export async function calculatePlanetaryPositions(
       house
     };
   });
+  
+  // Create a structured response with all the data needed by the frontend
+  return {
+    planets: positions,
+    houses: Array.from({ length: 12 }, (_, i) => ({
+      number: i + 1,
+      cusp: i * 30 + (date.getTime() % 30) // Deterministic house cusps
+    })),
+    ascendant: (date.getTime() % 360),
+    latitude: birthData.latitude,
+    longitude: birthData.longitude,
+    birthTime: `${birthData.hour}:${birthData.minute.toString().padStart(2, '0')}`,
+    birthDate: `${birthData.year}-${birthData.month.toString().padStart(2, '0')}-${birthData.day.toString().padStart(2, '0')}`
+  };
 }
