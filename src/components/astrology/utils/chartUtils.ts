@@ -167,26 +167,66 @@ export const cleanupChartInstance = (chartInstance: any): void => {
  */
 export const formatAstroChartData = (astroData: any): { planets: Record<string, number[]>; cusps: number[] } => {
   console.log('formatAstroChartData received data:', astroData);
+  console.log('formatAstroChartData - cusps in data:', astroData?.cusps);
+  console.log('formatAstroChartData - houses in data:', astroData?.houses);
+  
+  // Get cusps from the response, either from cusps array or houses array
+  let cusps: number[] = [];
+  let cuspSource = 'unknown';
+  
+  if (astroData?.cusps && Array.isArray(astroData.cusps) && astroData.cusps.length === 12) {
+    // Use cusps array directly if available and valid
+    cusps = astroData.cusps;
+    cuspSource = 'direct cusps array';
+    console.log('Using cusps directly from astroData.cusps:', cusps);
+  } else if (astroData?.houses && Array.isArray(astroData.houses)) {
+    // Fall back to extracting cusps from houses array
+    cusps = astroData.houses.map((house: any) => 
+      typeof house === 'number' ? house : house.cusp
+    );
+    cuspSource = 'houses array';
+    console.log('Extracted cusps from astroData.houses:', cusps);
+  } else {
+    // If no cusps data is available, calculate equal houses as a last resort
+    console.warn('No house cusps found in the API response, using equal houses as fallback');
+    cusps = Array.from({ length: 12 }, (_, i) => i * 30);
+    cuspSource = 'equal houses fallback';
+  }
+  
+  // Validate cusps to ensure they're all numbers
+  const validCusps = cusps.every(cusp => typeof cusp === 'number' && !isNaN(cusp));
+  if (!validCusps) {
+    console.error('Invalid cusps detected:', cusps);
+    console.warn('Falling back to equal houses due to invalid cusps');
+    cusps = Array.from({ length: 12 }, (_, i) => i * 30);
+    cuspSource = 'equal houses fallback (invalid cusps)';
+  }
+  
+  console.log(`Using cusps from ${cuspSource}:`, cusps);
   
   const chartData: { planets: Record<string, number[]>; cusps: number[] } = {
     planets: {},
-    cusps: astroData?.houses?.map((house: any) => house.cusp) || [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+    cusps: cusps
   };
+  
+  console.log('Using cusps:', chartData.cusps);
 
   // Convert planet data to the format expected by AstroChart
-  if (astroData && astroData.planets) {
+  if (astroData?.planets) {
     if (Array.isArray(astroData.planets)) {
       // New API format: planets is an array of objects
       astroData.planets.forEach((planet: any) => {
-        if (planet && planet.name && typeof planet.angle === 'number') {
-          chartData.planets[planet.name] = [planet.angle, 0, 0, 0];
+        if (planet && planet.name && (typeof planet.angle === 'number' || typeof planet.lon === 'number')) {
+          const angle = typeof planet.angle === 'number' ? planet.angle : planet.lon;
+          chartData.planets[planet.name] = [angle, 0, 0, 0];
         }
       });
-    } else {
+    } else if (typeof astroData.planets === 'object') {
       // Legacy format: planets is an object with planet names as keys
       Object.entries(astroData.planets).forEach(([name, planetData]: [string, any]) => {
-        if (planetData && typeof planetData.lon === 'number') {
-          chartData.planets[name] = [planetData.lon, 0, 0, 0];
+        if (planetData && (typeof planetData.lon === 'number' || typeof planetData.angle === 'number')) {
+          const angle = typeof planetData.lon === 'number' ? planetData.lon : planetData.angle;
+          chartData.planets[name] = [angle, 0, 0, 0];
         }
       });
     }

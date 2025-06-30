@@ -199,6 +199,18 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       
       const planetaryData = await positionsResponse.json();
       console.log('Received planetary data:', planetaryData);
+      
+      // CRITICAL: Make sure cusps are preserved in the planetary data
+      // If the API returns cusps but they're not in the top level, add them
+      if (planetaryData.cusps && Array.isArray(planetaryData.cusps) && planetaryData.cusps.length === 12) {
+        console.log('Found cusps array in API response:', planetaryData.cusps);
+      } else if (planetaryData.astroChartData?.cusps && Array.isArray(planetaryData.astroChartData.cusps)) {
+        // If cusps are nested in astroChartData, move them to the top level
+        planetaryData.cusps = planetaryData.astroChartData.cusps;
+        console.log('Moved cusps from astroChartData to top level:', planetaryData.cusps);
+      } else {
+        console.warn('No valid cusps array found in API response');
+      }
 
       // Calculate derived astrological data
       const planetsPerSign = processPlanetsPerSign(planetaryData);
