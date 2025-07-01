@@ -569,6 +569,41 @@ app.get('/api/news/:slug', async (req, res) => {
   }
 });
 
+// Debug endpoint to test planetary calculations directly
+app.get('/api/debug/planets', async (req, res) => {
+  try {
+    const testBirthData = {
+      year: 2009,
+      month: 3,
+      day: 11,
+      hour: 3,
+      minute: 5,
+      city: 'Kissimmee',
+      latitude: 28.2917,
+      longitude: -81.4076,
+      timezoneOffset: 240
+    };
+    
+    console.log('Debug endpoint calculating positions for:', testBirthData);
+    const positions = await astroCalculations.calculatePlanetaryPositions(testBirthData);
+    
+    // Log the raw positions for debugging
+    console.log('DEBUG ENDPOINT - Raw planetary positions:');
+    positions.planets.forEach(planet => {
+      console.log(`${planet.name}: ${planet.angle}° (${planet.sign}) in house ${planet.house}`);
+    });
+    
+    res.json({
+      message: 'Debug planetary positions',
+      data: positions
+    });
+  } catch (error) {
+    console.error('Error in debug endpoint:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Start the server
 app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);
 });

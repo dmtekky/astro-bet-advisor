@@ -566,14 +566,18 @@ export const useAstroData = (
             }
 
             return await retryResponse.json();
-          } catch (refreshError) {
+          } catch (error: unknown) {
             console.error(
               "[useAstroData] Error during session refresh/retry:",
-              refreshError,
+              error
             );
-            throw new Error(
-              `Failed to refresh session: ${refreshError.message}`,
-            );
+            
+            // Properly handle the unknown error type
+            if (error instanceof Error) {
+              throw new Error(`Failed to refresh session: ${error.message}`);
+            } else {
+              throw new Error(`Failed to refresh session: ${String(error)}`);
+            }
           }
         }
 
