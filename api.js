@@ -69,15 +69,51 @@ app.post('/api/astrology/positions', async (req, res) => {
   try {
     const birthData = req.body;
     
+    console.log('Calculating planetary positions for:', birthData);
+    
     // Validate birth data
     if (!birthData || !birthData.year || !birthData.month || !birthData.day || !birthData.hour || !birthData.minute) {
       return res.status(400).json({ error: 'Invalid birth data' });
     }
     
     // Calculate planetary positions
-    const positions = await calculatePlanetaryPositions(birthData);
+    const astroChartData = await calculatePlanetaryPositions(birthData);
     
-    res.status(200).json(positions);
+    // Log the raw data from calculations
+    console.log('Raw astroChartData from calculations:', JSON.stringify({
+      planets: astroChartData.planets && astroChartData.planets.length,
+      houses: astroChartData.houses && astroChartData.houses.length,
+      cusps: astroChartData.cusps,
+      ascendant: astroChartData.ascendant
+    }));
+    
+    // Create the response with the structure the frontend expects
+    const responseObject = {
+      // Include top-level cusps for direct access
+      cusps: astroChartData.cusps,
+      // Include the full astroChartData object
+      astroChartData: astroChartData,
+      // Include planets at the top level for compatibility with existing code
+      planets: astroChartData.planets,
+      // Include houses at the top level for compatibility with existing code
+      houses: astroChartData.houses,
+      // Include other fields at the top level for compatibility
+      ascendant: astroChartData.ascendant,
+      latitude: astroChartData.latitude,
+      longitude: astroChartData.longitude,
+      birthDate: astroChartData.birthDate,
+      birthTime: astroChartData.birthTime
+    };
+    
+    // Log the response structure
+    console.log('API Response Keys:', Object.keys(responseObject));
+    console.log('API Response Cusps Present:', !!responseObject.cusps);
+    if (responseObject.cusps) {
+      console.log('API Response Cusps Sample:', responseObject.cusps.slice(0, 3) + '... (total: ' + responseObject.cusps.length + ')');
+    }
+    
+    // Send the response
+    res.status(200).json(responseObject);
   } catch (error) {
     console.error('Error calculating positions:', error);
     res.status(500).json({ error: 'Internal server error' });

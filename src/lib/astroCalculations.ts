@@ -264,13 +264,13 @@ export async function calculatePlanetaryPositions(birthData: BirthData): Promise
       p1: a.planet1.toLowerCase(),
       p2: a.planet2.toLowerCase(),
     })),
-    cusps: formattedCusps,
+    cusps: houseCusps,
     ascendant: ascendant,
     mc: mc,
   };
 
-  console.log("Debug - Output astroChartData:", astroChartData);
+  console.log('[astroCalculations] Final astroChartData being returned:', JSON.stringify(astroChartData, null, 2));
+  console.log('[astroCalculations] Cusps array in return:', astroChartData.cusps);
 
   return astroChartData;
-
 }

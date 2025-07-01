@@ -372,6 +372,7 @@ interface AstroData {
       interpretation: string;
     }>;
   };
+  cusps?: number[]; // Add this line to include the cusps array from backend
   // extensible: add more fields for unique player profiles
   [key: string]: any;
 }
@@ -788,6 +789,7 @@ export const useAstroData = (
           })
           .optional(),
         sunSign: z.string().optional(),
+        cusps: z.array(z.number()).optional(), // Add this line to include the cusps array from backend
       });
 
       // Validate and parse API response
@@ -824,6 +826,7 @@ export const useAstroData = (
         modalities,
         astro_weather,
         interpretations,
+        cusps, // Add this line to include the cusps array from backend
         ...rest
       } = apiData;
       console.log(
@@ -973,6 +976,7 @@ export const useAstroData = (
           planets: planetInterpretations,
           aspects: interpretations?.aspects || [],
         },
+        cusps: cusps || [], // Add this line to include the cusps array from backend, with fallback to empty array if missing
         ...rest, // allow extensibility for unique player profiles
       };
       console.log(

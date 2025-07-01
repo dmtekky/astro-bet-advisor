@@ -64,7 +64,10 @@ export default async function handler(
     
     // Calculate all astrology data (planets, cusps, aspects, etc)
     const astroChartData = await calculatePlanetaryPositions(birthData);
-
+    
+    console.log('[API] Response structure keys:', Object.keys(astroChartData));
+    console.log('[API] Cusps in response:', astroChartData.cusps);
+    
     // Minimal validation: ensure cusps array exists and is valid
     if (!astroChartData.cusps || !Array.isArray(astroChartData.cusps) || astroChartData.cusps.length !== 12) {
       console.error('API ERROR: Invalid or missing cusps in astroChartData:', astroChartData.cusps);
@@ -74,18 +77,35 @@ export default async function handler(
     // Log the final response being sent
     console.log('FINAL API RESPONSE:', JSON.stringify(astroChartData, null, 2));
     
-    // Save the full astroChartData to Supabase and return the ID
+    // Save the full astroChartData to Supabase
     const { data, error }: PostgrestSingleResponse<any> = await supabase.from('astrology_data').insert([astroChartData]);
     if (error) {
       console.error('Supabase insert error:', error);
-      return res.status(500).json({ error: 'Failed to save data to Supabase' });
+      // Continue even if Supabase insert fails - we'll still return the data to the frontend
     }
-    if (data && Array.isArray(data) && data.length > 0 && data[0] !== null && 'id' in data[0]) {
-      return res.status(200).json({ success: true, id: data[0].id });
-    } else {
-      console.error('No data or ID returned from Supabase insert');
-      return res.status(500).json({ error: 'Failed to retrieve inserted ID' });
-    }
+    
+    // Create the response object with the structure that the frontend expects
+    const responseObject = {
+      // Include top-level cusps for direct access
+      cusps: astroChartData.cusps,
+      // Include the full astroChartData object
+      astroChartData: astroChartData,
+      // Include planets at the top level for compatibility
+      planets: astroChartData.planets,
+      // Include houses at the top level for compatibility
+      houses: astroChartData.houses,
+      // Include the Supabase ID if available
+      id: data && Array.isArray(data) && data.length > 0 && data[0] !== null && 'id' in data[0] ? data[0].id : null
+    };
+    
+    // Add detailed logging of the API response
+    console.log('API RESPONSE STRUCTURE KEYS:', Object.keys(responseObject));
+    console.log('API RESPONSE CUSPS:', responseObject.cusps);
+    console.log('API RESPONSE ASTROCHARTDATA KEYS:', Object.keys(responseObject.astroChartData));
+    console.log('API RESPONSE ASTROCHARTDATA.CUSPS:', responseObject.astroChartData.cusps);
+    
+    // Return the response
+    return res.status(200).json(responseObject);
   } catch (error) {
     console.error('Error calculating positions:', error);
     res.status(500).json({ 

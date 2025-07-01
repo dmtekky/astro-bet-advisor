@@ -200,6 +200,22 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       const planetaryData = await positionsResponse.json();
       console.log('Received planetary data:', planetaryData);
       
+      // Add detailed logging of the API response structure
+      console.log('API RESPONSE KEYS:', Object.keys(planetaryData));
+      console.log('API RESPONSE CUSPS EXISTS:', !!planetaryData.cusps);
+      if (planetaryData.cusps) {
+        console.log('API RESPONSE CUSPS:', planetaryData.cusps);
+        console.log('API RESPONSE CUSPS TYPE:', typeof planetaryData.cusps);
+        console.log('API RESPONSE CUSPS ISARRAY:', Array.isArray(planetaryData.cusps));
+        console.log('API RESPONSE CUSPS LENGTH:', planetaryData.cusps.length);
+      }
+      
+      console.log('API RESPONSE ASTROCHARTDATA EXISTS:', !!planetaryData.astroChartData);
+      if (planetaryData.astroChartData) {
+        console.log('API RESPONSE ASTROCHARTDATA KEYS:', Object.keys(planetaryData.astroChartData));
+        console.log('API RESPONSE ASTROCHARTDATA.CUSPS EXISTS:', !!planetaryData.astroChartData.cusps);
+      }
+      
       // CRITICAL: Make sure cusps are preserved in the planetary data
       // If the API returns cusps but they're not in the top level, add them
       if (planetaryData.cusps && Array.isArray(planetaryData.cusps) && planetaryData.cusps.length === 12) {
