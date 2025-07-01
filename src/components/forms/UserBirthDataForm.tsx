@@ -220,6 +220,13 @@ const UserBirthDataForm: React.FC<UserBirthDataFormProps> = ({
       // If the API returns cusps but they're not in the top level, add them
       if (planetaryData.cusps && Array.isArray(planetaryData.cusps) && planetaryData.cusps.length === 12) {
         console.log('Found cusps array in API response:', planetaryData.cusps);
+        
+        // Ensure cusps are also in astroChartData for consistency when saving to Supabase
+        if (!planetaryData.astroChartData) {
+          planetaryData.astroChartData = {};
+        }
+        planetaryData.astroChartData.cusps = planetaryData.cusps;
+        
       } else if (planetaryData.astroChartData?.cusps && Array.isArray(planetaryData.astroChartData.cusps)) {
         // If cusps are nested in astroChartData, move them to the top level
         planetaryData.cusps = planetaryData.astroChartData.cusps;

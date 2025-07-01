@@ -170,25 +170,41 @@ export const formatAstroChartData = (astroData: any): { planets: Record<string, 
   console.log('formatAstroChartData - cusps in data:', astroData?.cusps);
   console.log('formatAstroChartData - houses in data:', astroData?.houses);
   
-  // Get cusps from the response, either from cusps array or houses array
+  // Get cusps from the response, checking multiple possible locations
   let cusps: number[] = [];
   let cuspSource = 'unknown';
   
-  if (astroData?.cusps && Array.isArray(astroData.cusps) && astroData.cusps.length === 12) {
-    // Use cusps array directly if available and valid
+  // Check for cusps in all possible locations, in order of priority
+  if (astroData?.astroChartData?.cusps && Array.isArray(astroData.astroChartData.cusps) && astroData.astroChartData.cusps.length === 12) {
+    // First priority: Use cusps from astroChartData.cusps (from Supabase)
+    cusps = astroData.astroChartData.cusps;
+    cuspSource = 'astroChartData.cusps';
+    console.log('Using cusps from astroChartData.cusps:', cusps);
+  } else if (astroData?.cusps && Array.isArray(astroData.cusps) && astroData.cusps.length === 12) {
+    // Second priority: Use cusps array directly if available and valid
     cusps = astroData.cusps;
     cuspSource = 'direct cusps array';
     console.log('Using cusps directly from astroData.cusps:', cusps);
+  } else if (astroData?.planetary_data?.cusps && Array.isArray(astroData.planetary_data.cusps) && astroData.planetary_data.cusps.length === 12) {
+    // Third priority: Check in planetary_data.cusps (another possible Supabase location)
+    cusps = astroData.planetary_data.cusps;
+    cuspSource = 'planetary_data.cusps';
+    console.log('Using cusps from planetary_data.cusps:', cusps);
+  } else if (astroData?.planetary_data?.astroChartData?.cusps && Array.isArray(astroData.planetary_data.astroChartData.cusps) && astroData.planetary_data.astroChartData.cusps.length === 12) {
+    // Fourth priority: Check in planetary_data.astroChartData.cusps
+    cusps = astroData.planetary_data.astroChartData.cusps;
+    cuspSource = 'planetary_data.astroChartData.cusps';
+    console.log('Using cusps from planetary_data.astroChartData.cusps:', cusps);
   } else if (astroData?.houses && Array.isArray(astroData.houses)) {
-    // Fall back to extracting cusps from houses array
+    // Fifth priority: Fall back to extracting cusps from houses array
     cusps = astroData.houses.map((house: any) => 
       typeof house === 'number' ? house : house.cusp
     );
     cuspSource = 'houses array';
     console.log('Extracted cusps from astroData.houses:', cusps);
   } else {
-    // If no cusps data is available, calculate equal houses as a last resort
-    console.warn('No house cusps found in the API response, using equal houses as fallback');
+    // Last resort: If no cusps data is available, calculate equal houses
+    console.warn('No house cusps found in any location, using equal houses as fallback');
     cusps = Array.from({ length: 12 }, (_, i) => i * 30);
     cuspSource = 'equal houses fallback';
   }
