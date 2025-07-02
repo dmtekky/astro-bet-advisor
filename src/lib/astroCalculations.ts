@@ -1,4 +1,4 @@
-import { Planet, House, Time, Observer, Const, JulianDay } from 'astronomia';
+import * as Astronomia from 'astronomia';
 
 // Define the birth data interface to match the API request
 export interface BirthData {
@@ -150,19 +150,20 @@ export async function calculatePlanetaryPositions(birthData: BirthData): Promise
     const offsetMinutes = birthData.timezoneOffset;
     localTime.setUTCMinutes(localTime.getUTCMinutes() - offsetMinutes); // Correct offset application
   }
-  const jd = new JulianDay().fromDate(localTime); // Ensure JulianDay object is used correctly
+  const jd = Astronomia.JulianDay.fromDate(localTime); // Ensure JulianDay object is used correctly
   console.log("Debug - Adjusted Julian Day:", jd.toString());
-  const time = new Time(jd);
+  const time = new Astronomia.Time(jd);
   console.log('[astroCalculations] astronomia Time (UTC):', time);
 
   // Create astronomia Observer object
-  const observer = new Observer();
+  const observer = new Astronomia.Observer();
   observer.longitude = birthData.longitude;
   observer.latitude = birthData.latitude;
   console.log("Debug - Observer setup:", { longitude: observer.longitude, latitude: observer.latitude });
+  console.log(`[CRITICAL_DEBUG] Final pre-calculation values: localTime=${localTime.toISOString()}, julianDay=${jd.toString()}, observerLat=${observer.latitude}, observerLon=${observer.longitude}`);
 
   // Calculate house cusps, Ascendant, and MC using astronomia.House.Placidus
-  const houseData = House.Placidus(time, observer);
+  const houseData = Astronomia.House.Placidus(time, observer);
   
   // Extract cusps 1-12 and validate
   const houseCusps = Object.values(houseData.cusp).slice(1) as number[];
@@ -187,40 +188,40 @@ export async function calculatePlanetaryPositions(birthData: BirthData): Promise
 
   // For each planet, calculate and log positions with more detail
   const planets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
-  const planetPositions = [];
+  const planetPositions: PlanetData[] = [];
   planets.forEach(planetName => {
     let position;
     try {
       switch (planetName) {
         case 'Sun':
-          position = Planet.position(Const.Sun, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Sun, jd, observer);
           break;
         case 'Moon':
-          position = Planet.position(Const.Moon, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Moon, jd, observer);
           break;
         case 'Mercury':
-          position = Planet.position(Const.Mercury, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Mercury, jd, observer);
           break;
         case 'Venus':
-          position = Planet.position(Const.Venus, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Venus, jd, observer);
           break;
         case 'Mars':
-          position = Planet.position(Const.Mars, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Mars, jd, observer);
           break;
         case 'Jupiter':
-          position = Planet.position(Const.Jupiter, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Jupiter, jd, observer);
           break;
         case 'Saturn':
-          position = Planet.position(Const.Saturn, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Saturn, jd, observer);
           break;
         case 'Uranus':
-          position = Planet.position(Const.Uranus, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Uranus, jd, observer);
           break;
         case 'Neptune':
-          position = Planet.position(Const.Neptune, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Neptune, jd, observer);
           break;
         case 'Pluto':
-          position = Planet.position(Const.Pluto, jd, observer);
+          position = Astronomia.Planet.position(Astronomia.Const.Pluto, jd, observer);
           break;
       }
       console.log(`Debug - ${planetName} position: longitude=${position.lon}, latitude=${position.lat}, RA=${position.ra}, Dec=${position.dec}`);

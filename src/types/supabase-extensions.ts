@@ -76,25 +76,3 @@ export interface ExtendedDatabase extends OriginalDatabase {
     CompositeTypes: OriginalDatabase['public']['CompositeTypes'];
   };
 }
-
-// Extend the Database type with our custom tables
-declare module '@/integrations/supabase/types' {
-  interface Database {
-    public: {
-      Tables: {
-        user_data: {
-          Row: UserData;
-          Insert: Omit<Partial<UserData>, 'id' | 'created_at' | 'updated_at'> & { 
-            id: string;
-            birth_date: string;
-            birth_city: string;
-            created_at?: string;
-            updated_at?: string;
-          };
-          Update: Partial<UserData>;
-          Relationships: [];
-        };
-      } & OriginalDatabase['public']['Tables'];
-    };
-  }
-}
