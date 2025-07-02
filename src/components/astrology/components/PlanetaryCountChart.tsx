@@ -259,15 +259,15 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
       </div>
 
       {/* Title and Pills */}
-      <div className="mb-4">
-        <div className="relative inline-block mb-3">
-          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+      <div className="mb-4 text-center">
+        <div className="relative inline-block mb-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">
             Planetary Distribution
-          </h3>
-          <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0"></div>
+          </h1>
+          <div className="absolute -bottom-2 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0"></div>
         </div>
         
-        <div className="flex flex-wrap gap-2 max-w-full overflow-x-auto">
+        <div className="flex flex-wrap justify-center gap-2 max-w-full overflow-x-auto">
           {ZODIAC_SIGNS.map((sign, index) => {
             const count = normalizedPlanetCounts?.[index] || 0;
             if (count <= 0) return null;
@@ -288,13 +288,12 @@ export const PlanetaryCountChart: React.FC<PlanetaryCountChartProps> = ({
             const b2 = Math.max(0, b - 40);
             
             const gradient = `linear-gradient(135deg, rgba(${r},${g},${b},0.9) 0%, rgba(${r2},${g2},${b2},0.9) 100%)`;
-            const textColor = normalized > 0.5 ? 'text-white' : 'text-slate-900';
             const planets = normalizedPlanetsPerSign?.[sign] || [];
             
             return (
               <div 
                 key={sign} 
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${textColor} shadow-sm cursor-help`}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium text-white shadow-sm cursor-help"
                 style={{
                   background: gradient,
                   minWidth: 'fit-content',
