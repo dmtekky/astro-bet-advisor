@@ -214,13 +214,13 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
     <div className={`p-4 max-w-4xl mx-auto space-y-8 ${className}`}>
       {/* Charts container */}
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="grid grid-cols-1 gap-8 w-full"
       >
         {/* Natal Chart */}
-        <div className="w-full natal-chart-container">
+        <div className="w-full max-w-3xl mx-auto natal-chart-container">
           <NatalChart 
             astroData={natalChartData}
             isLoading={isLoading}
@@ -232,7 +232,7 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         </div>
 
         {/* Planetary Count Chart */}
-        <div className="w-full planetary-count-container">
+        <div className="w-full max-w-3xl mx-auto planetary-count-container">
           <PlanetaryCountChart 
             planetCounts={planetaryCounts || null}
             planetsPerSign={planetsPerSign || null}
