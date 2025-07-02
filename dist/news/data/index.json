@@ -1,0 +1,21 @@
+{
+  "lastUpdated": "2025-06-01T01:53:33.832Z",
+  "count": 1,
+  "articles": [
+    {
+      "id": "4866c028-6ae9-417d-801a-356cbc288bea",
+      "title": "New York vs Los Angeles - May 30 Game Recap",
+      "description": "Recap of the MLB game between New York Yankees and Los Angeles Dodgers",
+      "publishedAt": "2025-06-01T01:53:33.830Z",
+      "image": "https://www.aljazeera.com/wp-content/uploads/2024/10/AFP__20241031__2182034952__v1__HighRes__WorldSeriesLosAngelesDodgersVNewYorkYankeesG-1730352460.jpg?resize=770%2C513&quality=80",
+      "teamHome": "Los Angeles",
+      "teamAway": "New York",
+      "score": "Los Angeles 5 - 3 New York",
+      "date": "2025-05-30T19:10:00.000Z",
+      "slug": "nyy-vs-lad-2025-05-30",
+      "venue": "Dodger Stadium",
+      "attendance": 52347,
+      "duration": "3:15"
+    }
+  ]
+}

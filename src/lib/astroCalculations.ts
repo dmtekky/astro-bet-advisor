@@ -1,4 +1,4 @@
-import * as Astronomia from 'astronomia';
+import { JulianDay, Time, Observer, House, Planet, Zodiac, Aspect, Constellation } from 'astronomia';
 
 // Define the birth data interface to match the API request
 export interface BirthData {
@@ -150,20 +150,20 @@ export async function calculatePlanetaryPositions(birthData: BirthData): Promise
     const offsetMinutes = birthData.timezoneOffset;
     localTime.setUTCMinutes(localTime.getUTCMinutes() - offsetMinutes); // Correct offset application
   }
-  const jd = Astronomia.JulianDay.fromDate(localTime); // Ensure JulianDay object is used correctly
+  const jd = JulianDay.fromDate(localTime); // Ensure JulianDay object is used correctly
   console.log("Debug - Adjusted Julian Day:", jd.toString());
-  const time = new Astronomia.Time(jd);
+  const time = new Time(jd);
   console.log('[astroCalculations] astronomia Time (UTC):', time);
 
   // Create astronomia Observer object
-  const observer = new Astronomia.Observer();
+  const observer = new Observer();
   observer.longitude = birthData.longitude;
   observer.latitude = birthData.latitude;
   console.log("Debug - Observer setup:", { longitude: observer.longitude, latitude: observer.latitude });
   console.log(`[CRITICAL_DEBUG] Final pre-calculation values: localTime=${localTime.toISOString()}, julianDay=${jd.toString()}, observerLat=${observer.latitude}, observerLon=${observer.longitude}`);
 
   // Calculate house cusps, Ascendant, and MC using astronomia.House.Placidus
-  const houseData = Astronomia.House.Placidus(time, observer);
+  const houseData = House.Placidus(time, observer);
   
   // Extract cusps 1-12 and validate
   const houseCusps = Object.values(houseData.cusp).slice(1) as number[];
@@ -194,34 +194,34 @@ export async function calculatePlanetaryPositions(birthData: BirthData): Promise
     try {
       switch (planetName) {
         case 'Sun':
-          position = Astronomia.Planet.position(Astronomia.Const.Sun, jd, observer);
+          position = Planet.position(Planet.Sun, jd, observer);
           break;
         case 'Moon':
-          position = Astronomia.Planet.position(Astronomia.Const.Moon, jd, observer);
+          position = Planet.position(Planet.Moon, jd, observer);
           break;
         case 'Mercury':
-          position = Astronomia.Planet.position(Astronomia.Const.Mercury, jd, observer);
+          position = Planet.position(Planet.Mercury, jd, observer);
           break;
         case 'Venus':
-          position = Astronomia.Planet.position(Astronomia.Const.Venus, jd, observer);
+          position = Planet.position(Planet.Venus, jd, observer);
           break;
         case 'Mars':
-          position = Astronomia.Planet.position(Astronomia.Const.Mars, jd, observer);
+          position = Planet.position(Planet.Mars, jd, observer);
           break;
         case 'Jupiter':
-          position = Astronomia.Planet.position(Astronomia.Const.Jupiter, jd, observer);
+          position = Planet.position(Planet.Jupiter, jd, observer);
           break;
         case 'Saturn':
-          position = Astronomia.Planet.position(Astronomia.Const.Saturn, jd, observer);
+          position = Planet.position(Planet.Saturn, jd, observer);
           break;
         case 'Uranus':
-          position = Astronomia.Planet.position(Astronomia.Const.Uranus, jd, observer);
+          position = Planet.position(Planet.Uranus, jd, observer);
           break;
         case 'Neptune':
-          position = Astronomia.Planet.position(Astronomia.Const.Neptune, jd, observer);
+          position = Planet.position(Planet.Neptune, jd, observer);
           break;
         case 'Pluto':
-          position = Astronomia.Planet.position(Astronomia.Const.Pluto, jd, observer);
+          position = Planet.position(Planet.Pluto, jd, observer);
           break;
       }
       console.log(`Debug - ${planetName} position: longitude=${position.lon}, latitude=${position.lat}, RA=${position.ra}, Dec=${position.dec}`);

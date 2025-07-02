@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name='impact-site-verification' value='8a6a6e61-f3a7-4e0e-b7fe-a77458b94aa4' />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Astrology In Sports</title>
+    <base href="/" />
+    <meta name="description" content="Astrology In Sports - Player performance predictions powered by astrological insights" />
+    <meta name="author" content="Astrology In Sports" />
+
+    <meta property="og:title" content="Astrology In Sports" />
+    <meta property="og:description" content="Player performance predictions powered by astrological insights" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/favicon.ico" />
+    <meta property="og:image:type" content="image/x-icon" />
+    <meta property="og:image:width" content="32" />
+    <meta property="og:image:height" content="32" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@astrologyinsports" />
+    <meta name="twitter:image" content="/favicon.ico" />
+    <meta name="twitter:title" content="Astrology In Sports" />
+    <meta name="twitter:description" content="Player performance predictions powered by astrological insights" />
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4364688776267672"
+     crossorigin="anonymous"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon-16x16.ico" type="image/x-icon" sizes="16x16">
+    <link rel="icon" href="/favicon-32x32.ico" type="image/x-icon" sizes="32x32">
+    <link rel="icon" href="/favicon-48x48.ico" type="image/x-icon" sizes="48x48">
+    <link rel="icon" href="/favicon-64x64.ico" type="image/x-icon" sizes="64x64">
+    
+    <!-- AstroChart Library - Local Version -->
+    <script src="/astrochart.min.js" id="astrochart-script"></script>
+    <script>
+      // Simple script to check if AstroChart is loaded and dispatch event
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check immediately if AstroChart is already loaded
+        if (typeof window.AstroChart !== 'undefined') {
+          console.log('AstroChart loaded successfully from local file');
+          window.dispatchEvent(new CustomEvent('astrochart-loaded'));
+          return;
+        }
+        
+        // If not loaded yet, set up a listener for the script
+        document.getElementById('astrochart-script').onload = function() {
+          console.log('AstroChart loaded successfully from local file');
+          window.dispatchEvent(new CustomEvent('astrochart-loaded'));
+        };
+        
+        // Set a timeout to check if loading failed
+        setTimeout(function() {
+          if (typeof window.AstroChart === 'undefined') {
+            console.error('Failed to load AstroChart from local file');
+          }
+        }, 3000);
+      });
+    </script>
+    
+    <!-- impact.com STAT Tag -->
+    <script>
+      (function(i,m,p,a,c,t){c.ire_o=p;c[p]=c[p]||function(){(c[p].a=c[p].a||[]).push(arguments)};t=a.createElement(m);var z=a.getElementsByTagName(m)[0];t.async=1;t.src=i;z.parentNode.insertBefore(t,z)})('https://utt.impactcdn.com/P-A6308774-523f-47ee-acb8-457213d27fb91.js','script','impactStat',document,window);impactStat('transformLinks');impactStat('trackImpression');
+    </script>
+    <script type="module" crossorigin src="/assets/main-BDfILoKw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/main-nq7PIrMk.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+  </body>
+</html>

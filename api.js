@@ -1,5 +1,5 @@
 import express from 'express';
-import { calculatePlanetaryPositions } from './dist/astroCalculations.js';
+import { calculatePlanetaryPositions } from './src/lib/astroCalculations.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
