@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,58 +68,50 @@ app.use((req, res, next) => {
 // API endpoint for planetary positions
 app.post('/api/astrology/positions', async (req, res) => {
   try {
-    const birthData = req.body;
-    
-    console.log('Calculating planetary positions for:', birthData);
-    
-    // Validate birth data
-    if (!birthData || !birthData.year || !birthData.month || !birthData.day || !birthData.hour || !birthData.minute) {
-      return res.status(400).json({ error: 'Invalid birth data' });
+    const { year, month, day, hour = 12, minute = 0, latitude = 40.7128, longitude = -74.0060, timezoneOffset } = req.body;
+
+    // Validate required fields
+    if (year === undefined || month === undefined || day === undefined) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: year, month, and day are required' 
+      });
     }
-    
-    // Calculate planetary positions
-    const astroChartData = await calculatePlanetaryPositions(birthData);
-    
-    // Log the raw data from calculations
-    console.log('Raw astroChartData from calculations:', JSON.stringify({
-      planets: astroChartData.planets && astroChartData.planets.length,
-      houses: astroChartData.houses && astroChartData.houses.length,
-      cusps: astroChartData.cusps,
-      ascendant: astroChartData.ascendant
-    }));
-    
-    // Create the response with the structure the frontend expects
-    const responseObject = {
-      // Include top-level cusps for direct access
-      cusps: astroChartData.cusps,
-      // Include the full astroChartData object
-      astroChartData: astroChartData,
-      // Include planets at the top level for compatibility with existing code
-      planets: astroChartData.planets,
-      // Include houses at the top level for compatibility with existing code
-      houses: astroChartData.houses,
-      // Include other fields at the top level for compatibility
-      ascendant: astroChartData.ascendant,
-      latitude: astroChartData.latitude,
-      longitude: astroChartData.longitude,
-      birthDate: astroChartData.birthDate,
-      birthTime: astroChartData.birthTime
+
+    console.log('Raw request body:', req.body);
+    // Validate required fields
+    if (!req.body.year || !req.body.month || !req.body.day || !req.body.hour || !req.body.minute || !req.body.latitude || !req.body.longitude) {
+      return res.status(400).json({ error: 'Missing required birth data fields.' });
+    }
+
+    console.log('Parsed birth data fields:', { year: req.body.year, month: req.body.month, day: req.body.day, hour: req.body.hour, minute: req.body.minute, latitude: req.body.latitude, longitude: req.body.longitude, timezoneOffset: req.body.timezoneOffset });
+
+    // Create birth data object
+    const birthData = {
+      year: parseInt(year),
+      month: parseInt(month),
+      day: parseInt(day),
+      hour: parseInt(hour),
+      minute: parseInt(minute),
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      timezoneOffset: typeof timezoneOffset === 'number' ? parseInt(timezoneOffset) : undefined
     };
-    
-    // Log the response structure
-    console.log('API Response Keys:', Object.keys(responseObject));
-    console.log('API Response Cusps Present:', !!responseObject.cusps);
-    if (responseObject.cusps) {
-      console.log('API Response Cusps Sample:', responseObject.cusps.slice(0, 3) + '... (total: ' + responseObject.cusps.length + ')');
-    }
-    
-    // Send the response
-    res.status(200).json(responseObject);
+
+    // Calculate planetary positions with enhanced data
+    const chartData = await calculatePlanetaryPositions(birthData);
+
+    res.json(chartData);
+
   } catch (error) {
-    console.error('Error calculating positions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in astrology calculation:', error);
+    res.status(500).json({ 
+      error: 'Failed to calculate astrological positions',
+      details: error.message 
+    });
   }
 });
+
+
 
 // Unified astrology endpoint - serves both Dashboard and Players pages
 app.get(['/api/unified-astro/:date', '/api/unified-astro'], (req, res) => {
@@ -248,11 +241,37 @@ app.get(['/api/astro-enhanced/:date', '/api/astro-enhanced'], (req, res) => {
     const elements = calculateElements(positions);
     const modalities = calculateModalities(positions);
     
-    // Calculate houses (placeholder - would need real calculation in production)
-    const houses = {
+    // Calculate houses using astronomia
+    const jd = julian.Date.toJulian(targetDate);
+    const lat = 40.7128; // Default to NYC latitude
+    const lon = -74.0060; // Default to NYC longitude
+    
+    // Calculate sidereal time (in hours)
+    const st = sidereal.apparent(jd);
+    
+    // Calculate house cusps using Placidus system
+    const hsys = 'P'; // 'P' for Placidus, 'K' for Koch, etc.
+    const cusps = houses(jd, lat, lon, hsys);
+    
+    // Get the MC (Medium Coeli - 10th house cusp)
+    const mc = cusps[9]; // 10th house is at index 9 (0-based)
+    
+    // Calculate Ascendant (1st house cusp)
+    const asc = cusps[0];
+    
+    // Calculate IC (4th house cusp) and DC (7th house cusp)
+    const ic = (cusps[3] + 180) % 360; // Opposite of MC
+    const dc = (asc + 180) % 360; // Opposite of Ascendant
+    
+    const housesData = {
       system: 'placidus',
-      cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
-      angles: { asc: 0, mc: 270, dsc: 180, ic: 90 }
+      cusps: cusps.map(cusp => parseFloat(cusp.toFixed(6))),
+      angles: {
+        asc: parseFloat(asc.toFixed(6)),
+        mc: parseFloat(mc.toFixed(6)),
+        dsc: parseFloat(dc.toFixed(6)),
+        ic: parseFloat(ic.toFixed(6))
+      }
     };
     
     // Prepare planets object with expanded info
@@ -351,7 +370,7 @@ app.get(['/api/astro-enhanced/:date', '/api/astro-enhanced'], (req, res) => {
         retrograde: pos.speed < 0
       })),
       aspects,
-      houses,
+      houses: housesData,
       elements,
       modalities,
       planets: planetsExtended
@@ -604,6 +623,20 @@ app.get('/api/debug/planets', async (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+console.log('About to start API server on port:', port);
+const server = app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);
+  console.log('Server is now listening for requests');
 });
+
+// Add error handler
+server.on('error', (error) => {
+  console.error('Server error:', error);
+});
+
+// Keep the process alive
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+});
+
+console.log('Server setup complete');

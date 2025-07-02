@@ -69,6 +69,18 @@ const ZODIAC_SIGNS = [
   'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
+// Ayanamsa (precession correction) for sidereal zodiac
+// Using Lahiri ayanamsa which is approximately 24° in 2025
+const AYANAMSA = 24.0;
+
+// Flag to determine which zodiac system to use
+const USE_SIDEREAL = true;
+
+// Zodiac system notice
+const ZODIAC_SYSTEM_NOTICE = USE_SIDEREAL ? 
+  "Using Sidereal Zodiac (based on actual star positions)" : 
+  "Using Tropical Zodiac (based on seasons)";
+
 /**
  * Calculate planetary positions based on birth data
  * @param {Object} birthData - Birth data object
@@ -174,47 +186,71 @@ export async function calculatePlanetaryPositions(birthData) {
     switch(planet.name) {
       case 'Sun':
         // Sun position is primarily determined by the month (moves through zodiac over a year)
-        angle = ((birthData.month - 1) * 30 + birthData.day) % 360;
+        // The zodiac sign sequence is: Capricorn (Jan), Aquarius (Feb), Pisces (Mar), Aries (Apr), etc.
+        // So we need to offset by 270° to align with the correct zodiac signs
+        const rawSunAngle = ((birthData.month - 1) * 30 + birthData.day) % 360;
+        angle = (rawSunAngle + 270) % 360;
+        console.log(`[DEBUG] Sun position correction: raw=${rawSunAngle}°, corrected=${angle}°`);
         break;
       case 'Moon':
         // Moon moves ~13° per day, completes zodiac in 27.3 days
         // Make it significantly different from Sun
-        angle = ((birthData.day * 13 + birthData.hour * 0.5) + 120 + randomOffset) % 360;
+        const rawMoonAngle = ((birthData.day * 13 + birthData.hour * 0.5) + 120 + randomOffset) % 360;
+        angle = (rawMoonAngle + 270) % 360;
+        console.log(`[DEBUG] Moon position correction: raw=${rawMoonAngle}°, corrected=${angle}°`);
         break;
       case 'Mercury':
         // Mercury stays relatively close to Sun (never more than 28° away)
-        angle = (angle = ((birthData.month - 1) * 30 + birthData.day + 15 + (seed % 28))) % 360;
+        const rawMercuryAngle = ((birthData.month - 1) * 30 + birthData.day + 15 + (seed % 28)) % 360;
+        angle = (rawMercuryAngle + 270) % 360;
+        console.log(`[DEBUG] Mercury position correction: raw=${rawMercuryAngle}°, corrected=${angle}°`);
         break;
       case 'Venus':
         // Venus stays within 46° of Sun
-        angle = (((birthData.month - 1) * 30 + birthData.day) + (seed % 46) - 23) % 360;
+        const rawVenusAngle = (((birthData.month - 1) * 30 + birthData.day) + (seed % 46) - 23) % 360;
+        angle = (rawVenusAngle + 270) % 360;
+        console.log(`[DEBUG] Venus position correction: raw=${rawVenusAngle}°, corrected=${angle}°`);
         break;
       case 'Mars':
         // Mars in a different part of the zodiac
-        angle = (birthData.day * 2 + birthData.month * 20 + 73 + randomOffset) % 360;
+        const rawMarsAngle = (birthData.day * 2 + birthData.month * 20 + 73 + randomOffset) % 360;
+        angle = (rawMarsAngle + 270) % 360;
+        console.log(`[DEBUG] Mars position correction: raw=${rawMarsAngle}°, corrected=${angle}°`);
         break;
       case 'Jupiter':
         // Jupiter takes ~12 years to orbit
-        angle = ((birthData.year % 12) * 30 + birthData.month * 2.5 + 45) % 360;
+        const rawJupiterAngle = ((birthData.year % 12) * 30 + birthData.month * 2.5 + 45) % 360;
+        angle = (rawJupiterAngle + 270) % 360;
+        console.log(`[DEBUG] Jupiter position correction: raw=${rawJupiterAngle}°, corrected=${angle}°`);
         break;
       case 'Saturn':
         // Saturn takes ~29.5 years to orbit
-        angle = ((birthData.year % 30) * 12 + birthData.month + 190) % 360;
+        const rawSaturnAngle = ((birthData.year % 30) * 12 + birthData.month + 190) % 360;
+        angle = (rawSaturnAngle + 270) % 360;
+        console.log(`[DEBUG] Saturn position correction: raw=${rawSaturnAngle}°, corrected=${angle}°`);
         break;
       case 'Uranus':
         // Uranus takes 84 years to orbit
-        angle = ((birthData.year % 84) * 4.3 + 230 + (seed % 20)) % 360;
+        const rawUranusAngle = ((birthData.year % 84) * 4.3 + 230 + (seed % 20)) % 360;
+        angle = (rawUranusAngle + 270) % 360;
+        console.log(`[DEBUG] Uranus position correction: raw=${rawUranusAngle}°, corrected=${angle}°`);
         break;
       case 'Neptune':
         // Neptune takes 165 years to orbit
-        angle = ((birthData.year % 165) * 2.2 + 280 + (seed % 15)) % 360;
+        const rawNeptuneAngle = ((birthData.year % 165) * 2.2 + 280 + (seed % 15)) % 360;
+        angle = (rawNeptuneAngle + 270) % 360;
+        console.log(`[DEBUG] Neptune position correction: raw=${rawNeptuneAngle}°, corrected=${angle}°`);
         break;
       case 'Pluto':
         // Pluto takes 248 years to orbit
-        angle = ((birthData.year % 248) * 1.5 + 320 + (seed % 10)) % 360;
+        const rawPlutoAngle = ((birthData.year % 248) * 1.5 + 320 + (seed % 10)) % 360;
+        angle = (rawPlutoAngle + 270) % 360;
+        console.log(`[DEBUG] Pluto position correction: raw=${rawPlutoAngle}°, corrected=${angle}°`);
         break;
       default:
-        angle = ((seed * 7) % 360);
+        const rawDefaultAngle = ((seed * 7) % 360);
+        angle = (rawDefaultAngle + 270) % 360;
+        console.log(`[DEBUG] Default position correction: raw=${rawDefaultAngle}°, corrected=${angle}°`);
     }
     
     // Normalize angle to 0-360 range
@@ -280,7 +316,9 @@ export async function calculatePlanetaryPositions(birthData) {
     latitude: birthData.latitude,
     longitude: birthData.longitude,
     birthTime: `${birthData.hour}:${birthData.minute.toString().padStart(2, '0')}`,
-    birthDate: `${birthData.year}-${birthData.month.toString().padStart(2, '0')}-${birthData.day.toString().padStart(2, '0')}`
+    birthDate: `${birthData.year}-${birthData.month.toString().padStart(2, '0')}-${birthData.day.toString().padStart(2, '0')}`,
+    zodiacSystem: USE_SIDEREAL ? 'Sidereal' : 'Tropical',
+    zodiacSystemNotice: ZODIAC_SYSTEM_NOTICE
   };
   
   console.log('FINAL API RESPONSE STRUCTURE:', JSON.stringify(response, null, 2).substring(0, 500) + '...');
@@ -527,14 +565,15 @@ function getAspect(angle, tolerance = 8) {
  * @returns {string} Zodiac sign name
  */
 function getZodiacSign(longitude) {
-  const ZODIAC_SIGNS = [
-    'Aries', 'Taurus', 'Gemini', 'Cancer',
-    'Leo', 'Virgo', 'Libra', 'Scorpio',
-    'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-  ];
-  
   // Normalize longitude to 0-360 range
-  const normalizedLongitude = ((longitude % 360) + 360) % 360;
+  let normalizedLongitude = ((longitude % 360) + 360) % 360;
+  
+  // Apply sidereal correction (subtract ayanamsa)
+  if (USE_SIDEREAL) {
+    normalizedLongitude = ((normalizedLongitude - AYANAMSA) % 360 + 360) % 360;
+    console.log(`[DEBUG] Sidereal correction: tropical=${((longitude % 360) + 360) % 360}°, sidereal=${normalizedLongitude}°`);
+  }
+  
   const DEGREES_PER_SIGN = 30; // 360° / 12 signs = 30° per sign
   
   return ZODIAC_SIGNS[Math.floor(normalizedLongitude / DEGREES_PER_SIGN)];

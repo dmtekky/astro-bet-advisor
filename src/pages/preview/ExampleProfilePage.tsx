@@ -640,7 +640,7 @@ const ExampleProfilePage: React.FC = () => {
         <div className="mt-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Your Astrological Profile</h2>
-            <Badge variant="secondary">Demo Version</Badge>
+            <Badge variant="secondary">Sidereal Calculation</Badge>
           </div>
           
           {/* Birth data info */}
