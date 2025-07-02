@@ -1,5 +1,15 @@
 import express from 'express';
 import { calculatePlanetaryPositions } from './dist/astroCalculations.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get directory name in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import the unified-astro handler
+const unifiedAstroPath = path.join(__dirname, 'api', 'unified-astro.js');
+const unifiedAstroHandler = await import(unifiedAstroPath);
 
 // Process-level error handlers
 process.on('uncaughtException', (err, origin) => {
@@ -19,12 +29,34 @@ const port = 3001;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Add CORS headers
+// Configure CORS middleware
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    return res.status(200).json({});
+  }
   next();
+});
+
+// Add unified-astro endpoint
+app.get('/api/unified-astro', async (req, res) => {
+  console.log('Received request for /api/unified-astro, forwarding to handler');
+  try {
+    // Create a mock request object that matches what the handler expects
+    const mockReq = {
+      query: req.query,
+      headers: req.headers,
+      method: req.method
+    };
+    
+    // Call the unified-astro handler
+    await unifiedAstroHandler.default(mockReq, res);
+  } catch (error) {
+    console.error('Error in unified-astro endpoint:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
 });
 
 // Request logging middleware
