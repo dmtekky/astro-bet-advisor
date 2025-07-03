@@ -58,23 +58,28 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         const chartSize = Math.min(container.offsetWidth, container.offsetHeight);
         const chartSettings = {
           COLORS: {
-            background: 'transparent',
+            bkg: null,
+            text: '#f8fafc',      // Light gray for general text
+            accent: '#f59e0b',    // Brand orange
+            accentLight: '#fbbf24', // Lighter orange
+            grid: '#334155',      // Medium gray for grid lines
+            // Aspect colors - adjusted for cosmic orange and white theme
             aspects: {
               stroke: {
-                conjunction: '#FF0000',
-                opposition: '#0000FF',
-                trine: '#00FF00',
-                square: '#FF9900',
-                sextile: '#00FFFF',
+                conjunction: '#f59e0b', // Orange
+                opposition: '#fbbf24', // Lighter Orange
+                trine: '#f8fafc',      // White
+                square: '#94a3b8',     // Gray
+                sextile: '#60a5fa',    // Blue for contrast, or another shade of orange/white
               }
             },
           },
           ASPECTS: {
-            conjunction: { degree: 0, orbit: 8, display: true, color: '#FF0000' },
-            opposition: { degree: 180, orbit: 8, display: true, color: '#0000FF' },
-            trine: { degree: 120, orbit: 8, display: true, color: '#00FF00' },
-            square: { degree: 90, orbit: 8, display: true, color: '#FF9900' },
-            sextile: { degree: 60, orbit: 6, display: true, color: '#00FFFF' }
+            conjunction: { degree: 0, orbit: 8, display: true, color: '#f59e0b' }, // Orange
+            opposition: { degree: 180, orbit: 8, display: true, color: '#fbbf24' }, // Lighter Orange
+            trine: { degree: 120, orbit: 8, display: true, color: '#f8fafc' },      // White
+            square: { degree: 90, orbit: 8, display: true, color: '#94a3b8' },     // Gray
+            sextile: { degree: 60, orbit: 6, display: true, color: '#60a5fa' }    // Blue for contrast
           },
           SHOW_ASPECTS: true,
           SHOW_POINTS: true,
@@ -133,74 +138,36 @@ export const NatalChart: React.FC<NatalChartProps> = ({
   }
 
   return (
-    <div className="natal-chart-container relative p-4 rounded-lg overflow-hidden">
-      <div 
-        style={{
-          background: 'radial-gradient(circle at center, #0c1445 0%, #05071f 100%)',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: -1
-        }}
-      />
-      
-      {/* Starry background effect */}
-      <div className="absolute inset-0 z-0">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div 
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3}px`,
-              height: `${Math.random() * 3}px`,
-              opacity: Math.random() * 0.7 + 0.3,
-              animation: `twinkle ${Math.random() * 5 + 3}s infinite ease-in-out`
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-4 h-4 text-slate-400 hover:text-white cursor-pointer" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs bg-slate-800 border-slate-700 text-white">
-              <p>This is your natal chart showing the positions of planets at your birth time. The chart displays planetary aspects and their relationships.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <Button 
-          variant="outline" 
-          onClick={onDownload}
-          disabled={isDownloading}
-          className="text-white bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600"
-        >
-          {isDownloading ? 'Downloading...' : 'Download'}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={onShare}
-          disabled={isDownloading}
-          className="text-white bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600"
-        >
-          Share
-        </Button>
-      </div>
-
+    <div className="flex flex-col items-center w-full">
       <div 
         ref={containerRef} 
-        className="relative z-10 aspect-square"
+        className="relative z-10 aspect-square w-full"
         style={{ minHeight: '300px' }}
       />
       
-      <div className="mt-4 text-center text-sm text-slate-300">
-        <p>Natal Chart - {astroData.location || 'Unknown Location'}</p>
+      {/* Download/Share Buttons */}
+      <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-slate-700/50 w-full">
+        <button 
+          onClick={onDownload}
+          disabled={isDownloading}
+          className="px-4 py-2 text-sm flex items-center gap-2 text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {isDownloading ? 'Downloading...' : 'Download'}
+        </button>
+        {onShare && (
+          <button 
+            onClick={onShare}
+            className="px-4 py-2 text-sm flex items-center gap-2 text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
+        )}
       </div>
     </div>
   );

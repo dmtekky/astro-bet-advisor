@@ -874,3 +874,19 @@ While the database tables store raw, normalized data, the frontend application (
 ## License
 
 This project is licensed under the MIT License - see the `LICENSE` file for details (if one exists).
+
+## Natal Chart Styling
+
+This section documents the CSS rules applied to the natal chart for responsive scaling and visual styling, using a cosmic orange and white theme.
+
+### Responsive Scaling
+- Rule: `#natal-chart-astro svg { width: 100%; height: auto; display: block; }`
+  - Ensures the SVG scales responsively with the container size, adapting to different screen widths without distortion.
+
+### Outer Circle Coloring
+- Rules:
+  - `#natal-chart-astro-astrology-radix-signs path:nth-child(odd) { fill: #f59e0b; /* Cosmic Orange */ }`
+  - `#natal-chart-astro-astrology-radix-signs path:nth-child(even) { fill: #f8fafc; /* White */ }`
+  - Alternates fill colors for the zodiac sign segments to create a visually appealing, thematic design.
+
+These styles are defined in `src/index.css` and can be adjusted for further customization.

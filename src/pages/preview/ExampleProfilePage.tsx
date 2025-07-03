@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { generateInterpretations, KeyPlacementInterpretation } from '@/components/astrology/utils/interpretationsGenerator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -113,7 +114,7 @@ const ExampleProfilePage: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showAddSports, setShowAddSports] = useState(false);
-  const [interpretations, setInterpretations] = useState<Record<string, Record<string, string>>>({ sun: {}, moon: {}, rising: {}, aspects: {} });
+  const [interpretations, setInterpretations] = useState<KeyPlacementInterpretation>({});
   const [interpretationsLoading, setInterpretationsLoading] = useState(true);
   
   // Default user data when no Supabase data is available
@@ -222,30 +223,17 @@ const ExampleProfilePage: React.FC = () => {
     fetchSpecificUser();
   }, [fetchSpecificUser]);
   
-  // Fetch interpretations from Supabase
+  // Generate interpretations dynamically
   useEffect(() => {
-    const fetchInterpretations = async () => {
+    if (userData?.planetary_data) {
       setInterpretationsLoading(true);
-      const { data, error } = await supabase.from('interpretations').select('type, key, text');
-      if (error) {
-        console.error('Error fetching interpretations:', error);
-        return;
-      }
-
-      const formattedInterpretations = data.reduce((acc: Record<string, Record<string, string>>, item) => {
-        if (!acc[item.type]) {
-          acc[item.type] = {};
-        }
-        acc[item.type][item.key] = item.text;
-        return acc;
-      }, {});
-
-      setInterpretations(formattedInterpretations);
+      const generated = generateInterpretations(userData.planetary_data);
+      setInterpretations(generated);
       setInterpretationsLoading(false);
-    };
-
-    fetchInterpretations();
-  }, []);
+    } else {
+      setInterpretations({}); // Clear interpretations if no planetary data
+    }
+  }, [userData?.planetary_data]);
   
   const availableSports = SPORTS.filter(sport => !selectedSports.includes(sport.id));
   const selectedSportData = SPORTS.filter(sport => selectedSports.includes(sport.id));
@@ -322,6 +310,11 @@ const ExampleProfilePage: React.FC = () => {
   };
 
   const majorSigns = getMajorSigns(user?.planetary_data);
+
+  console.log('user.planetary_data:', user.planetary_data);
+  console.log('interpretationsLoading:', interpretationsLoading);
+  console.log('interpretations:', interpretations);
+  console.log('majorSigns:', majorSigns);
 
   const signDetails = {
     sun: {
@@ -505,151 +498,55 @@ const ExampleProfilePage: React.FC = () => {
           </div>
         </div>
         
-        {/* Main Content */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Left Column - Personal Info */}
-          <div className="space-y-6">
-            {/* Account Overview */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Account Overview</CardTitle>
-                <CardDescription className="text-slate-500">Your personal and subscription details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium text-slate-700">Account Type</Label>
-                    <p className="text-sm text-slate-900">{user.accountType}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-slate-700">Member Since</Label>
-                    <p className="text-sm text-slate-900">{user.memberSince}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-slate-700">Last Login</Label>
-                    <p className="text-sm text-slate-900">{user.lastLogin}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t border-slate-100 px-6 py-4">
-                <Button variant="outline">Manage Subscription</Button>
-                <Button>Upgrade</Button>
-              </CardFooter>
-            </Card>
 
-            {/* Preferences */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Preferences</CardTitle>
-                <CardDescription className="text-slate-500">Customize your experience</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="theme-mode" className="text-sm font-medium text-slate-700">
-                      Dark Mode
-                    </Label>
-                    <Switch id="theme-mode" />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-slate-700 mb-2">Timezone</Label>
-                    <Select>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
-                        <SelectItem value="cst">Central Standard Time (CST)</SelectItem>
-                        <SelectItem value="mst">Mountain Standard Time (MST)</SelectItem>
-                        <SelectItem value="pst">Pacific Standard Time (PST)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Middle Column - Stats */}
-          <div className="space-y-6">
-            {/* Stats Overview */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Stats Overview</CardTitle>
-                <CardDescription className="text-slate-500">Your activity statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-purple-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-purple-700">{user.stats.followers}</p>
-                    <p className="text-sm text-purple-600">Followers</p>
-                  </div>
-                  <div className="bg-amber-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-amber-700">{user.stats.following}</p>
-                    <p className="text-sm text-amber-600">Following</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Right Column - Security and More */}
-          <div className="space-y-6">
-            {/* Recent Activity */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Recent Activity</CardTitle>
-                <CardDescription className="text-slate-500">Your latest actions and events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="bg-green-100 p-2 rounded-full mr-3">
-                      <Check className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Prediction submitted</p>
-                      <p className="text-xs text-slate-500">Lakers vs Celtics - 2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="bg-blue-100 p-2 rounded-full mr-3">
-                      <ChevronsUpDown className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Updated profile</p>
-                      <p className="text-xs text-slate-500">Added favorite sports - Yesterday</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="bg-amber-100 p-2 rounded-full mr-3">
-                      <Check className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Prediction won</p>
-                      <p className="text-xs text-slate-500">Yankees vs Red Sox - 2 days ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
         
         {/* Astrological Charts Section */}
         <div className="mt-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Your Astrological Profile</h2>
-            <Badge variant="secondary">Demo Version</Badge>
+            <Badge 
+              variant="outline" 
+              className="
+                relative overflow-hidden
+                border-amber-600 bg-amber-600/90 
+                text-white hover:text-white/95
+                font-medium tracking-wide
+                px-3 sm:px-4 py-1.5 rounded-full
+                shadow-lg shadow-amber-600/30
+                hover:shadow-amber-600/40 hover:bg-amber-600
+                transition-all duration-300
+                group
+                backdrop-blur-sm
+                border-2 border-amber-500/50
+              "
+            >
+              <span className="relative z-10 flex items-center gap-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75 group-hover:opacity-100"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                </span>
+                <span className="drop-shadow-sm text-xs sm:text-sm font-semibold">Sidereal (Lahiri Ayanamsa)</span>
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-amber-400/30 via-amber-300/40 to-amber-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+            </Badge>
           </div>
           
           {/* Birth data info */}
           <div className="bg-gradient-to-b from-slate-900 to-indigo-900 rounded-lg shadow-xl p-6 mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-              <div className="text-sm text-slate-300">
-                <p><strong>Birth Data:</strong> {user.birthData ? `${user.birthData.birthDate} at ${user.birthData.birthTime || '12:01'} in ${user.birthData.birthCity}` : 'Not provided'}</p>
+              <div className="text-sm sm:text-base text-white font-medium">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-bold text-base sm:text-lg bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">Birth Data</span>
+                </div>
+                <p>{user.birthData ? `${user.birthData.birthDate} at ${user.birthData.birthTime || '12:01'} in ${user.birthData.birthCity}` : 'Not provided'}</p>
                 {user.birthData?.birthLatitude && user.birthData?.birthLongitude && (
-                  <p className="text-xs opacity-75 mt-1">
+                  <p className="text-sm opacity-90 mt-1 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-cyan-300" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
                     Coordinates: {user.birthData.birthLatitude.toFixed(4)}°N, {Math.abs(user.birthData.birthLongitude).toFixed(4)}°W
                   </p>
                 )}
@@ -744,29 +641,29 @@ const ExampleProfilePage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {majorSigns.sun && interpretations.sun?.[majorSigns.sun] && (
+                {majorSigns.sun && interpretations.sun?.description && (
                   <SignInterpretation
                     placement="Sun"
                     sign={majorSigns.sun}
-                    interpretation={interpretations.sun[majorSigns.sun]}
+                    interpretation={interpretations.sun.description}
                     icon={signDetails.sun.icon}
                     colorClass={signDetails.sun.colorClass}
                   />
                 )}
-                {majorSigns.moon && interpretations.moon?.[majorSigns.moon] && (
+                {majorSigns.moon && interpretations.moon?.description && (
                   <SignInterpretation
                     placement="Moon"
                     sign={majorSigns.moon}
-                    interpretation={interpretations.moon[majorSigns.moon]}
+                    interpretation={interpretations.moon.description}
                     icon={signDetails.moon.icon}
                     colorClass={signDetails.moon.colorClass}
                   />
                 )}
-                {majorSigns.rising && interpretations.rising?.[majorSigns.rising] && (
+                {majorSigns.rising && interpretations.rising?.description && (
                   <SignInterpretation
                     placement="Rising"
                     sign={majorSigns.rising}
-                    interpretation={interpretations.rising[majorSigns.rising]}
+                    interpretation={interpretations.rising.description}
                     icon={signDetails.rising.icon}
                     colorClass={signDetails.rising.colorClass}
                   />

@@ -48,6 +48,82 @@
     opacity: 1;
 }
 
+/* Natal Chart Specific Styles */
+.chart-title {
+  color: #f8fafc;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.chart-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: #f59e0b;
+  border-radius: 3px;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Responsive SVG for Natal Chart */
+#natal-chart-astro svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Prevent oversizing and improve scaling for text and icons */
+#natal-chart-astro text {
+  font-size: clamp(10px, 2vw, 14px); /* Scales text responsively, caps at 14px to avoid oversizing */
+  fill: #f8fafc; /* Ensure text is white for dark background contrast */
+}
+#natal-chart-astro path, #natal-chart-astro circle {
+  transition: all 0.3s ease; /* Smooth transitions for interactive feel */
+}
+
+/* Styling for outer circles (zodiac signs) with all sections orange and black icons */
+#natal-chart-astro-astrology-radix-signs path {
+  fill: #f59e0b; /* Cosmic Orange for all sections */
+  stroke: #1e293b; /* Dark stroke for definition */
+  stroke-width: 1;
+  transition: all 0.3s ease;
+}
+
+/* Make all icons in the outer ring black */
+#natal-chart-astro text {
+  fill: #000000; /* Black text for better contrast on orange */
+  font-size: clamp(10px, 2vw, 14px);
+  font-weight: 600; /* Make text bolder for better visibility */
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.7); /* Subtle white shadow for better readability */
+}
+
+/* General chart enhancements for dark background and aesthetics */
+#natal-chart-astro {
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); /* Darker cosmic gradient for depth */
+  border-radius: 8px; /* Soft rounding for modern look */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Subtle shadow for elevation */
+}
+
+/* Icon and element sizing cap */
+#natal-chart-astro g > * { /* Target groups to cap scaling of icons or other elements */
+  transform-origin: center;
+  transform: scale(1); /* Reset any unintended scaling, can be adjusted if needed */
+}
+
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased;

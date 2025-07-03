@@ -33,7 +33,10 @@
     "outDir": "./dist"
   },
   "include": [
-    "src/lib/astroCalculations.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
     "api.js"
   ],
   "exclude": ["node_modules"]

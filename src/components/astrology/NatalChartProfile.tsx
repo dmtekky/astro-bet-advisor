@@ -212,6 +212,36 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
 
   return (
     <div className={`p-4 max-w-4xl mx-auto space-y-8 ${className}`}>
+      <div 
+        style={{
+          background: 'radial-gradient(circle at center, #0f172a 0%, #1e293b 100%)',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: -1
+        }}
+      />
+      
+      {/* Starry background effect - cosmic orange and white */}
+      <div className="absolute inset-0 z-0">
+        {Array.from({ length: 70 }).map((_, i) => (
+          <div 
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 2 + 1}px`,
+              height: `${Math.random() * 2 + 1}px`,
+              backgroundColor: i % 2 === 0 ? '#f8fafc' : '#fbbf24', // White and light orange stars
+              opacity: Math.random() * 0.8 + 0.2,
+              animation: `twinkle ${Math.random() * 4 + 2}s infinite ease-in-out alternate`
+            }}
+          />
+        ))}
+      </div>
       {/* Charts container */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -220,7 +250,10 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         className="grid grid-cols-1 gap-8 w-full"
       >
         {/* Natal Chart */}
-        <div className="w-full max-w-3xl mx-auto natal-chart-container">
+        <div className="w-full max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
+            Natal Chart
+          </h2>
           <NatalChart 
             astroData={natalChartData}
             isLoading={isLoading}
@@ -232,7 +265,7 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         </div>
 
         {/* Planetary Count Chart */}
-        <div className="w-full max-w-3xl mx-auto planetary-count-container">
+        <div className="w-full max-w-3xl mx-auto">
           <PlanetaryCountChart 
             planetCounts={planetaryCounts || null}
             planetsPerSign={planetsPerSign || null}
