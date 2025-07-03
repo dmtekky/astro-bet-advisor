@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "es2020",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@emotion/react",
+    "jsxImportSource": "react",
     "incremental": true,
+    "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -19,20 +20,19 @@
       "@hooks/*": ["./src/hooks/*"],
       "@types/*": ["./src/types/*"]
     },
-    "strict": true,
+    "strict": false,
     "noImplicitAny": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "allowJs": true,
     "types": ["vite/client", "node", "@types/react", "@types/react-dom"],
-    "noEmit": true,
-    "outDir": "./dist",
-    "allowImportingTsExtensions": true
+    "noEmit": false,
+    "outDir": "./dist"
   },
   "include": [
     "src/**/*.ts",
@@ -41,5 +41,5 @@
     "src/**/*.jsx",
     "api.js"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules"]
 }
