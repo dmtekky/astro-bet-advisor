@@ -50,8 +50,8 @@ export const fetchPlayersByTeam = async (team_id: string): Promise<Player[]> => 
     console.log(`[PLAYER FETCH] Found team: ${teamData.name} (${teamData.abbreviation}), external_id: ${externalId}`);
 
     // Try multiple approaches to find players for this team
-    let players = [];
-    let playersError = null;
+    const players = [];
+    const playersError = null;
     
     // 1. Try idteam as string
     const { data: playersByIdTeamString, error: idTeamStringError } = await supabase

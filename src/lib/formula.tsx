@@ -189,7 +189,7 @@ export const DEFAULT_ASTROLOGICAL_WEIGHTS: AstrologicalWeights = {
   sun_jupiter_aspect: 0.015    // Lowered
 };
 
-export let currentAstrologicalWeights: AstrologicalWeights = { ...DEFAULT_ASTROLOGICAL_WEIGHTS };
+export const currentAstrologicalWeights: AstrologicalWeights = { ...DEFAULT_ASTROLOGICAL_WEIGHTS };
 
 // Validate that weights sum to 1.0 and normalize if needed
 export const validateWeights = (): void => {

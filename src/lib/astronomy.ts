@@ -59,7 +59,7 @@ export function getLunarNodes(date: Date = new Date()): {north: string, south: s
   const degreesMoved = (daysSinceReference * degreesPerDay) % 360;
   
   // Calculate current North Node longitude
-  let nodeLongitude = (REFERENCE_NODE_LONGITUDE - degreesMoved + 360) % 360;
+  const nodeLongitude = (REFERENCE_NODE_LONGITUDE - degreesMoved + 360) % 360;
   
   // The South Node is always 180° opposite the North Node
   const southNodeLongitude = (nodeLongitude + 180) % 360;

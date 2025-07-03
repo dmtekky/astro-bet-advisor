@@ -109,6 +109,18 @@ export interface MoonPhaseInfo {
   phaseType: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
 }
 
+// Planet data structure as received from the backend
+export interface PlanetData {
+  name: string;
+  longitude: number;
+  sign: string;
+  house?: number;
+  retrograde?: boolean;
+  speed?: number;
+  degree?: number;
+  [key: string]: any; // Allow additional properties
+}
+
 export interface AstroData {
   // Calculation metadata
   date: string;

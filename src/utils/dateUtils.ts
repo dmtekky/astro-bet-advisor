@@ -41,7 +41,7 @@ const parseSupabaseDate = (dateString: string | undefined | null): Date => {
   }
   // Replace space with 'T' and ensure timezone is correctly formatted for ISO parsing
   // Handles 'YYYY-MM-DD HH:MM:SS+ZZ' and 'YYYY-MM-DD HH:MM:SSZ'
-  let normalizedDateString = dateString.replace(' ', 'T');
+  const normalizedDateString = dateString.replace(' ', 'T');
   // If it ends with +ZZ (e.g., +00), ensure it's +ZZ:00 for broader compatibility if needed, though parseISO should handle +00
   // For simplicity, we assume the +ZZ or Z is sufficient for parseISO or new Date()
   // If it's already ISO (contains 'T' and 'Z' or +/- offset), new Date() should handle it.

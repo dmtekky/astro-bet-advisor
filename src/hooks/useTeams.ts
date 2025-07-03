@@ -58,7 +58,7 @@ export function useTeams(leagueKey?: string) {
           .eq('key', leagueKey);
 
         let leagueData = null;
-        let leagueError = leagueFetchError;
+        const leagueError = leagueFetchError;
 
         if (!leagueError && leagueDataArray) {
           if (leagueDataArray.length > 1) {

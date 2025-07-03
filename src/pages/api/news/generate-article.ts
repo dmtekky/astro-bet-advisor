@@ -239,9 +239,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // to your internal Supabase team UUIDs.
       // For example, if newsItem.teams contains [{id: 'SR_TEAM_ID_HOME', role: 'home'}, ...],
       // you'd need a mapping or another query to get your Supabase team UUIDs.
-      let homeTeamInternalId: string | null = null; // Placeholder
-      let awayTeamInternalId: string | null = null; // Placeholder
-      let gameIdFromNews: string | number | null = newsItem.game_id || null; // Placeholder
+      const homeTeamInternalId: string | null = null; // Placeholder
+      const awayTeamInternalId: string | null = null; // Placeholder
+      const gameIdFromNews: string | number | null = newsItem.game_id || null; // Placeholder
 
       // Example: If newsItem has references to teams involved
       // if (newsItem.references && Array.isArray(newsItem.references)) {

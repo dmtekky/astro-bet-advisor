@@ -200,7 +200,7 @@ export async function calculateAstrologicalInfluence(
     }
 
     // Calculate base score based on astrological factors
-    let rawScore = calculateBaseScore({
+    const rawScore = calculateBaseScore({
       planetaryPositions,
       aspects,
       elements,
@@ -209,7 +209,7 @@ export async function calculateAstrologicalInfluence(
     });
 
     // Normalize to 0–100, round, and bound
-    let score = Math.round(Math.max(0, Math.min(100, (rawScore / 60) * 100))); // Adjust denominator as needed for typical rawScore range
+    const score = Math.round(Math.max(0, Math.min(100, (rawScore / 60) * 100))); // Adjust denominator as needed for typical rawScore range
 
     // No fallback logic for valid birth dates - scores can be 0
 

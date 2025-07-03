@@ -85,7 +85,7 @@ const PlayerPage: React.FC = () => {
         return null;
       }
       // 1. Fetch all stats where first and last name match
-      let { data: statsRows, error } = await supabase
+      const { data: statsRows, error } = await supabase
         .from('baseball_stats')
         .select('*')
         .eq('first_name', playerData.first_name)

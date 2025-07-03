@@ -1,0 +1,1122 @@
+{
+  "sun": {
+    "Aries": {
+      "title": "Sun in Aries",
+      "description": "The Sun in Aries suggests a bold, energetic personality with a pioneering spirit. You are direct, courageous, and possess natural leadership qualities. Your approach to life is enthusiastic and action-oriented, often being the first to initiate projects or take on challenges.",
+      "keyThemes": ["Leadership", "Initiative", "Courage", "Independence"],
+      "strengths": ["Directness", "Enthusiasm", "Pioneering spirit", "Confidence"],
+      "challenges": ["Impulsiveness", "Aggressiveness", "Impatience"]
+    },
+    "Taurus": {
+      "title": "Sun in Taurus",
+      "description": "Sun in Taurus indicates stability and practicality in your core identity. You approach life with patience, persistence, and a strong connection to the material world. Your steady nature and appreciation for beauty and comfort make you reliable and grounded in your pursuits.",
+      "keyThemes": ["Persistence", "Sensuality", "Stability", "Resourcefulness"],
+      "strengths": ["Loyalty", "Reliability", "Determination", "Practicality"],
+      "challenges": ["Stubbornness", "Resistance to change", "Possessiveness"]
+    },
+    "Capricorn": {
+      "title": "Sun in Capricorn",
+      "description": "Sun in Capricorn endows you with ambition, discipline, and a methodical approach to achieving your goals. You are practical, responsible, and have a natural talent for organization and management. Your serious demeanor masks a determined spirit that steadily climbs toward success through hard work and perseverance.",
+      "keyThemes": ["Ambition", "Discipline", "Responsibility", "Structure"],
+      "strengths": ["Reliability", "Patience", "Practicality", "Self-control"],
+      "challenges": ["Rigidity", "Pessimism", "Workaholic tendencies"]
+    },
+    "Cancer": {
+      "title": "Sun in Cancer",
+      "description": "With the Sun in Cancer, your core identity is deeply connected to your emotions, home, and family. You are nurturing, sensitive, and possess a strong protective instinct for those you care about. Your emotional security is paramount, and you often seek comfort and familiarity in your surroundings.",
+      "keyThemes": ["Nurturing", "Emotional Security", "Home", "Family"],
+      "strengths": ["Empathy", "Intuition", "Protective", "Loyalty"],
+      "challenges": ["Moodiness", "Clinginess", "Over-sensitivity"]
+    },
+    "Leo": {
+      "title": "Sun in Leo",
+      "description": "Sun in Leo makes you a natural leader, radiating warmth, confidence, and a desire to shine. Your identity is tied to self-expression, creativity, and being at the center of attention. You are generous, enthusiastic, and possess a strong sense of pride in your accomplishments and those you love.",
+      "keyThemes": ["Leadership", "Creativity", "Self-expression", "Generosity"],
+      "strengths": ["Confidence", "Charisma", "Loyalty", "Courage"],
+      "challenges": ["Ego-centricity", "Stubbornness", "Need for admiration"]
+    },
+    "Virgo": {
+      "title": "Sun in Virgo",
+      "description": "With the Sun in Virgo, your core identity is characterized by practicality, analytical thinking, and a strong desire to be of service. You are meticulous, detail-oriented, and thrive on order and efficiency. Your innate desire to improve things often leads you to roles where you can apply your keen observational skills and problem-solving abilities.",
+      "keyThemes": ["Service", "Analysis", "Practicality", "Perfectionism"],
+      "strengths": ["Diligence", "Organization", "Modesty", "Helpfulness"],
+      "challenges": ["Over-critical", "Worry", "Self-doubt"]
+    },
+    "Libra": {
+      "title": "Sun in Libra",
+      "description": "Sun in Libra emphasizes balance, harmony, and a strong desire for partnership. Your core identity is often expressed through diplomacy, fairness, and a need for aesthetic beauty. You are social, charming, and strive to create equilibrium in all your relationships and surroundings.",
+      "keyThemes": ["Balance", "Harmony", "Partnership", "Justice"],
+      "strengths": ["Diplomacy", "Charm", "Fairness", "Sociability"],
+      "challenges": ["Indecisiveness", "People-pleasing", "Superficiality"]
+    },
+    "Scorpio": {
+      "title": "Sun in Scorpio",
+      "description": "With the Sun in Scorpio, your core identity is marked by intensity, passion, and a profound desire for depth and transformation. You are perceptive, resourceful, and possess a powerful will. Your approach to life is often secretive and strategic, driven by a need to uncover hidden truths and experience life on a profound level.",
+      "keyThemes": ["Intensity", "Transformation", "Passion", "Resourcefulness"],
+      "strengths": ["Perceptiveness", "Determination", "Loyalty", "Resilience"],
+      "challenges": ["Jealousy", "Secretiveness", "Controlling tendencies"]
+    },
+    "Sagittarius": {
+      "title": "Sun in Sagittarius",
+      "description": "Sun in Sagittarius embodies a spirit of adventure, optimism, and a quest for truth and knowledge. Your core identity is characterized by a love for freedom, exploration, and philosophical inquiry. You are enthusiastic, open-minded, and always seeking to expand your horizons, whether through travel, education, or spiritual pursuits.",
+      "keyThemes": ["Adventure", "Freedom", "Optimism", "Knowledge"],
+      "strengths": ["Enthusiasm", "Honesty", "Generosity", "Philosophical"],
+      "challenges": ["Restlessness", "Tactlessness", "Over-optimism"]
+    },
+    "Aquarius": {
+      "title": "Sun in Aquarius",
+      "description": "With the Sun in Aquarius, your core identity is defined by innovation, independence, and a humanitarian spirit. You are forward-thinking, intellectual, and often drawn to unconventional ideas and social causes. Your approach to life is objective and detached, valuing logic and universal principles over personal emotions.",
+      "keyThemes": ["Innovation", "Independence", "Humanitarianism", "Objectivity"],
+      "strengths": ["Intellectual", "Progressive", "Original", "Fair-minded"],
+      "challenges": ["Detachment", "Rebelliousness", "Eccentricity"]
+    },
+    "Pisces": {
+      "title": "Sun in Pisces",
+      "description": "Sun in Pisces signifies a compassionate, intuitive, and artistic core identity. You are highly sensitive, empathetic, and often possess a rich inner world of dreams and imagination. Your approach to life is often fluid and adaptable, driven by a desire for spiritual connection and a deep understanding of human emotions.",
+      "keyThemes": ["Compassion", "Intuition", "Artistry", "Spirituality"],
+      "strengths": ["Empathy", "Imagination", "Adaptability", "Selflessness"],
+      "challenges": ["Escapism", "Martyrdom", "Boundary issues"]
+    }
+  },
+  "moon": {
+    "Aries": {
+      "title": "Moon in Aries",
+      "description": "Moon in Aries brings emotional impulsiveness and quick reactions to your emotional nature. Your feelings are direct, passionate, and often expressed without hesitation. You need emotional freedom and independence, and may become restless when your emotions are constrained.",
+      "keyThemes": ["Independence", "Passion", "Spontaneity", "Courage"],
+      "strengths": ["Resilient", "Dynamic", "Honest expression", "Enthusiasm"],
+      "challenges": ["Mood Swings", "Impatience", "Emotional impulsiveness"]
+    },
+    "Gemini": {
+      "title": "Moon in Gemini",
+      "description": "Moon in Gemini creates an emotionally versatile and intellectually curious nature. Your feelings are expressed through communication, and you process emotions through analysis and conversation. You need mental stimulation and variety in your emotional life, often seeking new experiences and information to feel emotionally fulfilled.",
+      "keyThemes": ["Adaptability", "Curiosity", "Communication", "Duality"],
+      "strengths": ["Intellectual processing of emotions", "Versatility", "Social connection", "Quick thinking"],
+      "challenges": ["Emotional restlessness", "Overthinking", "Difficulty with deep emotional commitment"]
+    },
+    "Cancer": {
+      "title": "Moon in Cancer",
+      "description": "Moon in Cancer signifies a deeply emotional and nurturing inner world. Your feelings are closely tied to your sense of security, home, and family. You are highly sensitive, empathetic, and instinctively protective of those you love. Emotional comfort and familiarity are crucial for your well-being.",
+      "keyThemes": ["Nurturing", "Emotional Security", "Empathy", "Home"],
+      "strengths": ["Intuitive", "Caring", "Supportive", "Loyal"],
+      "challenges": ["Moodiness", "Clinginess", "Over-sensitivity", "Fear of change"]
+    },
+    "Leo": {
+      "title": "Moon in Leo",
+      "description": "Moon in Leo brings a dramatic, warm, and expressive emotional nature. You need to feel appreciated and admired, and you express your feelings with flair and confidence. Your emotional well-being is tied to your ability to be creative, playful, and to shine in your personal life.",
+      "keyThemes": ["Self-expression", "Creativity", "Warmth", "Pride"],
+      "strengths": ["Generosity", "Loyalty", "Enthusiasm", "Playfulness"],
+      "challenges": ["Need for attention", "Ego-driven emotions", "Dramatic outbursts"]
+    },
+    "Virgo": {
+      "title": "Moon in Virgo",
+      "description": "Moon in Virgo indicates an emotional nature that is practical, analytical, and service-oriented. You process your feelings by dissecting them and seeking logical solutions. Your emotional security comes from feeling useful and organized, and you often express care through acts of service and helpfulness.",
+      "keyThemes": ["Practicality", "Analysis", "Service", "Order"],
+      "strengths": ["Diligence", "Helpfulness", "Modesty", "Attention to detail"],
+      "challenges": ["Over-critical of self/others", "Worry", "Perfectionism", "Emotional restraint"]
+    },
+    "Libra": {
+      "title": "Moon in Libra",
+      "description": "Moon in Libra signifies an emotional need for harmony, balance, and partnership. Your feelings are often influenced by your relationships, and you seek emotional equilibrium through fair and diplomatic interactions. You are uncomfortable with conflict and strive to create a peaceful emotional environment.",
+      "keyThemes": ["Harmony", "Balance", "Partnership", "Fairness"],
+      "strengths": ["Diplomacy", "Graciousness", "Sociability", "Aesthetic appreciation"],
+      "challenges": ["Indecisiveness", "People-pleasing", "Dependency on others for emotional validation"]
+    },
+    "Scorpio": {
+      "title": "Moon in Scorpio",
+      "description": "Moon in Scorpio reveals an intense, passionate, and deeply private emotional nature. Your feelings run deep, and you experience emotions with profound intensity. You are highly perceptive and possess a strong need for emotional security and control. Your emotional world is complex and often hidden from others.",
+      "keyThemes": ["Intensity", "Depth", "Privacy", "Transformation"],
+      "strengths": ["Resilience", "Perceptiveness", "Loyalty", "Emotional strength"],
+      "challenges": ["Jealousy", "Secretiveness", "Possessiveness", "Emotional manipulation"]
+    },
+    "Sagittarius": {
+      "title": "Moon in Sagittarius",
+      "description": "Moon in Sagittarius indicates an emotional need for freedom, adventure, and expansive experiences. Your feelings are optimistic, enthusiastic, and you seek emotional fulfillment through exploration, learning, and philosophical pursuits. You are restless and thrive on new horizons, both intellectually and emotionally.",
+      "keyThemes": ["Freedom", "Adventure", "Optimism", "Exploration"],
+      "strengths": ["Enthusiasm", "Honesty", "Independence", "Generosity"],
+      "challenges": ["Restlessness", "Tactlessness", "Emotional detachment", "Impulsiveness"]
+    },
+    "Aquarius": {
+      "title": "Moon in Aquarius",
+      "description": "Moon in Aquarius signifies an emotional nature that is objective, independent, and focused on collective well-being. Your feelings are often processed intellectually, and you seek emotional security through shared ideals and humanitarian causes. You value emotional freedom and may appear detached, but you care deeply about humanity.",
+      "keyThemes": ["Objectivity", "Independence", "Humanitarianism", "Intellectualism"],
+      "strengths": ["Fair-minded", "Progressive", "Original", "Detached empathy"],
+      "challenges": ["Emotional aloofness", "Rebelliousness", "Unconventional emotional expression"]
+    },
+    "Pisces": {
+      "title": "Moon in Pisces",
+      "description": "Moon in Pisces reveals a highly sensitive, empathetic, and intuitive emotional nature. Your feelings are fluid and deeply connected to the collective unconscious, making you highly compassionate and imaginative. You seek emotional security through spiritual connection and may struggle with boundaries, absorbing the emotions of others.",
+      "keyThemes": ["Sensitivity", "Empathy", "Intuition", "Spirituality"],
+      "strengths": ["Compassion", "Imagination", "Artistic", "Selfless"],
+      "challenges": ["Escapism", "Martyrdom", "Boundary issues", "Vulnerability to others' emotions"]
+    }
+  },
+  "rising": {
+    "Aries": {
+      "title": "Aries Rising",
+      "description": "With Aries Rising, you project an energetic, direct, and assertive first impression. Others see you as courageous, independent, and action-oriented. Your physical appearance may include distinctive features, a confident walk, and an athletic build. You approach new situations with enthusiasm and initiative.",
+      "keyThemes": ["Leadership", "Action", "Directness", "Vitality"],
+      "strengths": ["Confidence", "Courage", "Independence", "Assertiveness"],
+      "challenges": ["Impulsiveness", "Competitiveness", "Impatience"]
+    },
+    "Taurus": {
+      "title": "Taurus Rising",
+      "description": "Taurus Rising gives you a steady, reliable, and grounded presence. You appear calm, practical, and sensual to others. Your physical appearance often includes a strong build, expressive eyes, and a deliberate way of moving. You approach new situations with patience and a desire for comfort and security.",
+      "keyThemes": ["Stability", "Sensuality", "Practicality", "Reliability"],
+      "strengths": ["Patience", "Determination", "Aesthetic appreciation", "Groundedness"],
+      "challenges": ["Resistance to change", "Stubbornness", "Materialism"]
+    },
+    "Cancer": {
+      "title": "Cancer Rising",
+      "description": "With Cancer Rising, you project a gentle, nurturing, and sensitive demeanor. Others perceive you as empathetic, protective, and somewhat reserved initially. Your emotional nature is often visible in your expressions, and you seek comfort and security in your interactions. You approach the world with an intuitive and sympathetic understanding.",
+      "keyThemes": ["Nurturing", "Sensitivity", "Empathy", "Protection"],
+      "strengths": ["Caring", "Intuitive", "Sympathetic", "Home-oriented"],
+      "challenges": ["Shyness", "Moodiness", "Over-sensitivity", "Clinginess"]
+    },
+    "Leo": {
+      "title": "Leo Rising",
+      "description": "With Leo Rising, you project a warm, confident, and charismatic first impression. Others are drawn to your natural radiance and leadership qualities. Your physical presence is often striking, with good posture and a regal bearing. You approach life with creativity, enthusiasm, and a desire to be recognized for your unique contributions.",
+      "keyThemes": ["Self-expression", "Creativity", "Leadership", "Dignity"],
+      "strengths": ["Charisma", "Generosity", "Confidence", "Warmth"],
+      "challenges": ["Pride", "Need for attention", "Dramatic tendencies"]
+    },
+    "Virgo": {
+      "title": "Virgo Rising",
+      "description": "Virgo Rising gives you a modest, analytical, and practical outer demeanor. Others perceive you as intelligent, organized, and helpful, often noticing your attention to detail. Your physical appearance may be neat and understated. You approach new situations with a desire to be useful and to analyze circumstances thoroughly before acting.",
+      "keyThemes": ["Analysis", "Service", "Practicality", "Modesty"],
+      "strengths": ["Diligence", "Organization", "Helpfulness", "Discernment"],
+      "challenges": ["Self-critical", "Worry", "Perfectionism", "Overthinking"]
+    },
+    "Libra": {
+      "title": "Libra Rising",
+      "description": "Libra Rising gives you a charming, diplomatic, and aesthetically pleasing outer demeanor. Others perceive you as graceful, fair-minded, and someone who seeks harmony in all interactions. Your physical appearance is often balanced and attractive. You approach new situations with a desire for partnership and a need to create equilibrium.",
+      "keyThemes": ["Harmony", "Balance", "Diplomacy", "Charm"],
+      "strengths": ["Graciousness", "Fairness", "Sociability", "Aesthetic appreciation"],
+      "challenges": ["Indecisiveness", "People-pleasing", "Avoidance of conflict"]
+    },
+    "Scorpio": {
+      "title": "Scorpio Rising",
+      "description": "Scorpio Rising gives you an intense, mysterious, and powerful outer demeanor. Others perceive you as private, resourceful, and possessing a magnetic presence. Your gaze is often piercing, and you exude an aura of depth and control. You approach new situations with a strategic mind and a desire to uncover hidden truths.",
+      "keyThemes": ["Intensity", "Mystery", "Power", "Resourcefulness"],
+      "strengths": ["Perceptiveness", "Resilience", "Determination", "Magnetic"],
+      "challenges": ["Secretiveness", "Controlling", "Suspicious"]
+    },
+    "Sagittarius": {
+      "title": "Sagittarius Rising",
+      "description": "Sagittarius Rising gives you an enthusiastic, optimistic, and adventurous outer demeanor. Others perceive you as friendly, philosophical, and always ready for a new experience. Your physical appearance is often energetic and open. You approach new situations with a love for freedom, exploration, and a desire to expand your horizons.",
+      "keyThemes": ["Adventure", "Freedom", "Optimism", "Exploration"],
+      "strengths": ["Enthusiasm", "Honesty", "Generosity", "Philosophical"],
+      "challenges": ["Restlessness", "Tactlessness", "Bluntness"]
+    },
+    "Aquarius": {
+      "title": "Aquarius Rising",
+      "description": "Aquarius Rising gives you an unconventional, intellectual, and independent outer demeanor. Others perceive you as original, progressive, and sometimes eccentric. Your physical appearance may be unique or striking. You approach new situations with an objective and detached perspective, valuing logic and humanitarian ideals.",
+      "keyThemes": ["Innovation", "Independence", "Objectivity", "Humanitarianism"],
+      "strengths": ["Intellectual", "Original", "Fair-minded", "Progressive"],
+      "challenges": ["Detachment", "Rebelliousness", "Eccentricity", "Aloofness"]
+    },
+    "Pisces": {
+      "title": "Pisces Rising",
+      "description": "Pisces Rising gives you a dreamy, sensitive, and empathetic outer demeanor. Others perceive you as compassionate, intuitive, and sometimes elusive. Your physical appearance may be soft and ethereal. You approach new situations with a fluid and adaptable nature, often absorbing the energies around you and seeking spiritual connection.",
+      "keyThemes": ["Sensitivity", "Empathy", "Intuition", "Dreaminess"],
+      "strengths": ["Compassion", "Imagination", "Adaptability", "Artistic"],
+      "challenges": ["Escapism", "Boundary issues", "Vulnerability", "Naivety"]
+    }
+  },
+  "houses": {
+    "planetsInHouses": {
+      "sun": {
+        "house1": {
+          "title": "Sun in 1st House",
+          "description": "The Sun in the 1st House indicates a strong, self-oriented personality. You project confidence, vitality, and a desire to make your mark on the world. Your identity is closely tied to your physical appearance and how you present yourself to others. You are likely to be assertive, independent, and possess a natural leadership quality.",
+          "keyThemes": ["Self-expression", "Identity", "Appearance", "Leadership"],
+          "strengths": ["Confident", "Assertive", "Independent", "Energetic"],
+          "challenges": ["Self-centered", "Impulsive", "Dominating"]
+        },
+        "house2": {
+          "title": "Sun in 2nd House",
+          "description": "The Sun in the 2nd House emphasizes your values, resources, and sense of self-worth. Your identity is often tied to what you own and your ability to generate income. You are likely to be practical, financially astute, and seek security through material possessions. Developing your talents and building a strong foundation are key themes.",
+          "keyThemes": ["Values", "Resources", "Self-worth", "Security"],
+          "strengths": ["Practical", "Resourceful", "Financially astute", "Determined"],
+          "challenges": ["Materialistic", "Possessive", "Resistant to change"]
+        },
+        "house3": {
+          "title": "Sun in 3rd House",
+          "description": "The Sun in the 3rd House highlights your intellect, communication, and immediate environment. Your identity is often expressed through how you learn, share ideas, and interact with siblings, neighbors, and short journeys. You are likely to be curious, articulate, and thrive on mental stimulation and exchanging information.",
+          "keyThemes": ["Communication", "Intellect", "Learning", "Siblings/Neighbors"],
+          "strengths": ["Articulate", "Curious", "Adaptable", "Expressive"],
+          "challenges": ["Scattered focus", "Superficiality", "Overthinking"]
+        },
+        "house4": {
+          "title": "Sun in 4th House",
+          "description": "The Sun in the 4th House highlights your roots, home, family, and emotional foundations. Your identity is deeply connected to your private life and sense of belonging. You are likely to be nurturing, protective, and find your purpose within the domestic sphere. Security and emotional comfort are paramount.",
+          "keyThemes": ["Home", "Family", "Roots", "Emotional Foundation"],
+          "strengths": ["Nurturing", "Protective", "Loyal", "Emotionally secure"],
+          "challenges": ["Clingy", "Overly sensitive", "Resistant to change"]
+        },
+        "house5": {
+          "title": "Sun in 5th House",
+          "description": "The Sun in the 5th House highlights your creativity, self-expression, romance, and children. Your identity is often expressed through your passions, hobbies, and the joy you find in life. You are likely to be playful, dramatic, and seek recognition for your unique talents and creations. This placement often indicates a strong desire for love and admiration.",
+          "keyThemes": ["Creativity", "Self-expression", "Romance", "Children"],
+          "strengths": ["Playful", "Generous", "Charismatic", "Artistic"],
+          "challenges": ["Ego-driven", "Attention-seeking", "Risk-taking"]
+        },
+        "house6": {
+          "title": "Sun in 6th House",
+          "description": "The Sun in the 6th House highlights your daily routines, work, health, and service to others. Your identity is often expressed through your diligence, efficiency, and desire to be useful. You are likely to be practical, analytical, and find purpose in contributing to the well-being of yourself and others. Attention to detail and organization are key themes.",
+          "keyThemes": ["Work", "Health", "Service", "Routine"],
+          "strengths": ["Diligence", "Analytical", "Organized", "Helpful"],
+          "challenges": ["Overworked", "Perfectionist", "Worry-prone"]
+        },
+        "house7": {
+          "title": "Sun in 7th House",
+          "description": "The Sun in the 7th House highlights your relationships, partnerships, and how you interact with others one-on-one. Your identity is often expressed through your connections with significant others, and you find purpose in collaboration and seeking balance. You are likely to be diplomatic, charming, and thrive in harmonious partnerships.",
+          "keyThemes": ["Relationships", "Partnerships", "Marriage", "Cooperation"],
+          "strengths": ["Diplomatic", "Charming", "Fair-minded", "Collaborative"],
+          "challenges": ["Dependency", "People-pleasing", "Indecisive"]
+        },
+        "house8": {
+          "title": "Sun in 8th House",
+          "description": "The Sun in the 8th House highlights transformation, shared resources, intimacy, and psychological depths. Your identity is often expressed through your ability to delve into profound experiences, manage joint finances, and navigate the complexities of power dynamics. You are likely to be intense, insightful, and drawn to uncovering hidden truths.",
+          "keyThemes": ["Transformation", "Shared Resources", "Intimacy", "Psychology"],
+          "strengths": ["Insightful", "Resilient", "Resourceful", "Deep"],
+          "challenges": ["Controlling", "Secretive", "Obsessive"]
+        },
+        "house9": {
+          "title": "Sun in 9th House",
+          "description": "The Sun in the 9th House highlights your quest for knowledge, higher learning, philosophy, and long journeys. Your identity is often expressed through your beliefs, your pursuit of truth, and your desire to explore the world and expand your horizons. You are likely to be optimistic, adventurous, and drawn to spiritual or intellectual growth.",
+          "keyThemes": ["Higher Learning", "Philosophy", "Travel", "Beliefs"],
+          "strengths": ["Optimistic", "Adventurous", "Wise", "Broad-minded"],
+          "challenges": ["Dogmatic", "Restless", "Overly idealistic"]
+        },
+        "house10": {
+          "title": "Sun in 10th House",
+          "description": "The Sun in the 10th House highlights your career, public image, and worldly achievements. Your identity is deeply intertwined with your professional life and your reputation. You are likely to be ambitious, driven, and seek recognition for your contributions to society. This placement often indicates a strong desire for leadership and authority.",
+          "keyThemes": ["Career", "Public Image", "Ambition", "Authority"],
+          "strengths": ["Ambitious", "Responsible", "Authoritative", "Goal-oriented"],
+          "challenges": ["Workaholic", "Status-driven", "Rigid"]
+        },
+        "house11": {
+          "title": "Sun in 11th House",
+          "description": "The Sun in the 11th House highlights your friendships, group affiliations, hopes, and dreams. Your identity is often expressed through your social network, your involvement in humanitarian causes, and your vision for the future. You are likely to be progressive, innovative, and find purpose in contributing to collective goals and ideals.",
+          "keyThemes": ["Friendships", "Groups", "Hopes/Dreams", "Humanitarianism"],
+          "strengths": ["Progressive", "Innovative", "Social", "Idealistic"],
+          "challenges": ["Detached", "Unrealistic", "Rebellious"]
+        },
+        "house12": {
+          "title": "Sun in 12th House",
+          "description": "The Sun in the 12th House highlights your subconscious, hidden strengths and weaknesses, solitude, and spiritual connection. Your identity is often expressed through introspection, compassion, and a deep connection to the collective unconscious. You are likely to be empathetic, intuitive, and find purpose in service to others, often behind the scenes.",
+          "keyThemes": ["Subconscious", "Spirituality", "Solitude", "Compassion"],
+          "strengths": ["Empathetic", "Intuitive", "Selfless", "Spiritual"],
+          "challenges": ["Self-undoing", "Escapism", "Martyrdom"]
+        }
+      },
+      "moon": {
+        "house1": {
+          "title": "Moon in 1st House",
+          "description": "The Moon in the 1st House highlights your emotional nature, instincts, and how you react to the world. Your identity is deeply intertwined with your feelings, and you tend to wear your heart on your sleeve. You are likely to be sensitive, intuitive, and your moods can fluctuate visibly. This placement often indicates a strong need for emotional security and self-expression.",
+          "keyThemes": ["Emotional Nature", "Instincts", "Self-Image", "Reactions"],
+          "strengths": ["Sensitive", "Intuitive", "Empathetic", "Expressive"],
+          "challenges": ["Moody", "Overly sensitive", "Impulsive"]
+        },
+        "house2": {
+          "title": "Moon in 2nd House",
+          "description": "The Moon in the 2nd House highlights your emotional connection to material possessions, security, and personal values. Your feelings of self-worth are often tied to what you own and your ability to provide for yourself. You are likely to be resourceful, emotionally attached to your belongings, and seek comfort through stability and tangible assets.",
+          "keyThemes": ["Material Security", "Values", "Self-Worth", "Resources"],
+          "strengths": ["Resourceful", "Stable", "Practical", "Nurturing"],
+          "challenges": ["Possessive", "Materialistic", "Resistant to change"]
+        },
+        "house3": {
+          "title": "Moon in 3rd House",
+          "description": "The Moon in the 3rd House highlights your emotional connection to communication, learning, and your immediate environment. Your feelings are often expressed through your words, and you may have a strong need to share your thoughts and experiences. You are likely to be curious, adaptable, and find emotional comfort in intellectual stimulation and familiar surroundings.",
+          "keyThemes": ["Communication", "Learning", "Short Journeys", "Siblings"],
+          "strengths": ["Expressive", "Adaptable", "Curious", "Intuitive communicator"],
+          "challenges": ["Overthinking", "Anxious", "Inconsistent communication"]
+        },
+        "house4": {
+          "title": "Moon in 4th House",
+          "description": "The Moon in the 4th House highlights your emotional connection to your home, family, roots, and sense of security. Your feelings are deeply tied to your domestic life and your past. You are likely to be nurturing, protective, and find emotional comfort in familiar surroundings and close family bonds. This placement often indicates a strong need for a secure and stable home base.",
+          "keyThemes": ["Home", "Family", "Roots", "Security"],
+          "strengths": ["Nurturing", "Protective", "Empathetic", "Supportive"],
+          "challenges": ["Clingy", "Overly emotional", "Resistant to change"]
+        },
+        "house5": {
+          "title": "Moon in 5th House",
+          "description": "The Moon in the 5th House highlights your emotional connection to creativity, romance, children, and self-expression. Your feelings are often expressed through artistic pursuits, playful activities, and your interactions with loved ones. You are likely to be emotionally demonstrative, enjoy being the center of attention, and find joy in creative endeavors and romantic relationships.",
+          "keyThemes": ["Creativity", "Romance", "Children", "Self-Expression"],
+          "strengths": ["Playful", "Affectionate", "Creative", "Enthusiastic"],
+          "challenges": ["Dramatic", "Attention-seeking", "Impulsive"]
+        },
+        "house6": {
+          "title": "Moon in 6th House",
+          "description": "The Moon in the 6th House highlights your emotional connection to work, daily routines, health, and service to others. Your feelings are often expressed through your practical contributions, and you may have a strong need for order and efficiency in your daily life. You are likely to be emotionally responsive to your work environment, attentive to details, and find emotional comfort in being helpful and productive.",
+          "keyThemes": ["Work", "Routines", "Health", "Service"],
+          "strengths": ["Diligent", "Helpful", "Organized", "Attentive"],
+          "challenges": ["Anxious", "Overcritical", "Hypochondriac"]
+        },
+        "house7": {
+          "title": "Moon in 7th House",
+          "description": "The Moon in the 7th House highlights your emotional connection to partnerships, relationships, and how you relate to others. Your feelings are deeply tied to your interactions with significant others, and you may have a strong need for emotional harmony and balance in your relationships. You are likely to be empathetic, diplomatic, and find emotional comfort in shared experiences and close bonds.",
+          "keyThemes": ["Partnerships", "Relationships", "Marriage", "Cooperation"],
+          "strengths": ["Empathetic", "Diplomatic", "Cooperative", "Harmonious"],
+          "challenges": ["Dependent", "Indecisive", "People-pleasing"]
+        },
+        "house8": {
+          "title": "Moon in 8th House",
+          "description": "The Moon in the 8th House highlights your emotional connection to transformation, shared resources, intimacy, and psychological depths. Your feelings are often intense and complex, and you may have a strong need for deep emotional bonds and understanding. You are likely to be intuitive, perceptive, and find emotional comfort in exploring the hidden aspects of life and sharing profound experiences with others.",
+          "keyThemes": ["Transformation", "Shared Resources", "Intimacy", "Psychological Depths"],
+          "strengths": ["Intuitive", "Perceptive", "Resilient", "Deep"],
+          "challenges": ["Controlling", "Secretive", "Jealous"]
+        },
+        "house9": {
+          "title": "Moon in 9th House",
+          "description": "The Moon in the 9th House highlights your emotional connection to higher learning, philosophy, travel, and spiritual beliefs. Your feelings are often expressed through your pursuit of knowledge and your exploration of different cultures and ideas. You are likely to be emotionally restless, seek meaning and purpose, and find emotional comfort in expanding your horizons and embracing new perspectives.",
+          "keyThemes": ["Higher Learning", "Philosophy", "Travel", "Beliefs"],
+          "strengths": ["Philosophical", "Open-minded", "Adventurous", "Optimistic"],
+          "challenges": ["Dogmatic", "Restless", "Impractical"]
+        },
+        "house10": {
+          "title": "Moon in 10th House",
+          "description": "The Moon in the 10th House highlights your emotional connection to your career, public image, and reputation. Your feelings are deeply tied to your professional achievements and how you are perceived by the world. You are likely to be ambitious, seek public recognition, and find emotional comfort in making a significant contribution to society. Your career path may be influenced by your family or your need for security.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Ambition"],
+          "strengths": ["Ambitious", "Responsible", "Public-spirited", "Influential"],
+          "challenges": ["Overly sensitive to criticism", "Workaholic", "Insecure about status"]
+        },
+        "house11": {
+          "title": "Moon in 11th House",
+          "description": "The Moon in the 11th House highlights your emotional connection to friendships, groups, social causes, and future aspirations. Your feelings are deeply tied to your sense of belonging and your involvement in collective endeavors. You are likely to be emotionally responsive to group dynamics, seek emotional support from friends, and find emotional comfort in working towards shared goals and humanitarian ideals.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Aspirations"],
+          "strengths": ["Humanitarian", "Socially conscious", "Supportive", "Visionary"],
+          "challenges": ["Emotionally detached from individuals", "Idealistic", "Unrealistic expectations of friends"]
+        },
+        "house12": {
+          "title": "Moon in 12th House",
+          "description": "The Moon in the 12th House highlights your emotional connection to the subconscious, hidden realms, spirituality, and self-undoing. Your feelings are often deeply private and may be influenced by past experiences or karmic patterns. You are likely to be highly intuitive, compassionate, and find emotional comfort in solitude, meditation, and spiritual practices. However, you may also be prone to emotional suppression or escapism.",
+          "keyThemes": ["Subconscious", "Hidden Realms", "Spirituality", "Self-undoing"],
+          "strengths": ["Intuitive", "Compassionate", "Spiritual", "Empathetic"],
+          "challenges": ["Emotional suppression", "Escapism", "Self-sabotage"]
+        }
+      },
+      "mercury": {
+        "house1": {
+          "title": "Mercury in 1st House",
+          "description": "Mercury in the 1st House indicates a highly intellectual and communicative individual whose mind is quick and active. You are likely to be articulate, curious, and eager to express your ideas. Your self-expression is often verbal, and you may have a talent for writing, speaking, or teaching. You are perceived as intelligent and adaptable, constantly processing information and engaging with your environment through thought and conversation.",
+          "keyThemes": ["Communication", "Intellect", "Self-expression", "Curiosity"],
+          "strengths": ["Articulate", "Quick-witted", "Adaptable", "Expressive"],
+          "challenges": ["Nervousness", "Overthinking", "Restlessness"]
+        },
+        "house2": {
+          "title": "Mercury in 2nd House",
+          "description": "Mercury in the 2nd House indicates a practical and analytical mind when it comes to finances, resources, and personal values. You are likely to be shrewd in business, good at managing money, and able to articulate your worth. Your thought process is often geared towards tangible results and security. You may have a talent for making money through communication, writing, or intellectual pursuits.",
+          "keyThemes": ["Finance", "Resources", "Values", "Practicality"],
+          "strengths": ["Resourceful", "Analytical", "Shrewd", "Articulate"],
+          "challenges": ["Materialistic", "Overly cautious", "Stubborn in opinions"]
+        },
+        "house3": {
+          "title": "Mercury in 3rd House",
+          "description": "Mercury in the 3rd House is a highly favorable placement, indicating a naturally curious, communicative, and intelligent individual. You are likely to excel in areas requiring mental agility, such as writing, speaking, and learning. Your mind is quick and adaptable, constantly seeking new information and eager to share it with others. You thrive on intellectual stimulation and enjoy engaging in discussions and debates.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys"],
+          "strengths": ["Intelligent", "Articulate", "Curious", "Adaptable"],
+          "challenges": ["Scattered focus", "Superficiality", "Nervous energy"]
+        },
+        "house4": {
+          "title": "Mercury in 4th House",
+          "description": "Mercury in the 4th House indicates a mind deeply connected to home, family, roots, and emotional security. Your thoughts are often focused on your past, your heritage, and creating a stable foundation. You are likely to be introspective, possess a good memory, and enjoy learning about history or genealogy. Communication within the family is important to you, and you may be the one who preserves family stories or traditions.",
+          "keyThemes": ["Home", "Family", "Roots", "Emotional Security"],
+          "strengths": ["Introspective", "Good memory", "Nurturing", "Traditional"],
+          "challenges": ["Overly attached to the past", "Resistant to change", "Shy in expressing feelings"]
+        },
+        "house5": {
+          "title": "Mercury in 5th House",
+          "description": "Mercury in the 5th House indicates a creative, expressive, and playful mind. You are likely to enjoy intellectual pursuits that involve self-expression, such as writing, performing, or teaching. Your communication style is often engaging and entertaining, and you may have a talent for captivating an audience. You find joy in sharing your ideas and engaging in mentally stimulating hobbies and creative projects.",
+          "keyThemes": ["Creativity", "Self-expression", "Romance", "Children", "Hobbies"],
+          "strengths": ["Creative", "Expressive", "Playful", "Entertaining"],
+          "challenges": ["Superficiality", "Attention-seeking", "Impractical"]
+        },
+        "house6": {
+          "title": "Mercury in 6th House",
+          "description": "Mercury in the 6th House indicates a mind that is analytical, practical, and focused on details, especially concerning work, health, and daily routines. You are likely to be highly organized, efficient, and skilled at problem-solving in practical matters. You enjoy learning about health, nutrition, and self-improvement. Your communication style is clear and precise, and you may excel in roles that require meticulous attention to detail or service to others.",
+          "keyThemes": ["Work", "Health", "Service", "Daily Routines", "Analysis"],
+          "strengths": ["Organized", "Efficient", "Analytical", "Meticulous"],
+          "challenges": ["Overly critical", "Perfectionistic", "Prone to worry"]
+        },
+        "house7": {
+          "title": "Mercury in 7th House",
+          "description": "Mercury in the 7th House indicates a mind that is highly attuned to relationships, partnerships, and diplomacy. You are likely to seek intellectual stimulation through interactions with others, enjoying debates and discussions with partners. You value fair communication and negotiation, and you may excel in roles that involve mediation, counseling, or public relations. Your approach to relationships is often logical and analytical, seeking balance and understanding.",
+          "keyThemes": ["Relationships", "Partnerships", "Diplomacy", "Negotiation"],
+          "strengths": ["Diplomatic", "Fair-minded", "Communicative", "Analytical"],
+          "challenges": ["Indecisive", "Overly compromising", "Argumentative"]
+        },
+        "house8": {
+          "title": "Mercury in 8th House",
+          "description": "Mercury in the 8th House indicates a deep, investigative, and often secretive mind. You are drawn to mysteries, hidden knowledge, and taboo subjects. You possess a keen ability to analyze and understand complex psychological dynamics, shared resources, and transformative processes. You may have a talent for research, detective work, or delving into the occult. Your communication style can be intense and probing, seeking to uncover the truth beneath the surface.",
+          "keyThemes": ["Transformation", "Shared Resources", "Mysteries", "Psychology"],
+          "strengths": ["Investigative", "Perceptive", "Insightful", "Resourceful"],
+          "challenges": ["Secretive", "Suspicious", "Obsessive"]
+        },
+        "house9": {
+          "title": "Mercury in 9th House",
+          "description": "Mercury in the 9th House indicates a philosophical, expansive, and globally-minded intellect. You are drawn to higher education, foreign cultures, spiritual beliefs, and broad concepts. You enjoy exploring different perspectives and are eager to share your knowledge with others. You may have a talent for teaching, writing, or traveling, and your communication style is often inspiring and visionary. You seek truth and meaning through exploration and intellectual pursuits.",
+          "keyThemes": ["Higher Education", "Philosophy", "Travel", "Spirituality", "Broad Concepts"],
+          "strengths": ["Philosophical", "Expansive", "Globally-minded", "Inspiring"],
+          "challenges": ["Dogmatic", "Impractical", "Overly idealistic"]
+        },
+        "house10": {
+          "title": "Mercury in 10th House",
+          "description": "Mercury in the 10th House indicates a mind that is ambitious, strategic, and focused on career, public image, and reputation. You are likely to be a clear and effective communicator in professional settings, capable of articulating your goals and plans with precision. You may excel in fields that require strong communication skills, such as public speaking, writing, or media. Your thought process is often geared towards achieving recognition and success in your chosen field.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Ambition", "Authority"],
+          "strengths": ["Ambitious", "Strategic", "Clear Communicator", "Professional"],
+          "challenges": ["Overly concerned with image", "Workaholic", "Manipulative in communication"]
+        },
+        "house11": {
+          "title": "Mercury in 11th House",
+          "description": "Mercury in the 11th House indicates a mind that is socially conscious, innovative, and focused on group dynamics, friendships, and humanitarian ideals. You are likely to be a clear and effective communicator within group settings, enjoying intellectual discussions with friends and associates. You may excel in roles that require networking, social activism, or futuristic thinking. Your thought process is often geared towards collective goals and contributing to the greater good.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Innovation", "Hopes and Wishes"],
+          "strengths": ["Socially conscious", "Innovative", "Collaborative", "Humanitarian"],
+          "challenges": ["Detached", "Impersonal", "Rebellious"]
+        },
+        "house12": {
+          "title": "Mercury in 12th House",
+          "description": "Mercury in the 12th House indicates a mind that is intuitive, introspective, and often drawn to the subconscious, spiritual, and hidden realms. Your thoughts may be deeply influenced by your inner world, dreams, and past experiences. You may have a talent for understanding subtle energies, psychology, or mystical subjects. Your communication style can be empathetic and compassionate, though you may sometimes struggle to articulate your inner thoughts. You find intellectual stimulation in solitude and introspection.",
+          "keyThemes": ["Subconscious", "Spirituality", "Hidden Realms", "Intuition", "Empathy"],
+          "strengths": ["Intuitive", "Empathetic", "Insightful", "Compassionate"],
+          "challenges": ["Self-undoing", "Escapist", "Difficulty expressing thoughts"]
+        }
+      },
+      "venus": {
+        "house1": {
+          "title": "Venus in 1st House",
+          "description": "Venus in the 1st House indicates a charming, graceful, and aesthetically pleasing personality. You are likely to be naturally attractive, possess a love for beauty, and present yourself in a harmonious way. You value peace and diplomacy in your interactions and strive to create a pleasant atmosphere around you. You may have a talent for art, fashion, or anything that enhances beauty and harmony. Your appearance and demeanor often reflect your desire for balance and connection.",
+          "keyThemes": ["Charm", "Grace", "Beauty", "Diplomacy", "Appearance"],
+          "strengths": ["Attractive", "Harmonious", "Diplomatic", "Artistic"],
+          "challenges": ["Vain", "Indulgent", "Superficial"]
+        },
+        "house2": {
+          "title": "Venus in 2nd House",
+          "description": "Venus in the 2nd House indicates a love for material comforts, financial security, and a strong appreciation for beauty in tangible forms. You derive pleasure from possessions, fine art, and luxurious experiences. You are likely to be good at managing money, and you may attract wealth through your charm and social connections. Your values are often tied to what you own and what brings you sensory pleasure. You may have a talent for earning money in creative or artistic fields.",
+          "keyThemes": ["Material Possessions", "Values", "Financial Security", "Self-Worth", "Sensory Pleasure"],
+          "strengths": ["Financially astute", "Appreciative of beauty", "Resourceful", "Generous"],
+          "challenges": ["Materialistic", "Overspending", "Possessive"]
+        },
+        "house3": {
+          "title": "Venus in 3rd House",
+          "description": "Venus in the 3rd House indicates a harmonious and pleasant communication style. You enjoy intellectual exchanges, learning, and sharing ideas with others. You are likely to be charming and diplomatic in your conversations, making you a popular individual. You may have a talent for writing, speaking, or teaching, and you enjoy short trips and interactions with siblings or close relatives. Your mind is often drawn to topics that bring beauty, harmony, and connection.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys", "Socializing"],
+          "strengths": ["Charming communicator", "Diplomatic", "Intellectually curious", "Friendly"],
+          "challenges": ["Superficial in communication", "Gossip", "Indecisive in opinions"]
+        },
+        "house4": {
+          "title": "Venus in 4th House",
+          "description": "Venus in the 4th House indicates a deep need for harmony, beauty, and love within the home and family environment. You are likely to have a strong emotional connection to your roots, and you find comfort and security in your domestic life. You may enjoy decorating your home, hosting gatherings, and creating a peaceful sanctuary. Your relationships with family members are often loving and supportive, and you seek emotional fulfillment through domestic harmony.",
+          "keyThemes": ["Home", "Family", "Roots", "Emotional Security", "Domestic Harmony"],
+          "strengths": ["Nurturing", "Supportive", "Homeloving", "Peaceful"],
+          "challenges": ["Overly attached to home", "Resistant to change", "Emotionally dependent"]
+        },
+        "house5": {
+          "title": "Venus in 5th House",
+          "description": "Venus in the 5th House indicates a love for creative expression, romance, and pleasure. You are likely to be artistic, enjoy hobbies, and have a playful approach to life. You find joy in self-expression, whether through art, performance, or romantic pursuits. You may have a special affinity for children and enjoy being around them. Your romantic relationships are often characterized by affection, fun, and a desire for shared pleasure. You seek happiness and fulfillment through creative and romantic endeavors.",
+          "keyThemes": ["Creativity", "Romance", "Pleasure", "Children", "Self-Expression"],
+          "strengths": ["Artistic", "Romantic", "Playful", "Affectionate"],
+          "challenges": ["Self-centered", "Excessive pleasure-seeking", "Gambling"]
+        },
+        "house6": {
+          "title": "Venus in 6th House",
+          "description": "Venus in the 6th House indicates a desire for harmony and pleasantness in daily routines, work, and health matters. You are likely to enjoy your work environment and prefer to collaborate with others. You may have a talent for healing arts, design, or any profession that involves beauty and service. You are meticulous in your work and strive for perfection, often finding satisfaction in helping others. Your approach to health and well-being is often holistic and balanced.",
+          "keyThemes": ["Work", "Health", "Daily Routines", "Service", "Co-workers"],
+          "strengths": ["Harmonious worker", "Helpful", "Meticulous", "Service-oriented"],
+          "challenges": ["Overly critical", "Perfectionist", "Prone to health issues due to stress"]
+        },
+        "house7": {
+          "title": "Venus in 7th House",
+          "description": "Venus in the 7th House indicates a strong desire for harmonious partnerships, both romantic and professional. You are likely to be charming, diplomatic, and seek balance in all your relationships. You value fairness, equality, and mutual respect, and you are often attracted to partners who embody these qualities. You may have a talent for negotiation, mediation, or any profession that involves working with others. Your relationships are a source of great joy and fulfillment, and you thrive when you can share your life with a compatible partner.",
+          "keyThemes": ["Partnerships", "Marriage", "Relationships", "Diplomacy", "Equality"],
+          "strengths": ["Harmonious in relationships", "Diplomatic", "Fair", "Cooperative"],
+          "challenges": ["Dependent on others", "People-pleasing", "Indecisive in relationships"]
+        },
+        "house8": {
+          "title": "Venus in 8th House",
+          "description": "Venus in the 8th House indicates a deep desire for emotional intimacy, transformation, and shared resources. You are drawn to intense relationships and may find love through profound, transformative experiences. You may have a talent for managing joint finances, investments, or inheritances. You are comfortable with the deeper aspects of life, including sexuality, death, and rebirth, and you seek beauty and harmony in these profound areas. Your relationships often involve a merging of resources and a deep emotional bond.",
+          "keyThemes": ["Intimacy", "Shared Resources", "Transformation", "Sexuality", "Mysteries"],
+          "strengths": ["Deeply intimate", "Resourceful", "Transformative", "Loyal"],
+          "challenges": ["Jealous", "Possessive", "Manipulative"]
+        },
+        "house9": {
+          "title": "Venus in 9th House",
+          "description": "Venus in the 9th House indicates a love for higher learning, philosophy, and travel. You are drawn to exploring different cultures, beliefs, and expanding your horizons. You may find love or develop significant relationships with people from foreign lands or those who share your philosophical interests. You value truth, wisdom, and spiritual growth, and you seek beauty and harmony in your pursuit of knowledge. You may have a talent for teaching, writing, or any profession that involves sharing knowledge and inspiring others.",
+          "keyThemes": ["Higher Education", "Philosophy", "Travel", "Spirituality", "Foreign Cultures"],
+          "strengths": ["Open-minded", "Philosophical", "Adventurous", "Inspirational"],
+          "challenges": ["Dogmatic", "Restless", "Superficial in beliefs"]
+        },
+        "house10": {
+          "title": "Venus in 10th House",
+          "description": "Venus in the 10th House indicates a desire for recognition, success, and a harmonious public image. You are likely to be charming and popular in your career, and you may find success in fields related to art, beauty, diplomacy, or public relations. You value your reputation and strive to maintain a positive image. You may attract beneficial relationships through your career or social standing. You seek fulfillment through public achievement and recognition, and you are often seen as graceful and approachable in your professional life.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Ambition", "Success"],
+          "strengths": ["Charming in career", "Popular", "Diplomatic", "Graceful"],
+          "challenges": ["Overly concerned with image", "Superficial", "Dependent on public approval"]
+        },
+        "house11": {
+          "title": "Venus in 11th House",
+          "description": "Venus in the 11th House indicates a love for friendships, group associations, and humanitarian causes. You are likely to be popular within your social circles and enjoy collaborating with like-minded individuals. You value camaraderie, shared ideals, and collective goals, and you seek beauty and harmony in your social interactions. You may attract friends who are artistic, charming, or socially influential. You are often involved in community activities or organizations that promote social justice and equality. Your relationships with friends are a source of great joy and inspiration.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Hopes and Wishes", "Community"],
+          "strengths": ["Popular", "Socially conscious", "Collaborative", "Idealistic"],
+          "challenges": ["Detached in relationships", "Overly idealistic", "Prone to groupthink"]
+        },
+        "house12": {
+          "title": "Venus in 12th House",
+          "description": "Venus in the 12th House indicates a compassionate and empathetic nature, with a deep connection to the spiritual realm. You are likely to be sensitive, intuitive, and drawn to helping others, especially those in need. You may find beauty and inspiration in solitude, meditation, or creative pursuits that allow you to express your inner world. Your relationships may involve a sense of sacrifice or a hidden quality, and you may be attracted to partners who are artistic, spiritual, or compassionate. You seek fulfillment through selfless service, spiritual connection, and a deep understanding of the human condition.",
+          "keyThemes": ["Spirituality", "Compassion", "Empathy", "Solitude", "Hidden Matters"],
+          "strengths": ["Sensitive", "Intuitive", "Selfless", "Artistic"],
+          "challenges": ["Self-sacrificing", "Escapist", "Prone to hidden affairs"]
+        }
+      },
+      "mars": {
+        "house1": {
+          "title": "Mars in 1st House",
+          "description": "Mars in the 1st House indicates a dynamic, assertive, and energetic personality. You are likely to be a natural leader, with a strong drive to initiate action and pursue your goals. You project an image of confidence and courage, and you are not afraid to stand up for yourself or others. You may have a competitive spirit and enjoy challenges. Your physical energy is often high, and you may be drawn to sports or activities that require strength and endurance. You are direct in your approach and can sometimes be impulsive or aggressive.",
+          "keyThemes": ["Assertiveness", "Initiative", "Courage", "Physical Energy", "Leadership"],
+          "strengths": ["Brave", "Energetic", "Decisive", "Independent"],
+          "challenges": ["Aggressive", "Impulsive", "Reckless", "Argumentative"]
+        },
+        "house2": {
+          "title": "Mars in 2nd House",
+          "description": "Mars in the 2nd House indicates a strong drive to acquire resources, financial independence, and material security. You are likely to be ambitious and energetic in your pursuit of wealth and possessions. You may have a talent for earning money, but you might also be prone to impulsive spending or taking financial risks. You are determined to achieve financial stability and may work tirelessly to build your resources. Your values are often tied to your ability to provide for yourself and others, and you may defend your possessions fiercely.",
+          "keyThemes": ["Finances", "Possessions", "Values", "Self-Worth", "Security"],
+          "strengths": ["Resourceful", "Ambitious", "Hardworking", "Determined"],
+          "challenges": ["Materialistic", "Impulsive spending", "Greedy", "Possessive"]
+        },
+        "house3": {
+          "title": "Mars in 3rd House",
+          "description": "Mars in the 3rd House indicates an energetic and assertive approach to communication, learning, and local interactions. You are likely to be quick-witted, articulate, and enjoy engaging in debates or discussions. You have a strong desire to express your ideas and may be very persuasive. You may be drawn to activities that involve movement, such as short trips or active hobbies. Your mind is active and restless, and you may be prone to speaking impulsively or aggressively. You are direct in your communication and may challenge others' opinions.",
+          "keyThemes": ["Communication", "Learning", "Short Trips", "Siblings", "Local Environment"],
+          "strengths": ["Articulate", "Quick-witted", "Persuasive", "Energetic communicator"],
+          "challenges": ["Argumentative", "Impulsive speech", "Restless", "Scattered energy"]
+        },
+        "house4": {
+          "title": "Mars in 4th House",
+          "description": "Mars in the 4th House indicates a strong drive for security, emotional independence, and a desire to establish roots. You are likely to be protective of your home and family, and you may have a strong emotional connection to your heritage or upbringing. You may be very active within your domestic environment, perhaps engaging in home improvements or family activities. There can be a tendency towards disputes or conflicts within the family, or a need to assert your independence from family ties. You seek a secure and stable foundation, and you are willing to fight for your emotional well-being.",
+          "keyThemes": ["Home", "Family", "Roots", "Emotional Security", "Past"],
+          "strengths": ["Protective", "Resourceful at home", "Emotionally independent", "Strong foundation"],
+          "challenges": ["Family disputes", "Restless at home", "Overly protective", "Difficulty letting go"]
+        },
+        "house5": {
+          "title": "Mars in 5th House",
+          "description": "Mars in the 5th House indicates a passionate and energetic approach to creativity, romance, and self-expression. You are likely to be a natural performer, with a strong desire to be noticed and applauded. You enjoy taking risks, especially in areas that bring you pleasure and excitement. You may be drawn to competitive sports, creative arts, or speculative ventures. Your romantic life is likely to be intense and passionate, and you may be attracted to partners who are equally dynamic. You are direct in your affections and may pursue your desires with great enthusiasm.",
+          "keyThemes": ["Creativity", "Romance", "Self-Expression", "Children", "Speculation"],
+          "strengths": ["Creative", "Passionate", "Courageous", "Playful"],
+          "challenges": ["Impulsive", "Reckless", "Dominating in relationships", "Gambling tendencies"]
+        },
+        "house6": {
+          "title": "Mars in 6th House",
+          "description": "Mars in the 6th House indicates a dynamic and energetic approach to work, daily routines, and health. You are likely to be a hard worker, with a strong drive to be productive and efficient. You may be drawn to professions that require physical activity, precision, or a competitive spirit. You are meticulous in your work and strive for perfection. Your health may be affected by stress or overwork, and you may be prone to accidents or injuries due to your active nature. You are dedicated to serving others and may be very helpful to your colleagues or employees.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Duty"],
+          "strengths": ["Hardworking", "Efficient", "Dedicated", "Helpful"],
+          "challenges": ["Workaholic", "Prone to stress", "Accident-prone", "Critical of self and others"]
+        },
+        "house7": {
+          "title": "Mars in 7th House",
+          "description": "Mars in the 7th House indicates an assertive and dynamic approach to partnerships, both romantic and business. You are likely to be attracted to strong, independent individuals and may enjoy a certain level of competition within your relationships. You are direct in your dealings with others and may initiate partnerships with enthusiasm. However, there can be a tendency towards conflict or power struggles within relationships, as you may be prone to asserting your will. You seek equality and fairness in your interactions, but you may also challenge others to grow and develop.",
+          "keyThemes": ["Partnerships", "Marriage", "Open Enemies", "Agreements", "Justice"],
+          "strengths": ["Direct", "Courageous in relationships", "Fair-minded", "Independent"],
+          "challenges": ["Argumentative", "Dominating", "Competitive", "Prone to conflict"]
+        },
+        "house8": {
+          "title": "Mars in 8th House",
+          "description": "Mars in the 8th House indicates an intense and passionate approach to shared resources, intimacy, and transformation. You are likely to be driven by deep desires and may be drawn to exploring the hidden aspects of life, such as psychology, occult studies, or financial investments. You are resourceful and determined, especially when it comes to managing joint finances or dealing with crises. Your intimate relationships are likely to be powerful and transformative, and you may be attracted to partners who are equally intense. There can be a tendency towards power struggles or conflicts over shared resources. You are resilient and capable of regenerating yourself after setbacks.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Transformation", "Death and Rebirth", "Occult"],
+          "strengths": ["Resourceful", "Resilient", "Passionate", "Insightful"],
+          "challenges": ["Controlling", "Manipulative", "Prone to power struggles", "Obsessive"]
+        },
+        "house9": {
+          "title": "Mars in 9th House",
+          "description": "Mars in the 9th House indicates an energetic and assertive approach to higher education, philosophy, and foreign cultures. You are likely to be a passionate seeker of truth, with a strong desire to expand your horizons and explore new ideas. You may be drawn to long-distance travel, academic pursuits, or spiritual quests. You are direct in your beliefs and may enjoy debating philosophical or religious topics. However, there can be a tendency towards dogmatism or a need to impose your views on others. You are enthusiastic about learning and may inspire others with your vision.",
+          "keyThemes": ["Higher Education", "Philosophy", "Travel", "Religion", "Broadcasting"],
+          "strengths": ["Truth-seeker", "Philosophical", "Adventurous", "Inspiring"],
+          "challenges": ["Dogmatic", "Preachy", "Restless", "Overly idealistic"]
+        },
+        "house10": {
+          "title": "Mars in 10th House",
+          "description": "Mars in the 10th House indicates a strong drive for career success, public recognition, and leadership. You are likely to be ambitious, determined, and willing to work hard to achieve your professional goals. You may be drawn to positions of authority or fields that require initiative and courage. You are direct in your professional dealings and may challenge the status quo. However, there can be a tendency towards power struggles or conflicts with authority figures. You seek to make your mark on the world and are driven by a desire for achievement.",
+          "keyThemes": ["Career", "Public Image", "Ambition", "Authority", "Achievement"],
+          "strengths": ["Ambitious", "Driven", "Leader", "Determined"],
+          "challenges": ["Authoritarian", "Workaholic", "Prone to conflict with superiors", "Ruthless"]
+        },
+        "house11": {
+          "title": "Mars in 11th House",
+          "description": "Mars in the 11th House indicates an energetic and assertive approach to friendships, group activities, and social causes. You are likely to be a natural leader within your social circles, with a strong drive to initiate projects and advocate for your ideals. You enjoy collaborating with like-minded individuals and may be drawn to organizations that promote social change or humanitarian efforts. You are direct in your friendships and may challenge your friends to achieve their goals. However, there can be a tendency towards conflicts within groups or a need to dominate social interactions. You are a passionate advocate for your beliefs and may inspire others to action.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Hopes and Wishes", "Community"],
+          "strengths": ["Leader", "Collaborative", "Socially conscious", "Inspiring"],
+          "challenges": ["Argumentative in groups", "Dominating", "Impatient", "Prone to conflict"]
+        },
+        "house12": {
+          "title": "Mars in 12th House",
+          "description": "Mars in the 12th House indicates a more subtle and internalized expression of energy and assertiveness. You may find yourself working behind the scenes, often on behalf of others or for humanitarian causes. Your drive and ambition may be directed towards spiritual or subconscious realms, and you may have a strong intuition. There can be a tendency to suppress anger or aggression, which may manifest as passive-aggressiveness or self-undoing. You may also encounter hidden enemies or experience challenges related to institutions like hospitals or prisons. Developing a healthy outlet for your energy, such as meditation or creative expression, is crucial.",
+          "keyThemes": ["Subconscious", "Hidden Enemies", "Self-undoing", "Spirituality", "Institutions"],
+          "strengths": ["Intuitive", "Compassionate", "Selfless", "Resilient"],
+          "challenges": ["Passive-aggressive", "Self-sabotaging", "Hidden anger", "Victim mentality"]
+        }
+      },
+      "jupiter": {
+        "house1": {
+          "title": "Jupiter in 1st House",
+          "description": "Jupiter in the 1st House indicates an optimistic, expansive, and benevolent personality. You are likely to be naturally cheerful, generous, and have a strong sense of self-confidence. You approach life with enthusiasm and a belief in your own good fortune. You may have a larger-than-life presence and inspire others with your positive outlook. There can be a tendency towards overindulgence or a lack of self-discipline, as you may believe that everything will always work out. You are eager to explore new experiences and may have a natural talent for teaching or guiding others.",
+          "keyThemes": ["Optimism", "Expansion", "Generosity", "Self-confidence", "Good Fortune"],
+          "strengths": ["Positive", "Enthusiastic", "Benevolent", "Inspiring"],
+          "challenges": ["Overindulgent", "Extravagant", "Lack of discipline", "Naivete"]
+        },
+        "house2": {
+          "title": "Jupiter in 2nd House",
+          "description": "Jupiter in the 2nd House indicates good fortune and expansion in matters of personal finances, possessions, and values. You are likely to have a positive and optimistic approach to money, believing that abundance will always come your way. You may be generous with your resources and enjoy accumulating wealth, not just for yourself, but also to share with others. You have a strong sense of self-worth and may find prosperity through your natural talents and abilities. There can be a tendency towards extravagance or overspending, as you may not always be prudent with your finances. You are likely to be financially secure and may experience periods of significant growth.",
+          "keyThemes": ["Money", "Possessions", "Values", "Self-worth", "Abundance"],
+          "strengths": ["Generous", "Optimistic about money", "Resourceful", "Prosperous"],
+          "challenges": ["Extravagant", "Overspending", "Materialistic", "Lack of financial discipline"]
+        },
+        "house3": {
+          "title": "Jupiter in 3rd House",
+          "description": "Jupiter in the 3rd House indicates an expansive and optimistic approach to communication, learning, and local environments. You are likely to be a natural communicator, with a broad range of interests and a thirst for knowledge. You enjoy sharing your ideas and may be drawn to teaching, writing, or public speaking. Your mind is open and curious, and you may find opportunities for growth through short journeys, siblings, or neighbors. There can be a tendency towards verbosity or a lack of focus, as you may try to learn too many things at once. You are likely to be well-informed and able to articulate your thoughts clearly.",
+          "keyThemes": ["Communication", "Learning", "Short Journeys", "Siblings", "Local Environment"],
+          "strengths": ["Communicative", "Curious", "Knowledgeable", "Optimistic"],
+          "challenges": ["Verbose", "Scattered", "Overly optimistic about information", "Gullible"]
+        },
+        "house4": {
+          "title": "Jupiter in 4th House",
+          "description": "Jupiter in the 4th House indicates good fortune, expansion, and protection in matters of home, family, and roots. You are likely to have a strong connection to your heritage and may find great comfort and security within your family unit. Your home may be a place of abundance and hospitality, and you may enjoy entertaining guests. You have a deep sense of belonging and may find opportunities for growth through real estate, property, or family businesses. There can be a tendency towards over-attachment to comfort or a reluctance to leave your familiar surroundings. You are likely to be well-supported by your family and may inherit wealth or property.",
+          "keyThemes": ["Home", "Family", "Roots", "Security", "Heritage"],
+          "strengths": ["Supportive", "Nurturing", "Generous", "Secure"],
+          "challenges": ["Over-attachment to home", "Reluctance to change", "Overly comfortable", "Materialistic about home"]
+        },
+        "house5": {
+          "title": "Jupiter in 5th House",
+          "description": "Jupiter in the 5th House indicates an expansive and fortunate approach to creativity, romance, children, and speculation. You are likely to be naturally playful, optimistic, and enjoy expressing yourself in unique ways. You may have a talent for artistic endeavors, performance, or sports. Your romantic life is likely to be abundant and joyful, and you may have many children or a strong connection to young people. There can be a tendency towards excessive risk-taking or overindulgence in pleasure, as you may believe that luck is always on your side. You are likely to be a source of inspiration and joy for others.",
+          "keyThemes": ["Creativity", "Romance", "Children", "Speculation", "Self-expression"],
+          "strengths": ["Playful", "Optimistic", "Creative", "Generous"],
+          "challenges": ["Excessive risk-taking", "Overindulgence", "Gambling", "Impulsive"]
+        },
+        "house6": {
+          "title": "Jupiter in 6th House",
+          "description": "Jupiter in the 6th House indicates good fortune and expansion in matters of work, daily routines, and health. You are likely to be optimistic and enthusiastic about your work, finding opportunities for growth and learning in your daily tasks. You may be drawn to professions that involve helping others, teaching, or healing. You are likely to have good health and a strong immune system, though there can be a tendency towards overindulgence in food or a lack of discipline in your health routines. You are a diligent worker and may find success through your dedication and positive attitude.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Pets"],
+          "strengths": ["Diligent", "Optimistic about work", "Helpful", "Healthy"],
+          "challenges": ["Overindulgence in food", "Lack of discipline in health", "Workaholic", "Overly optimistic about health"]
+        },
+        "house7": {
+          "title": "Jupiter in 7th House",
+          "description": "Jupiter in the 7th House indicates good fortune, expansion, and benevolence in matters of partnerships, marriage, and open enemies. You are likely to attract generous and supportive partners, both in personal and professional relationships. You approach relationships with optimism and a belief in their potential for growth and mutual benefit. You may be drawn to legal professions or fields that involve mediation and negotiation. There can be a tendency towards over-idealizing partners or a lack of discernment in choosing associates. You are likely to experience success through collaborations and may find happiness in marriage.",
+          "keyThemes": ["Partnerships", "Marriage", "Open Enemies", "Agreements", "Justice"],
+          "strengths": ["Supportive in relationships", "Optimistic", "Fair-minded", "Harmonious"],
+          "challenges": ["Over-idealizing partners", "Lack of discernment", "Legal issues", "Overly trusting"]
+        },
+        "house8": {
+          "title": "Jupiter in 8th House",
+          "description": "Jupiter in the 8th House indicates good fortune and expansion in matters of shared resources, intimacy, transformation, and occult studies. You may benefit from inheritances, joint finances, or the resources of others. You have a deep curiosity about the mysteries of life, death, and the hidden aspects of existence. You approach intimacy with generosity and a desire for profound connection. There can be a tendency towards overspending joint funds or an excessive focus on material gains from others. You are likely to experience significant personal transformation and may find success in fields related to finance, research, or psychology.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Transformation", "Occult", "Inheritance"],
+          "strengths": ["Resourceful", "Generous in intimacy", "Insightful", "Transformative"],
+          "challenges": ["Overspending joint funds", "Excessive focus on others' money", "Difficulty with boundaries", "Overly trusting with shared resources"]
+        },
+        "house9": {
+          "title": "Jupiter in 9th House",
+          "description": "Jupiter in the 9th House indicates good fortune and expansion in matters of higher education, philosophy, long journeys, and foreign cultures. You have a natural thirst for knowledge and a desire to explore the world, both intellectually and physically. You may be drawn to higher learning, spiritual pursuits, or international travel. You are likely to be optimistic, open-minded, and enjoy sharing your wisdom with others. There can be a tendency towards dogmatism or an overemphasis on abstract theories without practical application. You are likely to find great meaning and purpose through your pursuit of truth and understanding.",
+          "keyThemes": ["Higher Education", "Philosophy", "Long Journeys", "Foreign Cultures", "Spirituality"],
+          "strengths": ["Philosophical", "Knowledgeable", "Adventurous", "Open-minded"],
+          "challenges": ["Dogmatic", "Overly theoretical", "Restless", "Preachy"]
+        },
+        "house10": {
+          "title": "Jupiter in 10th House",
+          "description": "Jupiter in the 10th House indicates good fortune, expansion, and recognition in matters of career, public image, and reputation. You are likely to achieve success and prominence in your chosen field, often through your optimistic attitude, integrity, and ability to inspire others. You may be drawn to leadership roles, public service, or professions that involve teaching or guiding. There can be a tendency towards arrogance or an overemphasis on external validation and status. You are likely to build a strong reputation and leave a positive legacy through your contributions to society.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Authority", "Ambition"],
+          "strengths": ["Ambitious", "Respected", "Influential", "Successful"],
+          "challenges": ["Arrogant", "Overly concerned with status", "Workaholic", "Dogmatic in career"]
+        },
+        "house11": {
+          "title": "Jupiter in 11th House",
+          "description": "Jupiter in the 11th House indicates good fortune and expansion in matters of friendships, groups, hopes, and wishes. You are likely to have a wide circle of friends and associates who are supportive and share your optimistic vision for the future. You may be involved in humanitarian causes or social groups that aim to make a positive impact on the world. Your hopes and wishes tend to be grand and often manifest due to your positive outlook and the support of your network. There can be a tendency towards over-optimism about group endeavors or a lack of discernment in choosing friends. You are likely to find great joy and fulfillment through your connections with others and your contributions to the collective.",
+          "keyThemes": ["Friendships", "Groups", "Hopes", "Wishes", "Humanitarianism"],
+          "strengths": ["Supportive", "Optimistic", "Social", "Idealistic"],
+          "challenges": ["Over-optimism about groups", "Lack of discernment in friendships", "Unrealistic expectations", "Easily influenced by groups"]
+        },
+        "house12": {
+          "title": "Jupiter in 12th House",
+          "description": "Jupiter in the 12th House indicates good fortune, expansion, and protection in matters of the subconscious, hidden enemies, solitude, and spiritual growth. You are likely to find great comfort and inspiration in solitude, meditation, or spiritual practices. You are likely to have a compassionate and empathetic nature, with a strong desire to help those in need. You may have hidden talents or resources that emerge when you least expect them. There can be a tendency towards escapism or a reluctance to confront difficult realities. You are likely to experience profound spiritual insights and may find success in fields related to healing, charity, or mysticism.",
+          "keyThemes": ["Subconscious", "Hidden Enemies", "Solitude", "Spiritual Growth", "Compassion"],
+          "strengths": ["Compassionate", "Empathetic", "Intuitive", "Spiritual"],
+          "challenges": ["Escapism", "Self-undoing", "Hidden enemies", "Overly idealistic"]
+        }
+      },
+      "saturn": {
+        "house1": {
+          "title": "Saturn in 1st House",
+          "description": "Saturn in the 1st House indicates a serious, disciplined, and often reserved demeanor. You are likely to be self-reliant, responsible, and possess a strong sense of duty. You may appear older than your years and approach life with a cautious and practical attitude. There can be a tendency towards self-doubt, shyness, or a feeling of being burdened by responsibilities. You are likely to achieve success through hard work, perseverance, and a methodical approach to life. You learn valuable lessons through challenges and develop inner strength and resilience over time.",
+          "keyThemes": ["Self-image", "Personality", "Appearance", "First Impressions", "Self-reliance"],
+          "strengths": ["Disciplined", "Responsible", "Patient", "Resilient"],
+          "challenges": ["Self-doubt", "Shyness", "Pessimism", "Overly serious"]
+        },
+        "house2": {
+          "title": "Saturn in 2nd House",
+          "description": "Saturn in the 2nd House indicates a cautious and disciplined approach to finances, possessions, and self-worth. You are likely to be responsible with money, valuing security and stability over extravagance. You may experience delays or challenges in accumulating wealth, but through hard work and perseverance, you can build a solid financial foundation. There can be a tendency towards frugality, anxiety about money, or a feeling of inadequacy regarding your self-worth. You are likely to learn valuable lessons about resource management and develop a strong sense of self-reliance and inner value.",
+          "keyThemes": ["Finances", "Possessions", "Self-worth", "Values", "Security"],
+          "strengths": ["Frugal", "Responsible with money", "Disciplined", "Resourceful"],
+          "challenges": ["Anxiety about money", "Materialistic", "Self-worth issues", "Overly cautious"]
+        },
+        "house3": {
+          "title": "Saturn in 3rd House",
+          "description": "Saturn in the 3rd House indicates a serious and methodical approach to communication, learning, and local environment. You are likely to be a careful and precise communicator, preferring well-thought-out expressions over impulsive speech. You may have experienced challenges in early education or with siblings, leading to a disciplined approach to learning and a desire for thorough understanding. There can be a tendency towards shyness, difficulty expressing ideas, or a feeling of being misunderstood. You are likely to excel in fields requiring detailed analysis, research, or structured communication, and your mind tends to be organized and logical.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys", "Local Environment"],
+          "strengths": ["Precise communicator", "Methodical learner", "Organized thinker", "Responsible"],
+          "challenges": ["Shyness", "Difficulty expressing ideas", "Overly critical", "Anxiety about learning"]
+        },
+        "house4": {
+          "title": "Saturn in 4th House",
+          "description": "Saturn in the 4th House indicates a serious and responsible approach to home, family, and roots. You may have experienced a strict upbringing or felt a heavy sense of responsibility towards your family early in life. There can be a deep need for security and stability in your home environment, and you may be the foundation or rock for your family. You might be drawn to traditional values and prefer a structured domestic life. Challenges could include feelings of emotional restriction, difficulty expressing affection, or a sense of isolation within the family. Over time, you build a strong, secure home and develop a profound sense of inner peace and belonging.",
+          "keyThemes": ["Home", "Family", "Roots", "Security", "Emotional Foundation"],
+          "strengths": ["Responsible", "Supportive of family", "Stable", "Traditional"],
+          "challenges": ["Emotional restriction", "Difficulty expressing affection", "Isolation", "Overly serious about home"]
+        },
+        "house5": {
+          "title": "Saturn in 5th House",
+          "description": "Saturn in the 5th House indicates a serious and disciplined approach to creativity, romance, children, and self-expression. You may feel a sense of responsibility or even inhibition in these areas, leading to a cautious and methodical approach. You are likely to be a diligent and persistent creator, producing works of lasting value. In romance, you may be reserved or slow to commit, but once you do, you are loyal and steadfast. There can be challenges related to self-expression, a fear of taking risks, or difficulties with children. Over time, you develop a deep and meaningful connection to your creative power and find joy in structured forms of self-expression.",
+          "keyThemes": ["Creativity", "Romance", "Children", "Self-expression", "Hobbies"],
+          "strengths": ["Disciplined creator", "Loyal in love", "Responsible parent", "Persistent"],
+          "challenges": ["Creative blocks", "Fear of risk-taking", "Reserved in romance", "Strict with children"]
+        },
+        "house6": {
+          "title": "Saturn in 6th House",
+          "description": "Saturn in the 6th House indicates a serious and disciplined approach to work, daily routines, health, and service. You are likely to be a diligent and responsible worker, taking your duties seriously and striving for perfection. You may experience challenges related to health or work early in life, leading to a strong focus on self-care and efficient routines. There can be a tendency towards overwork, anxiety about health, or a critical attitude towards yourself and others. You are likely to excel in fields requiring precision, organization, and dedication, and your commitment to service can be profound.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Duty"],
+          "strengths": ["Diligent worker", "Responsible", "Organized", "Committed to service"],
+          "challenges": ["Overwork", "Health anxiety", "Self-critical", "Perfectionism"]
+        },
+        "house7": {
+          "title": "Saturn in 7th House",
+          "description": "Saturn in the 7th House indicates a serious and responsible approach to partnerships, marriage, and open enemies. You are likely to seek stable and committed relationships, valuing loyalty and maturity in your partners. You may experience delays or challenges in forming partnerships, or find yourself attracted to older or more serious individuals. There can be a tendency towards fear of commitment, difficulty trusting others, or attracting partners who are demanding or restrictive. Through partnerships, you learn valuable lessons about compromise, responsibility, and the nature of true commitment, ultimately building strong and lasting bonds.",
+          "keyThemes": ["Partnerships", "Marriage", "Contracts", "Open Enemies", "Compromise"],
+          "strengths": ["Loyal", "Committed", "Responsible in relationships", "Mature"],
+          "challenges": ["Fear of commitment", "Difficulty trusting", "Attracting restrictive partners", "Overly serious in relationships"]
+        },
+        "house8": {
+          "title": "Saturn in 8th House",
+          "description": "Saturn in the 8th House indicates a serious and responsible approach to shared resources, intimacy, transformation, and hidden matters. You are likely to be cautious and disciplined in managing joint finances or inheritances, valuing security and long-term stability. You may experience challenges related to trust, intimacy, or confronting deep psychological issues, leading to a desire for profound transformation. There can be a tendency towards fear of vulnerability, difficulty with emotional merging, or a sense of responsibility for others' burdens. Through these experiences, you develop resilience, self-mastery, and a deep understanding of life's mysteries and the cycles of death and rebirth.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Transformation", "Death and Rebirth", "Psychological Depth"],
+          "strengths": ["Responsible with shared resources", "Resilient", "Self-mastered", "Deeply insightful"],
+          "challenges": ["Fear of vulnerability", "Difficulty with intimacy", "Trust issues", "Obsessive about control"]
+        },
+        "house9": {
+          "title": "Saturn in 9th House",
+          "description": "Saturn in the 9th House indicates a serious and disciplined approach to higher education, philosophy, foreign travel, and spiritual beliefs. You are likely to be a diligent and thorough student, seeking deep understanding and practical application of knowledge. You may experience challenges or delays in pursuing higher education or traveling abroad, leading to a more structured and purposeful approach to these areas. There can be a tendency towards dogmatism, skepticism, or a fear of exploring new ideas. Through your pursuit of truth and wisdom, you develop a profound and well-founded philosophy of life, often becoming an authority in your chosen field.",
+          "keyThemes": ["Higher Education", "Philosophy", "Foreign Travel", "Spirituality", "Belief Systems"],
+          "strengths": ["Thorough student", "Disciplined learner", "Philosophical", "Wise"],
+          "challenges": ["Dogmatism", "Skepticism", "Fear of new ideas", "Overly rigid beliefs"]
+        },
+        "house10": {
+          "title": "Saturn in 10th House",
+          "description": "Saturn in the 10th House indicates a serious and ambitious approach to career, public image, and reputation. You are likely to be highly driven, responsible, and dedicated to achieving your professional goals. You may experience delays or challenges in your career path, but through perseverance and hard work, you can reach positions of authority and recognition. There can be a tendency towards overwork, a fear of failure, or a feeling of being burdened by professional responsibilities. You are likely to build a solid and respected career, earning recognition for your integrity and contributions to society.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Authority", "Ambition"],
+          "strengths": ["Ambitious", "Responsible", "Dedicated", "Respected"],
+          "challenges": ["Overwork", "Fear of failure", "Burdened by responsibility", "Rigid in career"]
+        },
+        "house11": {
+          "title": "Saturn in 11th House",
+          "description": "Saturn in the 11th House indicates a serious and responsible approach to friendships, groups, social causes, and future aspirations. You are likely to be selective in your friendships, valuing loyalty, maturity, and shared goals. You may experience challenges or delays in forming social connections, leading to a more independent and self-reliant approach to your social life. There can be a tendency towards isolation, shyness, or a fear of not fitting in. Through your involvement in groups and social causes, you develop a strong sense of purpose and contribute meaningfully to the collective, often becoming a respected leader or organizer.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Aspirations", "Hopes and Wishes"],
+          "strengths": ["Loyal friend", "Responsible group member", "Purpose-driven", "Respected leader"],
+          "challenges": ["Isolation", "Shyness", "Fear of not fitting in", "Overly serious in social settings"]
+        },
+        "house12": {
+          "title": "Saturn in 12th House",
+          "description": "Saturn in the 12th House indicates a serious and introspective approach to hidden matters, the subconscious, solitude, and spiritual growth. You are likely to be highly sensitive and empathetic, with a deep understanding of the human psyche. You may experience challenges related to self-undoing, isolation, or confronting past traumas, leading to a profound journey of self-discovery and healing. There can be a tendency towards self-sacrifice, escapism, or a fear of facing your inner demons. Through your spiritual practices and service to others, you develop immense inner strength, compassion, and a deep connection to the universal consciousness.",
+          "keyThemes": ["Subconscious", "Solitude", "Spiritual Growth", "Hidden Matters", "Self-undoing"],
+          "strengths": ["Sensitive", "Empathetic", "Spiritually aware", "Compassionate"],
+          "challenges": ["Self-undoing", "Isolation", "Escapism", "Fear of inner demons"]
+        }
+      },
+      "uranus": {
+        "house1": {
+          "title": "Uranus in 1st House",
+          "description": "Uranus in the 1st House indicates an independent, unconventional, and often eccentric personality. You are likely to be a trailblazer, eager to express your individuality and challenge the status quo. You may have a unique appearance or mannerisms that set you apart from others. There can be a tendency towards restlessness, sudden changes in direction, or a rebellious streak. You are likely to inspire others with your originality and progressive ideas, but may also be perceived as unpredictable or erratic. Your life path is often marked by unexpected twists and turns, leading to a constant evolution of your identity.",
+          "keyThemes": ["Individuality", "Unconventionality", "Independence", "Originality", "Rebellion"],
+          "strengths": ["Innovative", "Progressive", "Authentic", "Inspiring"],
+          "challenges": ["Restlessness", "Unpredictable", "Rebellious", "Erratic"]
+        },
+        "house2": {
+          "title": "Uranus in 2nd House",
+          "description": "Uranus in the 2nd House indicates an unconventional and often unpredictable approach to finances, possessions, and personal values. You are likely to have fluctuating income or unexpected gains and losses, leading to a need for adaptability in financial matters. You may challenge traditional notions of security and value freedom and independence over material accumulation. There can be a tendency towards impulsive spending, sudden changes in financial strategy, or a desire to earn money through innovative or unconventional means. You are likely to inspire others with your unique perspective on wealth and resources, but may also be perceived as financially unstable or erratic.",
+          "keyThemes": ["Finances", "Possessions", "Values", "Security", "Income"],
+          "strengths": ["Innovative financially", "Adaptable", "Independent", "Unconventional"],
+          "challenges": ["Fluctuating income", "Impulsive spending", "Financial instability", "Erratic financial decisions"]
+        },
+        "house3": {
+          "title": "Uranus in 3rd House",
+          "description": "Uranus in the 3rd House indicates an original, intuitive, and often unconventional mind. You are likely to have sudden insights, brilliant ideas, and a unique way of communicating. You may challenge traditional forms of education or prefer to learn through unconventional methods. There can be a tendency towards restlessness in thought, sudden changes in opinions, or a desire to express yourself in a shocking or provocative manner. You are likely to inspire others with your innovative thinking and progressive ideas, but may also be perceived as erratic or difficult to understand. Your communication style is often ahead of its time, and you may be drawn to technology, media, or writing.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys", "Mind"],
+          "strengths": ["Original thinker", "Intuitive", "Innovative communicator", "Progressive"],
+          "challenges": ["Restless mind", "Sudden changes of opinion", "Provocative communication", "Erratic thinking"]
+        },
+        "house4": {
+          "title": "Uranus in 4th House",
+          "description": "Uranus in the 4th House indicates an unconventional and often unstable home environment or family background. You may have experienced frequent moves, unusual family dynamics, or a desire for freedom from traditional domestic life. You are likely to seek independence and autonomy within your home, creating a unique and often modern living space. There can be a tendency towards restlessness in domestic matters, sudden changes in living arrangements, or a desire to break free from family expectations. You are likely to inspire others with your progressive approach to home and family, but may also be perceived as rootless or detached. Your sense of belonging is often found in unconventional communities or chosen families.",
+          "keyThemes": ["Home", "Family", "Roots", "Security", "Inner Foundation"],
+          "strengths": ["Independent at home", "Progressive family views", "Adaptable to change", "Unique living space"],
+          "challenges": ["Unstable home life", "Frequent moves", "Detached from family", "Restless in domestic matters"]
+        },
+        "house5": {
+          "title": "Uranus in 5th House",
+          "description": "Uranus in the 5th House indicates an unconventional, creative, and often unpredictable approach to self-expression, romance, children, and speculation. You are likely to have unique talents and a desire to express yourself in original and innovative ways. Your romantic life may be marked by sudden attractions, unusual relationships, or a need for freedom and excitement. There can be a tendency towards impulsiveness in creative pursuits, sudden changes in romantic interests, or a desire to raise children in an unconventional manner. You are likely to inspire others with your originality and spontaneity, but may also be perceived as erratic or unreliable in matters of the heart. Your creative endeavors often break new ground and challenge traditional norms.",
+          "keyThemes": ["Creativity", "Romance", "Children", "Self-expression", "Speculation"],
+          "strengths": ["Original creative expression", "Spontaneous", "Innovative", "Unique romantic style"],
+          "challenges": ["Impulsive in romance", "Unpredictable with children", "Erratic creative pursuits", "Risk-taker in speculation"]
+        },
+        "house6": {
+          "title": "Uranus in 6th House",
+          "description": "Uranus in the 6th House indicates an unconventional and often unpredictable approach to work, daily routines, and health. You are likely to seek freedom and innovation in your professional life, preferring roles that allow for independence and creativity. Your daily routines may be erratic or subject to sudden changes, and you may find traditional work environments restrictive. There can be a tendency towards unusual health issues or a preference for alternative healing methods. You are likely to inspire others with your unique work ethic and progressive ideas about well-being, but may also be perceived as unreliable or rebellious in the workplace. Your contributions often involve breaking new ground and challenging established norms.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Pets"],
+          "strengths": ["Innovative work ethic", "Adaptable to change", "Independent", "Progressive health views"],
+          "challenges": ["Erratic work habits", "Unpredictable health issues", "Rebellious in workplace", "Difficulty with routine"]
+        },
+        "house7": {
+          "title": "Uranus in 7th House",
+          "description": "Uranus in the 7th House indicates an unconventional, unpredictable, and often liberating approach to partnerships, marriage, and open enemies. You are likely to be drawn to unique or eccentric partners, and your relationships may be marked by sudden changes, periods of freedom, or a need for intellectual stimulation. Traditional relationship structures may feel restrictive, and you may prefer open or unconventional arrangements. There can be a tendency towards sudden breakups, unexpected alliances, or a desire for independence within partnerships. You are likely to inspire others with your progressive views on relationships, but may also be perceived as unreliable or detached. Your partnerships often challenge societal norms and lead to personal growth.",
+          "keyThemes": ["Partnerships", "Marriage", "Relationships", "Open Enemies", "Agreements"],
+          "strengths": ["Independent in relationships", "Progressive views", "Exciting partnerships", "Adaptable to change"],
+          "challenges": ["Unpredictable relationships", "Sudden breakups", "Detached in partnerships", "Difficulty with commitment"]
+        },
+        "house8": {
+          "title": "Uranus in 8th House",
+          "description": "Uranus in the 8th House indicates an unconventional, unpredictable, and often transformative approach to shared resources, intimacy, and psychological depths. You are likely to experience sudden changes in financial partnerships, inheritances, or joint ventures. Your approach to intimacy may be experimental or unconventional, seeking freedom and authenticity in deep connections. There can be a tendency towards sudden insights into psychological patterns, unexpected encounters with the occult, or a desire to break free from traditional notions of death and rebirth. You are likely to inspire others with your progressive views on transformation and shared power, but may also be perceived as erratic or detached. Your life path often involves profound psychological shifts and a unique understanding of the mysteries of life.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Transformation", "Death and Rebirth", "Occult"],
+          "strengths": ["Insightful into psychology", "Independent in shared finances", "Open to transformation", "Unconventional intimacy"],
+          "challenges": ["Unpredictable financial changes", "Erratic intimacy", "Difficulty with control", "Sudden crises"]
+        },
+        "house9": {
+          "title": "Uranus in 9th House",
+          "description": "Uranus in the 9th House indicates an unconventional, progressive, and often revolutionary approach to higher education, philosophy, foreign travel, and spiritual beliefs. You are likely to challenge traditional dogmas and seek truth through independent exploration and unconventional sources. Your philosophical views may be ahead of their time, and you may be drawn to foreign cultures or alternative spiritual paths. There can be a tendency towards sudden changes in beliefs, unexpected travel experiences, or a desire to break free from intellectual limitations. You are likely to inspire others with your innovative thinking and broad perspectives, but may also be perceived as radical or eccentric. Your life path often involves a quest for knowledge and a desire to expand consciousness beyond conventional boundaries.",
+          "keyThemes": ["Higher Education", "Philosophy", "Foreign Travel", "Spirituality", "Beliefs"],
+          "strengths": ["Progressive thinker", "Open-minded", "Independent learner", "Innovative spiritual views"],
+          "challenges": ["Sudden changes in beliefs", "Restless for new experiences", "Rebellious against dogma", "Erratic travel plans"]
+        },
+        "house10": {
+          "title": "Uranus in 10th House",
+          "description": "Uranus in the 10th House indicates an unconventional, independent, and often revolutionary approach to career, public image, and social status. You are likely to seek freedom and innovation in your professional life, preferring roles that allow for originality and a break from tradition. Your career path may be marked by sudden changes, unexpected opportunities, or a desire to challenge established norms. There can be a tendency towards restlessness in your public role, sudden shifts in reputation, or a desire to make a unique contribution to society. You are likely to inspire others with your progressive ideas and leadership, but may also be perceived as unpredictable or rebellious. Your professional life often involves pioneering new fields or advocating for social change.",
+          "keyThemes": ["Career", "Public Image", "Social Status", "Ambition", "Reputation"],
+          "strengths": ["Innovative career choices", "Independent leader", "Progressive public image", "Catalyst for change"],
+          "challenges": ["Unpredictable career path", "Sudden changes in status", "Rebellious against authority", "Erratic public persona"]
+        },
+        "house11": {
+          "title": "Uranus in 11th House",
+          "description": "Uranus in the 11th House indicates an unconventional, independent, and often revolutionary approach to friendships, groups, and aspirations. You are likely to be drawn to unique or eccentric friends, and your social circles may be marked by sudden changes, periods of freedom, or a need for intellectual stimulation. Traditional group structures may feel restrictive, and you may prefer open or unconventional associations. There can be a tendency towards sudden shifts in friendships, unexpected alliances, or a desire to break free from social norms. You are likely to inspire others with your progressive views on community and social change, but may also be perceived as unreliable or detached. Your aspirations often involve humanitarian causes or pioneering new social movements.",
+          "keyThemes": ["Friendships", "Groups", "Aspirations", "Hopes and Wishes", "Social Causes"],
+          "strengths": ["Independent in friendships", "Progressive social views", "Innovative in group settings", "Humanitarian"],
+          "challenges": ["Unpredictable friendships", "Sudden changes in groups", "Detached in social settings", "Rebellious against norms"]
+        },
+        "house12": {
+          "title": "Uranus in 12th House",
+          "description": "Uranus in the 12th House indicates an unconventional, intuitive, and often liberating approach to the subconscious, hidden matters, and spiritual realms. You are likely to have sudden insights into your inner world, and your spiritual experiences may be marked by unexpected awakenings or a desire to break free from traditional beliefs. There can be a tendency towards restlessness in your subconscious, sudden revelations about hidden patterns, or a desire to work behind the scenes for humanitarian causes. You are likely to inspire others with your unique spiritual insights and progressive views on the collective unconscious, but may also be perceived as eccentric or detached. Your life path often involves a deep connection to the unseen world and a desire to bring about subtle, yet profound, changes.",
+          "keyThemes": ["Subconscious", "Hidden Matters", "Spirituality", "Karma", "Self-undoing"],
+          "strengths": ["Intuitive insights", "Progressive spiritual views", "Compassionate", "Works for collective good"],
+          "challenges": ["Hidden restlessness", "Sudden subconscious revelations", "Difficulty with boundaries", "Self-undoing tendencies"]
+        }
+      },
+      "neptune": {
+        "house1": {
+          "title": "Neptune in 1st House",
+          "description": "Neptune in the 1st House suggests a highly sensitive, empathetic, and impressionable personality. You may appear dreamy, elusive, or even mysterious to others, as your boundaries between self and environment are often blurred. There's a strong connection to the collective unconscious, making you highly intuitive and compassionate, but also susceptible to absorbing the emotions and energies of those around you. You might struggle with a clear sense of identity, as your self-image can be fluid and easily influenced by external perceptions. This placement often indicates a natural artistic talent, a spiritual inclination, or a tendency towards escapism through fantasy or addiction. You may project an idealized image of yourself, leading to potential disillusionment if reality doesn't match your dreams. Learning to establish healthy boundaries and ground yourself is crucial for navigating life with this placement.",
+          "keyThemes": ["Identity", "Self-image", "Appearance", "Personality", "First Impressions"],
+          "strengths": ["Highly empathetic", "Intuitive", "Artistic", "Compassionate", "Spiritual"],
+          "challenges": ["Lack of boundaries", "Impressionable", "Escapism", "Confusion about self", "Idealism leading to disillusionment"]
+        },
+        "house2": {
+          "title": "Neptune in 2nd House",
+          "description": "Neptune in the 2nd House suggests a fluid, often idealized, and sometimes confusing relationship with personal values, finances, and material possessions. You may have an intuitive understanding of money or resources, but also a tendency towards impracticality or self-deception in financial matters. There can be a desire to use your resources for spiritual or humanitarian causes, or a susceptibility to scams and financial illusions. Your sense of self-worth may be tied to intangible qualities rather than material wealth, leading to a disregard for conventional financial security. This placement often indicates a natural artistic talent that can be monetized, or a need to find spiritual meaning in your possessions. You may experience periods of financial uncertainty or unexpected gains and losses, reflecting the elusive nature of Neptune. Learning to be realistic and discerning with your resources is crucial for navigating life with this placement.",
+          "keyThemes": ["Values", "Finances", "Possessions", "Self-worth", "Resources"],
+          "strengths": ["Intuitive with money", "Generous", "Artistic income potential", "Spiritual values"],
+          "challenges": ["Financial confusion", "Vulnerability to scams", "Impractical spending", "Unstable self-worth"]
+        },
+        "house3": {
+          "title": "Neptune in 3rd House",
+          "description": "Neptune in the 3rd House suggests a highly imaginative, intuitive, and sometimes vague approach to communication, learning, and immediate environment. Your mind may be very receptive to subtle energies and non-verbal cues, making you empathetic and perhaps telepathic. However, this can also lead to confusion, misunderstandings, or a tendency to idealize your siblings, neighbors, or early schooling. You may struggle with clear and precise communication, preferring to express yourself through art, music, or poetry. There can be a tendency towards escapism through reading or fantasy, or a need to find spiritual meaning in your daily interactions. This placement often indicates a natural talent for creative writing or a deep connection to your local community. You may experience periods of mental fog or a need to retreat from overstimulation. Learning to discern truth from illusion in your immediate surroundings is crucial for navigating life with this placement.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys", "Local Environment"],
+          "strengths": ["Imaginative communicator", "Intuitive learner", "Empathetic", "Artistic expression"],
+          "challenges": ["Mental fog", "Misunderstandings", "Idealization of others", "Escapism through fantasy"]
+        },
+        "house4": {
+          "title": "Neptune in 4th House",
+          "description": "Neptune in the 4th House suggests a deeply sensitive and intuitive connection to your roots, home, and family. Your early home environment may have been confusing, elusive, or highly idealized, leading to a blurred sense of boundaries with family members. There can be a strong psychic connection to your parents or ancestors, and you may absorb the emotional atmosphere of your home. This placement often indicates a desire for an idealized home life, a spiritual sanctuary, or a tendency towards escapism within your domestic sphere. You may struggle with a clear understanding of your family history or feel a deep, unspoken longing for a sense of belonging. This can also manifest as a natural talent for creating beautiful, ethereal home environments or a desire to help others find their spiritual home. Learning to establish clear boundaries within your family and home is crucial for navigating life with this placement.",
+          "keyThemes": ["Home", "Family", "Roots", "Ancestry", "Emotional Foundations"],
+          "strengths": ["Deeply empathetic to family", "Intuitive about home environment", "Creates spiritual sanctuary", "Strong psychic connection to roots"],
+          "challenges": ["Confusing family dynamics", "Blurred boundaries with family", "Idealization of home life", "Escapism within home"]
+        },
+        "house5": {
+          "title": "Neptune in 5th House",
+          "description": "Neptune in the 5th House suggests a highly imaginative, romantic, and sometimes elusive approach to creativity, self-expression, children, and pleasure. You may have a deep artistic talent, particularly in music, dance, or visual arts, often channeling inspiration from unseen realms. Your romantic life may be idealized, leading to a search for a soulmate or a tendency to project unrealistic expectations onto partners. There can be a strong connection to children, perhaps through a spiritual or compassionate bond, or a tendency to see them through rose-colored glasses. This placement often indicates a love for fantasy, drama, and escapism through creative pursuits or hobbies. You may struggle with clear boundaries in your creative projects or romantic relationships, leading to confusion or disillusionment. Learning to ground your artistic visions and distinguish reality from fantasy in your personal life is crucial for navigating life with this placement.",
+          "keyThemes": ["Creativity", "Self-expression", "Romance", "Children", "Pleasure"],
+          "strengths": ["Deeply artistic", "Romantic idealist", "Compassionate with children", "Inspired creativity"],
+          "challenges": ["Idealized romance", "Confusing creative projects", "Escapism through pleasure", "Blurred boundaries with children"]
+        },
+        "house6": {
+          "title": "Neptune in 6th House",
+          "description": "Neptune in the 6th House suggests a highly sensitive and intuitive approach to work, daily routines, health, and service. You may be drawn to professions that involve healing, compassion, or creative expression, often working behind the scenes or in a supportive role. Your daily routines may be fluid and unstructured, and you might struggle with organization or clear boundaries in your work environment. There can be a tendency towards psychosomatic illnesses, sensitivities to medications, or a need to find spiritual meaning in your health practices. This placement often indicates a deep empathy for those you serve, a desire to alleviate suffering, or a susceptibility to absorbing the stress and illnesses of others. You may struggle with clear communication in your workplace or feel unappreciated for your subtle contributions. Learning to establish healthy boundaries in your work and self-care routines is crucial for navigating life with this placement.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Pets"],
+          "strengths": ["Compassionate service", "Intuitive healer", "Creative in work", "Empathetic colleague"],
+          "challenges": ["Vague work boundaries", "Psychosomatic health issues", "Disorganization", "Susceptibility to illness"]
+        },
+        "house7": {
+          "title": "Neptune in 7th House",
+          "description": "Neptune in the 7th House suggests a highly idealized, empathetic, and sometimes confusing approach to partnerships, marriage, and open enemies. You may project your spiritual ideals onto your partners, seeking a soulmate connection that transcends ordinary reality. This can lead to deep, compassionate bonds, but also to disillusionment if your partner doesn't live up to your unrealistic expectations. There can be a tendency towards blurred boundaries in relationships, making it difficult to discern your needs from those of your partner. You might be drawn to partners who are artistic, spiritual, or in some way elusive or mysterious. This placement often indicates a need to serve others through partnerships, or a susceptibility to being deceived or misled by others. You may struggle with clear communication in your relationships or feel a deep sense of sacrifice for your loved ones. Learning to establish healthy boundaries and see your partners realistically is crucial for navigating life with this placement.",
+          "keyThemes": ["Partnerships", "Marriage", "Relationships", "Open Enemies", "Contracts"],
+          "strengths": ["Deeply empathetic in relationships", "Idealistic in love", "Compassionate partner", "Spiritual connection in partnerships"],
+          "challenges": ["Idealization of partners", "Blurred relationship boundaries", "Deception in relationships", "Disillusionment in marriage"]
+        },
+        "house8": {
+          "title": "Neptune in 8th House",
+          "description": "Neptune in the 8th House suggests a deeply intuitive, psychic, and sometimes confusing relationship with shared resources, intimacy, transformation, and the occult. You may have a strong connection to the mystical or unseen realms, and a natural ability to understand the deeper currents of life and death. Your approach to shared finances, inheritances, or joint ventures may be idealistic, leading to potential confusion, deception, or a lack of clear boundaries. In intimate relationships, you seek a spiritual or transcendent connection, but may also experience blurred lines, self-sacrifice, or a tendency to attract partners with complex psychological issues. This placement often indicates a profound capacity for empathy and healing, particularly in areas of trauma or loss. You may struggle with distinguishing reality from illusion in matters of power, control, or the hidden aspects of life. Learning to ground your spiritual insights and establish clear boundaries in shared resources and intimate connections is crucial for navigating life with this placement.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Transformation", "Occult", "Death and Rebirth"],
+          "strengths": ["Deeply intuitive and psychic", "Empathetic healer", "Spiritual understanding of transformation", "Compassionate in intimacy"],
+          "challenges": ["Confusing shared finances", "Blurred boundaries in intimacy", "Susceptibility to deception", "Difficulty with power dynamics"]
+        },
+        "house9": {
+          "title": "Neptune in 9th House",
+          "description": "Neptune in the 9th House suggests a deeply spiritual, idealistic, and sometimes elusive approach to higher education, philosophy, foreign cultures, and spiritual quests. You may have a profound longing for truth and meaning, often seeking it through mystical experiences, religious studies, or exploring diverse belief systems. Your philosophical views may be fluid and evolving, and you might struggle with rigid doctrines or dogmas. There can be a strong attraction to foreign lands and cultures, perhaps feeling a spiritual connection to places far from your birth. This placement often indicates a natural talent for inspiring others through your spiritual insights or a desire to serve humanity through higher ideals. You may struggle with distinguishing between genuine spiritual guidance and illusion, or feel disillusioned by traditional educational or religious institutions. Learning to ground your spiritual experiences and integrate them with practical wisdom is crucial for navigating life with this placement.",
+          "keyThemes": ["Higher Education", "Philosophy", "Spirituality", "Foreign Travel", "Belief Systems"],
+          "strengths": ["Deep spiritual insights", "Open-minded to diverse beliefs", "Inspirational teacher", "Compassionate global citizen"],
+          "challenges": ["Confusing spiritual quests", "Idealization of foreign cultures", "Disillusionment with institutions", "Difficulty discerning truth"]
+        },
+        "house10": {
+          "title": "Neptune in 10th House",
+          "description": "Neptune in the 10th House suggests a highly idealistic, intuitive, and sometimes elusive approach to career, public image, and reputation. You may be drawn to professions that involve healing, spirituality, creativity, or service to humanity, often seeking to make a difference in the world through your work. Your career path may be unconventional, fluid, or subject to periods of uncertainty and change. There can be a strong desire for recognition, but also a tendency to shy away from the spotlight or to feel misunderstood in your public role. This placement often indicates a natural talent for inspiring others through your vision or a capacity to bring a compassionate and imaginative approach to your professional life. You may struggle with clear boundaries in your career, leading to confusion, self-sacrifice, or a susceptibility to deception in professional dealings. Learning to ground your professional aspirations and maintain clarity in your public image is crucial for navigating life with this placement.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Ambition", "Authority Figures"],
+          "strengths": ["Inspired career path", "Compassionate leader", "Intuitive public image", "Creative professional"],
+          "challenges": ["Confusing career choices", "Blurred professional boundaries", "Idealization of public role", "Susceptibility to deception in career"]
+        },
+        "house11": {
+          "title": "Neptune in 11th House",
+          "description": "Neptune in the 11th House suggests a highly idealistic, compassionate, and sometimes elusive approach to friendships, groups, social causes, and future aspirations. You may be drawn to friendships based on shared spiritual ideals, artistic pursuits, or humanitarian goals, seeking connections that transcend superficiality. Your social circle may be diverse and unconventional, and you might struggle with clear boundaries in group settings, leading to confusion or self-sacrifice. There can be a strong desire to contribute to collective well-being, often through imaginative or spiritual means. This placement often indicates a natural talent for inspiring groups towards a common vision or a capacity to bring a healing presence to social movements. You may struggle with discerning true friends from those who might take advantage of your generosity, or feel disillusioned by group dynamics. Learning to establish healthy boundaries in friendships and maintain clarity in your social ideals is crucial for navigating life with this placement.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Hopes and Wishes", "Future Aspirations"],
+          "strengths": ["Idealistic friendships", "Compassionate group member", "Inspired social vision", "Humanitarian spirit"],
+          "challenges": ["Blurred boundaries in friendships", "Disillusionment with groups", "Susceptibility to deception in social circles", "Unrealistic future aspirations"]
+        },
+        "house12": {
+          "title": "Neptune in 12th House",
+          "description": "Neptune in the 12th House suggests a deeply mystical, compassionate, and sometimes elusive connection to the subconscious, hidden realms, spirituality, and self-undoing. You may have a rich inner world, vivid dreams, and a strong psychic sensitivity, often absorbing the emotions and energies of your environment. There can be a tendency towards self-sacrifice, martyrdom, or a feeling of being a victim, as boundaries between self and others are blurred. This placement often indicates a natural talent for spiritual healing, creative expression through art or music, or a deep understanding of the collective unconscious. You may struggle with distinguishing reality from illusion, or feel a sense of being lost or overwhelmed by the vastness of your inner landscape. This can also manifest as a need for solitude and retreat to recharge your spiritual batteries. Learning to establish healthy boundaries, discern genuine spiritual experiences from escapism, and integrate your spiritual insights into your daily life is crucial for navigating life with this placement.",
+          "keyThemes": ["Subconscious", "Spirituality", "Hidden Realms", "Self-undoing", "Karma"],
+          "strengths": ["Deeply mystical and intuitive", "Compassionate and empathetic", "Creative and artistic", "Spiritual healer"],
+          "challenges": ["Blurred boundaries", "Self-sacrifice and martyrdom", "Escapism and illusion", "Feeling lost or overwhelmed"]
+        }
+      },
+      "pluto": {
+        "house1": {
+          "title": "Pluto in 1st House",
+          "description": "Pluto in the 1st House suggests an intense, transformative, and powerful personality. You possess a strong will and a deep drive for self-mastery and regeneration. Your presence can be commanding, and you may exude an aura of mystery or intensity. This placement often indicates a life path marked by significant personal transformations, where you are constantly shedding old identities to emerge stronger. You may have experienced profound challenges in your early life that forced you to confront your inner power. There can be a tendency to be secretive or to guard your true self, as you are acutely aware of power dynamics and vulnerability. You are driven to understand the deeper motivations of others and may possess a natural ability to influence or lead. Learning to channel your immense power constructively and to trust your own transformative process is crucial for navigating life with this placement.",
+          "keyThemes": ["Personality", "Self-Image", "Appearance", "First Impressions", "Vitality"],
+          "strengths": ["Powerful presence", "Resilient and regenerative", "Strong will", "Transformative influence"],
+          "challenges": ["Intense and secretive", "Power struggles", "Self-destructive tendencies", "Difficulty with vulnerability"]
+        },
+        "house2": {
+          "title": "Pluto in 2nd House",
+          "description": "Pluto in the 2nd House suggests an intense and transformative relationship with personal values, finances, and material possessions. You may experience significant fluctuations in your financial life, including periods of great wealth or profound loss, forcing you to re-evaluate your relationship with money and security. There's a deep drive to accumulate resources, not just for security, but for power and control. You may be secretive about your finances or inheritances, and possess a keen ability to uncover hidden assets or opportunities. This placement often indicates a need to transform your value system, moving beyond superficial desires to embrace what truly empowers you. You may struggle with possessiveness or an obsessive focus on material gain, or experience power struggles related to shared resources. Learning to detach from material outcomes and to trust in your inner resources is crucial for navigating life with this placement.",
+          "keyThemes": ["Money", "Possessions", "Values", "Self-Worth", "Resources"],
+          "strengths": ["Resourceful and resilient", "Deep financial insight", "Strong sense of self-worth", "Transformative earning potential"],
+          "challenges": ["Obsessive about money", "Financial power struggles", "Fear of loss", "Materialistic tendencies"]
+        },
+        "house3": {
+          "title": "Pluto in 3rd House",
+          "description": "Pluto in the 3rd House suggests an intense, penetrating, and transformative approach to communication, learning, siblings, and immediate environment. You possess a powerful mind, capable of deep research and uncovering hidden truths. Your communication style may be direct, impactful, and sometimes intimidating, as you tend to get to the core of any issue. There can be a profound need to transform your thought processes and belief systems, often through intense learning experiences or challenging interactions with siblings or neighbors. You may be drawn to subjects that involve psychology, mystery, or the occult, and have a natural ability to influence others through your words. This placement often indicates a life path where you are constantly restructuring your mental framework. You may struggle with obsessive thinking, manipulative communication, or power struggles with siblings or in your local community. Learning to use your powerful mind for constructive transformation and to communicate with integrity is crucial for navigating life with this placement.",
+          "keyThemes": ["Communication", "Learning", "Siblings", "Short Journeys", "Local Environment"],
+          "strengths": ["Penetrating intellect", "Transformative communication", "Deep researcher", "Influential speaker"],
+          "challenges": ["Obsessive thinking", "Manipulative communication", "Power struggles with siblings", "Difficulty with superficiality"]
+        },
+        "house4": {
+          "title": "Pluto in 4th House",
+          "description": "Pluto in the 4th House suggests an intense, transformative, and often hidden relationship with your roots, home, and family. Your early home environment may have been marked by power struggles, secrets, or profound changes, forcing you to develop resilience and self-reliance from a young age. There can be a deep psychological connection to your family lineage, and you may be driven to uncover hidden family patterns or ancestral karma. This placement often indicates a need to transform your emotional foundations, releasing old conditioning and creating a home environment that truly empowers you. You may struggle with control issues within the family, or experience a deep fear of losing your sense of security. There can also be a tendency to be secretive about your private life or to create a very private, almost fortress-like home. Learning to release the past, forgive family dynamics, and build a secure emotional base from within is crucial for navigating life with this placement.",
+          "keyThemes": ["Home", "Family", "Roots", "Ancestry", "Emotional Foundations"],
+          "strengths": ["Deeply resilient emotional base", "Ability to transform family patterns", "Strong sense of inner security", "Penetrating insight into roots"],
+          "challenges": ["Family power struggles", "Secrets in the home", "Fear of abandonment", "Difficulty letting go of the past"]
+        },
+        "house5": {
+          "title": "Pluto in 5th House",
+          "description": "Pluto in the 5th House suggests an intense, transformative, and often obsessive approach to creativity, romance, children, and self-expression. You possess a powerful creative drive, often channeling deep psychological insights or hidden truths into your artistic endeavors. Your romantic relationships may be marked by intensity, power struggles, or profound transformations, as you seek deep, soul-level connections. There can be a strong desire to create, whether it's art, businesses, or children, and you may be very protective of your creations. This placement often indicates a need to transform your understanding of pleasure and risk, moving beyond superficial desires to embrace what truly empowers you. You may struggle with control issues in romantic relationships or with children, or experience a fear of losing your creative power. Learning to channel your intense creative energy constructively and to embrace vulnerability in love is crucial for navigating life with this placement.",
+          "keyThemes": ["Creativity", "Romance", "Children", "Self-Expression", "Speculation"],
+          "strengths": ["Deeply creative and expressive", "Magnetic romantic presence", "Transformative approach to parenting", "Powerful self-expression"],
+          "challenges": ["Obsessive in love", "Power struggles with children", "Fear of creative failure", "Compulsive risk-taking"]
+        },
+        "house6": {
+          "title": "Pluto in 6th House",
+          "description": "Pluto in the 6th House suggests an intense, transformative, and often obsessive approach to work, daily routines, health, and service. You possess a powerful drive to master your skills and to bring about profound changes in your work environment. There can be a deep need to uncover hidden dynamics in your workplace or to transform your approach to health and well-being. This placement often indicates a life path where you are constantly refining your daily habits and seeking deeper meaning in your work. You may be drawn to professions that involve healing, research, or uncovering hidden truths, and possess a natural ability to diagnose problems and implement effective solutions. You may struggle with perfectionism, workaholism, or power struggles with colleagues or subordinates. There can also be a tendency to experience intense health crises that force you to transform your lifestyle. Learning to channel your intense energy constructively in your daily life and to embrace a holistic approach to health is crucial for navigating life with this placement.",
+          "keyThemes": ["Work", "Daily Routines", "Health", "Service", "Pets"],
+          "strengths": ["Dedicated and hardworking", "Transformative in the workplace", "Insightful about health", "Effective problem-solver"],
+          "challenges": ["Perfectionism", "Workaholism", "Health crises", "Power struggles at work"]
+        },
+        "house7": {
+          "title": "Pluto in 7th House",
+          "description": "Pluto in the 7th House suggests an intense, transformative, and often challenging relationship with partnerships, marriage, and open enemies. Your significant relationships may be marked by power struggles, deep psychological dynamics, or profound transformations, as you seek to merge on a soul level. There can be a strong need to uncover hidden truths within your partnerships or to transform your approach to commitment and equality. This placement often indicates a life path where you are constantly learning about power dynamics through your interactions with others. You may be drawn to partners who are intense, powerful, or who facilitate your personal transformation, and possess a natural ability to understand the deeper motivations of others. You may struggle with control issues in relationships, or attract partners who are manipulative or who challenge your sense of self. There can also be a tendency to experience profound betrayals or endings in relationships that force you to confront your own shadow. Learning to share power, embrace vulnerability, and to transform your relationships into vehicles for growth is crucial for navigating life with this placement.",
+          "keyThemes": ["Partnerships", "Marriage", "Open Enemies", "Contracts", "Equality"],
+          "strengths": ["Deeply transformative relationships", "Insightful about power dynamics", "Loyal and committed partner", "Ability to heal relationships"],
+          "challenges": ["Power struggles in relationships", "Attracting manipulative partners", "Fear of intimacy", "Profound betrayals"]
+        },
+        "house8": {
+          "title": "Pluto in 8th House",
+          "description": "Pluto in the 8th House suggests an intense, transformative, and often obsessive relationship with shared resources, intimacy, death, and regeneration. You possess a powerful ability to delve into the depths of the human psyche and to uncover hidden truths. Your experiences with intimacy and shared resources may be marked by profound transformations, power struggles, or deep psychological dynamics, as you seek to merge on a soul level. There can be a strong need to understand the mysteries of life and death, and you may be drawn to subjects like occultism, psychology, or metaphysics. This placement often indicates a life path where you are constantly confronting your own shadow and transforming your understanding of power and control. You may struggle with control issues in shared finances or intimate relationships, or experience a deep fear of loss or betrayal. Learning to surrender to the transformative process, to embrace vulnerability in intimacy, and to trust in your own regenerative power is crucial for navigating life with this placement.",
+          "keyThemes": ["Shared Resources", "Intimacy", "Death and Rebirth", "Transformation", "Occult"],
+          "strengths": ["Deeply insightful about human nature", "Powerful in crisis situations", "Strong regenerative abilities", "Magnetic and transformative"],
+          "challenges": ["Control issues in shared resources", "Fear of loss or betrayal", "Obsessive about intimacy", "Attracting intense power struggles"]
+        },
+        "house9": {
+          "title": "Pluto in 9th House",
+          "description": "Pluto in the 9th House suggests an intense, transformative, and often obsessive approach to higher education, philosophy, foreign travel, and spiritual beliefs. You possess a powerful drive to uncover profound truths and to expand your understanding of the world. Your beliefs may undergo significant transformations throughout your life, as you constantly seek a deeper, more authentic spiritual path. There can be a strong need to challenge existing dogmas and to explore unconventional philosophies. This placement often indicates a life path where you are constantly seeking wisdom and meaning beyond the superficial. You may be drawn to subjects like comparative religion, metaphysics, or global politics, and possess a natural ability to influence others through your philosophical insights. You may struggle with dogmatism, fanaticism, or power struggles related to your beliefs. There can also be a tendency to experience profound crises of faith that force you to re-evaluate your worldview. Learning to embrace intellectual humility, to respect diverse perspectives, and to integrate your spiritual insights into your daily life is crucial for navigating life with this placement.",
+          "keyThemes": ["Higher Education", "Philosophy", "Foreign Travel", "Spirituality", "Belief Systems"],
+          "strengths": ["Deep philosophical insight", "Transformative spiritual journey", "Powerful teacher of truth", "Broad worldview"],
+          "challenges": ["Dogmatism and fanaticism", "Crises of faith", "Power struggles over beliefs", "Difficulty with superficiality"]
+        },
+        "house10": {
+          "title": "Pluto in 10th House",
+          "description": "Pluto in the 10th House suggests an intense, transformative, and often powerful approach to career, public image, and reputation. You possess a strong drive for success and recognition, often seeking positions of authority or influence. Your career path may be marked by significant transformations, power struggles, or profound changes in your public standing, forcing you to constantly redefine your professional identity. There can be a deep need to leave a lasting legacy and to make a profound impact on the world. This placement often indicates a life path where you are constantly striving for mastery and seeking to uncover hidden dynamics within your chosen field. You may be drawn to professions that involve power, control, or the transformation of society, and possess a natural ability to lead and inspire others. You may struggle with ambition, ruthlessness, or an obsessive focus on external achievement. There can also be a tendency to experience profound falls from grace or public scandals that force you to confront your own shadow. Learning to use your power responsibly, to prioritize integrity over ambition, and to embrace a more holistic definition of success is crucial for navigating life with this placement.",
+          "keyThemes": ["Career", "Public Image", "Reputation", "Authority", "Legacy"],
+          "strengths": ["Ambitious and driven", "Transformative in career", "Powerful leader", "Strong sense of purpose"],
+          "challenges": ["Ruthless ambition", "Power struggles in career", "Fear of failure", "Public scandals"]
+        },
+        "house11": {
+          "title": "Pluto in 11th House",
+          "description": "Pluto in the 11th House suggests an intense, transformative, and often powerful approach to friendships, groups, social causes, and future aspirations. You possess a strong drive to influence your social circles and to bring about profound changes in collective endeavors. Your friendships may be marked by intensity, power struggles, or deep psychological dynamics, as you seek connections that challenge and transform you. There can be a strong need to uncover hidden agendas within groups or to transform your approach to social justice and humanitarian causes. This placement often indicates a life path where you are constantly learning about power dynamics within collective settings. You may be drawn to groups that are intense, secretive, or focused on deep transformation, and possess a natural ability to lead and inspire others towards a common vision. You may struggle with control issues in friendships or group settings, or experience a deep fear of betrayal or exclusion. Learning to use your influence responsibly, to foster genuine collaboration, and to embrace the transformative power of collective action is crucial for navigating life with this placement.",
+          "keyThemes": ["Friendships", "Groups", "Social Causes", "Hopes and Wishes", "Future Aspirations"],
+          "strengths": ["Powerful social influence", "Transformative group leader", "Insightful about collective dynamics", "Dedicated to social change"],
+          "challenges": ["Control issues in friendships", "Group power struggles", "Fear of betrayal or exclusion", "Obsessive about social causes"]
+        },
+        "house12": {
+          "title": "Pluto in 12th House",
+          "description": "Pluto in the 12th House suggests an intense, transformative, and often hidden relationship with the subconscious, hidden realms, spirituality, and self-undoing. You possess a powerful ability to delve into the depths of your own psyche and to uncover hidden patterns or suppressed memories. Your inner world may be marked by profound transformations, where you are constantly confronting your own shadow and integrating unconscious material. There can be a strong need to understand the mysteries of life and death, and you may be drawn to subjects like psychology, spirituality, or the occult. This placement often indicates a life path where you are constantly seeking to release old patterns and to heal deep-seated psychological wounds. You may struggle with self-undoing, escapism, or a fear of confronting your own inner demons. There can also be a tendency to be secretive about your spiritual life or to experience profound crises that force you to confront your own vulnerability. Learning to embrace your shadow, to trust in your own healing process, and to integrate your spiritual insights into your daily life is crucial for navigating life with this placement.",
+          "keyThemes": ["Subconscious", "Spirituality", "Hidden Realms", "Self-undoing", "Karma"],
+          "strengths": ["Deep psychological insight", "Powerful self-healing abilities", "Strong spiritual connection", "Ability to uncover hidden truths"],
+          "challenges": ["Self-undoing and escapism", "Fear of inner demons", "Secretive about spiritual life", "Profound crises"]
+        }
+      }
+    }
+  },
+  "aspects": {
+    "conjunction": {
+      "sunMoon": {
+        "title": "Sun Conjunction Moon",
+        "description": "The Sun conjunct the Moon signifies a powerful alignment of your conscious will (Sun) and emotional nature (Moon). Your inner feelings and outer expression are in harmony, leading to a consistent and integrated personality. This aspect often indicates a strong sense of purpose and emotional stability, making it easier to achieve your goals as your desires and actions are aligned.",
+        "keyThemes": ["Harmony", "Integration", "Purpose", "Emotional Stability"],
+        "strengths": ["Self-aware", "Consistent", "Determined", "Balanced"],
+        "challenges": ["Stubborn", "Self-absorbed", "Difficulty adapting to change"]
+      },
+      "sunMercury": {},
+      "sunVenus": {},
+      "sunMars": {},
+      "moonMercury": {},
+      "moonVenus": {},
+      "moonMars": {}
+    },
+    "opposition": {},
+    "trine": {},
+    "square": {},
+    "sextile": {},
+    "quincunx": {},
+    "semisextile": {},
+    "semisquare": {},
+    "sesquiquadrate": {},
+    "quintile": {},
+    "biquintile": {},
+    "septile": {},
+    "novile": {},
+    "undecile": {},
+    "decile": {},
+    "tredecile": {},
+    "quindecile": {}
+  }
+}

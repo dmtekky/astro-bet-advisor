@@ -32,7 +32,7 @@ export const AstroPeakDay: React.FC<AstroPeakDayProps> = ({ player, astro }) => 
 
   // Get today's Sun and Moon sign
   let todaySunSign = '';
-  let todayMoonSign = todayAstro.moon_sign || '';
+  const todayMoonSign = todayAstro.moon_sign || '';
   if (todayAstro.planetary_signs && typeof todayAstro.planetary_signs === 'object' && !Array.isArray(todayAstro.planetary_signs)) {
     // Safely access the sun_sign property with type assertion
     const planetarySigns = todayAstro.planetary_signs as Record<string, any>;

@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { generateInterpretations, KeyPlacementInterpretation } from '@/components/astrology/utils/interpretationsGenerator';
-import { Input } from '@/components/ui/input';
+import { generateInterpretations } from '@/components/astrology/utils/interpretationsGenerator';
+import { AstroData, InterpretationContent } from '../../types/astrology';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -114,11 +114,11 @@ const ExampleProfilePage: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showAddSports, setShowAddSports] = useState(false);
-  const [interpretations, setInterpretations] = useState<KeyPlacementInterpretation>({});
+  const [interpretations, setInterpretations] = useState<AstroData | null>(null);
   const [interpretationsLoading, setInterpretationsLoading] = useState(true);
   
   // Default user data when no Supabase data is available
-  const defaultUser = {
+  const defaultUser: UserProfile = {
     name: 'New User',
     email: 'user@example.com',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -136,10 +136,14 @@ const ExampleProfilePage: React.FC = () => {
       followers: 0,
       following: 0,
     },
+    birthData: null,
+    planetary_data: null,
+    planetary_count: null,
+    planets_per_sign: null,
   };
   
   // Current user data (from Supabase or default)
-  const user = userData || { ...defaultUser, birthData: null, planetary_data: null, planetary_count: null, planets_per_sign: null } as UserProfile;
+  const user = userData || defaultUser;
 
   const fetchSpecificUser = useCallback(async () => {
     try {
@@ -225,13 +229,19 @@ const ExampleProfilePage: React.FC = () => {
   
   // Generate interpretations dynamically
   useEffect(() => {
-    if (userData?.planetary_data) {
+    if (userData?.planetary_data && Array.isArray(userData.planetary_data.planets)) {
       setInterpretationsLoading(true);
-      const generated = generateInterpretations(userData.planetary_data);
-      setInterpretations(generated);
-      setInterpretationsLoading(false);
+      try {
+        const generated = generateInterpretations(userData.planetary_data.planets);
+        setInterpretations(generated);
+      } catch (error) {
+        console.error('Error generating interpretations:', error);
+        setInterpretations(null);
+      } finally {
+        setInterpretationsLoading(false);
+      }
     } else {
-      setInterpretations({}); // Clear interpretations if no planetary data
+      setInterpretations(null); // Clear interpretations if no planetary data
     }
   }, [userData?.planetary_data]);
   
@@ -590,6 +600,7 @@ const ExampleProfilePage: React.FC = () => {
                     natalChartData={user.planetary_data}
                     planetaryCounts={user.planetary_count}
                     planetsPerSign={user.planets_per_sign}
+                    interpretations={interpretations}
                   />
                 </Suspense>
               ) : (
@@ -635,29 +646,29 @@ const ExampleProfilePage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {majorSigns.sun && interpretations.sun?.description && (
+                {majorSigns.sun && interpretations?.sun?.[majorSigns.sun] && (
                   <SignInterpretation
                     placement="Sun"
                     sign={majorSigns.sun}
-                    interpretation={interpretations.sun.description}
+                    interpretation={interpretations.sun[majorSigns.sun].description}
                     icon={signDetails.sun.icon}
                     colorClass={signDetails.sun.colorClass}
                   />
                 )}
-                {majorSigns.moon && interpretations.moon?.description && (
+                {majorSigns.moon && interpretations?.moon?.[majorSigns.moon] && (
                   <SignInterpretation
                     placement="Moon"
                     sign={majorSigns.moon}
-                    interpretation={interpretations.moon.description}
+                    interpretation={interpretations.moon[majorSigns.moon].description}
                     icon={signDetails.moon.icon}
                     colorClass={signDetails.moon.colorClass}
                   />
                 )}
-                {majorSigns.rising && interpretations.rising?.description && (
+                {majorSigns.rising && interpretations?.rising?.[majorSigns.rising] && (
                   <SignInterpretation
                     placement="Rising"
                     sign={majorSigns.rising}
-                    interpretation={interpretations.rising.description}
+                    interpretation={interpretations.rising[majorSigns.rising].description}
                     icon={signDetails.rising.icon}
                     colorClass={signDetails.rising.colorClass}
                   />
@@ -667,7 +678,25 @@ const ExampleProfilePage: React.FC = () => {
           </div>
         ) : null}
 
+        {/* Planets in Houses */}
+        {interpretations && interpretations.houses && interpretations.houses.planetsInHouses && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">Planets in Houses</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* TODO: Add rendering logic for planets in houses here */}
+            </div>
+          </div>
+        )}
+
         {/* Planetary Aspects */}
+        {interpretations && interpretations.aspects && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">Planetary Aspects</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* TODO: Add rendering logic for aspects here */}
+            </div>
+          </div>
+        )}
         {user?.planetary_data?.aspects && Array.isArray(user.planetary_data.aspects) && user.planetary_data.aspects.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 text-slate-800">Deeper Insights</h2>

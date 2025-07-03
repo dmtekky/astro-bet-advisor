@@ -35,7 +35,7 @@ export default function TeamRoster({ players, teamId }: TeamRosterProps) {
   // Sort players based on sortConfig
   const sortedPlayers = useMemo(() => {
     if (!players) return [];
-    let sortablePlayers = [...players];
+    const sortablePlayers = [...players];
     
     if (sortConfig.key) {
       sortablePlayers.sort((a, b) => {

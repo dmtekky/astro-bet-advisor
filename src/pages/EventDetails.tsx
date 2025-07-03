@@ -176,7 +176,7 @@ function findBestTeamMatch(teamName: string, teams: any[]): any | null {
   console.log(`[TEAM MATCH] Searching for team: '${teamName}' (normalized: '${normalizedSearch}')`);
   
   // First try exact match on normalized names
-  let exactMatch = teams.find(t => 
+  const exactMatch = teams.find(t => 
     t.name && normalizeTeamName(t.name) === normalizedSearch
   );
   
@@ -219,7 +219,7 @@ function findBestTeamMatch(teamName: string, teams: any[]): any | null {
     if (!team.name) return { team, score: 0 };
     
     const normalizedTeamName = normalizeTeamName(team.name);
-    let similarity = calculateSimilarity(normalizedSearch, normalizedTeamName);
+    const similarity = calculateSimilarity(normalizedSearch, normalizedTeamName);
     
     // Check for common abbreviations (e.g., "LAD" for "Los Angeles Dodgers")
     const normalizedAbbreviation = team.abbreviation ? normalizeTeamName(team.abbreviation) : '';
@@ -840,7 +840,7 @@ const EventDetails = () => {
       }
   };
   fetchData();
-// eslint-disable-next-line react-hooks/exhaustive-deps
+ 
 }, [id]);
   
   if (loading) {

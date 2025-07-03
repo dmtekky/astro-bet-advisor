@@ -192,7 +192,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
             {suggestions.map((suggestion, index) => {
               const displayName = `${suggestion.name}${suggestion.admin1 ? `, ${suggestion.admin1}` : ''}, ${suggestion.country}`;
               const searchValue = value.toLowerCase();
-              let matchIndex = displayName.toLowerCase().indexOf(searchValue);
+              const matchIndex = displayName.toLowerCase().indexOf(searchValue);
               
               // Create a unique key using all available identifiers
               const uniqueKey = [

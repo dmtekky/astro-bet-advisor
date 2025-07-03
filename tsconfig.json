@@ -18,7 +18,8 @@
       "@components/*": ["./src/components/*"],
       "@lib/*": ["./src/lib/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@types/*": ["./src/types/*"]
+      "@types/*": ["./src/types/*"],
+      "@astrologyTypes": ["./src/astrology/interpretations/types.ts"]
     },
     "strict": true,
     "noImplicitAny": false,

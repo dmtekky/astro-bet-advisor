@@ -2,6 +2,8 @@
  * Type definitions for astrology components
  */
 
+import { AstroData } from '../../../types/astrology';
+
 // Birth data structure
 export interface BirthDataProps {
   date: string;
@@ -23,6 +25,7 @@ export interface NatalChartProfileProps {
   planetaryCounts?: number[];
   planetsPerSign?: Record<string, string[]>;
   className?: string;
+  interpretations?: AstroData | null;
 }
 
 // Props for the NatalChart component

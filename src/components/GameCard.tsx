@@ -329,7 +329,7 @@ const GameCard: React.FC<GameCardProps> = ({
 // Prop type validation - using any type for game prop to avoid TypeScript conflicts
 // with the complex Game type from @/types
 GameCard.propTypes = {
-  game: PropTypes.any.isRequired, // eslint-disable-line @typescript-eslint/no-explicit-any
+  game: PropTypes.any.isRequired,  
   homeTeam: PropTypes.shape({
     id: PropTypes.string,
     name: PropTypes.string,

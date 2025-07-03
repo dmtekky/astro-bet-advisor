@@ -4,7 +4,7 @@ import { getMoonPhase, getMoonPhaseInfo, getPlanetPositions } from '../../../lib
 export const prerender = false; // Ensure this is serverless, not static
 
 export const GET: APIRoute = async ({ params, request }) => {
-  let { date } = params;
+  const { date } = params;
   // Strictly extract only YYYY-MM-DD, ignore trailing chars (e.g., :1)
   const match = typeof date === 'string' ? date.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})/) : null;
   const dateStr = match ? match[1] : new Date().toISOString().split('T')[0];
