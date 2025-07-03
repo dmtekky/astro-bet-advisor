@@ -212,18 +212,6 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
 
   return (
     <div className={`p-4 max-w-4xl mx-auto space-y-8 ${className}`}>
-      <div 
-        style={{
-          background: 'radial-gradient(circle at center, #0f172a 0%, #1e293b 100%)',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: -1
-        }}
-      />
-      
       {/* Starry background effect - cosmic orange and white */}
       <div className="absolute inset-0 z-0">
         {Array.from({ length: 70 }).map((_, i) => (
@@ -251,17 +239,44 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
       >
         {/* Natal Chart */}
         <div className="w-full max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
             Natal Chart
           </h2>
-          <NatalChart 
-            astroData={natalChartData}
-            isLoading={isLoading}
-            error={error}
-            onDownload={handleDownloadNatalChart}
-            onShare={handleShareNatalChart}
-            isDownloading={isDownloading}
-          />
+          
+          {/* Planet Sign Pills */}
+          {planetsPerSign && Object.keys(planetsPerSign).length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {Object.entries(planetsPerSign).map(([sign, planets]) =>
+                planets.map(planet => (
+                  <div 
+                    key={`${planet}-${sign}`}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow transition-shadow"
+                  >
+                    <span className="font-semibold">{planet}</span>
+                    <span className="mx-1">in</span>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">{sign}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          
+          <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+            {isLoading ? (
+              <ChartLoading />
+            ) : error ? (
+              <ChartError error={error} onRetry={handleRetry} />
+            ) : (
+              <NatalChart
+                astroData={natalChartData}
+                isLoading={isLoading}
+                error={error}
+                onDownload={handleDownloadNatalChart}
+                onShare={handleShareNatalChart}
+                isDownloading={isDownloading}
+              />
+            )}
+          </div>
         </div>
 
         {/* Planetary Count Chart */}

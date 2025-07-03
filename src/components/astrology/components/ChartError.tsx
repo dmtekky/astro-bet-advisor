@@ -1,12 +1,41 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
+
+// Simple button component to avoid import issues
+const Button = ({ 
+  children, 
+  onClick, 
+  variant = 'default',
+  className = '' 
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void; 
+  variant?: 'default' | 'outline' | 'ghost';
+  className?: string; 
+}) => {
+  const baseStyles = 'px-4 py-2 rounded-md transition-colors';
+  const variantStyles = {
+    default: 'bg-blue-600 text-white hover:bg-blue-700',
+    outline: 'border border-current hover:bg-white/10',
+    ghost: 'hover:bg-white/10',
+  };
+  
+  return (
+    <button 
+      onClick={onClick} 
+      className={`${baseStyles} ${variantStyles[variant] || variantStyles.default} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
 
 interface ChartErrorProps {
   error?: Error;
   message?: string;
   actionText?: string;
   onAction?: () => void;
+  onRetry?: () => void; // Alias for onAction to maintain backward compatibility
 }
 
 /**

@@ -419,10 +419,6 @@ const ExampleProfilePage: React.FC = () => {
                     </div>
                   )}
                   <div className="flex items-center space-x-2 mt-2">
-                    <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2.5 py-0.5 rounded-full">
-                      {user.accountType} Member
-                    </span>
-                    <span className="text-slate-400">•</span>
                     <span className="text-xs text-slate-500">
                       Member since {user.memberSince}
                     </span>
@@ -430,9 +426,7 @@ const ExampleProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-sm">
-              Upgrade Plan
-            </Button>
+
           </div>
           <div className="mt-6 pt-4 border-t border-slate-100">
             <div className="flex justify-between items-center mb-4">
