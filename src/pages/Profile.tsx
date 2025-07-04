@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useState, lazy, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,9 +40,17 @@ const Profile = () => {
   const [theme, setTheme] = useState<string>('Light Mode');
   const [activeTab, setActiveTab] = useState('profile');
   const [isClient, setIsClient] = useState(false);
+  
+  // Create a ref to track if component is mounted
+  const isMounted = useRef(true);
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Set isMounted to false when component unmounts
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   const refreshData = async () => {
@@ -53,6 +61,9 @@ const Profile = () => {
       .select('*')
       .eq('id', user.id)
       .single();
+
+    // Check if component is still mounted before updating state
+    if (!isMounted.current) return;
 
     if (error) {
       console.error('Error refreshing user data:', error);
@@ -79,10 +90,10 @@ const Profile = () => {
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) {
-        setLoading(false);
+        if (isMounted.current) setLoading(false);
         return;
       }
-      setLoading(true);
+      if (isMounted.current) setLoading(true);
 
       let { data: profile, error } = await supabase
         .from('user_data')
@@ -112,6 +123,9 @@ const Profile = () => {
         `)
         .eq('id', user.id)
         .single();
+
+      // Check if component is still mounted before updating state
+      if (!isMounted.current) return;
 
       if (error && error.code === 'PGRST116') { // No rows found
         console.log("No existing user data found, creating new entry.");
@@ -145,6 +159,9 @@ const Profile = () => {
           .select()
           .single();
 
+        // Check if component is still mounted before updating state
+        if (!isMounted.current) return;
+
         if (insertError) {
           console.error("Error creating new user data:", insertError);
           setError(`Error creating profile: ${insertError.message}`);
@@ -157,10 +174,13 @@ const Profile = () => {
         return;
       }
 
-      if (profile) {
-        setUserData(profile);
+      // Check if component is still mounted before updating state
+      if (isMounted.current) {
+        if (profile) {
+          setUserData(profile);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadProfile();
@@ -186,7 +206,8 @@ const Profile = () => {
     if (userData?.planetary_data && userData.birthData) {
       console.log('Profile.tsx: userData.planetary_data', userData.planetary_data);
       console.log('Profile.tsx: userData.birthData', userData.birthData);
-      setInterpretationsLoading(true);
+      if (isMounted.current) setInterpretationsLoading(true);
+      
       try {
         const generated = generateInterpretations(
           userData.planetary_data.planets,
@@ -196,16 +217,18 @@ const Profile = () => {
           userData.birthData.birthLon,
           userData.birthData.birthTimeZone
         );
-        setInterpretations(generated);
+        
+        // Check if component is still mounted before updating state
+        if (isMounted.current) setInterpretations(generated);
       } catch (error) {
         console.error('Error generating interpretations:', error);
-        setInterpretations(null);
+        if (isMounted.current) setInterpretations(null);
       } finally {
-        setInterpretationsLoading(false);
+        if (isMounted.current) setInterpretationsLoading(false);
       }
     } else {
       console.log('Profile.tsx: Missing planetary_data or birthData for interpretations generation.');
-      setInterpretations(null); // Clear interpretations if no planetary data
+      if (isMounted.current) setInterpretations(null); // Clear interpretations if no planetary data
     }
   }, [userData?.planetary_data, userData?.birthData]);
 
