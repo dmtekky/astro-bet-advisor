@@ -424,38 +424,34 @@ const ExampleProfilePage: React.FC = () => {
         )}
         {/* Profile Header */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-            <div className="flex items-center space-x-6 mb-6 md:mb-0">
-              <div className="relative">
-                <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-                    {user.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></span>
-              </div>
-              <div>
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900">{user.name}</h1>
-                  {user.planetary_data && (
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                      {majorSigns.sun && (
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">☀️ Sun in {majorSigns.sun}</Badge>
-                      )}
-                      {majorSigns.moon && (
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-800 border-slate-200">🌙 Moon in {majorSigns.moon}</Badge>
-                      )}
-                      {majorSigns.rising && (
-                        <Badge variant="secondary" className="bg-rose-100 text-rose-800 border-rose-200">🌅 {majorSigns.rising} Rising</Badge>
-                      )}
-                    </div>
+          <div className="flex flex-col">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-4 w-full sm:w-auto">
+                <div className="relative">
+                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white shadow-lg">
+                    {user.avatar ? (
+                      <AvatarImage 
+                        src={user.avatar} 
+                        alt={user.name} 
+                        className="object-cover"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg sm:text-xl font-medium">
+                        {user.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  {user.accountType === 'Premium' && (
+                    <span className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white"></span>
                   )}
-                  <div className="flex items-center space-x-2 mt-2">
-                    <span className="text-xs text-slate-500">
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">{user.name}</h1>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-xs text-slate-500 whitespace-nowrap">
                       Member since {user.memberSince}
                     </span>
                   </div>
@@ -463,6 +459,30 @@ const ExampleProfilePage: React.FC = () => {
               </div>
             </div>
 
+            <div className="flex flex-col gap-3 mt-3">
+              {user.planetary_data && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {majorSigns.sun && (
+                    <Badge variant="secondary" className="text-xs sm:text-sm bg-yellow-100 text-yellow-800 border-yellow-200">☀️ Sun in {majorSigns.sun}</Badge>
+                  )}
+                  {majorSigns.moon && (
+                    <Badge variant="secondary" className="text-xs sm:text-sm bg-slate-100 text-slate-800 border-slate-200">🌙 Moon in {majorSigns.moon}</Badge>
+                  )}
+                  {majorSigns.rising && (
+                    <Badge variant="secondary" className="text-xs sm:text-sm bg-rose-100 text-rose-800 border-rose-200">🌅 {majorSigns.rising} Rising</Badge>
+                  )}
+                </div>
+              )}
+              
+              <Button 
+                variant="outline" 
+                className="w-full sm:w-auto text-sm sm:text-base text-slate-900 bg-white/90 hover:bg-blue-700 hover:text-white border-blue-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-colors duration-200 self-start"
+                onClick={() => setShowForm(true)}
+                aria-label="Edit birth data"
+              >
+                {user.birthData ? 'Edit Birth Data' : 'Add Birth Data'}
+              </Button>
+            </div>
           </div>
           <div className="mt-6 pt-4 border-t border-slate-100">
             <div className="flex justify-between items-center mb-4">
@@ -533,7 +553,7 @@ const ExampleProfilePage: React.FC = () => {
         {/* Astrological Charts Section */}
         <div className="mt-12">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Your Astrological Profile</h2>
+
             <Badge 
               variant="outline" 
               className="
@@ -581,14 +601,6 @@ const ExampleProfilePage: React.FC = () => {
                   </p>
                 )}
               </div>
-              <Button 
-                variant="outline" 
-                className="text-slate-900 bg-white/90 hover:bg-blue-700 hover:text-white border-blue-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-colors duration-200"
-                onClick={() => setShowForm(true)}
-                aria-label="Edit birth data"
-              >
-                {user.birthData ? 'Edit Birth Data' : 'Add Birth Data'}
-              </Button>
             </div>
           </div>
           

@@ -1,16 +1,32 @@
-export type Profile = {
+import { Database } from '@/types/supabase';
+import { AstroData } from './astrology'; // Import AstroData
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+
+export interface BirthData {
+  birthDate: string;
+  birthTime: string;
+  birthCity: string;
+  birthLatitude: number;
+  birthLongitude: number;
+  timeUnknown: boolean;
+}
+
+export interface UserProfile {
   id: string;
-  username: string;
-  avatar_url: string | null;
-  updated_at: string;
-  created_at: string;
-};
-
-export type ProfileInsert = Omit<Profile, 'created_at' | 'updated_at'> & {
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'created_at'>> & {
-  updated_at?: string;
-};
+  name: string;
+  email: string;
+  avatar?: string;
+  memberSince: string;
+  isPremium: boolean;
+  birthData?: BirthData;
+  planetary_data?: any; // Restored planetary_data
+  planetaryPositions: any[];
+  aspects: any[];
+  houses: any[];
+  interpretations: AstroData | null;
+  planets_per_sign?: any; // Define a more specific type if possible
+  // Add other fields as needed
+}
