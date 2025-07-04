@@ -101,5 +101,8 @@ export default defineConfig(({ mode }) => {
         'axios',
       ],
     },
+    ssr: {
+      noExternal: ['@astrodraw/astrochart'],
+    },
   };
 });
