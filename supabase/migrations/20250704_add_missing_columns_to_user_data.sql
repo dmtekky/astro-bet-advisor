@@ -62,6 +62,11 @@ BEGIN
       ALTER TABLE public.user_data ADD COLUMN member_since TIMESTAMP WITH TIME ZONE DEFAULT NOW();
     END IF;
 
+    -- Add last_login column if it doesn't exist
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'user_data' AND column_name = 'last_login') THEN
+      ALTER TABLE public.user_data ADD COLUMN last_login TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+    END IF;
+
     -- Add account_type column if it doesn't exist
     IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'user_data' AND column_name = 'account_type') THEN
       ALTER TABLE public.user_data ADD COLUMN account_type TEXT DEFAULT 'Standard';
