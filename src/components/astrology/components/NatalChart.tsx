@@ -68,6 +68,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
         return;
       }
       
+      const abortController = new AbortController();
+      
       let chartInstance: any = null;
       let isMounted = true;
       
@@ -139,13 +141,13 @@ const NatalChart: React.FC<NatalChartProps> = ({
         }
       };
 
-      // Initialize chart
       initializeChart();
 
       // Cleanup function
       return () => {
         console.log('[NatalChart] Component unmounting, cleaning up...');
         isMounted = false;
+        abortController.abort();  // Abort any ongoing async operations
         
         if (chartInstance) {
           if (typeof chartInstance.destroy === 'function') {
@@ -167,7 +169,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
           }
         }
       };
-    }, [renderAttempt]);
+    }, [renderAttempt, astroData]);
 
     // Add retry button if there's an error
     if (chartError) {
