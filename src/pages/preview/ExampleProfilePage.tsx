@@ -232,7 +232,14 @@ const ExampleProfilePage: React.FC = () => {
     if (userData?.planetary_data && Array.isArray(userData.planetary_data.planets)) {
       setInterpretationsLoading(true);
       try {
-        const generated = generateInterpretations(userData.planetary_data.planets);
+        const generated = generateInterpretations(
+          userData.planetary_data.planets,
+          userData.planetary_data.date,
+          userData.planetary_data.query_time,
+          userData.planetary_data.latitude,
+          userData.planetary_data.longitude,
+          userData.planetary_data.timezone
+        );
         setInterpretations(generated);
       } catch (error) {
         console.error('Error generating interpretations:', error);
@@ -324,6 +331,25 @@ const ExampleProfilePage: React.FC = () => {
   console.log('user.planetary_data:', user.planetary_data);
   console.log('interpretationsLoading:', interpretationsLoading);
   console.log('interpretations:', interpretations);
+  console.log('interpretations.planets:', interpretations?.planets ? Object.keys(interpretations.planets) : 'not available');
+  console.log('interpretations.aspects:', interpretations?.aspects ? Object.keys(interpretations.aspects) : 'not available');
+  
+  // Log the first planet and its houses to understand the structure
+  if (interpretations?.planets) {
+    const firstPlanetKey = Object.keys(interpretations.planets)[0];
+    if (firstPlanetKey) {
+      console.log(`First planet (${firstPlanetKey}) data:`, interpretations.planets[firstPlanetKey]);
+      console.log(`Houses data for ${firstPlanetKey}:`, interpretations.planets[firstPlanetKey]?.houses);
+    }
+  }
+  
+  // Log the first aspect to understand the structure
+  if (interpretations?.aspects) {
+    const firstAspectKey = Object.keys(interpretations.aspects)[0];
+    if (firstAspectKey) {
+      console.log(`First aspect (${firstAspectKey}) data:`, interpretations.aspects[firstAspectKey]);
+    }
+  }
   console.log('majorSigns:', majorSigns);
 
   const signDetails = {
@@ -679,21 +705,94 @@ const ExampleProfilePage: React.FC = () => {
         ) : null}
 
         {/* Planets in Houses */}
-        {interpretations && interpretations.houses && interpretations.houses.planetsInHouses && (
+        {interpretations && interpretations.planets && Object.keys(interpretations.planets).length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 text-slate-800">Planets in Houses</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* TODO: Add rendering logic for planets in houses here */}
+              {interpretations && interpretations.planets ? (
+                Object.entries(interpretations.planets).map(([planetName, data]) => {
+                  // Handle different data structures based on the actual data
+                  if (!data || typeof data !== 'object') return null;
+                  
+                  // Get houses data if it exists
+                  const houses = data.houses || {};
+                  if (Object.keys(houses).length === 0) return null;
+                  
+                  // Get the first house data available
+                  const houseEntries = Object.entries(houses);
+                  if (houseEntries.length === 0) return null;
+                  
+                  const [houseKey, houseData] = houseEntries[0];
+                  
+                  // Access the house data safely with proper type handling
+                  const houseText = typeof houseData === 'string' 
+                    ? houseData 
+                    : typeof houseData === 'object' && houseData 
+                      ? ((houseData as any).description || (houseData as any).text || JSON.stringify(houseData)) 
+                      : 'No detailed information available';
+                  
+                  return (
+                    <Card key={`${planetName}-${houseKey}`} className="overflow-hidden hover:shadow-md transition-shadow">
+                      <CardHeader className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+                        <CardTitle className="text-lg font-semibold">
+                          {planetName} in {houseKey.replace('house', 'House ')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <p className="text-sm text-gray-600 mb-2">
+                          {houseText}
+                        </p>
+                        <div className="mt-3">
+                          <h4 className="font-medium text-indigo-600 mb-1">Sports Influence</h4>
+                          <p className="text-sm text-gray-600">
+                            This placement may impact your performance in competitive activities.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              ) : (
+                <p className="col-span-3 text-center text-gray-500">No planetary house data available</p>
+              )}
             </div>
           </div>
         )}
 
         {/* Planetary Aspects */}
-        {interpretations && interpretations.aspects && (
+        {interpretations && interpretations.aspects && Object.keys(interpretations.aspects).length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 text-slate-800">Planetary Aspects</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* TODO: Add rendering logic for aspects here */}
+              {interpretations && interpretations.aspects ? (
+                Object.entries(interpretations.aspects).slice(0, 6).map(([aspectName, aspectData]) => {
+                  // Handle both string and object aspect data with proper type handling
+                  const aspectText = typeof aspectData === 'string' 
+                    ? aspectData 
+                    : typeof aspectData === 'object' && aspectData 
+                      ? ((aspectData as any).description || (aspectData as any).text || JSON.stringify(aspectData)) 
+                      : 'No detailed information available';
+                  
+                  return (
+                    <Card key={aspectName} className="overflow-hidden hover:shadow-md transition-shadow">
+                      <CardHeader className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10">
+                        <CardTitle className="text-lg font-semibold">{aspectName}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <p className="text-sm text-gray-600">{aspectText}</p>
+                        <div className="mt-3">
+                          <h4 className="font-medium text-indigo-600 mb-1">Sports Impact</h4>
+                          <p className="text-sm text-gray-600">
+                            This aspect can influence your performance in competitive activities.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              ) : (
+                <p className="col-span-3 text-center text-gray-500">No aspect interpretation data available</p>
+              )}
             </div>
           </div>
         )}

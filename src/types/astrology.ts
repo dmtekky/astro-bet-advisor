@@ -9,7 +9,7 @@ export type ZodiacSign =
 
 export type Element = 'fire' | 'earth' | 'air' | 'water';
 export type Modality = 'cardinal' | 'fixed' | 'mutable';
-export type AspectType = 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition';
+export type AspectType = 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
 export type HouseSystemType = 'Placidus' | 'Koch' | 'Equal' | 'Whole';
 export type PlanetName = 
   | 'Sun' | 'Moon' | 'Mercury' | 'Venus' | 'Mars'

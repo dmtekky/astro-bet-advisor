@@ -1,59 +1,96 @@
-import astroData from '@/astrology/interpretations/astroData.json';
-import { AstroData, PlanetData } from '../../../../types/astrology'; // Adjusted import path
+import astroDataInterpretations from '../../../astrology/interpretations/astroData.json';
+import { AstroData, PlanetData, Aspect, AspectType, CelestialBody, ZodiacSign, PlanetName } from '../../../types/astrology';
 
-// This utility function generates the key placement interpretations by looking up planetary data and matching signs.
-export const generateInterpretations = (planetaryData: PlanetData[] | any[]): AstroData => {
-  console.log('generateInterpretations called with:', JSON.stringify(planetaryData?.slice(0, 2)));
-  
-  const interpretations: AstroData = { planets: {}} as AstroData;
-
-  if (!Array.isArray(planetaryData)) {
-    console.error('planetaryData is not an array:', planetaryData);
-    return astroData; // Return full astroData as fallback
-  }
-
+export const generateInterpretations = (planetaryData: PlanetData[], date: string, queryTime: string, latitude: number, longitude: number, timezone: string): AstroData => {
+  const planets: Record<string, CelestialBody> = {};
   planetaryData.forEach(planet => {
-    // Skip if planet doesn't have name or house
-    if (!planet || !planet.name || !planet.house) {
-      console.log('Skipping planet without name or house:', planet);
-      return;
-    }
+    planets[planet.name] = {
+      name: planet.name,
+      longitude: planet.longitude,
+      sign: planet.sign as ZodiacSign,
+      house: planet.house,
+      retrograde: planet.retrograde || false,
+      speed: planet.speed || 0,
+      degree: planet.degree || 0,
+    };
+  });
 
-    try {
-      const planetName = planet.name;
-      const houseNumber = planet.house;
-      
-      console.log(`Processing ${planetName} in house ${houseNumber}`);
-      
-      // Check if this planet exists in astroData and has houses data
-      if (astroData.planets[planetName as keyof typeof astroData.planets]?.houses) {
-        const houseKey = `house${houseNumber}` as keyof typeof astroData.planets[typeof planetName]['houses'];
-        const interpretation = astroData.planets[planetName as keyof typeof astroData.planets].houses[houseKey];
-        
+  const houseInterpretations: any = {};
+  planetaryData.forEach(planet => {
+    if (planet.name && planet.house) {
+      const planetInterp = astroDataInterpretations[planet.name as PlanetName];
+      if (planetInterp && planetInterp.houses) {
+        const houseKey = `house${planet.house}`;
+        const houseKeyTyped = houseKey as keyof typeof planetInterp.houses;
+        const interpretation = planetInterp.houses[houseKeyTyped];
         if (interpretation) {
-          console.log(`Found interpretation for ${planetName} in ${houseKey}`);
-          
-          // Initialize the planet's houses object if it doesn't exist
-          if (!interpretations.planets[planetName as keyof typeof interpretations.planets]) {
-            interpretations.planets[planetName as keyof typeof interpretations.planets] = { houses: {} };
-          }
-          
-          // Add the interpretation
-          interpretations.planets[planetName as keyof typeof interpretations.planets].houses[houseKey] = interpretation;
-        } else {
-          console.log(`No interpretation found for ${planetName} in ${houseKey}`);
+          if (!houseInterpretations[planet.name]) houseInterpretations[planet.name] = { houses: {} };
+          houseInterpretations[planet.name].houses[houseKey] = interpretation;
         }
-      } else {
-        console.log(`No houses data for planet ${planetName}`);
       }
-    } catch (error) {
-      console.error('Error processing planet:', planet, error);
     }
   });
 
-  console.log('Generated interpretations for planets:', Object.keys(interpretations.planets));
-  
-  // For now, return the full astroData.json for other sections (like signs, aspects) if they are not yet dynamically generated.
-  // In the future, this function should be expanded to generate all interpretations dynamically.
-  return { ...astroData, planets: interpretations.planets };
+  const aspects: Aspect[] = [];
+  const orb = 10;
+  planetaryData.forEach((planetA, indexA) => {
+    planetaryData.forEach((planetB, indexB) => {
+      if (indexA < indexB) {
+        const deltaLon = Math.min(Math.abs(planetA.longitude - planetB.longitude), 360 - Math.abs(planetA.longitude - planetB.longitude));
+        let aspectType: AspectType | null = null;
+        switch (true) {
+          case deltaLon < orb:
+            aspectType = 'conjunction';
+            break;
+          case deltaLon > 180 - orb && deltaLon < 180 + orb:
+            aspectType = 'opposition';
+            break;
+          case deltaLon > 120 - orb && deltaLon < 120 + orb:
+            aspectType = 'trine';
+            break;
+          case deltaLon > 90 - orb && deltaLon < 90 + orb:
+            aspectType = 'square';
+            break;
+          case deltaLon > 60 - orb && deltaLon < 60 + orb:
+            aspectType = 'sextile';
+            break;
+          case deltaLon > 150 - orb && deltaLon < 150 + orb:
+            aspectType = 'quincunx';
+            break;
+        }
+
+        if (aspectType) {
+          const planetPairKey = `${aspectType}_${planetA.name}_${planetB.name}`.toLowerCase();
+          const aspectData = astroDataInterpretations.aspects[aspectType as AspectType];
+          const influence = (aspectData as any)[planetPairKey]?.description || 'No specific interpretation available';
+          aspects.push({
+            from: planetA.name,
+            to: planetB.name,
+            type: aspectType,
+            orb: deltaLon,
+            influence: influence,
+          });
+        }
+      }
+    });
+  });
+
+  return {
+    date: date,
+    queryTime: queryTime,
+    observer: { latitude: latitude, longitude: longitude, timezone: timezone },
+    latitude: latitude,
+    longitude: longitude,
+    timezone: timezone,
+    sun: planets['Sun'] || { name: 'Sun', longitude: 0, sign: 'Aries' as ZodiacSign, retrograde: false, degree: 0 },
+    moon: planets['Moon'] || { name: 'Moon', longitude: 0, sign: 'Aries' as ZodiacSign, retrograde: false, phase: 0, phase_name: 'New Moon', degree: 0 },
+    planets: planets,
+    houses: { system: 'Placidus', cusps: [], angles: { asc: 0, mc: 0, dsc: 0, ic: 0 } },
+    aspects: aspects,
+    patterns: [],
+    dignities: {},
+    elements: { fire: { score: 0, planets: [], percentage: 0 }, earth: { score: 0, planets: [], percentage: 0 }, air: { score: 0, planets: [], percentage: 0 }, water: { score: 0, planets: [], percentage: 0 } },
+    modalities: { cardinal: { score: 0, planets: [] }, fixed: { score: 0, planets: [] }, mutable: { score: 0, planets: [] } },
+    moonPhase: { name: 'Unknown', value: 0, illumination: 0, nextFullMoon: new Date(), ageInDays: 0, phaseType: 'new' },
+  } as AstroData;
 };

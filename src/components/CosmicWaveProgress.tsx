@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getPlanetColor, getPlanetGradient } from '@/utils/planetColors';
+import { getPlanetColor, getPlanetGradient } from '../utils/planetColors';
 
 interface CosmicWaveProgressProps {
   value: number; // 0-100
@@ -81,61 +81,42 @@ const CosmicWaveProgress: React.FC<CosmicWaveProgressProps> = ({
   const labelRef = useRef<HTMLSpanElement>(null);
   
   useEffect(() => {
+    if (!canvasRef.current) return;
+
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    // Handle resize
-    const handleResize = () => {
-      // Set canvas dimensions with device pixel ratio for sharp rendering
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      
-      canvas.width = rect.width * dpr;
-      canvas.height = height * dpr;
-      
-      ctx.scale(dpr, dpr);
-    };
-    
-    // Initial setup
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    
-    // Animation function
+
+    // Animation function - defined inside useEffect to avoid stale closures
     const animate = () => {
-      if (!canvas || !ctx) return;
+      if (!canvasRef.current || !ctx) return;
+      
+      const canvas = canvasRef.current;
+      
+      // Calculate endX based on the normalized value
+      const endX = canvas.width * normalizedValue;
+      
+      // Set up animation parameters
+      const frequency = 0.02; // Controls how many waves appear
+      const amplitude = height * 0.15; // Controls wave height
+      const phaseShift = time * 0.05; // Controls wave movement
+      
+      // Setup gradient
+      const gradient = ctx.createLinearGradient(0, 0, endX, 0);
+      gradient.addColorStop(0, startColor);
+      gradient.addColorStop(1, endColor);
       
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Create gradient
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      gradient.addColorStop(0, startColor);
-      gradient.addColorStop(0.5, `${startColor}80`);
-      gradient.addColorStop(1, endColor);
-      
-      // Set wave properties - slower animation
-      const amplitude = height / 3.5; // Height of the wave
-      const frequency = 0.01; // Lower frequency for slower wave
-      const phaseShift = time * 0.01; // Slower phase shift for calmer animation
-      
-      // Draw the wave
-      ctx.beginPath();
-      
-      // Calculate the endpoint based on the value
-      const dpr = window.devicePixelRatio || 1;
-      const endX = canvas.width * normalizedValue / dpr;
-      
-      // Draw the background glow
+      // Draw glow backdrop wave
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(0, height / 2);
       
-      // Draw the wave path with multiple waves for a more complex effect
+      // Draw the backdrop wave path
       for (let x = 0; x <= endX; x++) {
-        // Combine multiple sine waves for more interesting effect
+        // Combine multiple sine waves for more natural effect
         const y = height / 2 + 
                  amplitude * 0.6 * Math.sin(frequency * x + phaseShift) + 
                  amplitude * 0.2 * Math.sin(frequency * 1.5 * x - phaseShift * 0.3);
@@ -182,7 +163,7 @@ const CosmicWaveProgress: React.FC<CosmicWaveProgressProps> = ({
       ctx.fillStyle = gradient;
       ctx.fill();
       
-      // Update time for next frame
+      // Only update time in animation frame - limiting with requestAnimationFrame
       setTime(prevTime => prevTime + 1);
       
       // Continue animation
@@ -190,13 +171,15 @@ const CosmicWaveProgress: React.FC<CosmicWaveProgressProps> = ({
     };
     
     // Start animation
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
     
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
-  }, [normalizedValue, startColor, endColor, height, time]);
+  }, [normalizedValue, startColor, endColor, height]); // Remove 'time' from dependencies
   
   // Cleanup function for resize event listener
   useEffect(() => {

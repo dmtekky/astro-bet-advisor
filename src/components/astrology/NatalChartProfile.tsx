@@ -12,7 +12,7 @@ import ChartError from './components/ChartError';
  * NatalChartProfile component that renders both a natal chart and planetary count chart
  * based on a user's birth data or planetary data.
  */
-export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
+const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
   birthData,
   natalChartData,
   planetaryCounts,
@@ -284,13 +284,11 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         {/* Planetary Count Chart */}
         <div className="w-full max-w-3xl mx-auto">
           <PlanetaryCountChart 
-            planetCounts={planetaryCounts || null}
-            planetsPerSign={planetsPerSign || null}
-            isLoading={isLoading}
-            error={error}
+            planetCounts={planetaryCounts} 
+            planetsPerSign={{}} 
+            isDownloading={isDownloadingPlanets}
             onDownload={handleDownloadPlanetaryCount}
             onShare={handleSharePlanetaryCount}
-            isDownloading={isDownloadingPlanets}
           />
         </div>
 
@@ -300,35 +298,54 @@ export const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
               Planets in Houses
             </h2>
-            <div className="space-y-6">
-              {Object.entries(interpretations.planets).map(([planetName, planetData]) => (
-                planetData.houses && Object.entries(planetData.houses).map(([houseKey, interpretation]) => (
-                  <div key={`${planetName}-${houseKey}`} className="bg-white/10 p-4 rounded-lg shadow-md border border-slate-700">
-                    <h3 className="text-xl font-semibold text-orange-300 mb-2">{interpretation.title}</h3>
-                    <p className="text-slate-300 text-sm mb-3">{interpretation.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {interpretation.keyThemes && interpretation.keyThemes.map(theme => (
-                        <span key={theme} className="bg-blue-600/30 text-blue-300 text-xs px-2 py-1 rounded-full">{theme}</span>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {interpretation.strengths && interpretation.strengths.length > 0 && (
-                        <div className="flex items-center text-green-400 text-sm">
-                          <Info className="w-4 h-4 mr-1" />
-                          Strengths: {interpretation.strengths.join(', ')}
-                        </div>
-                      )}
-                      {interpretation.challenges && interpretation.challenges.length > 0 && (
-                        <div className="flex items-center text-red-400 text-sm">
-                          <Info className="w-4 h-4 mr-1" />
-                          Challenges: {interpretation.challenges.join(', ')}
-                        </div>
-                      )}
+            {/* Display planet in house interpretations */}
+            {interpretations?.planets && Object.entries(interpretations.planets).map(([planet, data]) => {
+              // Only render if there is house data available
+              if (!data?.houses) return null;
+              
+              // Find the house for this planet
+              const houseKey = Object.keys(data.houses)[0]; // Just get the first house key
+              const interpretation = data.houses[houseKey] as { 
+                emoji?: string;
+                effect?: string;
+                sportsTitle?: string;
+                sportsDescription?: string;
+              };
+              
+              return (
+                <motion.div 
+                  key={`${planet}-house`}
+                  className="mb-8 bg-black/30 border border-amber-500/20 rounded-lg p-6 backdrop-blur-md"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-semibold text-white">
+                      {planet} in {houseKey.replace('house', 'House ')}
+                    </h3>
+                    <span className="text-amber-400">
+                      {interpretation?.emoji || '✨'}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <p className="text-white/90">
+                      {interpretation?.effect || 'This placement influences your cosmic energy.'}
+                    </p>
+                    
+                    <div className="mt-4 space-y-3">
+                      <h4 className="text-lg font-medium text-amber-400">
+                        {interpretation?.sportsTitle || 'Sports Influence'}
+                      </h4>
+                      <p className="text-white/80">
+                        {interpretation?.sportsDescription || 'This placement may affect your performance in competitive activities.'}
+                      </p>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
