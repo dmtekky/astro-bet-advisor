@@ -39,6 +39,11 @@ const Profile = () => {
   const [sportsPreferences, setSportsPreferences] = useState<string[]>([]);
   const [theme, setTheme] = useState<string>('Light Mode');
   const [activeTab, setActiveTab] = useState('profile');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const refreshData = async () => {
     if (!user) return;
@@ -391,11 +396,10 @@ const Profile = () => {
                   {interpretationsLoading ? (
                     <SignInterpretationSkeleton />
                   ) : (
-                    interpretations && (
-                      <NatalChartProfile
+                    isClient && birthData && (
+                      <NatalChartProfileLazy
                         birthData={birthData}
-                        astroData={interpretations}
-                        refreshData={refreshData}
+                        profileId={userData?.id || ''}
                       />
                     )
                   )}
