@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 
 // Define the User type to match Supabase's User type
 export type User = {
@@ -40,12 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for changes in auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user as User ?? null);
+      const currentUser = session?.user as User ?? null;
+      setUser(currentUser);
       setLoading(false);
 
-      // Redirect after successful auth
-      if (event === 'SIGNED_IN') {
-        navigate('/profile');
+      // Only redirect if we're not already on a protected route
+      const isProtectedRoute = ['/profile', '/dashboard'].some(route => 
+        window.location.pathname.startsWith(route)
+      );
+      
+      if (event === 'SIGNED_IN' && !isProtectedRoute) {
+        // Optional: You might want to redirect to the dashboard or home instead
+        // navigate('/dashboard');
       }
     });
 
