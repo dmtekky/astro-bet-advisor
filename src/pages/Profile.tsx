@@ -79,28 +79,48 @@ const Profile = () => {
       }
       setLoading(true);
 
-      const { data, error } = await supabase
+      let { data: profile, error } = await supabase
         .from('user_data')
-        .select('*')
+        .select(`
+          id,
+          name,
+          email,
+          avatar_url,
+          member_since,
+          last_login,
+          account_type,
+          birth_data: birth_data_id (
+            id,
+            date,
+            time,
+            timezone,
+            latitude,
+            longitude,
+            city,
+            country
+          ),
+          sports_preferences: sports_preferences_id (
+            id,
+            favorite_sports,
+            favorite_teams,
+            sports_betting_interest_level
+          ),
+          astrology_preferences: astrology_preferences_id (
+            id,
+            favorite_planets,
+            favorite_houses,
+            favorite_aspects
+          )
+        `)
         .eq('id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-        console.error('Error fetching user data:', error);
-        setError('Failed to load profile.');
-        setLoading(false);
-        return;
-      }
-
-      if (data) {
-        setUserData(data);
-      } else {
-        // Create a new profile if one doesn't exist
+      if (error && error.code === 'PGRST116') { // No rows found
+        console.log("No existing user data found, creating new entry.");
         const newProfile: Profile = {
           id: user.id,
           name: user.user_metadata?.name || user.email?.split('@')[0] || null,
           email: user.email || null,
-
           member_since: new Date().toISOString(),
           last_login: new Date().toISOString(),
           account_type: 'Standard',
@@ -123,19 +143,26 @@ const Profile = () => {
           created_at: new Date().toISOString(),
         };
 
-        const { data: newUserData, error: insertError } = await supabase
+        const { data: newProfileData, error: insertError } = await supabase
           .from('user_data')
-          .insert([newProfile])
+          .insert(newProfile)
           .select()
           .single();
 
         if (insertError) {
-          console.error('Error creating new user data:', insertError);
-          setError('Failed to create profile.');
-          setLoading(false);
+          console.error("Error creating new user data:", insertError);
+          setError(`Error creating profile: ${insertError.message}`);
           return;
         }
-        setUserData(newUserData);
+        profile = newProfileData;
+      } else if (error) {
+        console.error("Error fetching user data:", error);
+        setError(`Error fetching profile: ${error.message}`);
+        return;
+      }
+
+      if (profile) {
+        setUserData(profile);
       }
       setLoading(false);
     };
