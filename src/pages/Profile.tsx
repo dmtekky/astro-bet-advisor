@@ -100,7 +100,7 @@ const Profile = () => {
           id: user.id,
           name: user.user_metadata?.name || user.email?.split('@')[0] || null,
           email: user.email || null,
-          avatar_url: user.user_metadata?.avatar_url || null,
+
           member_since: new Date().toISOString(),
           last_login: new Date().toISOString(),
           account_type: 'Standard',
