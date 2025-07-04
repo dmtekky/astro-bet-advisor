@@ -19,7 +19,7 @@ import { generateInterpretations } from '@/components/astrology/utils/interpreta
 import SignInterpretation from '@/components/astrology/SignInterpretation';
 import AspectsGrid from '@/components/astrology/AspectsGrid';
 
-import { NatalChartProfile } from '@/components/astrology/NatalChartProfile';
+import NatalChartProfile from '@/components/astrology/NatalChartProfile';
 import SignInterpretationSkeleton from '@/components/astrology/SignInterpretationSkeleton';
 
 import { UserProfile, BirthData, Profile } from '@/types/profiles';
