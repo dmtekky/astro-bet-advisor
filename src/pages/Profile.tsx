@@ -122,7 +122,6 @@ const Profile = () => {
           accuracy: '0%',
           followers: 0,
           following: 0,
-          birth_date: null,
           birth_time: null,
           birth_city: null,
           time_unknown: null,
