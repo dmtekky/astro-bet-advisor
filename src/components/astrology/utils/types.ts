@@ -31,11 +31,14 @@ export interface NatalChartProfileProps {
 // Props for the NatalChart component
 export interface NatalChartProps {
   astroData: any;
-  isLoading: boolean;
-  error: Error | null;
-  onDownload: () => Promise<void>;
-  onShare: () => Promise<void>;
-  isDownloading: boolean;
+  isLoading?: boolean;
+  error?: Error | null;
+  onDownload?: () => Promise<void>;
+  onShare?: () => Promise<void>;
+  isDownloading?: boolean;
+  width?: number;
+  height?: number;
+  onError?: (error: Error) => void;
 }
 
 // Props for the PlanetaryCountChart component

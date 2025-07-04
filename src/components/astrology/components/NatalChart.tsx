@@ -1,218 +1,259 @@
-import React, { useRef, useEffect } from 'react';
-import { Info } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
-import { NatalChartProps, AstroChartInstance } from '../utils/types';
-import { formatAstroChartData } from '../utils/chartUtils';
+import React, { useRef, useEffect, useState } from 'react';
+import { Download, Share2 } from 'lucide-react';
 import ChartLoading from './ChartLoading';
 import ChartError from './ChartError';
 import ChartPlaceholder from './ChartPlaceholder';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
+import { NatalChartProps } from '../utils/types';
+import { formatAstroChartData } from '../utils/chartUtils';
 
-// Define the AstroChart type based on the actual library's API
-type AstroChartType = {
-  new (elementId: string, width: number, height: number, settings?: any): AstroChartInstance;
+// Create a client-only component wrapper
+const ClientOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  
+  if (!mounted) return null;
+  return <>{children}</>;
 };
 
-// Global variable to store the AstroChart module
-let AstroChart: AstroChartType | null = null;
-
 /**
- * Component for rendering the natal chart using AstroChart library
+ * NatalChart component for rendering astrological charts using AstroChart library
  */
-export const NatalChart: React.FC<NatalChartProps> = ({
+const NatalChart: React.FC<NatalChartProps> = ({
   astroData,
-  isLoading,
-  error,
+  width = 600,
+  height = 600,
+  isLoading = false,
+  error = null,
   onDownload,
   onShare,
-  isDownloading
+  isDownloading = false,
+  onError,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const astroChartRef = useRef<AstroChartInstance | null>(null);
+  const [chartError, setChartError] = useState<Error | null>(error);
+  
+  // Chart settings
+  const chartSize = Math.min(width, height);
+  const chartSettings = {
+    MARGIN: 100,                // chart margin
+    SYMBOL_SCALE: 0.5,          // chart symbol scale
+    SYMBOL_AXIS_CORRECTION: 2,  // chart symbol axis correction
+    CUSPS_STROKE: '#999',       // chart cusps stroke color
+    STROKE: '#000',             // chart stroke color
+    SIGNS_COLOR: true,          // chart signs colors
+    SHOW_ASPECT_GRID: true,     // chart aspect grid
+    SHOW_ASPECTS: true,         // chart aspects
+    ASPECTS_WITH_POINTS: true,  // chart aspects with points
+    ASPECTS_WITH_CUSPS: false,  // chart aspects with cusps
+    CIRCLE_COLOR: '#333',       // chart circle color
+    CUSPS_COLOR: '#333',        // chart cusps color
+    CIRCLE_ONLY: false,         // chart circle only
+    ASPECTS_STROKE: '#333',     // chart aspects stroke color
+    ASPECTS_STROKE_WIDTH: 1,    // chart aspects stroke width
+    COLOR_BACKGROUND: 'transparent', // chart background color
+  };
 
-  useEffect(() => {
-    let mounted = true;  // Track if component is still mounted
-    // Only run on client side
-    if (typeof window === 'undefined') {
-      return () => {}; // Return empty cleanup function
-    }
-
-    console.log('%c[NatalChart] Initializing chart', 'color: #00ff00; font-weight: bold;', 'Received astroData:', astroData);
-
-    if (!containerRef.current || !astroData || !astroData.planets) {
-      console.log('Missing required data for chart initialization');
-      return () => {}; // Return empty cleanup function
-    }
-
-    const container = containerRef.current;
+  // The actual chart renderer that only runs on the client
+  const ChartRenderer = () => {
+    const [renderAttempt, setRenderAttempt] = useState(0);
     
-    // Clear any existing chart
-    const existingChart = container.querySelector('#natal-chart-astro');
-    if (existingChart) {
-      container.removeChild(existingChart);
-    }
-
-    // Create container for the chart
-    const astroChartDiv = document.createElement('div');
-    astroChartDiv.id = 'natal-chart-astro';
-    astroChartDiv.style.width = '100%';
-    astroChartDiv.style.height = '100%';
-    astroChartDiv.style.position = 'absolute';
-    astroChartDiv.style.top = '0';
-    astroChartDiv.style.left = '0';
-    astroChartDiv.style.zIndex = '25';
-    
-    // Append the chart container to the DOM
-    container.appendChild(astroChartDiv);
-
-    let chartInstance: AstroChartInstance | null = null;
-    
-    // Initialize the chart asynchronously
-    const initializeChart = async () => {
-      try {
-        // Ensure AstroChart is loaded
-        if (!AstroChart) {
-          const module = await import('@astrodraw/astrochart');
-          AstroChart = module.default;
-        }
-
-        console.log('AstroChart module loaded, initializing chart...');
-        
-        const chartSize = Math.min(container.offsetWidth, container.offsetHeight);
-        const chartSettings = {
-          COLORS: {
-            bkg: null,
-            text: '#f8fafc',
-            accent: '#f59e0b',
-            accentLight: '#fbbf24',
-            grid: '#334155',
-            aspects: {
-              stroke: {
-                conjunction: '#f59e0b',
-                opposition: '#fbbf24',
-                trine: '#f8fafc',
-                square: '#94a3b8',
-                sextile: '#60a5fa',
-              }
-            },
-          },
-          ASPECTS: {
-            conjunction: { degree: 0, orbit: 8, display: true, color: '#f59e0b' },
-            opposition: { degree: 180, orbit: 8, display: true, color: '#fbbf24' },
-            trine: { degree: 120, orbit: 8, display: true, color: '#f8fafc' },
-            square: { degree: 90, orbit: 8, display: true, color: '#94a3b8' },
-            sextile: { degree: 60, orbit: 6, display: true, color: '#60a5fa' }
-          },
-          SHOW_ASPECTS: true,
-          SHOW_POINTS: true,
-          SHOW_DIGNITIES: true,
-          RESPONSIVE: true,
-          WIDTH: chartSize,
-          HEIGHT: chartSize
-        };
-
-        // Format the data for AstroChart
-        const chartData = formatAstroChartData(astroData);
-
-        // Initialize the chart with the correct arguments
-        // AstroChart expects: (elementId, width, height, settings)
-        chartInstance = new AstroChart(
-          'natal-chart-astro',
-          chartSize,
-          chartSize,
-          chartSettings
-        );
-
-        console.log('[NatalChart] AstroChart instance created, rendering radix chart...');
-        if (chartInstance && typeof chartInstance.radix === 'function') {
-          chartInstance.radix(chartData);
-          console.log('[NatalChart] Chart rendered successfully');
-        } else {
-          console.error('[NatalChart] AstroChart instance is missing required radix method:', chartInstance);
-        }
-      } catch (error) {
-        console.error('[NatalChart] Error initializing AstroChart:', error);
+    useEffect(() => {
+      if (!astroData) {
+        setChartError(new Error('No astrological data provided'));
+        return;
       }
-    };
-
-    // Start the initialization
-    initializeChart();
-
-    // Cleanup function
-    return () => {
-      console.log('[NatalChart] Cleaning up chart instance...');
-      mounted = false;
       
-      // Clean up chart instance
-      if (chartInstance) {
-        // Check if the chart instance has a destroy method
-        if (typeof chartInstance.destroy === 'function') {
+      let chartInstance: any = null;
+      let isMounted = true;
+      
+      const initializeChart = async () => {
+        try {
+          console.log('[NatalChart] Attempting to dynamically import AstroChart...');
+          
+          // Use a try-catch to handle any import errors
+          let AstroChart;
           try {
-            chartInstance.destroy();
-          } catch (err) {
-            console.error('Error destroying AstroChart instance:', err);
+            const module = await import('@astrodraw/astrochart');
+            AstroChart = module.default;
+            console.log('[NatalChart] AstroChart module loaded successfully');
+          } catch (importError) {
+            console.error('[NatalChart] Failed to import AstroChart:', importError);
+            throw new Error(`Failed to load AstroChart module: ${importError instanceof Error ? importError.message : 'Unknown error'}`);
+          }
+          
+          if (!isMounted) {
+            console.log('[NatalChart] Component unmounted during import, aborting');
+            return;
+          }
+          
+          // Create container if it doesn't exist
+          if (containerRef.current) {
+            const existingChart = containerRef.current.querySelector('#natal-chart-container');
+            if (existingChart) {
+              existingChart.remove();
+            }
+            
+            const chartContainer = document.createElement('div');
+            chartContainer.id = 'natal-chart-container';
+            chartContainer.style.width = `${chartSize}px`;
+            chartContainer.style.height = `${chartSize}px`;
+            containerRef.current.appendChild(chartContainer);
+            
+            console.log('[NatalChart] Chart container created with ID:', chartContainer.id);
+          } else {
+            throw new Error('Container ref is null');
+          }
+
+          // Format the data for AstroChart
+          const chartData = formatAstroChartData(astroData);
+          console.log('[NatalChart] Formatted chart data:', chartData);
+
+          // Initialize the chart with the correct arguments
+          console.log('[NatalChart] Creating AstroChart instance...');
+          chartInstance = new AstroChart(
+            'natal-chart-container',
+            chartSize,
+            chartSize,
+            chartSettings
+          );
+          console.log('[NatalChart] AstroChart instance created');
+
+          // Render the chart with data
+          if (chartInstance && typeof chartInstance.radix === 'function') {
+            console.log('[NatalChart] Calling radix method with chart data...');
+            chartInstance.radix(chartData);
+            console.log('[NatalChart] Chart rendered successfully');
+            setChartError(null);
+          } else {
+            throw new Error('AstroChart instance does not have a radix method');
+          }
+        } catch (error) {
+          console.error('[NatalChart] Error initializing AstroChart:', error);
+          setChartError(error instanceof Error ? error : new Error('Failed to initialize chart'));
+          if (onError) onError(error instanceof Error ? error : new Error('Failed to initialize chart'));
+        }
+      };
+
+      // Initialize chart
+      initializeChart();
+
+      // Cleanup function
+      return () => {
+        console.log('[NatalChart] Component unmounting, cleaning up...');
+        isMounted = false;
+        
+        if (chartInstance) {
+          if (typeof chartInstance.destroy === 'function') {
+            try {
+              console.log('[NatalChart] Destroying chart instance...');
+              chartInstance.destroy();
+            } catch (e) {
+              console.error('[NatalChart] Error destroying chart:', e);
+            }
           }
         }
-        // Clear the reference
-        astroChartRef.current = null;
-      }
-    };
-  }, [astroData]); // Only re-run if astroData changes
 
-  // Handle loading state
+        // Remove chart container
+        if (containerRef.current) {
+          const chartElement = containerRef.current.querySelector('#natal-chart-container');
+          if (chartElement) {
+            console.log('[NatalChart] Removing chart container from DOM');
+            chartElement.remove();
+          }
+        }
+      };
+    }, [renderAttempt]);
+
+    // Add retry button if there's an error
+    if (chartError) {
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/50 text-white">
+          <p className="mb-4 text-red-300">{chartError.message}</p>
+          <button 
+            onClick={() => setRenderAttempt(prev => prev + 1)}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    
+    return null; // The chart is rendered directly to the DOM
+  };
+
   if (isLoading) {
-    return <ChartLoading />;
-  }
-
-  // Handle error state
-  if (error) {
-    return <ChartError error={error} onRetry={() => window.location.reload()} />;
-  }
-
-  // Handle case when no data is available
-  if (!astroData || !astroData.planets) {
-    return <ChartPlaceholder />;
+    return (
+      <div className="w-full p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500" />
+      </div>
+    );
   }
 
   return (
-    <div className="relative w-full h-full min-h-[400px] bg-gray-900 rounded-lg overflow-hidden">
-      <div ref={containerRef} className="w-full h-full relative" id="natal-chart-container" />
-      
-      <div className="absolute top-4 right-4 z-10 flex space-x-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={onDownload}
-                disabled={isDownloading}
-                className="bg-gray-800/80 hover:bg-gray-700/80 border-gray-700 text-white"
-              >
-                {isDownloading ? 'Downloading...' : 'Download'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download Chart</p>
-            </TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={onShare}
-                className="bg-gray-800/80 hover:bg-gray-700/80 border-gray-700 text-white"
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Share Chart</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div className="relative w-full">
+      {/* Download/Share buttons */}
+      <div className="absolute top-2 right-2 z-10 flex space-x-2">
+        {onDownload && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onDownload}
+                  disabled={isDownloading}
+                  className="p-2 bg-white/90 hover:bg-white rounded-full shadow-md transition-all"
+                  title="Download chart"
+                >
+                  <Download size={18} className="text-slate-700" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download Chart</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        {onShare && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onShare}
+                  disabled={isDownloading}
+                  className="p-2 bg-white/90 hover:bg-white rounded-full shadow-md transition-all"
+                  title="Share chart"
+                >
+                  <Share2 size={18} className="text-slate-700" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Share Chart</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+
+      {/* Chart container */}
+      <div 
+        ref={containerRef}
+        className="relative w-full h-full min-h-[400px] bg-gray-900 rounded-lg overflow-hidden natal-chart-container"
+      >
+        <ClientOnly>
+          <ChartRenderer />
+        </ClientOnly>
+        
+        {/* Fallback for server-side rendering */}
+        <noscript>
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white">
+            <p>JavaScript is required to view this chart</p>
+          </div>
+        </noscript>
       </div>
     </div>
   );
