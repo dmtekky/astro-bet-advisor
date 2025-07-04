@@ -43,9 +43,9 @@ const NatalChart: React.FC<NatalChartProps> = ({
     MARGIN: 100,                // chart margin
     SYMBOL_SCALE: 0.5,          // chart symbol scale
     SYMBOL_AXIS_CORRECTION: 2,  // chart symbol axis correction
-    CUSPS_STROKE: '#999',       // chart cusps stroke color
+    CUSPS_STROKE: 0x999999,     // chart cusps stroke color (hex as number)
     STROKE: '#000',             // chart stroke color
-    SIGNS_COLOR: true,          // chart signs colors
+    SIGNS_COLOR: '#000000',      // chart signs colors (black)
     SHOW_ASPECT_GRID: true,     // chart aspect grid
     SHOW_ASPECTS: true,         // chart aspects
     ASPECTS_WITH_POINTS: true,  // chart aspects with points
@@ -63,33 +63,28 @@ const NatalChart: React.FC<NatalChartProps> = ({
     const [renderAttempt, setRenderAttempt] = useState(0);
     
     useEffect(() => {
+      console.log('[NatalChart] Component mounted with astroData:', JSON.stringify(astroData, null, 2));
+      console.log('[NatalChart] Chart settings:', JSON.stringify(chartSettings, null, 2));
+      
       if (!astroData) {
+        console.log('[NatalChart] No astrological data provided, setting error');
         setChartError(new Error('No astrological data provided'));
         return;
       }
       
       const abortController = new AbortController();
-      
-      let chartInstance: any = null;
       let isMounted = true;
+      let chartInstance: any = null;
       
       const initializeChart = async () => {
         try {
-          console.log('[NatalChart] Attempting to dynamically import AstroChart...');
-          
-          // Use a try-catch to handle any import errors
-          let AstroChart;
-          try {
-            const module = await import('@astrodraw/astrochart');
-            AstroChart = module.default;
-            console.log('[NatalChart] AstroChart module loaded successfully');
-          } catch (importError) {
-            console.error('[NatalChart] Failed to import AstroChart:', importError);
-            throw new Error(`Failed to load AstroChart module: ${importError instanceof Error ? importError.message : 'Unknown error'}`);
-          }
+          console.log('[NatalChart] Starting dynamic import of AstroChart...');
+          const module = await import('@astrodraw/astrochart');
+          const AstroChart = module.default;
+          console.log('[NatalChart] AstroChart imported successfully');
           
           if (!isMounted) {
-            console.log('[NatalChart] Component unmounted during import, aborting');
+            console.log('[NatalChart] Component unmounted during import, aborting initialization');
             return;
           }
           
@@ -105,8 +100,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
             chartContainer.style.width = `${chartSize}px`;
             chartContainer.style.height = `${chartSize}px`;
             containerRef.current.appendChild(chartContainer);
-            
-            console.log('[NatalChart] Chart container created with ID:', chartContainer.id);
+            console.log('[NatalChart] Chart container created');
           } else {
             throw new Error('Container ref is null');
           }
@@ -115,19 +109,14 @@ const NatalChart: React.FC<NatalChartProps> = ({
           const chartData = formatAstroChartData(astroData);
           console.log('[NatalChart] Formatted chart data:', chartData);
 
-          // Initialize the chart with the correct arguments
+          // Initialize the chart
           console.log('[NatalChart] Creating AstroChart instance...');
-          chartInstance = new AstroChart(
-            'natal-chart-container',
-            chartSize,
-            chartSize,
-            chartSettings
-          );
+          chartInstance = new AstroChart('natal-chart-container', chartSize, chartSize, chartSettings);
           console.log('[NatalChart] AstroChart instance created');
 
-          // Render the chart with data
+          // Render the chart
           if (chartInstance && typeof chartInstance.radix === 'function') {
-            console.log('[NatalChart] Calling radix method with chart data...');
+            console.log('[NatalChart] Rendering chart with data...');
             chartInstance.radix(chartData);
             console.log('[NatalChart] Chart rendered successfully');
             setChartError(null);
@@ -135,7 +124,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
             throw new Error('AstroChart instance does not have a radix method');
           }
         } catch (error) {
-          console.error('[NatalChart] Error initializing AstroChart:', error);
+          console.error('[NatalChart] Error during initialization:', error);
           setChartError(error instanceof Error ? error : new Error('Failed to initialize chart'));
           if (onError) onError(error instanceof Error ? error : new Error('Failed to initialize chart'));
         }
@@ -143,12 +132,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
       initializeChart();
 
-      // Cleanup function
       return () => {
-        console.log('[NatalChart] Component unmounting, cleaning up...');
+        console.log('[NatalChart] Component unmounting...');
         isMounted = false;
-        abortController.abort();  // Abort any ongoing async operations
-        
+        abortController.abort();
         if (chartInstance) {
           if (typeof chartInstance.destroy === 'function') {
             try {
@@ -159,13 +146,11 @@ const NatalChart: React.FC<NatalChartProps> = ({
             }
           }
         }
-
-        // Remove chart container
         if (containerRef.current) {
           const chartElement = containerRef.current.querySelector('#natal-chart-container');
           if (chartElement) {
-            console.log('[NatalChart] Removing chart container from DOM');
             chartElement.remove();
+            console.log('[NatalChart] Chart container removed');
           }
         }
       };
