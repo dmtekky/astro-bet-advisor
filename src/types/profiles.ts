@@ -1,9 +1,32 @@
-import { Database } from '@/types/supabase';
+
 import { AstroData } from './astrology'; // Import AstroData
 
-export type Profile = Database['public']['Tables']['profiles']['Row']
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
-export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+export interface Profile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  member_since: string | null;
+  last_login: string | null;
+  account_type: string | null;
+  favorite_sports: string[] | null;
+  notification_email: string | null;
+  theme: string | null;
+  predictions: number | null;
+  accuracy: string | null;
+  followers: number | null;
+  following: number | null;
+  birth_date: string | null;
+  birth_time: string | null;
+  birth_city: string | null;
+  time_unknown: boolean | null;
+  birth_latitude: number | null;
+  birth_longitude: number | null;
+  planetary_data: any | null;
+  planetary_count: any | null;
+  planets_per_sign: any | null;
+  created_at: string | null;
+}
 
 export interface BirthData {
   birthDate: string;
@@ -20,13 +43,22 @@ export interface UserProfile {
   email: string;
   avatar?: string;
   memberSince: string;
-  isPremium: boolean;
+  lastLogin: string;
+  accountType: string;
+  preferences: {
+    favoriteSports: string[];
+    notificationEmail: string;
+    theme: string;
+  };
+  stats: {
+    predictions: number;
+    accuracy: string;
+    followers: number;
+    following: number;
+  };
   birthData?: BirthData;
-  planetary_data?: any; // Restored planetary_data
-  planetaryPositions: any[];
-  aspects: any[];
-  houses: any[];
+  planetary_data?: AstroData | null;
   interpretations: AstroData | null;
-  planets_per_sign?: any; // Define a more specific type if possible
+  planets_per_sign?: { [key: string]: number };
   // Add other fields as needed
 }
