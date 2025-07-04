@@ -184,6 +184,8 @@ const Profile = () => {
   // Generate interpretations dynamically
   useEffect(() => {
     if (userData?.planetary_data && userData.birthData) {
+      console.log('Profile.tsx: userData.planetary_data', userData.planetary_data);
+      console.log('Profile.tsx: userData.birthData', userData.birthData);
       setInterpretationsLoading(true);
       try {
         const generated = generateInterpretations(
@@ -202,6 +204,7 @@ const Profile = () => {
         setInterpretationsLoading(false);
       }
     } else {
+      console.log('Profile.tsx: Missing planetary_data or birthData for interpretations generation.');
       setInterpretations(null); // Clear interpretations if no planetary data
     }
   }, [userData?.planetary_data, userData?.birthData]);

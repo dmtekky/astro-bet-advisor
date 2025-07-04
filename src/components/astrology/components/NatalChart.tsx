@@ -31,6 +31,7 @@ export const NatalChart: React.FC<NatalChartProps> = ({
   const astroChartRef = useRef<AstroChartInstance | null>(null);
 
   useEffect(() => {
+    let mounted = true;  // Track if component is still mounted
     // Only run on client side
     if (typeof window === 'undefined') {
       return () => {}; // Return empty cleanup function
@@ -112,29 +113,25 @@ export const NatalChart: React.FC<NatalChartProps> = ({
 
         // Format the data for AstroChart
         const chartData = formatAstroChartData(astroData);
-        
+
         // Initialize the chart with the correct arguments
         // AstroChart expects: (elementId, width, height, settings)
         chartInstance = new AstroChart(
-          'natal-chart-container',
+          'natal-chart-astro',
           chartSize,
           chartSize,
           chartSettings
         );
-        
-        // Use the radix method to render the chart with data
+
+        console.log('[NatalChart] AstroChart instance created, rendering radix chart...');
         if (chartInstance && typeof chartInstance.radix === 'function') {
           chartInstance.radix(chartData);
+          console.log('[NatalChart] Chart rendered successfully');
         } else {
-          console.error('AstroChart instance does not have a radix method');
+          console.error('[NatalChart] AstroChart instance is missing required radix method:', chartInstance);
         }
-        
-        // Store the chart instance in the ref
-        astroChartRef.current = chartInstance;
-        
       } catch (error) {
-        console.error('Error initializing AstroChart:', error);
-        // You might want to update an error state here to show an error message
+        console.error('[NatalChart] Error initializing AstroChart:', error);
       }
     };
 
@@ -143,15 +140,10 @@ export const NatalChart: React.FC<NatalChartProps> = ({
 
     // Cleanup function
     return () => {
-      // Remove the chart container if it exists
-      if (containerRef.current) {
-        const chartElement = containerRef.current.querySelector('#natal-chart-astro');
-        if (chartElement && chartElement.parentNode === containerRef.current) {
-          containerRef.current.removeChild(chartElement);
-        }
-      }
+      console.log('[NatalChart] Cleaning up chart instance...');
+      mounted = false;
       
-      // Clean up the chart instance if it exists
+      // Clean up chart instance
       if (chartInstance) {
         // Check if the chart instance has a destroy method
         if (typeof chartInstance.destroy === 'function') {
