@@ -89,28 +89,23 @@ const Profile = () => {
           member_since,
           last_login,
           account_type,
-          birth_data: birth_data_id (
-            id,
-            date,
-            time,
-            timezone,
-            latitude,
-            longitude,
-            city,
-            country
-          ),
-          sports_preferences: sports_preferences_id (
-            id,
-            favorite_sports,
-            favorite_teams,
-            sports_betting_interest_level
-          ),
-          astrology_preferences: astrology_preferences_id (
-            id,
-            favorite_planets,
-            favorite_houses,
-            favorite_aspects
-          )
+          favorite_sports,
+          notification_email,
+          theme,
+          predictions,
+          accuracy,
+          followers,
+          following,
+          birth_date,
+          birth_time,
+          birth_city,
+          time_unknown,
+          birth_latitude,
+          birth_longitude,
+          planetary_data,
+          planetary_count,
+          planets_per_sign,
+          created_at
         `)
         .eq('id', user.id)
         .single();
