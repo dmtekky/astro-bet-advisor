@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => {
         'os': 'os-browserify/browser',
         'zlib': 'browserify-zlib',
         'vm': 'vm-browserify',
+        '@astrologyTypes': path.resolve(__dirname, './src/astrology/interpretations/types.ts'),
       },
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.node'],
     },

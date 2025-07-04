@@ -204,6 +204,7 @@ const Profile = () => {
   // Generate interpretations dynamically
   useEffect(() => {
     if (userData?.planetary_data && userData.birthData) {
+      console.log('[Profile] Attempting to render NatalChartProfileLazy. planetary_data:', userData.planetary_data, 'birthData:', userData.birthData);
       console.log('Profile.tsx: userData.planetary_data', userData.planetary_data);
       console.log('Profile.tsx: userData.birthData', userData.birthData);
       if (isMounted.current) setInterpretationsLoading(true);
