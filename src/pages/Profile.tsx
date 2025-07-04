@@ -187,7 +187,7 @@ const Profile = () => {
   }, [user]);
 
   useEffect(() => {
-    if (userData) {
+    if (userData && isMounted.current) {
       setBirthData(userData.birth_date ? {
         birthDate: userData.birth_date,
         birthTime: userData.birth_time || '',
@@ -256,7 +256,7 @@ const Profile = () => {
   const [name, setName] = useState(userData?.name || '');
 
   useEffect(() => {
-    if (userData) {
+    if (userData && isMounted.current) {
       setName(userData.name || '');
     }
   }, [userData]);

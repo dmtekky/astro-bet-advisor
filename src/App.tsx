@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react';
+import React from 'react';
 import {
   Routes,
   Route,
@@ -35,6 +36,8 @@ const Footer = lazy(() => import('./components/Footer'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const Profile = lazy(() => import('./pages/Profile'));
+const AuthCallback = lazy(() => import('./components/AuthCallback'));
+
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const FloatingBackButton = lazy(() => import('./components/common/FloatingBackButton'));
@@ -59,7 +62,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -136,8 +139,8 @@ function AppContent() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
 
               {/* Protected Routes */}

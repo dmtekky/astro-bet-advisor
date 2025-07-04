@@ -19,8 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: env.VITE_BASE_URL || '/',
-    define: {
-      ...clientEnv,
+    define: { ...clientEnv,
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_KEY': JSON.stringify(env.VITE_SUPABASE_KEY),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
@@ -65,11 +64,11 @@ export default defineConfig(({ mode }) => {
     ].filter(Boolean),
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
-        '@components': path.resolve(__dirname, 'src/components'),
-        '@lib': path.resolve(__dirname, 'src/lib'),
-        '@hooks': path.resolve(__dirname, 'src/hooks'),
-        '@types': path.resolve(__dirname, 'src/types'),
+        '@': path.resolve(__dirname, './src'),
+        '@components': path.resolve(__dirname, './src/components'),
+        '@lib': path.resolve(__dirname, './src/lib'),
+        '@hooks': path.resolve(__dirname, './src/hooks'),
+        '@types': path.resolve(__dirname, './src/types'),
         'buffer': 'buffer/',
         'stream': 'stream-browserify',
         'util': 'util/',
