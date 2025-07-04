@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '../../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
 import { NatalChartProps, AstroChartInstance } from '../utils/types';
 import { formatAstroChartData } from '../utils/chartUtils';
 import ChartLoading from './ChartLoading';
@@ -48,6 +48,18 @@ export const NatalChart: React.FC<NatalChartProps> = ({
     astroChartDiv.style.top = '0';
     astroChartDiv.style.left = '0';
     astroChartDiv.style.zIndex = '25';
+
+    return () => {
+      // Cleanup function: remove the chart div when the component unmounts
+      if (containerRef.current && astroChartDiv.parentNode === containerRef.current) {
+        containerRef.current.removeChild(astroChartDiv);
+      }
+      if (astroChartRef.current) {
+        // If AstroChart has a destroy method, call it here
+        // astroChartRef.current.destroy(); 
+        astroChartRef.current = null;
+      }
+    };
     container.appendChild(astroChartDiv);
 
     const initializeChart = () => {
