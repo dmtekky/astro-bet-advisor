@@ -89,7 +89,7 @@ const Profile = () => {
   const navigate = useNavigate();
 
   // Use the useAstroData hook to fetch and process astrological data
-  const { planetaryData: fetchedPlanetaryData, birthData: fetchedBirthData } = useAstroData(birthData);
+  const { planetaryData: fetchedPlanetaryData, birthData: fetchedBirthData } = birthData ? useAstroData(birthData) : { planetaryData: undefined, birthData: undefined };
 
   console.log('[Profile] Debugging useAstroData inputs/outputs:');
   console.log('  birthData:', birthData);
@@ -257,10 +257,6 @@ const Profile = () => {
       if (isMounted.current) setInterpretations(null); // Clear interpretations if no planetary data
     }
   }, [userData?.planetary_data, userData?.birthData]);
-
-
-
-
 
   if (loading || !userData) {
     return (
@@ -445,15 +441,13 @@ const Profile = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-medium mb-2">Planetary Data</h4>
-                  {interpretationsLoading ? (
-                    <SignInterpretationSkeleton />
-                  ) : (
-                    isClient && birthData && (
+                  {userData?.birthData && userData?.planetary_data && (
+                    <Suspense fallback={<SignInterpretationSkeleton />}>
                       <NatalChartProfileLazy
-                        birthData={birthData}
-                        profileId={userData?.id || ''}
+                        birthData={userData.birthData}
+                        planetaryData={userData.planetary_data}
                       />
-                    )
+                    </Suspense>
                   )}
                 </div>
               </div>
