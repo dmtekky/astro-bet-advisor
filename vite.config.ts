@@ -99,6 +99,7 @@ export default defineConfig(({ mode }) => {
         'date-fns',
         'lodash',
         'axios',
+        '@astrodraw/astrochart',
       ],
     },
     ssr: {
