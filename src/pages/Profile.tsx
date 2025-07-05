@@ -24,6 +24,7 @@ import SignInterpretationSkeleton from '@/components/astrology/SignInterpretatio
 
 import { UserProfile, BirthData, Profile } from '@/types/profiles';
 import { AstroData } from '@/types/astrology';
+import { useAstroData } from '@/hooks/useAstroData';
 
 // Lazily import the chart components for code splitting
 const NatalChartProfileLazy = lazy(() => import('@/components/astrology/NatalChartProfile'));
@@ -86,6 +87,20 @@ const Profile = () => {
   const [interpretations, setInterpretations] = useState<AstroData | null>(null);
   const [interpretationsLoading, setInterpretationsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Use the useAstroData hook to fetch and process astrological data
+  const { planetaryData: fetchedPlanetaryData, birthData: fetchedBirthData } = useAstroData(birthData);
+
+  // Update userData with the fetched astrological data
+  useEffect(() => {
+    if (fetchedPlanetaryData && fetchedBirthData && isMounted.current) {
+      setUserData(prevData => ({
+        ...prevData!,
+        planetary_data: fetchedPlanetaryData,
+        birthData: fetchedBirthData,
+      }));
+    }
+  }, [fetchedPlanetaryData, fetchedBirthData]);
 
   useEffect(() => {
     const loadProfile = async () => {
