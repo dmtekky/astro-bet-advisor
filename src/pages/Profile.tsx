@@ -94,13 +94,18 @@ const Profile = () => {
   // Update userData with the fetched astrological data
   useEffect(() => {
     if (fetchedPlanetaryData && fetchedBirthData && isMounted.current) {
-      setUserData(prevData => ({
-        ...prevData!,
-        planetary_data: fetchedPlanetaryData,
-        birthData: fetchedBirthData,
-      }));
+      console.log('[Profile] useAstroData returned data. Updating userData...');
+      setUserData(prevData => {
+        const updatedData = {
+          ...prevData!,
+          planetary_data: fetchedPlanetaryData,
+          birthData: fetchedBirthData,
+        };
+        console.log('[Profile] userData updated:', updatedData);
+        return updatedData;
+      });
     }
-  }, [fetchedPlanetaryData, fetchedBirthData]);
+  }, [fetchedPlanetaryData, fetchedBirthData, isMounted, setUserData]);
 
   useEffect(() => {
     const loadProfile = async () => {
