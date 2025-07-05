@@ -1,5 +1,5 @@
 
-import { AstroData } from './astrology'; // Import AstroData
+import { AstroData } from './app.types.js'; // Import AstroData
 
 export interface Profile {
   id: string;
@@ -50,6 +50,7 @@ export interface UserProfile {
     notificationEmail: string;
     theme: string;
   };
+  isPremium: boolean;
   stats: {
     predictions: number;
     accuracy: string;

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@components/ui/button';
+import { Input } from '@components/ui/input';
+import { Label } from '@components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@components/ui/card';
+import { Switch } from '@components/ui/switch';
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
-import { calculatePlanetaryCounts, processPlanetsPerSign, countsToArray } from '@/components/astrology/utils/chartUtils';
+import { useToast } from '@components/ui/use-toast';
+import { supabase } from '@lib/supabase';
+import { calculatePlanetaryCounts, processPlanetsPerSign, countsToArray } from '@components/astrology/utils/chartUtils';
 import cities from '@/data/cities-clean.json';
 import { useEffect, useMemo } from 'react';
 

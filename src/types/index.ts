@@ -1,4 +1,6 @@
-import { Database, Json } from './database.types';
+
+
+import { Database, Json } from './database.types.js';
 
 export type Sport = 
   // Frontend display names
@@ -204,7 +206,7 @@ export type {
   AstroData,
   AstroDataResponse,
   MoonPhaseInfo
-} from './astrology';
+} from './astrology.js';
 
 export interface GameOutcomePrediction {
   homeWinProbability: number;

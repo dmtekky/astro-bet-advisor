@@ -9,6 +9,7 @@ import {
   CardTitle, 
   CardDescription 
 } from '@/components/ui/card';
+import { calculatePlanetaryPositions, BirthData } from '../lib/astroCalculations.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AspectType, CelestialBody, ElementalBalance, ModalBalance } from '@/types/astrology';
@@ -246,55 +247,48 @@ const PlayerDetailPage: React.FC = () => {
     if (player && player.player_birth_date) {
       setLoadingAstroData(true);
       
-      // Mock astro data - in a real app, you would fetch this from an API
-      setTimeout(() => {
-        const mockAstroData: AstroChartData = {
-          date: player.player_birth_date || '',
-          planets: {
-            sun: {
-              name: 'Sun',
-              sign: player.player_birth_date ? ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][new Date(player.player_birth_date).getMonth()] : 'Unknown',
-              degree: Math.floor(Math.random() * 30),
-              house: Math.floor(Math.random() * 12) + 1,
-              retrograde: false
-            },
-            moon: {
-              name: 'Moon',
-              sign: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][Math.floor(Math.random() * 12)],
-              degree: Math.floor(Math.random() * 30),
-              house: Math.floor(Math.random() * 12) + 1,
-              retrograde: false
-            }
-          },
-          moonPhase: {
-            name: ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'][Math.floor(Math.random() * 8)],
-            value: Math.random(),
-            illumination: Math.random()
-          },
-          houses: {},
-          signs: {},
-          aspects: [],
-          elements: {
-            fire: { score: Math.random() * 10, percentage: Math.random() * 100 },
-            earth: { score: Math.random() * 10, percentage: Math.random() * 100 },
-            air: { score: Math.random() * 10, percentage: Math.random() * 100 },
-            water: { score: Math.random() * 10, percentage: Math.random() * 100 }
-          },
-          modalities: {
-            cardinal: { score: Math.random() * 10, percentage: Math.random() * 100 },
-            fixed: { score: Math.random() * 10, percentage: Math.random() * 100 },
-            mutable: { score: Math.random() * 10, percentage: Math.random() * 100 }
-          },
-          sunSign: player.player_birth_date ? ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][new Date(player.player_birth_date).getMonth()] : 'Unknown',
-          moonSign: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][Math.floor(Math.random() * 12)],
-          ascendant: ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][Math.floor(Math.random() * 12)],
-          dominantPlanets: [],
-          astroWeather: ['Favorable', 'Neutral', 'Challenging'][Math.floor(Math.random() * 3)]
-        };
-        
-        setAstroData(mockAstroData);
-        setLoadingAstroData(false);
-      }, 1000);
+      const fetchAstroData = async () => {
+        try {
+          if (!player.player_birth_date) {
+          setLoadingAstroData(false);
+          setError("Player birth date is missing.");
+          return;
+        }
+        const birthDate = new Date(player.player_birth_date);
+          const year = birthDate.getFullYear();
+          const month = birthDate.getMonth() + 1;
+          const day = birthDate.getDate();
+          const hour = 12;
+          const minute = 0;
+
+          // These values should ideally come from the player's data or a geocoding service.
+          // For now, using placeholders. You might need to implement a way to get these.
+          const latitude = 34.0522; // Example: Los Angeles latitude
+          const longitude = -118.2437; // Example: Los Angeles longitude
+          const timezoneOffset = -420; // Example: PST (UTC-7) in minutes
+
+          const birthData: BirthData = {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            latitude,
+            longitude,
+            timezoneOffset,
+          };
+
+          const result = await calculatePlanetaryPositions(birthData);
+          setAstroData(result);
+        } catch (err) {
+          console.error("Error calculating astrological data:", err);
+          setError("Failed to calculate astrological data.");
+        } finally {
+          setLoadingAstroData(false);
+        }
+      };
+
+      fetchAstroData();
     }
   }, [player]);
 

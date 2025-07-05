@@ -25,10 +25,7 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
 
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+
   },
   "include": ["src", "src/types"],
   "typeRoots": ["./node_modules/@types", "./src/types"],

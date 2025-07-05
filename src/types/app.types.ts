@@ -178,4 +178,29 @@ export interface AstroData {
   luckyNumber?: number;
   rulingPlanet?: string;
   interpretation?: string; // Retaining for flexibility, but dailyHoroscope might be primary
+  planets?: Record<string, PlanetData>;
+}
+
+export interface PlanetData {
+  houses: HouseInterpretation[];
+  // Add other properties of a planet if they exist in the data
+}
+
+export interface HouseInterpretation {
+  emoji?: string;
+  effect?: string;
+  // Add other properties if they exist in the house interpretation data
+}
+
+export interface AstroDataResponse {
+  natalChartData: any;
+  planetaryCounts: Record<string, number>;
+  planetsPerSign: Record<string, string[]>;
+  interpretations?: AstroData;
+}
+
+export interface MoonPhaseInfo {
+  phase: string;
+  illumination: number;
+  emoji: string;
 }

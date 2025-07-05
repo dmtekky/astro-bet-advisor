@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { UserProfile } from '@/types/profiles';
+import { Card, CardHeader, CardContent } from '@/components/ui/card.js';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.js';
+import { Badge } from '@/components/ui/badge.js';
+import { UserProfile } from '@/types/profiles.js';
 
 interface ProfileHeaderProps {
   user: UserProfile;
