@@ -91,6 +91,11 @@ const Profile = () => {
   // Use the useAstroData hook to fetch and process astrological data
   const { planetaryData: fetchedPlanetaryData, birthData: fetchedBirthData } = useAstroData(birthData);
 
+  console.log('[Profile] Debugging useAstroData inputs/outputs:');
+  console.log('  birthData:', birthData);
+  console.log('  fetchedPlanetaryData:', fetchedPlanetaryData);
+  console.log('  fetchedBirthData:', fetchedBirthData);
+
   // Update userData with the fetched astrological data
   useEffect(() => {
     if (fetchedPlanetaryData && fetchedBirthData && isMounted.current) {
