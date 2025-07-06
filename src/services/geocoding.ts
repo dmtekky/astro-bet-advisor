@@ -597,7 +597,7 @@ function cacheResult(key: string, result: GeocodingResult): void {
  * 
  * @param olderThan - Optional timestamp, only clear entries older than this
  */
-function clearGeocodingCache(olderThan?: number): void {
+export function clearGeocodingCache(olderThan?: number): void {
   try {
     const keysToRemove: string[] = [];
     
