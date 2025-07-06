@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-// Temporary comment to force re-evaluation
 
-import { useAuth } from '@/contexts/AuthContext.js';
-import { supabase } from '@/lib/supabase.js';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
-import type { Profile } from '@/types/profiles.js';
+import type { Profile } from '@/types/profiles';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
