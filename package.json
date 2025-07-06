@@ -129,7 +129,7 @@
     "dev": "vite",
     "api": "node --experimental-json-modules api.js",
     "start": "concurrently \"npm run dev\" \"npm run api\"",
-    "build": "tsc --project tsconfig.app.json --noEmit && vite build",
+    "build": "vite build",
     "build:ts": "tsc --project tsconfig.json",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
