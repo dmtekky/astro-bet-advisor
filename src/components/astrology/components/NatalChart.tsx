@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Download, Share2 } from 'lucide-react';
-import ChartLoading from './ChartLoading';
-import ChartError from './ChartError';
-import ChartPlaceholder from './ChartPlaceholder';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
-import { NatalChartProps } from '../utils/types';
-import { Origin, Horoscope as CircularHoroscope } from 'circular-natal-horoscope-js';
-import { Horoscope as DrawerHoroscope } from 'horoscopedrawer'; // Assuming this import path
+import ChartLoading from './ChartLoading.js';
+import ChartError from './ChartError.js';
+import ChartPlaceholder from './ChartPlaceholder.js';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip.js';
+import { NatalChartProps } from '../utils/types.js';
+import { Origin, Horoscope } from 'circular-natal-horoscope-js';
+import DrawerHoroscope from 'horoscopedrawer';
 
 // Create a client-only component wrapper
 const ClientOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,159 +41,108 @@ const NatalChart: React.FC<NatalChartProps> = ({
   const chartSize = Math.min(width, height);
 
   // The actual chart renderer that only runs on the client
-  const ChartRenderer = () => {
+  const ChartRenderer = ({ astroData }: { astroData: any }) => {
     const [renderAttempt, setRenderAttempt] = useState(0); // Keep renderAttempt for retry logic
-
-    // Helper function to transform astroData into HoroscopeDrawer's expected format
-    const transformAstroDataForHoroscopeDrawer = (data: any) => {
-      if (!data || !data.birthData || !data.celestialBodies) {
-        return null;
-      }
-
-      const { year, month, day, hour, minute, latitude, longitude } = data.birthData;
-
-      const origin = new Origin({
-        year,
-        month: month - 1, // Months are 0-indexed in circular-natal-horoscope-js
-        date: day,
-        hour,
-        minute,
-        latitude,
-        longitude,
-      });
-
-      const circularHoroscope = new CircularHoroscope({
-        origin,
-        houseSystem: 'placidus',
-        zodiac: 'tropical',
-        aspectPoints: ['bodies', 'points', 'angles'],
-        aspectWithPoints: ['bodies', 'points', 'angles'],
-        aspectTypes: ['major', 'minor'],
-        language: 'en',
-      });
-
-      const planets: { [key: string]: number } = {};
-      // Mapping from circular-natal-horoscope-js labels to HoroscopeDrawer keys
-      const planetMap: { [key: string]: string } = {
-        'sun': 'sun', 'moon': 'moon', 'mercury': 'mercury', 'venus': 'venus',
-        'mars': 'mars', 'jupiter': 'jupiter', 'saturn': 'saturn', 'uranus': 'uranus',
-        'neptune': 'neptune', 'pluto': 'pluto', 'chiron': 'chiron',
-        'north node': 'rahu', // Rahu is North Node
-        'south node': 'ketu', // Ketu is South Node
-      };
-
-      circularHoroscope.CelestialBodies.all.forEach((body: any) => {
-        const mappedName = planetMap[body.label.toLowerCase()];
-        if (mappedName && body.ChartPosition && body.ChartPosition.Ecliptic) {
-          planets[mappedName] = body.ChartPosition.Ecliptic.DecimalDegrees;
-        }
-      });
-
-      const houses: { axes: { [key: string]: number }, hasHouses: boolean } = {
-        hasHouses: true,
-        axes: {},
-      };
-
-      if (circularHoroscope.Houses && circularHoroscope.Houses.length >= 12) {
-        // HoroscopeDrawer's axes mapping to circular-natal-horoscope-js house cusps (0-indexed array)
-        // Cusp 1 (Ascendant) is handled by zodiac.ascendant
-        houses.axes = {
-          axis2to8: circularHoroscope.Houses[1].degree,  // Cusp 2
-          axis3to9: circularHoroscope.Houses[2].degree,  // Cusp 3
-          axis4to10: circularHoroscope.Houses[3].degree, // Cusp 4 (IC)
-          axis5to11: circularHoroscope.Houses[4].degree, // Cusp 5
-          axis6to12: circularHoroscope.Houses[5].degree, // Cusp 6
-          // HoroscopeDrawer also expects axis7to1, axis8to2, etc. which are opposite to the first 6.
-          // Since circular-natal-horoscope-js provides all 12, we can map them directly.
-          // However, HoroscopeDrawer's documentation implies it might calculate these if not provided.
-          // For now, let's stick to the ones explicitly mentioned in the placeholder.
-          // If issues arise, we might need to add more or confirm HoroscopeDrawer's behavior.
-        };
-      }
-
-      let ascendantSign = 0;
-      let ascendantDegree = 0;
-      if (circularHoroscope.Ascendant && circularHoroscope.Ascendant.ChartPosition && circularHoroscope.Ascendant.ChartPosition.Ecliptic) {
-        const ascendantDecimalDegrees = circularHoroscope.Ascendant.ChartPosition.Ecliptic.DecimalDegrees;
-        ascendantSign = Math.floor(ascendantDecimalDegrees / 30);
-        ascendantDegree = ascendantDecimalDegrees % 30;
-      }
-
-      return {
-        zodiac: {
-          ascendant: {
-            sign: ascendantSign,
-            degree: ascendantDegree,
-          },
-        },
-        planets,
-        houses,
-      };
-    };
 
     useEffect(() => {
       console.log('[NatalChart] Component mounted with astroData:', JSON.stringify(astroData, null, 2));
 
       if (!astroData) {
-        console.log('[NatalChart] No astrological data provided, setting error');
+        console.log('[NatalChart] No astrological data provided');
         setChartError(new Error('No astrological data provided'));
         return;
       }
-
-      let drawerInstance: any = null;
-      const svgElementId = 'natal-chart-svg'; // ID for the SVG element
-
-      try {
-        const horoscopeDrawerProperties = transformAstroDataForHoroscopeDrawer(astroData);
-
-        if (!horoscopeDrawerProperties) {
-          throw new Error('Failed to transform astrological data for chart drawing.');
-        }
-
-        // Ensure the SVG container exists
-        if (containerRef.current) {
-          const existingSvg = containerRef.current.querySelector(`#${svgElementId}`);
-          if (existingSvg) {
-            existingSvg.remove(); // Remove existing SVG to prevent duplicates on re-render
+      const abortController = new AbortController();
+      let isMounted = true;
+      
+      const initializeChart = () => {
+        try {
+          if (!isMounted || !astroData || !astroData.birthData) {
+            console.log('[NatalChart] Component unmounted or no birth data, aborting initialization');
+            return;
           }
 
-          const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          svgContainer.id = svgElementId;
-          svgContainer.setAttribute('width', chartSize.toString());
-          svgContainer.setAttribute('height', chartSize.toString());
-          containerRef.current.appendChild(svgContainer);
-          console.log('[NatalChart] SVG container created');
-        } else {
-          throw new Error('Container ref is null');
-        }
+          const { birthData } = astroData;
+          const { year, month, date, hour, minute, latitude, longitude, timezone } = birthData;
 
-        console.log('[NatalChart] Creating HoroscopeDrawer instance...');
-        drawerInstance = new DrawerHoroscope(horoscopeDrawerProperties);
-        console.log('[NatalChart] HoroscopeDrawer instance created');
-
-        console.log('[NatalChart] Drawing chart with data...');
-        drawerInstance.draw(`#${svgElementId}`);
-        console.log('[NatalChart] Chart drawn successfully');
-        setChartError(null);
-
-      } catch (error) {
-        console.error('[NatalChart] Error during chart drawing:', error);
-        setChartError(error instanceof Error ? error : new Error('Failed to draw chart'));
-        if (onError) onError(error instanceof Error ? error : new Error('Failed to draw chart'));
-      }
-
-      return () => {
-        console.log('[NatalChart] Component unmounting...');
-        // HoroscopeDrawer doesn't seem to have a destroy method,
-        // so we just remove the SVG element.
-        if (containerRef.current) {
-          const chartElement = containerRef.current.querySelector(`#${svgElementId}`);
-          if (chartElement) {
-            chartElement.remove();
-            console.log('[NatalChart] Chart SVG removed');
+          if (
+            year === undefined || month === undefined || date === undefined ||
+            hour === undefined || minute === undefined ||
+            latitude === undefined || longitude === undefined || timezone === undefined
+          ) {
+            console.log('[NatalChart] Incomplete birth data, setting error');
+            setChartError(new Error('Incomplete birth data for chart rendering.'));
+            return;
           }
+
+          // Create container if it doesn't exist
+          if (containerRef.current) {
+            // Remove existing canvas if any
+            const existingCanvas = containerRef.current.querySelector('canvas');
+            if (existingCanvas) {
+              existingCanvas.remove();
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'natal-chart-canvas';
+            canvas.width = chartSize;
+            canvas.height = chartSize;
+            containerRef.current.appendChild(canvas);
+            console.log('[NatalChart] Chart canvas created');
+
+            // Initialize CircularNatalHoroscope
+            const origin = new Origin({
+              year,
+              month: month - 1, // Month is 0-indexed in CircularNatalHoroscope
+              date,
+              hour,
+              minute,
+              latitude,
+              longitude,
+
+            });
+
+            const natalHoroscope = new Horoscope({
+              origin: origin,
+              houseSystem: "placidus", 
+              zodiac: "tropical",      
+              aspectPoints: ['bodies', 'points', 'angles'],
+              aspectWithPoints: ['bodies', 'points', 'angles'],
+              aspectTypes: ["major", "minor"],
+              language: 'en'
+            });
+            console.log('[NatalChart] CircularNatalHoroscope instance created');
+
+            // Draw the horoscope
+            const drawer = new DrawerHoroscope(natalHoroscope);
+            drawer.draw('#' + canvas.id);
+            console.log('[NatalChart] Chart drawn successfully');
+            setChartError(null);
+
+          } else {
+            throw new Error('Container ref is null');
+          }
+        } catch (error) {
+          console.error('[NatalChart] Error during initialization:', error);
+          setChartError(error instanceof Error ? error : new Error('Failed to initialize chart'));
+          if (onError) onError(error instanceof Error ? error : new Error('Failed to initialize chart'));
         }
+
+        return () => {
+          console.log('[NatalChart] Component unmounting...');
+          isMounted = false;
+          if (containerRef.current) {
+            const chartElement = containerRef.current.querySelector('#natal-chart-canvas');
+            if (chartElement) {
+              chartElement.remove();
+              console.log('[NatalChart] Chart canvas removed');
+            }
+          }
+        };
       };
+
+      initializeChart(); // Call initializeChart here
+
     }, [renderAttempt, astroData, chartSize]); // Add chartSize to dependencies
 
     // Add retry button if there's an error
@@ -272,7 +221,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
         className="relative w-full h-full min-h-[400px] bg-gray-900 rounded-lg overflow-hidden natal-chart-container"
       >
         <ClientOnly>
-          <ChartRenderer />
+          <ChartRenderer astroData={astroData} />
         </ClientOnly>
         
         {/* Fallback for server-side rendering */}

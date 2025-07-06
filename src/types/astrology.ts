@@ -1,5 +1,4 @@
-export type { AstroData, AstroDataResponse, MoonPhaseInfo } from './app.types.js';
-import type { AstroData } from './app.types.js';
+
 import { BirthData } from './profiles.js';
 
 // Birth data structure
@@ -137,7 +136,152 @@ export interface ElementalBalance {
 }
 
 export interface ModalBalance {
-  cardinal: { score: number; percentage: number };
-  fixed: { score: number; percentage: number };
-  mutable: { score: number; percentage: number };
+  cardinal: { score: number; planets: string[] };
+  fixed: { score: number; planets: string[] };
+  mutable: { score: number; planets: string[] };
+}
+
+export interface MoonPhaseInfo {
+  name: string;
+  value: number; // 0-1
+  illumination: number; // 0-1
+  nextFullMoon: Date;
+  ageInDays: number;
+  phaseType: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
+}
+
+// Planet data structure as received from the backend
+export interface PlanetData {
+  name: string;
+  longitude: number;
+  sign: string;
+  house?: number;
+  retrograde?: boolean;
+  speed?: number;
+  degree?: number;
+  [key: string]: any; // Allow additional properties
+}
+
+export interface AstroData {
+  // Calculation metadata
+  date: string;
+  queryTime: string;
+  observer?: {
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+    timezone: string;
+  };
+  
+  // Core data
+  sun: CelestialBody;
+  moon: CelestialBody;
+  planets: Record<string, CelestialBody>;
+  houses?: HouseSystem;
+  
+  // Analysis
+  aspects: Aspect[];
+  patterns?: AspectPattern[];
+  dignities?: Record<string, Dignity>;
+  elements?: ElementalBalance;
+  modalities?: ModalBalance;
+  
+  // Extra insights
+  moonPhase: MoonPhaseInfo;
+  ascendant?: number; // Add ascendant to AstroData
+}
+
+export interface InterpretationContent {
+  [key: string]: string | { [subKey: string]: string };
+}
+
+// For the API
+export interface AstroDataResponse {
+  date: string;
+  query_time: string;
+  observer?: {
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+    timezone: string;
+  };
+  sun: {
+    sign: string;
+    longitude: number;
+    degree: number;
+    minute?: number;
+    retrograde?: boolean;
+  };
+  moon: {
+    sign: string;
+    longitude: number;
+    phase: number;
+    phase_name: string;
+    degree: number;
+    minute?: number;
+    retrograde?: boolean;
+  };
+  positions: Array<{
+    planet: string;
+    longitude: number;
+    sign: string;
+    degree: number;
+    minute?: number;
+    retrograde?: boolean;
+  }>;
+  // Optional structured planetary data
+  planets?: Record<string, {
+    name: string;
+    longitude: number;
+    sign: string;
+    degree: number;
+    retrograde?: boolean;
+    speed?: number;
+    house?: number;
+  }>;
+  aspects: Array<{
+    name: string;
+    aspect: string;
+    orb: number;
+    influence: string;
+  }>;
+  retrograde: Array<{
+    planet: string;
+    isRetrograde: boolean;
+    influence: string;
+  }>;
+  houses?: {
+    system: string;
+    cusps: number[];
+    angles: {
+      asc: number;
+      mc: number;
+      dsc: number;
+      ic: number;
+    };
+  };
+  elements?: {
+    fire: { score: number; planets: string[] };
+    earth: { score: number; planets: string[] };
+    air: { score: number; planets: string[] };
+    water: { score: number; planets: string[] };
+  };
+  modalities?: {
+    cardinal: { score: number; planets: string[] };
+    fixed: { score: number; planets: string[] };
+    mutable: { score: number; planets: string[] };
+  };
+  dignities?: Record<string, {
+    score: number;
+    status: string;
+    description: string;
+  }>;
+  patterns?: Array<{
+    type: string;
+    planets: string[];
+    signs?: string[];
+    elements?: string[];
+    influence: string;
+    strength: number;
+  }>;
 }

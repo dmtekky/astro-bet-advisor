@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, easeOut } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,7 +94,7 @@ const itemVariants = {
     transition: {
       delay: i * 0.05,
       duration: 0.2,
-      ease: 'easeOut'
+      ease: easeOut
     }
   }),
   hover: {
@@ -112,6 +112,20 @@ const ExampleProfilePage: React.FC = () => {
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch the user session on component mount
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUserId(session.user.id);
+      } else {
+        console.warn('No active Supabase session found.');
+        // Optionally handle cases where no user is logged in, e.g., redirect to login
+      }
+    };
+    getSession();
+  }, []);
   const [showForm, setShowForm] = useState(false);
   const [showAddSports, setShowAddSports] = useState(false);
   const [interpretations, setInterpretations] = useState<AstroData | null>(null);
@@ -145,12 +159,19 @@ const ExampleProfilePage: React.FC = () => {
   // Current user data (from Supabase or default)
   const user = userData || defaultUser;
 
-  const fetchSpecificUser = useCallback(async () => {
+  const fetchSpecificUser = useCallback(async (currentUserId: string | null) => {
     try {
       setLoading(true);
       
       // Fetch data for the specific user ID
-      const specificUserId = '9245f829-40d5-44ee-9ea7-182d4d23d0b6';
+      if (!currentUserId) {
+        console.warn('No user ID provided to fetchSpecificUser.');
+        setLoading(false);
+        return;
+      }
+
+      // Use the provided currentUserId
+      const specificUserId = currentUserId;
       // With a typed Supabase client, this call becomes fully type-safe.
       const { data, error } = await supabase
         .from('user_data') // No more `(supabase as any)` needed!
@@ -224,8 +245,10 @@ const ExampleProfilePage: React.FC = () => {
   
   // Fetch user data from Supabase
   useEffect(() => {
-    fetchSpecificUser();
-  }, [fetchSpecificUser]);
+    if (userId) {
+      fetchSpecificUser(userId);
+    }
+  }, [fetchSpecificUser, userId]);
   
   // Generate interpretations dynamically
   useEffect(() => {
@@ -379,7 +402,7 @@ const ExampleProfilePage: React.FC = () => {
         )}
         
         {/* User Birth Data Form Modal */}
-        {showForm && (
+        {showForm && userId && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
