@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import TeamShareButton from '@/components/teams/TeamShareButton';
+import { supabase } from '@/lib/supabase.js';
+import TeamShareButton from '@/components/teams/TeamShareButton.js';
 import { Helmet } from 'react-helmet';
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;

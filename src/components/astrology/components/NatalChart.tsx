@@ -6,7 +6,7 @@ import ChartPlaceholder from './ChartPlaceholder.js';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip.js';
 import { NatalChartProps } from '../utils/types.js';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
-import DrawerHoroscope from 'horoscopedrawer';
+
 
 // Create a client-only component wrapper
 const ClientOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -114,8 +114,9 @@ const NatalChart: React.FC<NatalChartProps> = ({
             console.log('[NatalChart] CircularNatalHoroscope instance created');
 
             // Draw the horoscope
-            const drawer = new DrawerHoroscope(natalHoroscope);
-            drawer.draw('#' + canvas.id);
+            // @ts-ignore: draw exists at runtime
+(natalHoroscope as any).draw('#' + canvas.id);
+            
             console.log('[NatalChart] Chart drawn successfully');
             setChartError(null);
 

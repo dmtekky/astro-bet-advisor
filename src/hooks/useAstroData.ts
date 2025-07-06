@@ -13,9 +13,9 @@ import type {
   CelestialBody,
   ZodiacSign,
   MoonPhaseInfo,
-} from "../types/astrology";
+} from "../types/astrology.js";
 import * as z from "zod"; // Import Zod
-import { ASPECT_INTERPRETATIONS } from '../utils/aspectInterpretations'; // Import aspect interpretations
+import { ASPECT_INTERPRETATIONS } from '../utils/aspectInterpretations.js'; // Import aspect interpretations
 
 // Initialize Supabase client with fallback to REACT_APP_ prefixed variables for backward compatibility
 const supabase = createClient(
@@ -41,18 +41,18 @@ const getZodiacSign = (longitude: number): ZodiacSign => {
 
 const getElementFromSign = (sign: ZodiacSign): Element => {
   const elements: Record<ZodiacSign, Element> = {
-    "Aries": "fire",
-    "Leo": "fire",
-    "Sagittarius": "fire",
-    "Taurus": "earth",
-    "Virgo": "earth",
-    "Capricorn": "earth",
-    "Gemini": "air",
-    "Libra": "air",
-    "Aquarius": "air",
-    "Cancer": "water",
-    "Scorpio": "water",
-    "Pisces": "water"
+    "Aries": "Fire",
+    "Leo": "Fire",
+    "Sagittarius": "Fire",
+    "Taurus": "Earth",
+    "Virgo": "Earth",
+    "Capricorn": "Earth",
+    "Gemini": "Air",
+    "Libra": "Air",
+    "Aquarius": "Air",
+    "Cancer": "Water",
+    "Scorpio": "Water",
+    "Pisces": "Water"
   };
   return elements[sign];
 };
@@ -804,13 +804,28 @@ export const useAstroData = (
           response: apiData,
         });
 
-        // Return minimal valid structure
+        // Return minimal valid structure with default values
+        const currentDate = new Date().toISOString().split('T')[0];
         return {
-          date,
+          date: currentDate,
+          queryTime: new Date().toISOString(),
           planets: {},
           aspects: [],
-          elements: undefined,
-          sunSign: undefined,
+          elements: {
+            fire: { score: 0, planets: [] },
+            earth: { score: 0, planets: [] },
+            air: { score: 0, planets: [] },
+            water: { score: 0, planets: [] }
+          },
+          moonPhase: {
+            name: 'Unknown',
+            value: 0,
+            illumination: 0,
+            nextFullMoon: new Date().toISOString(),
+            ageInDays: 0,
+            phaseType: 'new'
+          },
+          astroWeather: 'Unknown'
         };
       }
 
@@ -855,8 +870,13 @@ export const useAstroData = (
               sign: value.sign as ZodiacSign,
               degree: value.degrees || value.degree || 0, // Handle both API versions
               retrograde: Boolean(value.retrograde),
-              speed: value.speed || 1,
-              interpretation: interpretations?.planets?.[planetKey]?.interpretation || '',
+              // Handle speed property which might not be in the type
+              speed: (value as any).speed || 1,
+              // Safely access interpretation
+              interpretation: interpretations && 
+                interpretations.planets && 
+                planetKey in interpretations.planets ? 
+                interpretations.planets[planetKey] : '',
             };
           }
         });

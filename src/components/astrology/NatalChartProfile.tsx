@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas/dist/html2canvas.esm.js';
 import { Info } from 'lucide-react';
-import { NatalChartProfileProps, NatalChartProps, PlanetaryCountChartProps } from '../../types/astrology.ts';
-import NatalChart from './components/NatalChart.tsx';
-import PlanetaryCountChart from './components/PlanetaryCountChart.tsx';
-import ChartLoading from './components/ChartLoading.tsx';
-import ChartError from './components/ChartError.tsx';
+import { NatalChartProfileProps, NatalChartProps, PlanetaryCountChartProps } from '../../types/astrology.js';
+import NatalChart from './components/NatalChart.js';
+import PlanetaryCountChart from './components/PlanetaryCountChart.js';
+import ChartLoading from './components/ChartLoading.js';
+import ChartError from './components/ChartError.js';
 
 /**
  * NatalChartProfile component that renders both a natal chart and planetary count chart
@@ -293,7 +293,10 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
         </div>
 
         {/* Planets in Houses Interpretations */}
-        {interpretations?.planets && Object.keys(interpretations.planets).some(planetName => Object.keys(interpretations.planets![planetName as keyof typeof interpretations.planets].houses || {}).length > 0) && (
+        {interpretations?.planets && Object.keys(interpretations.planets).some(planetName => {
+          const planet = interpretations.planets![planetName as keyof typeof interpretations.planets] as any;
+          return Object.keys(planet?.houses || {}).length > 0;
+        }) && (
           <div className="w-full max-w-3xl mx-auto bg-white/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
               Planets in Houses
@@ -302,13 +305,14 @@ const NatalChartProfile: React.FC<NatalChartProfileProps> = ({
             {interpretations?.planets && Object.entries(interpretations.planets).map(([planet, data]) => {
               if (!data) return null; // Add null check for data
 
-              // Only render if there is house data available
-              if (!data?.houses) return null;
+              // Use type assertion to handle the houses property
+              const planetData = data as any;
+              if (!planetData?.houses) return null;
               
               // Find the house for this planet
-              const houseKey = data.houses && Object.keys(data.houses).length > 0 ? Object.keys(data.houses)[0] : undefined; // Add null check for data.houses
+              const houseKey = planetData.houses && Object.keys(planetData.houses).length > 0 ? Object.keys(planetData.houses)[0] : undefined;
               if (!houseKey) return null; // If no house key, don't render
-              const interpretation = data.houses[houseKey] as { 
+              const interpretation = planetData.houses[houseKey] as { 
                 emoji?: string;
                 effect?: string;
                 sportsTitle?: string;

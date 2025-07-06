@@ -25,13 +25,20 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
     "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "paths": {
       "@/*": ["./src/*"]
     },
 
 
   },
-  "include": ["src", "src/types"],
+  "include": [
+    "src",
+    "src/types",
+    "src/data/**/*.json",
+    "src/astrology/interpretations/**/*.json"
+  ],
   "typeRoots": ["./node_modules/@types", "./src/types"],
   "exclude": ["node_modules"]
 }

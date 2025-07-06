@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { Database, type Json } from '@/integrations/supabase/types'; // Corrected Database import path
+import { Database, type Json } from '@/integrations/supabase/types.js'; // Corrected Database import path
 
 // Try Vite's import.meta.env first, then fall back to process.env for Node scripts
 const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL) || process.env?.VITE_SUPABASE_URL || '';
@@ -84,7 +84,7 @@ export const fetchFromSupabase = async <T>(
 };
 
 // NBA Types
-import type { NbaTeam, NbaPlayer } from '@/types/nba.types';
+import type { NbaTeam, NbaPlayer } from '@/types/nba.types.js';
 
 // NBA fetchers
 
@@ -205,7 +205,7 @@ export async function fetchLatestAstrologicalData(): Promise<AstrologicalData | 
     const currentDate = new Date().toISOString().split('T')[0];
     
     // Generate the data using playerAstroService
-    const astroData = await import('./playerAstroService').then(module => 
+    const astroData = await import('./playerAstroService.js').then(module => 
       module.generatePlayerAstroData(currentDate)
     );
     

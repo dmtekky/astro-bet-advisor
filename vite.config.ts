@@ -80,6 +80,7 @@ export default defineConfig(({ mode }) => {
         'zlib': 'browserify-zlib',
         'vm': 'vm-browserify',
         '@astrologyTypes': path.resolve(__dirname, './src/astrology/interpretations/types.ts'),
+         'circular-natal-horoscope-js': path.resolve(__dirname, './node_modules/circular-natal-horoscope-js/dist/index.js'),
       },
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.node'],
     },
@@ -100,10 +101,12 @@ export default defineConfig(({ mode }) => {
         'lodash',
         'axios',
         '@astrodraw/astrochart',
+         'circular-natal-horoscope-js',
+         'horoscope-drawer',
       ],
     },
     ssr: {
-      noExternal: ['@astrodraw/astrochart'],
+      noExternal: ['@astrodraw/astrochart', 'horoscope-drawer'],
     },
   };
 });

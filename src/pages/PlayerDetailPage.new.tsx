@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase.js';
 import { motion } from 'framer-motion';
 import { 
   Card, 
@@ -8,11 +8,11 @@ import {
   CardHeader, 
   CardTitle, 
   CardDescription 
-} from '@/components/ui/card';
+} from '@/components/ui/card.js';
 import { calculatePlanetaryPositions, BirthData } from '../lib/astroCalculations.js';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { AspectType, CelestialBody, ElementalBalance, ModalBalance } from '@/types/astrology';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.js';
+import { Badge } from '@/components/ui/badge.js';
+import { AspectType, CelestialBody, ElementalBalance, ModalBalance } from '@/types/astrology.js';
 import { BarChart, RadarChart, LineChart, PieChart } from 'recharts';
 
 // Types

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext.js';
+import { supabase } from '@/lib/supabase.js';
 
-import type { Profile } from '@/types/profiles';
+import type { Profile } from '@/types/profiles.js';
 
 const Profile = () => {
   const { user, signOut } = useAuth();

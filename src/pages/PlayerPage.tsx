@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAstroData } from '../hooks/useAstroData';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import LoadingScreen from '@/components/LoadingScreen';
-import type { Database } from '@/types/database.types';
+import { supabase } from '@/lib/supabase.js';
+import { useAstroData } from '@/hooks/useAstroData.js';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card.js';
+import LoadingScreen from '@/components/LoadingScreen.js';
+import type { Database } from '@/types/database.types.js';
 
 // Define types based on Supabase schema
 type PlayerRow = Database['public']['Tables']['players']['Row'];
 type TeamRow = Database['public']['Tables']['teams']['Row'];
 type LeagueRow = Database['public']['Tables']['leagues']['Row'];
+// Extend the base type with all the properties we need for the component
 type BaseballStatsRow = Database['public']['Tables']['baseball_stats']['Row'] & {
-  team_abbreviation?: string;
-  team_name?: string;
-  season?: number;
+  team_abbreviation?: string | null;
+  team_name?: string | null;
+  season?: number | null;
 };
 
 interface PlayerProfile {
@@ -61,7 +62,13 @@ const PlayerPage: React.FC = () => {
         .eq('id', playerData.current_team_id)
         .single();
       if (teamError) console.error('Error fetching team data:', teamError);
-      else teamData = fetchedTeamData;
+      else {
+        // Add slug property if missing to satisfy type requirements
+        teamData = {
+          ...fetchedTeamData,
+          slug: fetchedTeamData.slug || fetchedTeamData.abbreviation?.toLowerCase() || ''
+        };
+      }
       console.log('Team data fetched:', teamData);
     }
 
@@ -101,7 +108,7 @@ const PlayerPage: React.FC = () => {
       }
       // 2. If only one result, return it
       if (statsRows.length === 1) {
-        return statsRows[0];
+        return statsRows[0] as BaseballStatsRow;
       }
       // 3. If multiple, filter by team abbreviation or team name (case-insensitive)
       if (teamData) {
@@ -122,7 +129,7 @@ const PlayerPage: React.FC = () => {
         // If still ambiguous, try matching by team name field if available
         if (filtered.length === 0 && teamName) {
           filtered = statsRows.filter(
-            s => (s.team_name || '').toLowerCase() === teamName
+            s => ((s as any).team_name || '').toLowerCase() === teamName
           );
         }
         if (filtered.length === 1) {
@@ -344,15 +351,15 @@ const PlayerPage: React.FC = () => {
           {!loadingProfile && errorProfile && <p className="text-red-500">Could not load statistics due to profile error.</p>}
           {!loadingProfile && !errorProfile && stats && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <p><strong>Batting Avg:</strong> {stats.batting_average?.toFixed(3) ?? 'N/A'}</p>
+              <p><strong>Batting Avg:</strong> {stats.batting_avg?.toFixed(3) ?? 'N/A'}</p>
               <p><strong>Home Runs:</strong> {stats.home_runs ?? 'N/A'}</p>
-              <p><strong>RBIs:</strong> {stats.runs_batted_in ?? 'N/A'}</p>
-              <p><strong>OBP:</strong> {stats.on_base_percentage?.toFixed(3) ?? 'N/A'}</p>
-              <p><strong>SLG:</strong> {stats.slugging_percentage?.toFixed(3) ?? 'N/A'}</p>
-              <p><strong>OPS:</strong> {stats.on_base_plus_slugging?.toFixed(3) ?? 'N/A'}</p>
+              <p><strong>RBIs:</strong> {stats.rbi ?? 'N/A'}</p>
+              <p><strong>OBP:</strong> {stats.on_base_pct?.toFixed(3) ?? 'N/A'}</p>
+              <p><strong>SLG:</strong> {stats.slugging_pct?.toFixed(3) ?? 'N/A'}</p>
+              <p><strong>OPS:</strong> {stats.on_base_plus_slugging_pct?.toFixed(3) ?? 'N/A'}</p>
               <p><strong>Wins (Pitcher):</strong> {stats.wins ?? 'N/A'}</p>
               <p><strong>Losses (Pitcher):</strong> {stats.losses ?? 'N/A'}</p>
-              <p><strong>ERA (Pitcher):</strong> {stats.earned_run_average?.toFixed(2) ?? 'N/A'}</p>
+              <p><strong>ERA (Pitcher):</strong> {stats.era?.toFixed(2) ?? 'N/A'}</p>
               <p><strong>Strikeouts (Pitcher):</strong> {stats.strikeouts ?? 'N/A'}</p>
               <p><strong>Saves (Pitcher):</strong> {stats.saves ?? 'N/A'}</p>
               <p><strong>Stolen Bases:</strong> {stats.stolen_bases ?? 'N/A'}</p>
