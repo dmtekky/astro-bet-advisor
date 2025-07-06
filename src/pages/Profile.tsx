@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext.js';
 import { supabase } from '@/lib/supabase.js';
 import { PostgrestError } from '@supabase/supabase-js';
 
-import type { Profile } from '@/types/profiles.js';
+import type { Profile } from '@/types/profiles';
 import PlanetaryCountChart from '@/components/astrology/PlanetaryCountChart';
 import UserBirthDataForm from '@/components/forms/UserBirthDataForm';
 
@@ -273,26 +273,23 @@ const Profile = () => {
               onClick={handleSignOut}
               className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
             >
-              Sign Out
+              {loading ? 'Updating...' : 'Update Profile'}
             </button>
+          </form>
 
-            {/* Planetary Count Chart */}
-            {userData?.planetary_count && (
-              <div className="mt-6">
-                <PlanetaryCountChart
-                  planetCounts={userData.planetary_count as any}
-                  planetsPerSign={userData?.planets_per_sign ?? {}}
-                  isDownloading={false}
-                  onDownload={async () => {}}
-                  onShare={async () => {}}
-                />
-              </div>
-            )}
+          <button
+            onClick={handleSignOut}
+            className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Sign Out
+          </button>
 
-            {/* Birth Data Form */}
+          {/* Planetary Count Chart */}
+          {userData?.planetary_count && (
             <div className="mt-6">
-              {showBirthForm ? (
-                <UserBirthDataForm
+              <PlanetaryCountChart
+                planetaryCount={userData.planetary_count}
+              />
                   userId={user!.id}
                   defaultValues={{
                     birthDate: userData?.birth_date ?? undefined,

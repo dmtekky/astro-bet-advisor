@@ -19,9 +19,9 @@ export interface Profile {
   time_unknown: boolean | null;
   birth_latitude: number | null;
   birth_longitude: number | null;
-  planetary_data: any | null;
-  planetary_count: any | null;
-  planets_per_sign: any | null;
+  planetary_data: AstroData | null;
+  planetary_count: Record<string, number> | null;
+  planets_per_sign: Record<string, number> | null;
   created_at: string | null;
 }
 
