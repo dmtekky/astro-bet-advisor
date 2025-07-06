@@ -273,23 +273,20 @@ const Profile = () => {
               onClick={handleSignOut}
               className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
             >
-              {loading ? 'Updating...' : 'Update Profile'}
+              Sign Out
             </button>
-          </form>
 
-          <button
-            onClick={handleSignOut}
-            className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-          >
-            Sign Out
-          </button>
+            {/* Planetary Count Chart */}
+            {userData?.planetary_count && (
+              <div className="mt-6">
+                <PlanetaryCountChart planetaryCount={userData.planetary_count} />
+              </div>
+            )}
 
-          {/* Planetary Count Chart */}
-          {userData?.planetary_count && (
+            {/* Birth Data Form */}
             <div className="mt-6">
-              <PlanetaryCountChart
-                planetaryCount={userData.planetary_count}
-              />
+              {showBirthForm ? (
+                <UserBirthDataForm
                   userId={user!.id}
                   defaultValues={{
                     birthDate: userData?.birth_date ?? undefined,
