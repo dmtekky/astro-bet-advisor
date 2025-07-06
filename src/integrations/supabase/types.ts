@@ -68,6 +68,75 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      },
+      user_data: {
+        Row: {
+          id: string;
+          name: string | null;
+          email: string | null;
+          avatar_url: string | null;
+          member_since: string | null;
+          last_login: string | null;
+          account_type: string | null;
+          favorite_sports: string[] | null;
+          notification_email: string | null;
+          theme: string | null;
+          birth_date: string | null;
+          birth_time: string | null;
+          birth_city: string | null;
+          time_unknown: boolean | null;
+          birth_latitude: number | null;
+          birth_longitude: number | null;
+          planetary_data: Json | null;
+          planetary_count: Json | null;
+          planets_per_sign: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name?: string | null;
+          email?: string | null;
+          avatar_url?: string | null;
+          member_since?: string | null;
+          last_login?: string | null;
+          account_type?: string | null;
+          favorite_sports?: string[] | null;
+          notification_email?: string | null;
+          theme?: string | null;
+          birth_date?: string | null;
+          birth_time?: string | null;
+          birth_city?: string | null;
+          time_unknown?: boolean | null;
+          birth_latitude?: number | null;
+          birth_longitude?: number | null;
+          planetary_data?: Json | null;
+          planetary_count?: Json | null;
+          planets_per_sign?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string | null;
+          email?: string | null;
+          avatar_url?: string | null;
+          member_since?: string | null;
+          last_login?: string | null;
+          account_type?: string | null;
+          favorite_sports?: string[] | null;
+          notification_email?: string | null;
+          theme?: string | null;
+          birth_date?: string | null;
+          birth_time?: string | null;
+          birth_city?: string | null;
+          time_unknown?: boolean | null;
+          birth_latitude?: number | null;
+          birth_longitude?: number | null;
+          planetary_data?: Json | null;
+          planetary_count?: Json | null;
+          planets_per_sign?: Json | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
       }
       baseball_players: {
         Row: {

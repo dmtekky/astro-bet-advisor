@@ -2,8 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext.js';
 import { supabase } from '@/lib/supabase.js';
+import { PostgrestError } from '@supabase/supabase-js';
 
 import type { Profile } from '@/types/profiles.js';
+import PlanetaryCountChart from '@/components/astrology/PlanetaryCountChart';
+import UserBirthDataForm from '@/components/forms/UserBirthDataForm';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -14,6 +17,7 @@ const Profile = () => {
   const [sportsPreferences, setSportsPreferences] = useState<string[]>([]);
   const [theme, setTheme] = useState<string>('Light Mode');
   const [isClient, setIsClient] = useState(false);
+  const [showBirthForm, setShowBirthForm] = useState(false);
   
   // Create a ref to track if component is mounted
   const isMounted = useRef(true);
@@ -32,7 +36,28 @@ const Profile = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('user_data')
-      .select('*')
+      .select(`
+          id,
+          name,
+          email,
+          avatar_url,
+          account_type,
+          favorite_sports,
+          notification_email,
+          theme,
+          birth_date,
+          birth_time,
+          birth_city,
+          time_unknown,
+          birth_latitude,
+          birth_longitude,
+          planetary_data,
+          planetary_count,
+          planets_per_sign,
+          created_at,
+          member_since,
+          last_login
+        `)
       .eq('id', user.id)
       .single();
 
@@ -43,7 +68,7 @@ const Profile = () => {
       console.error('Error refreshing user data:', error);
       setError('Failed to refresh profile data.');
     } else if (data) {
-      setUserData(data);
+      setUserData(data as Profile); // Explicitly cast to Profile
       setSportsPreferences(data.favorite_sports || []);
       setTheme(data.theme || 'Light Mode');
     }
@@ -59,7 +84,7 @@ const Profile = () => {
       }
       if (isMounted.current) setLoading(true);
 
-      let { data: profile, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('user_data')
         .select(`
           id,
@@ -70,10 +95,6 @@ const Profile = () => {
           favorite_sports,
           notification_email,
           theme,
-          predictions,
-          accuracy,
-          followers,
-          following,
           birth_date,
           birth_time,
           birth_city,
@@ -83,15 +104,19 @@ const Profile = () => {
           planetary_data,
           planetary_count,
           planets_per_sign,
-          created_at
+          created_at,
+          member_since,
+          last_login
         `)
         .eq('id', user.id)
-        .single();
+        .single() as { data: Profile | null, error: PostgrestError | null };
 
       // Check if component is still mounted before updating state
       if (!isMounted.current) return;
 
-      if (error && error.code === 'PGRST116') { // No rows found
+      let finalProfile: Profile | null = null;
+
+      if (profileError && profileError.code === 'PGRST116') { // No rows found
         console.log("No existing user data found, creating new entry.");
         const newProfile: Profile = {
           id: user.id,
@@ -102,10 +127,7 @@ const Profile = () => {
           favorite_sports: [],
           notification_email: user.email || null,
           theme: 'Light Mode',
-          predictions: 0,
-          accuracy: '0%',
-          followers: 0,
-          following: 0,
+
           birth_date: null,
           birth_time: null,
           birth_city: null,
@@ -134,17 +156,19 @@ const Profile = () => {
           setError(`Error creating profile: ${insertError.message}`);
           return;
         }
-        profile = newProfileData;
-      } else if (error) {
-        console.error("Error fetching user data:", error);
-        setError(`Error fetching profile: ${error.message}`);
+        finalProfile = newProfileData;
+      } else if (profileError) {
+        console.error("Error fetching user data:", profileError);
+        setError(`Error fetching profile: ${profileError.message}`);
         return;
+      } else {
+        finalProfile = profileData;
       }
 
       // Check if component is still mounted before updating state
       if (isMounted.current) {
-        if (profile) {
-          setUserData(profile);
+        if (finalProfile) {
+          setUserData(finalProfile);
         }
         setLoading(false);
       }
@@ -221,10 +245,7 @@ const Profile = () => {
               <p><strong>Email:</strong> {userData.email}</p>
               <p><strong>Member Since:</strong> {new Date(userData.created_at || '').toLocaleDateString()}</p>
               <p><strong>Account Type:</strong> {userData.account_type}</p>
-              <p><strong>Predictions:</strong> {userData.predictions}</p>
-              <p><strong>Accuracy:</strong> {userData.accuracy}</p>
-              <p><strong>Followers:</strong> {userData.followers}</p>
-              <p><strong>Following:</strong> {userData.following}</p>
+
             </div>
 
             <h3 className="text-xl font-semibold mt-6 mb-4">Update Profile</h3>
@@ -254,6 +275,44 @@ const Profile = () => {
             >
               Sign Out
             </button>
+
+            {/* Planetary Count Chart */}
+            {userData?.planetary_count && (
+              <div className="mt-6">
+                <PlanetaryCountChart
+                  planetCounts={userData.planetary_count as any}
+                  planetsPerSign={userData?.planets_per_sign ?? {}}
+                  isDownloading={false}
+                  onDownload={async () => {}}
+                  onShare={async () => {}}
+                />
+              </div>
+            )}
+
+            {/* Birth Data Form */}
+            <div className="mt-6">
+              {showBirthForm ? (
+                <UserBirthDataForm
+                  userId={user!.id}
+                  defaultValues={{
+                    birthDate: userData?.birth_date ?? undefined,
+                    birthTime: userData?.birth_time ?? undefined,
+                    birthCity: userData?.birth_city ?? undefined,
+                    timeUnknown: userData?.time_unknown ?? undefined,
+                    birthLatitude: userData?.birth_latitude ?? undefined,
+                    birthLongitude: userData?.birth_longitude ?? undefined,
+                  }}
+                  onSuccess={() => window.location.reload()}
+                />
+              ) : (
+                <button
+                  onClick={() => setShowBirthForm(true)}
+                  className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                >
+                  {userData?.birth_date ? 'Update Birth Data' : 'Add Birth Data'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ) : (

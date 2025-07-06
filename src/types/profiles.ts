@@ -12,10 +12,7 @@ export interface Profile {
   favorite_sports: string[] | null;
   notification_email: string | null;
   theme: string | null;
-  predictions: number | null;
-  accuracy: string | null;
-  followers: number | null;
-  following: number | null;
+
   birth_date: string | null;
   birth_time: string | null;
   birth_city: string | null;
