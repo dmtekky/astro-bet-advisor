@@ -1,4 +1,0 @@
-# Force HTTPS and non-www
-https://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
-http://www.fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
-http://fullmoonodds.com/* https://fullmoonodds.com/:splat 301!
