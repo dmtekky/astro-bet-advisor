@@ -71,7 +71,6 @@ const Footer: React.FC = () => {
     { to: '/upcoming-games', label: 'Games' },
     { to: '/privacy', label: 'Privacy Policy' },
     { to: '/terms', label: 'Terms of Service' },
-    { to: '/preview/profile', label: 'Preview Profile' },
   ];
 
   return (
