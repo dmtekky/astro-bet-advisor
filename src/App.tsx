@@ -8,54 +8,54 @@ import {
   useParams,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SearchProvider } from "./context/SearchContext";
+import { SearchProvider } from "./context/SearchContext.js";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { PageViewProvider } from "./contexts/PageViewContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { PageViewProvider } from "./contexts/PageViewContext.js";
+import { AuthProvider } from "./contexts/AuthContext.js";
+import ProtectedRoute from "./components/auth/ProtectedRoute.js";
 
-import ScrollToTop from "./components/ScrollToTop";
-import SignUpPrompt from './components/auth/SignUpPrompt';
-import useSignUpPrompt from "./hooks/useSignUpPrompt";
+import ScrollToTop from "./components/ScrollToTop.js";
+import SignUpPrompt from './components/auth/SignUpPrompt.js';
+import useSignUpPrompt from "./hooks/useSignUpPrompt.js";
 
 // Lazy load pages for code splitting
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const EventDetails = lazy(() => import('./pages/EventDetails'));
-const TeamPage = lazy(() => import('./pages/TeamPage'));
-const PlayerDetailPage = lazy(() => import('./pages/PlayerDetailPage'));
-const LeaguePage = lazy(() => import('./pages/LeaguePage'));
-const GamePage = lazy(() => import('./pages/GamePage'));
-const SearchResults = lazy(() => import('./pages/SearchResults'));
-const UpcomingGames = lazy(() => import('./pages/UpcomingGames'));
-const NewsPage = lazy(() => import('./pages/NewsPage'));
-const NewsArticle = lazy(() => import('./pages/NewsArticle'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const Header = lazy(() => import('./components/Header'));
-const Footer = lazy(() => import('./components/Footer'));
-const Login = lazy(() => import('./pages/Login'));
-const Signup = lazy(() => import('./pages/Signup'));
-const Profile = lazy(() => import('./pages/Profile'));
-const AuthCallback = lazy(() => import('./components/AuthCallback'));
+const Dashboard = lazy(() => import('./pages/Dashboard.js'));
+const EventDetails = lazy(() => import('./pages/EventDetails.js'));
+const TeamPage = lazy(() => import('./pages/TeamPage.js'));
+const PlayerDetailPage = lazy(() => import('./pages/PlayerDetailPage.js'));
+const LeaguePage = lazy(() => import('./pages/LeaguePage.js'));
+const GamePage = lazy(() => import('./pages/GamePage.js'));
+const SearchResults = lazy(() => import('./pages/SearchResults.js'));
+const UpcomingGames = lazy(() => import('./pages/UpcomingGames.js'));
+const NewsPage = lazy(() => import('./pages/NewsPage.js'));
+const NewsArticle = lazy(() => import('./pages/NewsArticle.js'));
+const NotFound = lazy(() => import('./pages/NotFound.js'));
+const Header = lazy(() => import('./components/Header.js'));
+const Footer = lazy(() => import('./components/Footer.js'));
+const Login = lazy(() => import('./pages/Login.js'));
+const Signup = lazy(() => import('./pages/Signup.js'));
+const Profile = lazy(() => import('./pages/Profile.js'));
+const AuthCallback = lazy(() => import('./components/AuthCallback.js'));
 
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const FloatingBackButton = lazy(() => import('./components/common/FloatingBackButton'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.js'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword.js'));
+const FloatingBackButton = lazy(() => import('./components/common/FloatingBackButton.js'));
 
-const NbaTeamsPage = lazy(() => import('./pages/NbaTeamsPage'));
-const NbaTeamDetailPage = lazy(() => import('./pages/NbaTeamDetailPage'));
-const NbaPlayersPage = lazy(() => import('./pages/NbaPlayersPage'));
-const BasketballPlayerPage = lazy(() => import('./pages/players/BasketballPlayerPage'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService'));
-const SignUpPromptPreview = lazy(() => import('./pages/SignUpPromptPreview'));
+const NbaTeamsPage = lazy(() => import('./pages/NbaTeamsPage.js'));
+const NbaTeamDetailPage = lazy(() => import('./pages/NbaTeamDetailPage.js'));
+const NbaPlayersPage = lazy(() => import('./pages/NbaPlayersPage.js'));
+const BasketballPlayerPage = lazy(() => import('./pages/players/BasketballPlayerPage.js'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.js'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService.js'));
+const SignUpPromptPreview = lazy(() => import('./pages/SignUpPromptPreview.js'));
 
 // Lazy load preview pages
-const ExampleProfilePage = lazy(() => import('./pages/preview/ExampleProfilePage'));
+const ExampleProfilePage = lazy(() => import('./pages/preview/ExampleProfilePage.js'));
 
 // Import the LoadingScreen component
-import LoadingScreen from "./components/LoadingScreen";
-import AmazonAffiliateBanner from "./components/AmazonAffiliateBanner";
+import LoadingScreen from "./components/LoadingScreen.js";
+import AmazonAffiliateBanner from "./components/AmazonAffiliateBanner.js";
 
 // Single instance of QueryClient with optimized defaults
 const queryClient = new QueryClient({
