@@ -1,0 +1,1210 @@
+
+> full-moon-odds@0.0.0 build
+> tsc && vite build
+
+src/components/AstroDisclosure.tsx(2,39): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/components/astrology/AspectsGrid.tsx(2,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/astrology/AspectsGrid.tsx(3,79): error TS2307: Cannot find module '@/components/ui/table' or its corresponding type declarations.
+src/components/astrology/AspectsGrid.tsx(4,74): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+src/components/astrology/components/BirthDataForm.tsx(2,32): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/types.js'?
+src/components/astrology/components/ChartLoading.tsx(3,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/astrology/components/ChartPlaceholder.tsx(3,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/astrology/components/ChartPlaceholder.tsx(4,39): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/types.js'?
+src/components/astrology/components/PlanetaryCountChart.tsx(5,38): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/chartUtils.js'?
+src/components/astrology/components/PlanetaryCountChart.tsx(6,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ChartLoading.js'?
+src/components/astrology/components/PlanetaryCountChart.tsx(7,24): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ChartError.js'?
+src/components/astrology/components/PlanetaryCountChart.tsx(8,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ChartPlaceholder.js'?
+src/components/astrology/NatalChartProfile.tsx(296,183): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/NatalChartProfile.tsx(306,26): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/NatalChartProfile.tsx(309,37): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/NatalChartProfile.tsx(309,64): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/NatalChartProfile.tsx(309,102): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/NatalChartProfile.tsx(311,43): error TS2551: Property 'houses' does not exist on type 'CelestialBody'. Did you mean 'house'?
+src/components/astrology/PlanetaryCountChart.tsx(4,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/astrology/PlanetaryCountChart.tsx(5,74): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+src/components/astrology/PlanetaryCountChart.tsx(7,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/astrology/SignInterpretation.tsx(2,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/astrology/SignInterpretationSkeleton.tsx(2,47): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/astrology/SignInterpretationSkeleton.tsx(3,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/astrology/utils/chartUtils.ts(4,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './types.js'?
+src/components/astrology/utils/interpretationsGenerator.ts(1,38): error TS1543: Importing a JSON file into an ECMAScript module requires a 'type: "json"' import attribute when 'module' is set to 'NodeNext'.
+src/components/astrology/utils/interpretationsGenerator.ts(2,98): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../../types/astrology.js'?
+src/components/astrology/utils/types.ts(5,27): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../../types/astrology.js'?
+src/components/AstroPredictionCard.tsx(2,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/AstroPredictionCard.tsx(3,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/components/AstroPredictionCard.tsx(4,26): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.
+src/components/AstroPredictionCard.tsx(6,34): error TS2307: Cannot find module '@/utils/sportsPredictions' or its corresponding type declarations.
+src/components/auth/AuthLayout.tsx(3,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(5,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(6,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(7,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/components/auth/LoginForm.tsx(11,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/components/auth/ProtectedRoute.tsx(2,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(5,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(6,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(7,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/components/auth/SignupForm.tsx(9,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/components/auth/SignUpPrompt.tsx(3,24): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../ui/button.js'?
+src/components/auth/SignUpPrompt.tsx(4,25): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../contexts/AuthContext.js'?
+src/components/auth/SignUpPrompt.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/AuthCallback.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabaseClient.js'?
+src/components/common/LocationInput.tsx(2,56): error TS2307: Cannot find module '@/types/location' or its corresponding type declarations.
+src/components/common/LocationInput.tsx(8,8): error TS2307: Cannot find module '@/utils/locationUtils' or its corresponding type declarations.
+src/components/common/LocationInput.tsx(9,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/common/LocationInput.tsx(11,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/components/CosmicWaveProgress.tsx(2,51): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/planetColors.js'?
+src/components/dashboard/ElementalBalance.tsx(4,49): error TS2307: Cannot find module '@/utils/astroUtils/index' or its corresponding type declarations.
+src/components/dashboard/KeyPlanetaryInfluences.tsx(7,8): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/dashboard/KeyPlanetaryInfluences.tsx(9,32): error TS2307: Cannot find module '@/components/CosmicWaveProgress' or its corresponding type declarations.
+src/components/dashboard/KeyPlanetaryInfluences.tsx(10,33): error TS2307: Cannot find module '@/utils/astroUtils/index' or its corresponding type declarations.
+src/components/dashboard/KeyPlanetaryInfluences.tsx(11,31): error TS2307: Cannot find module '@/utils/astroIcons' or its corresponding type declarations.
+src/components/dashboard/LunarStatusCard.tsx(7,8): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/dashboard/LunarStatusCard.tsx(9,26): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.
+src/components/dashboard/LunarStatusCard.tsx(10,75): error TS2307: Cannot find module '@/utils/astroUtils/index' or its corresponding type declarations.
+src/components/dashboard/LunarStatusCard.tsx(11,48): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/components/dashboard/SolarInfluenceInsights.tsx(7,8): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/dashboard/TopPlayersCarousel.tsx(2,48): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../PlayerCardNew.js'?
+src/components/dashboard/TopPlayersCarousel.tsx(3,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/dashboard/TopPlayersCarousel.tsx(66,32): error TS2339: Property 'id' does not exist on type '{ astro_influence: number; astro_influence_score: number; teamAverageAstroInfluence?: number | undefined; }'.
+src/components/dashboard/TopPlayersCarousel.tsx(82,32): error TS2339: Property 'id' does not exist on type '{ astro_influence: number; astro_influence_score: number; teamAverageAstroInfluence?: number | undefined; }'.
+src/components/Footer.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/Footer.tsx(5,26): error TS2307: Cannot find module '@/components/ui/use-toast' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(2,24): error TS2307: Cannot find module '@components/ui/button' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(3,23): error TS2307: Cannot find module '@components/ui/input' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(4,23): error TS2307: Cannot find module '@components/ui/label' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(5,87): error TS2307: Cannot find module '@components/ui/card' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(6,24): error TS2307: Cannot find module '@components/ui/switch' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(8,26): error TS2307: Cannot find module '@components/ui/use-toast' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(9,26): error TS2307: Cannot find module '@lib/supabase' or its corresponding type declarations.
+src/components/forms/UserBirthDataForm.tsx(10,80): error TS2307: Cannot find module '@components/astrology/utils/chartUtils' or its corresponding type declarations.
+src/components/game/GneePrediction.tsx(4,22): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/game/GneePrediction.tsx(166,13): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: (i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetResolver'.
+        Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'string | TargetAndTransition'.
+          Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'type' are incompatible.
+                        Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/components/game/GneePrediction.tsx(195,13): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: (i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetResolver'.
+        Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'string | TargetAndTransition'.
+          Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'type' are incompatible.
+                        Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/components/game/GneePrediction.tsx(227,13): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: (i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetResolver'.
+        Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'string | TargetAndTransition'.
+          Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'type' are incompatible.
+                        Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/components/game/GneePrediction.tsx(255,13): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: (i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '(i: number) => { opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetResolver'.
+        Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'string | TargetAndTransition'.
+          Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ opacity: number; y: number; transition: { delay: number; type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ delay: number; type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'type' are incompatible.
+                        Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/components/GameCard.tsx(3,35): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/GameCard.tsx(5,33): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/components/GameCard.tsx(333,3): error TS2322: Type 'Requireable<InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>>' is not assignable to type 'Validator<Partial<GameTeam> | null | undefined>'.
+  Types of property '[nominalTypeHack]' are incompatible.
+    Type '{ type: InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; ... 5 more ...; sport: Requireable<...>; }> | null | undefined; } | undefined' is not assignable to type '{ type: Partial<GameTeam> | null | undefined; } | undefined'.
+      Type '{ type: InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<...>; ... 4 more ...; sport: Requireable<...>; }> | null | undefined; }' is not assignable to type '{ type: Partial<GameTeam> | null | undefined; }'.
+        Types of property 'type' are incompatible.
+          Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }> | null | undefined' is not assignable to type 'Partial<GameTeam> | null | undefined'.
+            Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>' is not assignable to type 'Partial<GameTeam> | null | undefined'.
+              Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>' is not assignable to type 'Partial<GameTeam>'.
+                Types of property 'primary_color' are incompatible.
+                  Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+                    Type 'null' is not assignable to type 'string | undefined'.
+src/components/GameCard.tsx(345,3): error TS2322: Type 'Requireable<InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>>' is not assignable to type 'Validator<Partial<GameTeam> | null | undefined>'.
+  Types of property '[nominalTypeHack]' are incompatible.
+    Type '{ type: InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; ... 5 more ...; sport: Requireable<...>; }> | null | undefined; } | undefined' is not assignable to type '{ type: Partial<GameTeam> | null | undefined; } | undefined'.
+      Type '{ type: InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<...>; ... 4 more ...; sport: Requireable<...>; }> | null | undefined; }' is not assignable to type '{ type: Partial<GameTeam> | null | undefined; }'.
+        Types of property 'type' are incompatible.
+          Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }> | null | undefined' is not assignable to type 'Partial<GameTeam> | null | undefined'.
+            Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>' is not assignable to type 'Partial<GameTeam> | null | undefined'.
+              Type 'InferProps<{ id: Requireable<string>; name: Requireable<string>; city: Requireable<string>; logo_url: Requireable<string>; logo: Requireable<string>; ... 4 more ...; sport: Requireable<...>; }>' is not assignable to type 'Partial<GameTeam>'.
+                Types of property 'primary_color' are incompatible.
+                  Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+                    Type 'null' is not assignable to type 'string | undefined'.
+src/components/games/GameCard.tsx(4,35): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/games/GameCard.tsx(5,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/components/games/GameCard.tsx(6,28): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/components/games/GameCarousel.tsx(2,28): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/components/games/GameCarousel.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './GameCard.js'?
+src/components/games/GameCarousel.tsx(5,31): error TS2307: Cannot find module '@/hooks/useWindowSize' or its corresponding type declarations.
+src/components/games/GamesByDate.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './GameCard.js'?
+src/components/games/GamesByDate.tsx(4,56): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/components/Header.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/components/Header.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/Header.tsx(5,53): error TS2307: Cannot find module '@/components/ui/avatar' or its corresponding type declarations.
+src/components/Header.tsx(13,8): error TS2307: Cannot find module '@/components/ui/dropdown-menu' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(2,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(3,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(5,27): error TS2307: Cannot find module '@/context/SearchContext' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(6,29): error TS2307: Cannot find module '@/components/navigation/SportNavigation' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(7,23): error TS2307: Cannot find module '@/components/navigation/MobileNav' or its corresponding type declarations.
+src/components/layout/DashboardLayout.tsx(8,29): error TS2307: Cannot find module '@/components/navigation/MobileBottomNav' or its corresponding type declarations.
+src/components/MarkdownContent.tsx(56,11): error TS2322: Type '({ node, className, children, ...props }: { node?: any; className?: string; children: React.ReactNode; [key: string]: any; }) => JSX.Element' is not assignable to type 'keyof IntrinsicElements | ComponentType<ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps> | undefined'.
+  Type '({ node, className, children, ...props }: { node?: any; className?: string; children: React.ReactNode; [key: string]: any; }) => JSX.Element' is not assignable to type 'FunctionComponent<ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps>'.
+    Types of parameters '__0' and 'props' are incompatible.
+      Type 'ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps' is not assignable to type '{ [key: string]: any; node?: any; className?: string | undefined; children: ReactNode; }'.
+        Property 'children' is optional in type 'ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps' but required in type '{ [key: string]: any; node?: any; className?: string | undefined; children: ReactNode; }'.
+src/components/NatalChart.tsx(2,21): error TS2307: Cannot find module 'd3' or its corresponding type declarations.
+src/components/navigation/MobileNav.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/navigation/MobileNav.tsx(5,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/components/navigation/MobileNav.tsx(6,27): error TS2307: Cannot find module '@/context/SearchContext' or its corresponding type declarations.
+src/components/navigation/MobileNav.tsx(7,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/navigation/MobileNav.tsx(8,51): error TS2307: Cannot find module '@/components/ui/sheet' or its corresponding type declarations.
+src/components/navigation/SportNavigation.tsx(3,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/components/PlayerCardNew.tsx(4,53): error TS2307: Cannot find module '@/utils/zodiacUtils' or its corresponding type declarations.
+src/components/PlayerCardNew.tsx(130,7): error TS2322: Type '{ initial: { opacity: number; y: number; }; animate: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; hover: { y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+  Property 'animate' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'ease' are incompatible.
+                    Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                      Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                        Type 'number[]' is not assignable to type 'Easing[]'.
+                          Type 'number' is not assignable to type 'Easing'.
+src/components/players/AstroProfile.tsx(2,27): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/players/AstroProfile.tsx(3,32): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../pages/BigThreeAstroCards.js'?
+src/components/players/AstroProfile.tsx(4,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../pages/AstroPeakDay.js'?
+src/components/players/AstroProfile.tsx(7,24): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/players/AstroProfile.tsx(85,20): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/components/players/AstroProfile.tsx(88,20): error TS2345: Argument of type '"Increased aggression on the basepaths could lead to extra bases" | "Risk of overaggression could lead to baserunning errors"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression on the basepaths could lead to extra bases"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(93,20): error TS2345: Argument of type '"Exceptional defensive positioning and fielding consistency expected" | "May play too conservatively in high-pressure defensive situations"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and fielding consistency expected"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(96,20): error TS2345: Argument of type '"Excellent pitch selection and plate discipline likely" | "Could be overly patient at the plate, missing hittable pitches"' is not assignable to parameter of type 'never'.
+  Type '"Excellent pitch selection and plate discipline likely"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(101,20): error TS2345: Argument of type '"Enhanced ability to read and react to complex pitch sequences" | "May overthink at-bats, leading to mental fatigue late in games"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced ability to read and react to complex pitch sequences"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(104,20): error TS2345: Argument of type '"Quick adjustments to opposing pitchers' strategies" | "Could struggle against pitchers with unpredictable patterns"' is not assignable to parameter of type 'never'.
+  Type '"Quick adjustments to opposing pitchers' strategies"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(109,20): error TS2345: Argument of type '"Exceptional performance in high-pressure, clutch situations" | "Emotional fluctuations might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in high-pressure, clutch situations"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(112,20): error TS2345: Argument of type '"Adaptive approach allows quick recovery from slumps" | "Might be overly influenced by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive approach allows quick recovery from slumps"' is not assignable to type 'never'.
+src/components/players/AstroProfile.tsx(118,18): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/components/players/PerformancePrediction.tsx(2,24): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/players/PerformancePrediction.tsx(3,27): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/players/PerformancePrediction.tsx(71,20): error TS2345: Argument of type '"Strong scoring potential, especially in transition and fast break situations" | "May struggle with shot selection and forcing plays"' is not assignable to parameter of type 'never'.
+  Type '"Strong scoring potential, especially in transition and fast break situations"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(74,20): error TS2345: Argument of type '"Increased aggression driving to the basket could lead to more free throw attempts" | "Risk of foul trouble due to over-aggressive defense"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression driving to the basket could lead to more free throw attempts"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(79,20): error TS2345: Argument of type '"Exceptional defensive positioning and rebounding expected" | "May be less mobile on defense against quicker opponents"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and rebounding expected"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(82,20): error TS2345: Argument of type '"Strong post presence and efficient scoring in the paint" | "Could struggle against more physical defenders"' is not assignable to parameter of type 'never'.
+  Type '"Strong post presence and efficient scoring in the paint"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(87,20): error TS2345: Argument of type '"Enhanced court vision and playmaking ability" | "May overthink plays, leading to turnovers"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced court vision and playmaking ability"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(90,20): error TS2345: Argument of type '"Excellent three-point shooting and spacing" | "Could struggle against aggressive on-ball defense"' is not assignable to parameter of type 'never'.
+  Type '"Excellent three-point shooting and spacing"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(95,20): error TS2345: Argument of type '"Exceptional performance in clutch situations" | "Emotions might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in clutch situations"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(98,20): error TS2345: Argument of type '"Adaptive playstyle creates opportunities for teammates" | "Might be overly affected by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive playstyle creates opportunities for teammates"' is not assignable to type 'never'.
+src/components/players/PerformancePrediction.tsx(104,18): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/components/players/PlayerInfluenceCard.tsx(2,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../CircularProgress.js'?
+src/components/players/PlayerInfluenceCard.tsx(5,27): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/players/PlayerInfluenceCard.tsx(6,47): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../utils/elementUtils.js'?
+src/components/players/PlayerStatsTable.tsx(2,24): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/components/profile/BirthDataSection.tsx(3,24): error TS2307: Cannot find module '@components/ui/button' or its corresponding type declarations.
+src/components/profile/BirthDataSection.tsx(4,75): error TS2307: Cannot find module '@components/ui/card' or its corresponding type declarations.
+src/components/profile/BirthDataSection.tsx(5,23): error TS2307: Cannot find module '@components/ui/badge' or its corresponding type declarations.
+src/components/profile/BirthDataSection.tsx(6,40): error TS2307: Cannot find module '@types/profiles' or its corresponding type declarations.
+src/components/profile/BirthDataSection.tsx(6,40): error TS6137: Cannot import type declaration files. Consider importing 'profiles' instead of '@types/profiles'.
+src/components/profile/BirthDataSection.tsx(8,45): error TS2307: Cannot find module '@components/forms/UserBirthDataForm' or its corresponding type declarations.
+src/components/TeamChemistryMeter.tsx(3,58): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ui/card.js'?
+src/components/TeamChemistryMeter.tsx(4,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ui/progress.js'?
+src/components/TeamChemistryMeter.tsx(5,74): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './ui/tooltip.js'?
+src/components/TeamChemistryMeter.tsx(7,50): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/zodiacUtils.js'?
+src/components/TeamRoster.tsx(46,13): error TS2533: Object is possibly 'null' or 'undefined'.
+src/components/TeamRoster.tsx(46,34): error TS2533: Object is possibly 'null' or 'undefined'.
+src/components/TeamRoster.tsx(49,13): error TS2533: Object is possibly 'null' or 'undefined'.
+src/components/TeamRoster.tsx(49,34): error TS2533: Object is possibly 'null' or 'undefined'.
+src/components/teams/TeamShareButton.tsx(2,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/teams/TeamShareButton.tsx(8,8): error TS2307: Cannot find module '@/components/ui/dropdown-menu' or its corresponding type declarations.
+src/components/teams/TeamShareButton.tsx(16,26): error TS2307: Cannot find module '@/components/ui/use-toast' or its corresponding type declarations.
+src/components/teams/TeamShareButton.tsx(126,11): error TS18046: 'err' is of type 'unknown'.
+src/components/ui/accordion.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/alert-dialog.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/alert-dialog.tsx(5,32): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/ui/alert.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/avatar.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/badge.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/breadcrumb.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/button.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/calendar.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/calendar.tsx(6,32): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/ui/card.tsx(3,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/carousel.tsx(7,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/carousel.tsx(8,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/ui/chart.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/checkbox.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/command.tsx(6,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/command.tsx(7,52): error TS2307: Cannot find module '@/components/ui/dialog' or its corresponding type declarations.
+src/components/ui/context-menu.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/dialog.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/drawer.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/dropdown-menu.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/form.tsx(13,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/form.tsx(14,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/components/ui/hover-card.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/index.ts(2,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './button.js'?
+src/components/ui/index.ts(3,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './card.js'?
+src/components/ui/index.ts(4,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './tabs.js'?
+src/components/ui/index.ts(5,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './tooltip.js'?
+src/components/ui/index.ts(6,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './badge.js'?
+src/components/ui/index.ts(7,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './progress.js'?
+src/components/ui/input-otp.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/input.tsx(3,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/label.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/menubar.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/navigation-menu.tsx(6,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/pagination.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/pagination.tsx(5,45): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/ui/pagination.tsx(68,5): error TS2783: 'size' is specified more than once, so this usage will be overwritten.
+src/components/ui/pagination.tsx(84,5): error TS2783: 'size' is specified more than once, so this usage will be overwritten.
+src/components/ui/popover.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/progress.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/radio-group.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/resizable.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/scroll-area.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/select.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/separator.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/sheet.tsx(6,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/sidebar.tsx(6,29): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../hooks/use-mobile.js'?
+src/components/ui/sidebar.tsx(7,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/sidebar.tsx(8,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(9,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(10,27): error TS2307: Cannot find module '@/components/ui/separator' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(11,37): error TS2307: Cannot find module '@/components/ui/sheet' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(12,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/ui/sidebar.tsx(18,8): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+src/components/ui/skeleton.tsx(1,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/skeletons/GameCardSkeleton.tsx(2,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/ui/skeletons/TeamCardSkeleton.tsx(2,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/components/ui/slider.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/spinner.tsx(2,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/components/ui/stat-card.tsx(2,58): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './card.js'?
+src/components/ui/switch.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/table.tsx(3,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/tabs.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/textarea.tsx(3,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/toast.tsx(6,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/toaster.tsx(1,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../hooks/use-toast.js'?
+src/components/ui/toaster.tsx(9,8): error TS2307: Cannot find module '@/components/ui/toast' or its corresponding type declarations.
+src/components/ui/toggle-group.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/toggle-group.tsx(6,32): error TS2307: Cannot find module '@/components/ui/toggle' or its corresponding type declarations.
+src/components/ui/toggle-group.tsx(20,4): error TS2322: Type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: any; } | { children: Element; ref: ForwardedRef<HTMLDivElement>; className: any; }' is not assignable to type 'IntrinsicAttributes & ((ToggleGroupSingleProps | ToggleGroupMultipleProps) & RefAttributes<HTMLDivElement>)'.
+  Type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: any; }' is not assignable to type 'IntrinsicAttributes & ((ToggleGroupSingleProps | ToggleGroupMultipleProps) & RefAttributes<HTMLDivElement>)'.
+    Property 'type' is missing in type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: any; }' but required in type 'ToggleGroupMultipleProps'.
+src/components/ui/toggle-group.tsx(41,6): error TS2741: Property 'value' is missing in type '{ children: any; ref: ForwardedRef<HTMLButtonElement>; className: any; }' but required in type 'Omit<ToggleGroupItemImplProps, "pressed">'.
+src/components/ui/toggle.tsx(5,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/tooltip.tsx(4,20): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/utils.js'?
+src/components/ui/use-toast.ts(1,33): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../hooks/use-toast.js'?
+src/contexts/AuthContext.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/contexts/GeocodingContext.tsx(16,8): error TS2307: Cannot find module '@/services/geocoding' or its corresponding type declarations.
+src/features/astro/AstroStatus.tsx(2,63): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/features/astro/AstroSummaryBanner.tsx(2,45): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/features/dashboard/BettingCard.tsx(3,70): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/features/dashboard/BettingCard.tsx(4,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/features/dashboard/BettingCard.tsx(5,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/features/dashboard/BettingCard.tsx(6,68): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/features/dashboard/BettingCard.tsx(7,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/features/dashboard/BettingGrid.tsx(3,58): error TS2307: Cannot find module '@/components/ui/tabs' or its corresponding type declarations.
+src/features/dashboard/BettingGrid.tsx(4,37): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/features/dashboard/BettingGrid.tsx(5,38): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './EnhancedBettingCard.js'?
+src/features/dashboard/BettingGrid.tsx(6,89): error TS2307: Cannot find module '@/hooks/useSportsData' or its corresponding type declarations.
+src/features/dashboard/BettingGrid.tsx(8,27): error TS2307: Cannot find module '@/context/SearchContext' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(3,70): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(4,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(5,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(6,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(7,68): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(8,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/features/dashboard/EnhancedBettingCard.tsx(10,56): error TS2307: Cannot find module '@/hooks/useFormulaData' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(4,58): error TS2307: Cannot find module '@/components/ui/tabs' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(5,39): error TS2307: Cannot find module '@/components/ui/scroll-area' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(8,56): error TS2307: Cannot find module '@/hooks/useFormulaData' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(9,28): error TS2307: Cannot find module '@/lib/games' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(10,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(11,28): error TS2307: Cannot find module '@/types/sports' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(12,24): error TS2307: Cannot find module '@/types/sports' or its corresponding type declarations.
+src/features/dashboard/EnhancedDashboard.tsx(13,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './GameCard.js'?
+src/features/dashboard/GameCard.tsx(3,59): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/features/dashboard/GameCard.tsx(4,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/features/dashboard/GameCard.tsx(5,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/features/dashboard/GameCard.tsx(7,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/features/dashboard/GameCard.tsx(125,41): error TS18047: 'team' is possibly 'null'.
+src/features/dashboard/GameCard.tsx(125,68): error TS18047: 'team' is possibly 'null'.
+src/features/dashboard/GameCard.tsx(127,16): error TS18047: 'team' is possibly 'null'.
+src/features/dashboard/GameCard.tsx(127,33): error TS18047: 'team' is possibly 'null'.
+src/features/dashboard/SportsTabs.tsx(3,58): error TS2307: Cannot find module '@/components/ui/tabs' or its corresponding type declarations.
+src/features/dashboard/SportsTabs.tsx(4,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/features/games/GameCard.tsx(3,35): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/features/games/GameCard.tsx(4,26): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.
+src/features/games/GameCard.tsx(7,45): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/features/games/GameCard.tsx(8,30): error TS2307: Cannot find module '@/lib/formula' or its corresponding type declarations.
+src/features/games/GameCard.tsx(9,25): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(3,22): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './GameCard.js'?
+src/features/games/GamesSection.tsx(4,27): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/LoadingScreen.js'?
+src/features/games/GamesSection.tsx(5,23): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(6,25): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(7,23): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './NextEvent.js'?
+src/features/games/GamesSection.tsx(8,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './EventHistory.js'?
+src/features/games/GamesSection.tsx(9,29): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(10,26): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(11,27): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(12,34): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(13,30): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/features/games/GamesSection.tsx(68,18): error TS2345: Argument of type '"Failed to load data. Please try again later."' is not assignable to parameter of type 'SetStateAction<null>'.
+src/features/games/GamesSection.tsx(110,39): error TS2339: Property 'id' does not exist on type 'never'.
+src/features/games/NextEvent.tsx(21,24): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/features/games/NextEvent.tsx(21,52): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/features/games/NextEvent.tsx(41,7): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'never'.
+src/features/games/NextEventCount.tsx(2,45): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/hooks/use-toast.ts(6,8): error TS2307: Cannot find module '@/components/ui/toast' or its corresponding type declarations.
+src/hooks/useAstroData.ts(16,8): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../types/astrology.js'?
+src/hooks/useAstroData.ts(18,40): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/aspectInterpretations.js'?
+src/hooks/useAstroData.ts(44,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(45,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(46,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(47,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(48,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(49,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(50,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(51,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(52,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(53,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(54,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(55,5): error TS2322: Type 'string' is not assignable to type 'Element'.
+src/hooks/useAstroData.ts(809,11): error TS2448: Block-scoped variable 'date' used before its declaration.
+src/hooks/useAstroData.ts(812,11): error TS2322: Type 'undefined' is not assignable to type '{ fire: { score: number; planets: string[]; }; earth: { score: number; planets: string[]; }; air: { score: number; planets: string[]; }; water: { score: number; planets: string[]; }; }'.
+src/hooks/useAstroData.ts(854,32): error TS2339: Property 'longitude' does not exist on type 'object'.
+src/hooks/useAstroData.ts(855,27): error TS2339: Property 'sign' does not exist on type 'object'.
+src/hooks/useAstroData.ts(856,29): error TS2339: Property 'degrees' does not exist on type 'object'.
+src/hooks/useAstroData.ts(856,46): error TS2339: Property 'degree' does not exist on type 'object'.
+src/hooks/useAstroData.ts(857,41): error TS2339: Property 'retrograde' does not exist on type 'object'.
+src/hooks/useAstroData.ts(858,28): error TS2339: Property 'speed' does not exist on type 'object'.
+src/hooks/useAstroGames.ts(2,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './useGames.js'?
+src/hooks/useAstroGames.ts(3,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './useAstroData.js'?
+src/hooks/useAstroGames.ts(4,37): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/hooks/useFormulaData.ts(10,37): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/hooks/useFormulaData.ts(11,26): error TS2307: Cannot find module '@/integrations/supabase/client' or its corresponding type declarations.
+src/hooks/useFormulaData.ts(12,21): error TS2307: Cannot find module '@/lib/formula' or its corresponding type declarations.
+src/hooks/useGames.ts(4,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/hooks/useGames.ts(5,66): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/hooks/useSignUpPrompt.ts(3,25): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../contexts/AuthContext.js'?
+src/hooks/useSportsData.ts(2,45): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/hooks/useSportsData.ts(3,68): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/hooks/useSportsData.ts(4,69): error TS2307: Cannot find module '@/lib/astroCalc' or its corresponding type declarations.
+src/hooks/useSportsData.ts(73,56): error TS2307: Cannot find module '@/lib/playerAstroService' or its corresponding type declarations.
+src/hooks/useSportsData.ts(185,26): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/hooks/useSportsData.ts(189,26): error TS2345: Argument of type '{ id: string; player_id: any; favorability: any; influences: any; details: any; timestamp: string; }' is not assignable to parameter of type 'never'.
+src/hooks/useTeams.ts(2,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/hooks/useTeams.ts(100,53): error TS2339: Property 'id' does not exist on type 'never'.
+src/hooks/useTeams.ts(111,42): error TS2339: Property 'id' does not exist on type 'never'.
+src/hooks/useTopPlayers.ts(2,26): error TS2307: Cannot find module '@/integrations/supabase/client' or its corresponding type declarations.
+src/hooks/useUpcomingGames.ts(2,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/hooks/useUpcomingGames.ts(3,46): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/hooks/useUpcomingGames.ts(4,26): error TS2307: Cannot find module '../types/database.types' or its corresponding type declarations.
+src/integrations/supabase/client.ts(2,31): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './types.js'?
+src/lib/astroCalc.ts(743,18): error TS2345: Argument of type '{ start: Date; end: Date; }' is not assignable to parameter of type 'never'.
+src/lib/astroCalc.ts(749,18): error TS2345: Argument of type '{ start: Date; end: Date; }' is not assignable to parameter of type 'never'.
+src/lib/astroCalc.ts(755,18): error TS2345: Argument of type '{ start: Date; end: Date; }' is not assignable to parameter of type 'never'.
+src/lib/astroCalc.ts(762,20): error TS2345: Argument of type '{ start: Date; end: Date; }' is not assignable to parameter of type 'never'.
+src/lib/astroCalc.ts(775,27): error TS2339: Property 'start' does not exist on type 'never'.
+src/lib/astroCalc.ts(775,51): error TS2339: Property 'end' does not exist on type 'never'.
+src/lib/astroFormula.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/lib/astroUtils.ts(15,8): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../types/astrology.js'?
+src/lib/custom-supabase.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/lib/custom-supabase.ts(2,55): error TS2307: Cannot find module '@/types/supabase-extensions' or its corresponding type declarations.
+src/lib/formula.tsx(12,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../integrations/supabase/client.js'?
+src/lib/formula.tsx(13,49): error TS2307: Cannot find module '@/lib/astroCalc' or its corresponding type declarations.
+src/lib/formula.tsx(17,43): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/lib/formula.tsx(21,43): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/lib/formula.tsx(349,49): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/lib/formula.tsx(479,52): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/lib/formula.tsx(482,63): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(483,50): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(487,69): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(488,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(491,65): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(492,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(495,63): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(496,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(499,69): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(500,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/formula.tsx(637,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/lib/formula.tsx(638,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/lib/formula.tsx(639,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/lib/formula.tsx(653,35): error TS18048: 'safeEphemeris.natal_to_transit_aspects' is possibly 'undefined'.
+src/lib/formula.tsx(654,28): error TS18048: 'safeEphemeris.elemental_balance' is possibly 'undefined'.
+src/lib/formula.tsx(655,29): error TS18048: 'safeEphemeris.modalities_balance' is possibly 'undefined'.
+src/lib/formula.tsx(704,39): error TS18046: 'error' is of type 'unknown'.
+src/lib/formula.tsx(889,6): error TS18048: 'ephemeris.natal_to_transit_aspects' is possibly 'undefined'.
+src/lib/formula.tsx(890,6): error TS18048: 'ephemeris.elemental_balance' is possibly 'undefined'.
+src/lib/formula.tsx(891,6): error TS18048: 'ephemeris.modalities_balance' is possibly 'undefined'.
+src/lib/games.ts(1,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './supabase.js'?
+src/lib/games.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../types/sports.js'?
+src/lib/mlbCache.ts(1,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './supabase.js'?
+src/lib/mlbCache.ts(2,33): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/lib/oddsApi.ts(3,31): error TS2307: Cannot find module '../types/database.types' or its corresponding type declarations.
+src/lib/playerAstroService.ts(8,75): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/lib/playerAstroService.ts(9,58): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './astroUtils.js'?
+src/lib/standardAstroScore.ts(15,41): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './playerAstroService.js'?
+src/lib/supabase.ts(2,37): error TS2307: Cannot find module '@/integrations/supabase/types' or its corresponding type declarations.
+src/lib/supabase.ts(87,41): error TS2307: Cannot find module '@/types/nba.types' or its corresponding type declarations.
+src/lib/supabase.ts(208,36): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './playerAstroService.js'?
+src/lib/supabase.ts(219,7): error TS2353: Object literal may only specify known properties, and 'created_at' does not exist in type 'AstrologicalData'.
+src/lib/updateAstroScores.ts(31,9): error TS18046: 'error' is of type 'unknown'.
+src/lib/updateAstroScores.ts(81,14): error TS18046: 'error' is of type 'unknown'.
+src/lib/updateAstroScores.ts(83,14): error TS18046: 'error' is of type 'unknown'.
+src/main.tsx(4,33): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+src/main.tsx(5,25): error TS2307: Cannot find module '@/components/ui/toaster' or its corresponding type declarations.
+src/main.tsx(6,35): error TS2307: Cannot find module '@/components/ui/sonner' or its corresponding type declarations.
+src/main.tsx(7,17): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './App.js'?
+src/pages/_AstroTeamSection.tsx(2,63): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/_AstroTeamSection.tsx(3,38): error TS2307: Cannot find module '@/lib/formula' or its corresponding type declarations.
+src/pages/api/astro/[date].ts(2,10): error TS2305: Module '"../../../lib/astroCalculations.js"' has no exported member 'getMoonPhase'.
+src/pages/api/astro/[date].ts(2,24): error TS2305: Module '"../../../lib/astroCalculations.js"' has no exported member 'getMoonPhaseInfo'.
+src/pages/api/astro/[date].ts(2,42): error TS2305: Module '"../../../lib/astroCalculations.js"' has no exported member 'getPlanetPositions'.
+src/pages/api/astrology/natal-chart.ts(2,45): error TS2307: Cannot find module '@/lib/astroCalculations' or its corresponding type declarations.
+src/pages/api/astrology/positions.ts(2,45): error TS2307: Cannot find module '@/lib/astroCalculations' or its corresponding type declarations.
+src/pages/api/astrology/test-cusps.ts(2,45): error TS2307: Cannot find module '@/lib/astroCalculations' or its corresponding type declarations.
+src/pages/api/news/[slug].ts(79,16): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/news/generate-article.ts(3,33): error TS2307: Cannot find module '@/components/PlayerCardNew' or its corresponding type declarations.
+src/pages/api/news/generate-article.ts(4,25): error TS2307: Cannot find module '@/utils/slugify' or its corresponding type declarations.
+src/pages/api/news/generate-article.ts(150,28): error TS2339: Property 'abbreviation' does not exist on type '{ abbreviation: any; }[]'.
+src/pages/api/news/generate-article.ts(150,75): error TS2339: Property 'abbreviation' does not exist on type '{ abbreviation: any; }[]'.
+src/pages/api/news/index.ts(48,81): error TS2339: Property 'title' does not exist on type 'never'.
+src/pages/api/news/index.ts(50,58): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/news/index.ts(51,53): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/news/index.ts(78,19): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/api/news/index.ts(78,33): error TS2339: Property 'gameId' does not exist on type 'never'.
+src/pages/api/news/index.ts(79,22): error TS2339: Property 'title' does not exist on type 'never'.
+src/pages/api/news/index.ts(79,42): error TS2339: Property 'teamAway' does not exist on type 'never'.
+src/pages/api/news/index.ts(79,75): error TS2339: Property 'teamHome' does not exist on type 'never'.
+src/pages/api/news/index.ts(80,28): error TS2339: Property 'description' does not exist on type 'never'.
+src/pages/api/news/index.ts(80,51): error TS2339: Property 'title' does not exist on type 'never'.
+src/pages/api/news/index.ts(80,101): error TS2339: Property 'teamAway' does not exist on type 'never'.
+src/pages/api/news/index.ts(80,135): error TS2339: Property 'teamHome' does not exist on type 'never'.
+src/pages/api/news/index.ts(81,24): error TS2339: Property 'content' does not exist on type 'never'.
+src/pages/api/news/index.ts(82,28): error TS2339: Property 'publishedAt' does not exist on type 'never'.
+src/pages/api/news/index.ts(82,51): error TS2339: Property 'date' does not exist on type 'never'.
+src/pages/api/news/index.ts(83,21): error TS2339: Property 'slug' does not exist on type 'never'.
+src/pages/api/news/index.ts(83,38): error TS2339: Property 'path' does not exist on type 'never'.
+src/pages/api/news/index.ts(83,53): error TS2339: Property 'path' does not exist on type 'never'.
+src/pages/api/news/index.ts(84,25): error TS2339: Property 'teamHome' does not exist on type 'never'.
+src/pages/api/news/index.ts(84,45): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/pages/api/news/index.ts(85,25): error TS2339: Property 'teamAway' does not exist on type 'never'.
+src/pages/api/news/index.ts(85,45): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/pages/api/news/index.ts(86,22): error TS2339: Property 'image' does not exist on type 'never'.
+src/pages/api/news/index.ts(87,29): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/api/news/index.ts(87,69): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/api/news/index.ts(88,22): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/api/news/index.ts(89,29): error TS2339: Property 'homeScore' does not exist on type 'never'.
+src/pages/api/news/index.ts(90,29): error TS2339: Property 'awayScore' does not exist on type 'never'.
+src/pages/api/news/index.ts(112,16): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/team-og-image.tsx(2,29): error TS2307: Cannot find module 'next/server' or its corresponding type declarations.
+src/pages/api/test-discord.ts(58,16): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/test-update.ts(2,35): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/updateAstroScores.js'?
+src/pages/api/test-update.ts(51,14): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/test-webhook.ts(59,16): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/test-webhook.ts(65,34): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL | Request'.
+      Type 'undefined' is not assignable to type 'string | URL | Request'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'URL | RequestInfo'.
+      Type 'undefined' is not assignable to type 'URL | RequestInfo'.
+src/pages/api/test-webhook.ts(87,16): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/update-scores.ts(3,35): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/updateAstroScores.js'?
+src/pages/api/update-scores.ts(37,37): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/update-scores.ts(87,71): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/standardAstroScore.js'?
+src/pages/api/update-scores.ts(172,9): error TS2322: Type 'any[]' is not assignable to type 'never[]'.
+  Type 'any' is not assignable to type 'never'.
+src/pages/api/update-scores.ts(195,20): error TS2339: Property 'impact_score' does not exist on type 'never'.
+src/pages/api/update-scores.ts(196,20): error TS2339: Property 'astro_influence_score' does not exist on type 'never'.
+src/pages/api/update-scores.ts(197,20): error TS2339: Property 'astro_influence_score' does not exist on type 'never'.
+src/pages/api/update-scores.ts(199,24): error TS2345: Argument of type '{ player_id: any; impact_score: number; astro_influence_score: number; updated_at: string; }' is not assignable to parameter of type 'never'.
+src/pages/api/update-scores.ts(200,31): error TS2339: Property 'player_id' does not exist on type 'never'.
+src/pages/api/update-scores.ts(241,50): error TS18046: 'error' is of type 'unknown'.
+src/pages/api/update-scores.ts(246,14): error TS18046: 'error' is of type 'unknown'.
+src/pages/AstroPeakDay.tsx(2,35): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/AstroPeakDay.tsx(3,63): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/BigThreeAstroCards.tsx(2,32): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/Dashboard.tsx(15,8): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/Dashboard.tsx(16,22): error TS2307: Cannot find module '@/components/GameCard' or its corresponding type declarations.
+src/pages/Dashboard.tsx(17,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/Dashboard.tsx(18,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/Dashboard.tsx(19,50): error TS2307: Cannot find module '@/utils/dateUtils' or its corresponding type declarations.
+src/pages/Dashboard.tsx(20,26): error TS2307: Cannot find module '@/hooks/useTeams' or its corresponding type declarations.
+src/pages/Dashboard.tsx(21,34): error TS2307: Cannot find module '@/hooks/useUpcomingGames' or its corresponding type declarations.
+src/pages/Dashboard.tsx(22,26): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.
+src/pages/Dashboard.tsx(23,32): error TS2307: Cannot find module '@/components/CosmicWaveProgress' or its corresponding type declarations.
+src/pages/Dashboard.tsx(24,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/pages/Dashboard.tsx(25,27): error TS2307: Cannot find module '@/components/ui/separator' or its corresponding type declarations.
+src/pages/Dashboard.tsx(31,8): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+src/pages/Dashboard.tsx(32,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/Dashboard.tsx(61,30): error TS2307: Cannot find module '@/hooks/useAstroData' or its corresponding type declarations.
+src/pages/Dashboard.tsx(62,27): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/Dashboard.tsx(63,27): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/Dashboard.tsx(67,8): error TS2307: Cannot find module '@/utils/sportsPredictions' or its corresponding type declarations.
+src/pages/Dashboard.tsx(76,8): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/pages/Dashboard.tsx(77,41): error TS2307: Cannot find module '@/types/gamePredictions' or its corresponding type declarations.
+src/pages/Dashboard.tsx(78,30): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/Dashboard.tsx(79,44): error TS2307: Cannot find module '@/types/gamePredictions' or its corresponding type declarations.
+src/pages/Dashboard.tsx(117,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/Dashboard.tsx(118,27): error TS2307: Cannot find module '@/components/LoadingScreen' or its corresponding type declarations.
+src/pages/Dashboard.tsx(119,32): error TS2307: Cannot find module '@/components/dashboard/TopPlayersCarousel' or its corresponding type declarations.
+src/pages/Dashboard.tsx(120,27): error TS2307: Cannot find module '@/hooks/useTopPlayers' or its corresponding type declarations.
+src/pages/Dashboard.tsx(167,29): error TS2307: Cannot find module '@/components/AstroDisclosure' or its corresponding type declarations.
+src/pages/Dashboard.tsx(170,36): error TS2307: Cannot find module '@/components/dashboard/KeyPlanetaryInfluences' or its corresponding type declarations.
+src/pages/Dashboard.tsx(171,29): error TS2307: Cannot find module '@/components/dashboard/LunarStatusCard' or its corresponding type declarations.
+src/pages/Dashboard.tsx(172,36): error TS2307: Cannot find module '@/components/dashboard/SolarInfluenceInsights' or its corresponding type declarations.
+src/pages/Dashboard.tsx(173,30): error TS2307: Cannot find module '@/components/dashboard/ElementalBalance' or its corresponding type declarations.
+src/pages/Dashboard.tsx(325,17): error TS18046: 'a' is of type 'unknown'.
+src/pages/Dashboard.tsx(325,36): error TS18046: 'b' is of type 'unknown'.
+src/pages/Dashboard.tsx(443,38): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/Dashboard.tsx(451,25): error TS2339: Property 'charAt' does not exist on type 'never'.
+src/pages/Dashboard.tsx(451,53): error TS2339: Property 'slice' does not exist on type 'never'.
+src/pages/Dashboard.tsx(598,20): error TS2538: Type 'undefined' cannot be used as an index type.
+src/pages/Dashboard.tsx(758,11): error TS18046: 'data' is of type 'unknown'.
+src/pages/Dashboard.tsx(759,20): error TS18046: 'data' is of type 'unknown'.
+src/pages/Dashboard.tsx(985,13): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: string; delay: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { duration: number; ease: string; delay: number; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { duration: number; ease: string; delay: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { duration: number; ease: string; delay: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ duration: number; ease: string; delay: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ duration: number; ease: string; delay: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ duration: number; ease: string; delay: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'ease' are incompatible.
+                    Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+src/pages/Dashboard.tsx(1115,35): error TS18046: 'group' is of type 'unknown'.
+src/pages/Dashboard.tsx(1117,37): error TS18046: 'group' is of type 'unknown'.
+src/pages/Dashboard.tsx(1120,30): error TS18046: 'group' is of type 'unknown'.
+src/pages/Dashboard.tsx(1273,17): error TS2322: Type '{ hidden: { opacity: number; y: number; }; show: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'ease' are incompatible.
+                    Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                      Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                        Type 'number[]' is not assignable to type 'Easing[]'.
+                          Type 'number' is not assignable to type 'Easing'.
+src/pages/Dashboard.tsx(1364,19): error TS2322: Type '{ hidden: { opacity: number; }; show: { opacity: number; transition: { duration: number; ease: string; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ duration: number; ease: string; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ duration: number; ease: string; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ duration: number; ease: string; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'ease' are incompatible.
+                    Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+src/pages/Dashboard.tsx(1428,25): error TS2322: Type '{ hidden: { opacity: number; y: number; }; show: { opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }; hover: { y: number; transition: { duration: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/pages/Dashboard.tsx(1446,25): error TS2322: Type '{ hidden: { opacity: number; y: number; }; show: { opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }; hover: { y: number; transition: { duration: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/pages/Dashboard.tsx(1592,27): error TS2322: Type '{ hidden: { opacity: number; y: number; }; show: { opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }; hover: { y: number; transition: { duration: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'show' is incompatible with index signature.
+    Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; y: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/pages/EventDetails.tsx(3,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/EventDetails.tsx(4,75): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/EventDetails.tsx(5,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/EventDetails.tsx(24,35): error TS2307: Cannot find module '@/services/scheduleService' or its corresponding type declarations.
+src/pages/EventDetails.tsx(25,61): error TS2307: Cannot find module '@/services/playerService' or its corresponding type declarations.
+src/pages/EventDetails.tsx(30,8): error TS2307: Cannot find module '@/lib/astroFormula' or its corresponding type declarations.
+src/pages/EventDetails.tsx(31,31): error TS2307: Cannot find module '@/services/teamService' or its corresponding type declarations.
+src/pages/EventDetails.tsx(265,54): error TS2307: Cannot find module '@/lib/playerAstroService' or its corresponding type declarations.
+src/pages/EventDetails.tsx(659,13): error TS2322: Type '{ moon_phase: number; moon_sign: any; sun_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; mercury_retrograde: any; sun_mars_transit: any; sun_saturn_transit: any; sun_jupiter_transit: any; }' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(662,34): error TS2339: Property 'sun_sign' does not exist on type '{ moon_phase: any; moon_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; uranus_sign: any; neptune_sign: any; pluto_sign: any; sun_moon_aspect: any; ... 4 more ...; moon_mars_aspect: any; }'.
+src/pages/EventDetails.tsx(668,44): error TS2339: Property 'mercury_retrograde' does not exist on type '{ moon_phase: any; moon_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; uranus_sign: any; neptune_sign: any; pluto_sign: any; sun_moon_aspect: any; ... 4 more ...; moon_mars_aspect: any; }'.
+src/pages/EventDetails.tsx(669,42): error TS2339: Property 'sun_mars_transit' does not exist on type '{ moon_phase: any; moon_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; uranus_sign: any; neptune_sign: any; pluto_sign: any; sun_moon_aspect: any; ... 4 more ...; moon_mars_aspect: any; }'.
+src/pages/EventDetails.tsx(670,44): error TS2551: Property 'sun_saturn_transit' does not exist on type '{ moon_phase: any; moon_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; uranus_sign: any; neptune_sign: any; pluto_sign: any; sun_moon_aspect: any; ... 4 more ...; moon_mars_aspect: any; }'. Did you mean 'sun_saturn_aspect'?
+src/pages/EventDetails.tsx(671,45): error TS2551: Property 'sun_jupiter_transit' does not exist on type '{ moon_phase: any; moon_sign: any; mercury_sign: any; venus_sign: any; mars_sign: any; jupiter_sign: any; saturn_sign: any; uranus_sign: any; neptune_sign: any; pluto_sign: any; sun_moon_aspect: any; ... 4 more ...; moon_mars_aspect: any; }'. Did you mean 'sun_jupiter_aspect'?
+src/pages/EventDetails.tsx(681,11): error TS2322: Type '{ moon_phase: number; moon_sign: string; mercury_sign: string; venus_sign: string; mars_sign: string; jupiter_sign: string; saturn_sign: string; sun_sign: string; mercury_retrograde: boolean; sun_mars_transit: string; sun_saturn_transit: string; sun_jupiter_transit: string; }' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(742,21): error TS18047: 'astroData' is possibly 'null'.
+src/pages/EventDetails.tsx(752,21): error TS18047: 'astroData' is possibly 'null'.
+src/pages/EventDetails.tsx(754,28): error TS18047: 'astroData' is possibly 'null'.
+src/pages/EventDetails.tsx(760,39): error TS18047: 'astroData' is possibly 'null'.
+src/pages/EventDetails.tsx(786,34): error TS2345: Argument of type '{ astro_influence: number; total_impact: number; id: string; stats?: Record<string, unknown>; team: string; team_id?: string; win_shares: number; name: string; position: string; image_url?: string; jersey_number?: number; sport?: string; birth_date?: string; }' is not assignable to parameter of type 'never'.
+src/pages/EventDetails.tsx(798,69): error TS2339: Property 'astro_influence' does not exist on type 'never'.
+src/pages/EventDetails.tsx(815,28): error TS2339: Property 'total_impact' does not exist on type 'never'.
+src/pages/EventDetails.tsx(815,49): error TS2339: Property 'total_impact' does not exist on type 'never'.
+src/pages/EventDetails.tsx(818,67): error TS2339: Property 'name' does not exist on type 'never'.
+src/pages/EventDetails.tsx(818,107): error TS2339: Property 'total_impact' does not exist on type 'never'.
+src/pages/EventDetails.tsx(824,13): error TS2698: Spread types may only be created from object types.
+src/pages/EventDetails.tsx(825,41): error TS2339: Property 'position' does not exist on type 'never'.
+src/pages/EventDetails.tsx(826,37): error TS2339: Property 'team' does not exist on type 'never'.
+src/pages/EventDetails.tsx(826,64): error TS2339: Property 'team_id' does not exist on type 'never'.
+src/pages/EventDetails.tsx(1061,11): error TS2322: Type 'string' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(1062,11): error TS2322: Type 'string' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(1070,11): error TS2322: Type 'string' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(1071,11): error TS2322: Type 'string' is not assignable to type 'null'.
+src/pages/EventDetails.tsx(1085,163): error TS18048: 'odds.home' is possibly 'undefined'.
+src/pages/EventDetails.tsx(1090,163): error TS18048: 'odds.away' is possibly 'undefined'.
+src/pages/EventPage.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/EventPage.tsx(4,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(5,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(6,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(7,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/ForgotPassword.tsx(9,24): error TS2307: Cannot find module '@/components/auth/AuthLayout' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(3,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(4,29): error TS2307: Cannot find module '@/components/layout/DashboardLayout' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(5,35): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(6,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(7,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(8,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(9,97): error TS2307: Cannot find module '@/components/ui/breadcrumb' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(11,33): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(12,30): error TS2307: Cannot find module '@/hooks/useAstroData' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(13,93): error TS2307: Cannot find module '@/types/gamePredictions' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(14,36): error TS2307: Cannot find module '@/utils/sportsPredictions' or its corresponding type declarations.
+src/pages/GameDetails.simple.tsx(15,32): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/pages/GamePage.tsx(3,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/GamePage.tsx(4,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/GamePage.tsx(5,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/GamePage.tsx(6,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/GamePage.tsx(7,40): error TS2307: Cannot find module '@/components/ui/avatar' or its corresponding type declarations.
+src/pages/GamePage.tsx(10,28): error TS2307: Cannot find module '@/components/game/GneePrediction' or its corresponding type declarations.
+src/pages/GamePage.tsx(11,39): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/Home.tsx(2,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/HomePage.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(3,75): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(5,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(6,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(7,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(8,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(9,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(11,29): error TS2307: Cannot find module '@/components/layout/DashboardLayout' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(12,27): error TS2307: Cannot find module '@/components/ui/separator' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(13,22): error TS2307: Cannot find module '@/components/GameCard' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(14,47): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(46,26): error TS2307: Cannot find module '@/types/database.types' or its corresponding type declarations.
+src/pages/LeaguePage.tsx(129,44): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/Login.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/pages/Login.tsx(4,24): error TS2307: Cannot find module '@/components/auth/AuthLayout' or its corresponding type declarations.
+src/pages/Login.tsx(5,23): error TS2307: Cannot find module '@/components/auth/LoginForm' or its corresponding type declarations.
+src/pages/Login.tsx(6,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(4,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(5,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(6,46): error TS2307: Cannot find module '@/lib/mlbCache' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(7,27): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(8,27): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/pages/mlb/MlbTeamDetailPage.tsx(107,55): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamDetailPage.tsx(116,26): error TS2339: Property 'city' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamDetailPage.tsx(142,27): error TS2339: Property 'id' does not exist on type 'GameWithTeams'.
+src/pages/mlb/MlbTeamDetailPage.tsx(145,38): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamDetailPage.tsx(145,68): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamDetailPage.tsx(150,32): error TS2339: Property 'game_date' does not exist on type 'GameWithTeams'.
+src/pages/mlb/MlbTeamsPage.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/mlb/MlbTeamsPage.tsx(4,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/mlb/MlbTeamsPage.tsx(5,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/mlb/MlbTeamsPage.tsx(6,31): error TS2307: Cannot find module '@/lib/mlbCache' or its corresponding type declarations.
+src/pages/mlb/MlbTeamsPage.tsx(7,27): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/pages/mlb/MlbTeamsPage.tsx(76,27): error TS2339: Property 'id' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(76,53): error TS2339: Property 'id' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(80,25): error TS2339: Property 'logo_url' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(82,33): error TS2339: Property 'logo_url' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(83,36): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(87,25): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/mlb/MlbTeamsPage.tsx(92,25): error TS2339: Property 'city' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(3,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(4,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(5,53): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(6,26): error TS2307: Cannot find module '@/components/games/GameCard' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(7,27): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(8,27): error TS2307: Cannot find module '@/types/dashboard' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(9,46): error TS2307: Cannot find module '@/lib/mlbCache' or its corresponding type declarations.
+src/pages/MLBLeaguePage.tsx(90,27): error TS2339: Property 'id' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(90,49): error TS2339: Property 'id' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(94,25): error TS2339: Property 'logo_url' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(96,33): error TS2339: Property 'logo_url' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(97,36): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(101,25): error TS2339: Property 'name' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(106,25): error TS2339: Property 'city' does not exist on type 'ExtendedTeam'.
+src/pages/MLBLeaguePage.tsx(118,23): error TS2339: Property 'id' does not exist on type 'ExtendedGame'.
+src/pages/NbaPlayerDetailPage.tsx(3,36): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/NbaPlayerDetailPage.tsx(4,32): error TS2307: Cannot find module '../types/nba.types' or its corresponding type declarations.
+src/pages/NbaPlayersPage.tsx(2,33): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/NbaPlayersPage.tsx(3,32): error TS2307: Cannot find module '../types/nba.types' or its corresponding type declarations.
+src/pages/NbaTeamDetailPage.tsx(3,48): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/NbaTeamDetailPage.tsx(4,41): error TS2307: Cannot find module '../types/nba.types' or its corresponding type declarations.
+src/pages/NbaTeamsPage.tsx(2,68): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/news/[slug].tsx(2,27): error TS2307: Cannot find module 'next/router' or its corresponding type declarations.
+src/pages/news/[slug].tsx(3,34): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+src/pages/news/index.tsx(2,27): error TS2307: Cannot find module 'next/router' or its corresponding type declarations.
+src/pages/news/index.tsx(3,35): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+src/pages/NewsArticle.tsx(4,29): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/MarkdownContent.js'?
+src/pages/NewsArticle.tsx(5,27): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/PlayerCardNew.js'?
+src/pages/NewsArticle.tsx(6,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/NewsArticle.tsx(257,43): error TS18047: 'p' is possibly 'null'.
+src/pages/NewsArticle.tsx(257,52): error TS18047: 'player' is possibly 'null'.
+src/pages/NewsPage.tsx(53,11): error TS2322: Type 'any[]' is not assignable to type 'never[]'.
+  Type 'any' is not assignable to type 'never'.
+src/pages/NewsPage.tsx(62,23): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/NewsPage.tsx(63,26): error TS2339: Property 'title' does not exist on type 'never'.
+src/pages/NewsPage.tsx(63,46): error TS2339: Property 'teamAway' does not exist on type 'never'.
+src/pages/NewsPage.tsx(63,79): error TS2339: Property 'teamHome' does not exist on type 'never'.
+src/pages/NewsPage.tsx(64,32): error TS2339: Property 'description' does not exist on type 'never'.
+src/pages/NewsPage.tsx(64,55): error TS2339: Property 'title' does not exist on type 'never'.
+src/pages/NewsPage.tsx(65,28): error TS2339: Property 'content' does not exist on type 'never'.
+src/pages/NewsPage.tsx(66,32): error TS2339: Property 'publishedAt' does not exist on type 'never'.
+src/pages/NewsPage.tsx(66,55): error TS2339: Property 'date' does not exist on type 'never'.
+src/pages/NewsPage.tsx(67,25): error TS2339: Property 'slug' does not exist on type 'never'.
+src/pages/NewsPage.tsx(67,41): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/NewsPage.tsx(68,29): error TS2339: Property 'teamHome' does not exist on type 'never'.
+src/pages/NewsPage.tsx(68,49): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/pages/NewsPage.tsx(69,29): error TS2339: Property 'teamAway' does not exist on type 'never'.
+src/pages/NewsPage.tsx(69,49): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/pages/NewsPage.tsx(70,26): error TS2339: Property 'image' does not exist on type 'never'.
+src/pages/NewsPage.tsx(71,33): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/NewsPage.tsx(71,73): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/NewsPage.tsx(72,26): error TS2339: Property 'score' does not exist on type 'never'.
+src/pages/NewsPage.tsx(73,33): error TS2339: Property 'homeScore' does not exist on type 'never'.
+src/pages/NewsPage.tsx(74,33): error TS2339: Property 'awayScore' does not exist on type 'never'.
+src/pages/PlayerDetailPage.new.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/PlayerDetailPage.new.tsx(11,8): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/PlayerDetailPage.new.tsx(13,58): error TS2307: Cannot find module '@/components/ui/tabs' or its corresponding type declarations.
+src/pages/PlayerDetailPage.new.tsx(14,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/pages/PlayerDetailPage.new.tsx(15,75): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/pages/PlayerDetailPage.new.tsx(88,5): error TS2300: Duplicate identifier 'interpretation'.
+src/pages/PlayerDetailPage.new.tsx(88,5): error TS2687: All declarations of 'interpretation' must have identical modifiers.
+src/pages/PlayerDetailPage.new.tsx(91,5): error TS2300: Duplicate identifier 'interpretation'.
+src/pages/PlayerDetailPage.new.tsx(91,5): error TS2687: All declarations of 'interpretation' must have identical modifiers.
+src/pages/PlayerDetailPage.new.tsx(91,5): error TS2717: Subsequent property declarations must have the same type.  Property 'interpretation' must be of type 'string', but here has type 'string | undefined'.
+src/pages/PlayerDetailPage.tsx(4,34): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/PlayerDetailPage.tsx(5,72): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/playerAstroService.js'?
+src/pages/PlayerDetailPage.tsx(6,105): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/PlayerDetailPage.tsx(7,39): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/zodiacIllustrations.js'?
+src/pages/PlayerDetailPage.tsx(8,35): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/BattingStats.js'?
+src/pages/PlayerDetailPage.tsx(9,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/CircularProgress.js'?
+src/pages/PlayerDetailPage.tsx(10,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './AstroPeakDay.js'?
+src/pages/PlayerDetailPage.tsx(11,32): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './BigThreeAstroCards.js'?
+src/pages/PlayerDetailPage.tsx(489,18): error TS18047: 'player.full_name' is possibly 'null'.
+src/pages/PlayerDetailPage.tsx(676,28): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/PlayerDetailPage.tsx(679,28): error TS2345: Argument of type '"Increased aggression on the basepaths could lead to extra bases" | "Risk of overaggression could lead to baserunning errors"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression on the basepaths could lead to extra bases"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(684,28): error TS2345: Argument of type '"Exceptional defensive positioning and fielding consistency expected" | "May play too conservatively in high-pressure defensive situations"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and fielding consistency expected"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(687,28): error TS2345: Argument of type '"Excellent pitch selection and plate discipline likely" | "Could be overly patient at the plate, missing hittable pitches"' is not assignable to parameter of type 'never'.
+  Type '"Excellent pitch selection and plate discipline likely"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(692,28): error TS2345: Argument of type '"Enhanced ability to read and react to complex pitch sequences" | "May overthink at-bats, leading to mental fatigue late in games"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced ability to read and react to complex pitch sequences"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(695,28): error TS2345: Argument of type '"Quick adjustments to opposing pitchers' strategies" | "Could struggle against pitchers with unpredictable patterns"' is not assignable to parameter of type 'never'.
+  Type '"Quick adjustments to opposing pitchers' strategies"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(700,28): error TS2345: Argument of type '"Exceptional performance in high-pressure, clutch situations" | "Emotional fluctuations might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in high-pressure, clutch situations"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(703,28): error TS2345: Argument of type '"Adaptive approach allows quick recovery from slumps" | "Might be overly influenced by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive approach allows quick recovery from slumps"' is not assignable to type 'never'.
+src/pages/PlayerDetailPage.tsx(709,26): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/PlayerDetailPage.tsx(907,31): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+src/pages/PlayerPage.tsx(3,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../lib/supabase.js'?
+src/pages/PlayerPage.tsx(4,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../hooks/useAstroData.js'?
+src/pages/PlayerPage.tsx(5,75): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/PlayerPage.tsx(6,27): error TS2307: Cannot find module '@/components/LoadingScreen' or its corresponding type declarations.
+src/pages/PlayerPage.tsx(7,31): error TS2307: Cannot find module '@/types/database.types' or its corresponding type declarations.
+src/pages/players/BaseballPlayerPage.backup.tsx(4,34): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(5,72): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(6,105): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/players/BaseballPlayerPage.backup.tsx(7,39): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(8,35): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(9,30): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(10,26): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(11,32): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.backup.tsx(489,18): error TS18047: 'player.full_name' is possibly 'null'.
+src/pages/players/BaseballPlayerPage.backup.tsx(676,28): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(679,28): error TS2345: Argument of type '"Increased aggression on the basepaths could lead to extra bases" | "Risk of overaggression could lead to baserunning errors"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression on the basepaths could lead to extra bases"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(684,28): error TS2345: Argument of type '"Exceptional defensive positioning and fielding consistency expected" | "May play too conservatively in high-pressure defensive situations"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and fielding consistency expected"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(687,28): error TS2345: Argument of type '"Excellent pitch selection and plate discipline likely" | "Could be overly patient at the plate, missing hittable pitches"' is not assignable to parameter of type 'never'.
+  Type '"Excellent pitch selection and plate discipline likely"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(692,28): error TS2345: Argument of type '"Enhanced ability to read and react to complex pitch sequences" | "May overthink at-bats, leading to mental fatigue late in games"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced ability to read and react to complex pitch sequences"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(695,28): error TS2345: Argument of type '"Quick adjustments to opposing pitchers' strategies" | "Could struggle against pitchers with unpredictable patterns"' is not assignable to parameter of type 'never'.
+  Type '"Quick adjustments to opposing pitchers' strategies"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(700,28): error TS2345: Argument of type '"Exceptional performance in high-pressure, clutch situations" | "Emotional fluctuations might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in high-pressure, clutch situations"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(703,28): error TS2345: Argument of type '"Adaptive approach allows quick recovery from slumps" | "Might be overly influenced by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive approach allows quick recovery from slumps"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(709,26): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/BaseballPlayerPage.backup.tsx(907,31): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+src/pages/players/BaseballPlayerPage.tsx(4,34): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(5,72): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(6,105): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/players/BaseballPlayerPage.tsx(7,39): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(8,35): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(9,30): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(10,26): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(11,32): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/BaseballPlayerPage.tsx(489,18): error TS18047: 'player.full_name' is possibly 'null'.
+src/pages/players/BaseballPlayerPage.tsx(676,28): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(679,28): error TS2345: Argument of type '"Increased aggression on the basepaths could lead to extra bases" | "Risk of overaggression could lead to baserunning errors"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression on the basepaths could lead to extra bases"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(684,28): error TS2345: Argument of type '"Exceptional defensive positioning and fielding consistency expected" | "May play too conservatively in high-pressure defensive situations"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and fielding consistency expected"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(687,28): error TS2345: Argument of type '"Excellent pitch selection and plate discipline likely" | "Could be overly patient at the plate, missing hittable pitches"' is not assignable to parameter of type 'never'.
+  Type '"Excellent pitch selection and plate discipline likely"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(692,28): error TS2345: Argument of type '"Enhanced ability to read and react to complex pitch sequences" | "May overthink at-bats, leading to mental fatigue late in games"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced ability to read and react to complex pitch sequences"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(695,28): error TS2345: Argument of type '"Quick adjustments to opposing pitchers' strategies" | "Could struggle against pitchers with unpredictable patterns"' is not assignable to parameter of type 'never'.
+  Type '"Quick adjustments to opposing pitchers' strategies"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(700,28): error TS2345: Argument of type '"Exceptional performance in high-pressure, clutch situations" | "Emotional fluctuations might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in high-pressure, clutch situations"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(703,28): error TS2345: Argument of type '"Adaptive approach allows quick recovery from slumps" | "Might be overly influenced by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive approach allows quick recovery from slumps"' is not assignable to type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(709,26): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/BaseballPlayerPage.tsx(907,31): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+src/pages/players/BasketballPlayerPage.tsx(4,34): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/supabase.js'?
+src/pages/players/BasketballPlayerPage.tsx(5,72): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../lib/playerAstroService.js'?
+src/pages/players/BasketballPlayerPage.tsx(6,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/players/PlayerHeader.js'?
+src/pages/players/BasketballPlayerPage.tsx(7,33): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/players/PlayerInfluenceCard.js'?
+src/pages/players/BasketballPlayerPage.tsx(8,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/players/AstroProfile.js'?
+src/pages/players/BasketballPlayerPage.tsx(9,35): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/players/PerformancePrediction.js'?
+src/pages/players/BasketballPlayerPage.tsx(10,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/players/PlayerStatsTable.js'?
+src/pages/players/BasketballPlayerPage.tsx(11,54): error TS2307: Cannot find module '../../types/app.types' or its corresponding type declarations.
+src/pages/players/BasketballPlayerPage.tsx(12,24): error TS2307: Cannot find module '../../types/nba.types' or its corresponding type declarations.
+src/pages/players/BasketballPlayerPage.tsx(19,8): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../utils/elementUtils.js'?
+src/pages/players/BasketballPlayerPage.tsx(20,39): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../utils/zodiacIllustrations.js'?
+src/pages/players/BasketballPlayerPage.tsx(22,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../components/CircularProgress.js'?
+src/pages/players/BasketballPlayerPage.tsx(23,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../AstroPeakDay.js'?
+src/pages/players/BasketballPlayerPage.tsx(24,32): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../BigThreeAstroCards.js'?
+src/pages/players/BasketballPlayerPage.tsx(116,20): error TS18047: 'madeNum' is possibly 'null'.
+src/pages/players/BasketballPlayerPage.tsx(116,30): error TS18047: 'attemptedNum' is possibly 'null'.
+src/pages/players/PlayerDetailPage.reference.tsx(4,34): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(5,72): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(6,105): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/pages/players/PlayerDetailPage.reference.tsx(7,39): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(8,35): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(9,30): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(10,26): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(11,32): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/pages/players/PlayerDetailPage.reference.tsx(489,18): error TS18047: 'player.full_name' is possibly 'null'.
+src/pages/players/PlayerDetailPage.reference.tsx(676,28): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(679,28): error TS2345: Argument of type '"Increased aggression on the basepaths could lead to extra bases" | "Risk of overaggression could lead to baserunning errors"' is not assignable to parameter of type 'never'.
+  Type '"Increased aggression on the basepaths could lead to extra bases"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(684,28): error TS2345: Argument of type '"Exceptional defensive positioning and fielding consistency expected" | "May play too conservatively in high-pressure defensive situations"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional defensive positioning and fielding consistency expected"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(687,28): error TS2345: Argument of type '"Excellent pitch selection and plate discipline likely" | "Could be overly patient at the plate, missing hittable pitches"' is not assignable to parameter of type 'never'.
+  Type '"Excellent pitch selection and plate discipline likely"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(692,28): error TS2345: Argument of type '"Enhanced ability to read and react to complex pitch sequences" | "May overthink at-bats, leading to mental fatigue late in games"' is not assignable to parameter of type 'never'.
+  Type '"Enhanced ability to read and react to complex pitch sequences"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(695,28): error TS2345: Argument of type '"Quick adjustments to opposing pitchers' strategies" | "Could struggle against pitchers with unpredictable patterns"' is not assignable to parameter of type 'never'.
+  Type '"Quick adjustments to opposing pitchers' strategies"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(700,28): error TS2345: Argument of type '"Exceptional performance in high-pressure, clutch situations" | "Emotional fluctuations might affect consistency"' is not assignable to parameter of type 'never'.
+  Type '"Exceptional performance in high-pressure, clutch situations"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(703,28): error TS2345: Argument of type '"Adaptive approach allows quick recovery from slumps" | "Might be overly influenced by team momentum swings"' is not assignable to parameter of type 'never'.
+  Type '"Adaptive approach allows quick recovery from slumps"' is not assignable to type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(709,26): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/pages/players/PlayerDetailPage.reference.tsx(907,31): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+src/pages/preview/ExampleProfilePage.tsx(3,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(4,87): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(5,53): error TS2307: Cannot find module '@/components/ui/avatar' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(6,41): error TS2307: Cannot find module '@/components/astrology/utils/interpretationsGenerator' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(7,50): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../../types/astrology.js'?
+src/pages/preview/ExampleProfilePage.tsx(8,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(9,24): error TS2307: Cannot find module '@/components/ui/switch' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(16,8): error TS2307: Cannot find module '@/components/ui/select' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(18,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(21,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(22,31): error TS2307: Cannot find module '@/components/forms/UserBirthDataForm' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(23,26): error TS2307: Cannot find module '@/components/astrology/components/ChartLoading' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(24,32): error TS2307: Cannot find module '@/components/astrology/SignInterpretation' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(25,25): error TS2307: Cannot find module '@/components/astrology/AspectsGrid' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(26,40): error TS2307: Cannot find module '@/components/astrology/SignInterpretationSkeleton' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(29,45): error TS2307: Cannot find module '@/components/astrology/NatalChartProfile' or its corresponding type declarations.
+src/pages/preview/ExampleProfilePage.tsx(328,5): error TS2554: Expected 1 arguments, but got 0.
+src/pages/preview/ExampleProfilePage.tsx(753,39): error TS2339: Property 'houses' does not exist on type 'object'.
+src/pages/PrivacyPolicy.tsx(3,22): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/PrivacyPolicy.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/Profile.tsx(4,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/pages/Profile.tsx(5,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/Profile.tsx(6,29): error TS2307: Cannot find module '@/contexts/PageViewContext' or its corresponding type declarations.
+src/pages/Profile.tsx(8,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/Profile.tsx(9,75): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/Profile.tsx(10,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/pages/Profile.tsx(11,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/pages/Profile.tsx(12,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/Profile.tsx(14,34): error TS2307: Cannot find module '@/components/profile/BirthDataSection' or its corresponding type declarations.
+src/pages/Profile.tsx(15,31): error TS2307: Cannot find module '@/components/forms/UserBirthDataForm' or its corresponding type declarations.
+src/pages/Profile.tsx(16,27): error TS2307: Cannot find module '@/components/profile/ProfileHeader' or its corresponding type declarations.
+src/pages/Profile.tsx(18,41): error TS2307: Cannot find module '@/components/astrology/utils/interpretationsGenerator' or its corresponding type declarations.
+src/pages/Profile.tsx(19,32): error TS2307: Cannot find module '@/components/astrology/SignInterpretation' or its corresponding type declarations.
+src/pages/Profile.tsx(20,25): error TS2307: Cannot find module '@/components/astrology/AspectsGrid' or its corresponding type declarations.
+src/pages/Profile.tsx(22,31): error TS2307: Cannot find module '@/components/astrology/NatalChartProfile' or its corresponding type declarations.
+src/pages/Profile.tsx(23,40): error TS2307: Cannot find module '@/components/astrology/SignInterpretationSkeleton' or its corresponding type declarations.
+src/pages/Profile.tsx(25,49): error TS2307: Cannot find module '@/types/profiles' or its corresponding type declarations.
+src/pages/Profile.tsx(26,27): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/pages/Profile.tsx(27,30): error TS2307: Cannot find module '@/hooks/useAstroData' or its corresponding type declarations.
+src/pages/Profile.tsx(30,49): error TS2307: Cannot find module '@/components/astrology/NatalChartProfile' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(3,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(4,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(5,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(6,41): error TS2307: Cannot find module '@/components/ui/alert' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(8,24): error TS2307: Cannot find module '@/components/auth/AuthLayout' or its corresponding type declarations.
+src/pages/ResetPassword.tsx(9,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/pages/SearchResults.tsx(3,27): error TS2307: Cannot find module '@/context/SearchContext' or its corresponding type declarations.
+src/pages/SearchResults.tsx(4,52): error TS2307: Cannot find module '@/hooks/useSportsData' or its corresponding type declarations.
+src/pages/SearchResults.tsx(5,28): error TS2307: Cannot find module '@/features/dashboard/EnhancedBettingCard' or its corresponding type declarations.
+src/pages/SearchResults.tsx(6,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/Signup.tsx(3,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/pages/Signup.tsx(4,24): error TS2307: Cannot find module '@/components/auth/AuthLayout' or its corresponding type declarations.
+src/pages/Signup.tsx(5,24): error TS2307: Cannot find module '@/components/auth/SignupForm' or its corresponding type declarations.
+src/pages/SignUpPromptPreview.tsx(2,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/auth/SignUpPrompt.js'?
+src/pages/SignUpPromptPreview.tsx(3,24): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/button.js'?
+src/pages/TeamPage.tsx(3,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/pages/TeamPage.tsx(4,29): error TS2307: Cannot find module '@/components/teams/TeamShareButton' or its corresponding type declarations.
+src/pages/TeamPage.tsx(148,23): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/badge.js'?
+src/pages/TeamPage.tsx(149,24): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/button.js'?
+src/pages/TeamPage.tsx(150,53): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/alert.js'?
+src/pages/TeamPage.tsx(152,27): error TS2307: Cannot find module '@/components/PlayerCardNew' or its corresponding type declarations.
+src/pages/TeamPage.tsx(153,23): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/use-toast.js'?
+src/pages/TeamPage.tsx(154,24): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/TeamRoster.js'?
+src/pages/TeamPage.tsx(155,30): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/games/GameCarousel.js'?
+src/pages/TeamPage.tsx(156,36): error TS2307: Cannot find module '@/utils/teamColors' or its corresponding type declarations.
+src/pages/TeamPage.tsx(157,35): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/card.js'?
+src/pages/TeamPage.tsx(158,26): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../components/ui/skeleton.js'?
+src/pages/TeamPage.tsx(159,36): error TS2307: Cannot find module '@/components/TeamChemistryMeter' or its corresponding type declarations.
+src/pages/TeamPage.tsx(160,38): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../utils/calculateImpactScore.js'?
+src/pages/TeamPage.tsx(420,20): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/pages/TeamPage.tsx(1089,15): error TS2322: Type 'Team | null' is not assignable to type 'Team'.
+  Type 'null' is not assignable to type 'Team'.
+src/pages/TeamPage.tsx(1090,15): error TS2322: Type 'Team | null' is not assignable to type 'Team'.
+  Type 'null' is not assignable to type 'Team'.
+src/pages/TermsOfService.tsx(3,22): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/pages/TermsOfService.tsx(4,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(3,34): error TS2307: Cannot find module '@/hooks/useUpcomingGames' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(4,50): error TS2307: Cannot find module '@/utils/dateUtils' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(5,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(6,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(8,22): error TS2307: Cannot find module '@/components/GameCard' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(9,26): error TS2307: Cannot find module '@/hooks/useTeams' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(12,46): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/pages/UpcomingGames.tsx(226,26): error TS18046: 't' is of type 'unknown'.
+src/scripts/sync.js(14,7): error TS2451: Cannot redeclare block-scoped variable 'supabaseUrl'.
+src/scripts/sync.js(15,7): error TS2451: Cannot redeclare block-scoped variable 'supabaseKey'.
+src/scripts/sync.js(26,7): error TS2451: Cannot redeclare block-scoped variable 'supabase'.
+src/scripts/sync.js(30,7): error TS2451: Cannot redeclare block-scoped variable 'API_KEY'.
+src/scripts/sync.js(31,7): error TS2451: Cannot redeclare block-scoped variable 'LEAGUE_ID_SPORTSDB'.
+src/scripts/sync.js(33,7): error TS2451: Cannot redeclare block-scoped variable 'TEAM_NAME_MAPPING'.
+src/scripts/sync.js(230,7): error TS2451: Cannot redeclare block-scoped variable 'supabaseUrl'.
+src/scripts/sync.js(231,7): error TS2451: Cannot redeclare block-scoped variable 'supabaseKey'.
+src/scripts/sync.js(238,7): error TS2451: Cannot redeclare block-scoped variable 'supabase'.
+src/scripts/sync.js(241,7): error TS2451: Cannot redeclare block-scoped variable 'API_KEY'.
+src/scripts/sync.js(242,7): error TS2451: Cannot redeclare block-scoped variable 'LEAGUE_ID_SPORTSDB'.
+src/scripts/sync.js(245,7): error TS2451: Cannot redeclare block-scoped variable 'TEAM_NAME_MAPPING'.
+src/services/__tests__/geocoding.test.ts(1,54): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../geocoding.js'?
+src/services/__tests__/geocoding.test.ts(2,23): error TS2307: Cannot find module 'jest-fetch-mock' or its corresponding type declarations.
+src/services/__tests__/geocoding.test.ts(8,14): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(9,14): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(12,17): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(15,12): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(18,10): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(19,13): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(27,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(28,3): error TS2304: Cannot find name 'beforeAll'.
+src/services/__tests__/geocoding.test.ts(36,21): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(37,19): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(40,3): error TS2304: Cannot find name 'afterAll'.
+src/services/__tests__/geocoding.test.ts(46,3): error TS2304: Cannot find name 'beforeEach'.
+src/services/__tests__/geocoding.test.ts(50,5): error TS2304: Cannot find name 'jest'.
+src/services/__tests__/geocoding.test.ts(53,3): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(54,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(70,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(71,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(72,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(73,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(74,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(75,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(78,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(80,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(81,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(84,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(107,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(108,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(109,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(112,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(115,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(143,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(144,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(145,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(146,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(149,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(155,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(160,13): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(164,3): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(165,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/services/__tests__/geocoding.test.ts(181,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(187,7): error TS2304: Cannot find name 'expect'.
+src/services/__tests__/geocoding.test.ts(208,7): error TS2304: Cannot find name 'expect'.
+src/services/geocoding.ts(438,9): error TS18046: 'error' is of type 'unknown'.
+src/services/playerService.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/services/scheduleService.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/services/scheduleService.ts(165,51): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/scheduleService.ts(169,57): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(172,17): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(174,37): error TS2339: Property 'venue' does not exist on type 'never'.
+src/services/scheduleService.ts(175,52): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(176,36): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(177,37): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(178,39): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(179,40): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/services/scheduleService.ts(183,17): error TS2339: Property 'external_id' does not exist on type 'never'.
+src/services/scheduleService.ts(184,17): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/scheduleService.ts(185,15): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(186,15): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(187,24): error TS2339: Property 'external_id' does not exist on type 'never'.
+src/services/scheduleService.ts(188,23): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/scheduleService.ts(189,15): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(190,15): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(191,24): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(191,59): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(193,19): error TS2339: Property 'sport_type' does not exist on type 'never'.
+src/services/scheduleService.ts(194,17): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(194,35): error TS2339: Property 'home_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(195,17): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(195,35): error TS2339: Property 'away_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(196,26): error TS2339: Property 'sport_type' does not exist on type 'never'.
+src/services/scheduleService.ts(197,17): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(197,35): error TS2339: Property 'home_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(198,17): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(198,35): error TS2339: Property 'away_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(199,26): error TS2339: Property 'sport_type' does not exist on type 'never'.
+src/services/scheduleService.ts(200,17): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(200,35): error TS2339: Property 'home_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(201,17): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(201,35): error TS2339: Property 'away_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(202,26): error TS2339: Property 'sport_type' does not exist on type 'never'.
+src/services/scheduleService.ts(203,17): error TS2339: Property 'home_team' does not exist on type 'never'.
+src/services/scheduleService.ts(203,35): error TS2339: Property 'home_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(204,17): error TS2339: Property 'away_team' does not exist on type 'never'.
+src/services/scheduleService.ts(204,35): error TS2339: Property 'away_team_id' does not exist on type 'never'.
+src/services/scheduleService.ts(212,28): error TS2339: Property 'sport' does not exist on type 'never'.
+src/services/scheduleService.ts(298,72): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/scheduleService.ts(319,33): error TS2339: Property 'sport' does not exist on type 'never'.
+src/services/sportsDataService.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/services/sportsDataService.ts(2,23): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/services/sportsDataService.ts(3,28): error TS2307: Cannot find module '@/types/supabase' or its corresponding type declarations.
+src/services/teamService.ts(1,26): error TS2307: Cannot find module '@/lib/supabase' or its corresponding type declarations.
+src/services/teamService.ts(2,28): error TS2307: Cannot find module '@/types/sports' or its corresponding type declarations.
+src/services/testTheSportsDb.ts(1,49): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './theSportsDbService.js'?
+src/services/theSportsDbService.ts(325,11): error TS2322: Type 'string | null' is not assignable to type 'null'.
+  Type 'string' is not assignable to type 'null'.
+src/services/theSportsDbService.ts(326,11): error TS2322: Type 'string | null' is not assignable to type 'null'.
+  Type 'string' is not assignable to type 'null'.
+src/types/dashboard.ts(1,26): error TS2307: Cannot find module './database.types' or its corresponding type declarations.
+src/types/gamePredictions.ts(1,50): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './astrology.js'?
+src/types/nba.types.ts(19,38): error TS2307: Cannot find module './app.types' or its corresponding type declarations.
+src/types/supabase-extensions.ts(2,46): error TS2307: Cannot find module '@/integrations/supabase/types' or its corresponding type declarations.
+src/types/supabase-extensions.ts(3,22): error TS2307: Cannot find module '@/types/supabase' or its corresponding type declarations.
+src/utils/astroUtils.tsx(1,43): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/utils/astroUtils/index.ts(2,15): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../astroUtils.js'?
+src/utils/elementUtils.ts(3,27): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
+src/utils/locationUtils.ts(1,42): error TS2307: Cannot find module '@/types/location' or its corresponding type declarations.
+src/utils/locationUtils.ts(2,24): error TS1543: Importing a JSON file into an ECMAScript module requires a 'type: "json"' import attribute when 'module' is set to 'NodeNext'.
+src/utils/playerAnalysis.ts(1,63): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/utils/sportsPredictions.ts(7,8): error TS2307: Cannot find module '@/types/astrology' or its corresponding type declarations.
+src/utils/sportsPredictions.ts(8,33): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+src/utils/sportsPredictions.ts(9,41): error TS2307: Cannot find module '@/types/gamePredictions' or its corresponding type declarations.
+src/utils/zodiacIllustrations.ts(2,28): error TS2307: Cannot find module '../types/app.types' or its corresponding type declarations.
