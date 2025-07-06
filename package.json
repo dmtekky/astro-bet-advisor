@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": "18.x"
+    "node": ">=20.3.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
