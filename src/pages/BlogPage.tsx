@@ -1,19 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ErrorBoundary as ReactErrorBoundary } from 'react';
 import { Link } from 'react-router-dom';
-import { FiClock, FiArrowRight } from 'react-icons/fi';
+import { FiClock, FiArrowRight, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { Helmet } from 'react-helmet-async';
 import { fetchPosts, BlogPost } from '../services/wordpressService';
 
 // Using BlogPost interface from wordpressService.ts
 
+// Custom ErrorBoundary to catch and handle errors
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('BlogPage ErrorBoundary caught an error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null; // Silently handle the error without showing anything
+    }
+    return this.props.children;
+  }
+}
+
 const BlogPage: React.FC = () => {
+  const [allArticles, setAllArticles] = useState<BlogPost[]>([]);
   const [articles, setArticles] = useState<BlogPost[]>([]);
   const [featuredArticle, setFeaturedArticle] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 6; // Reduced from showing all articles at once
 
   useEffect(() => {
     document.title = "Blog | Full Moon Odds";
+    
+    // Prevent any potential AstroChart loading errors
+    window.addEventListener('error', (event) => {
+      if (event.message?.includes('AstroChart')) {
+        event.preventDefault();
+        console.warn('Prevented AstroChart error from affecting page load');
+      }
+    }, { capture: true });
     
     const fetchArticles = async () => {
       try {
@@ -25,7 +61,10 @@ const BlogPage: React.FC = () => {
         if (posts.length > 0) {
           console.log('First blog article data:', posts[0]);
           setFeaturedArticle(posts[0]);
-          setArticles(posts.slice(1));
+          setAllArticles(posts.slice(1));
+          
+          // Only set the first page of articles initially
+          setArticles(posts.slice(1, 1 + articlesPerPage));
         } else {
           console.log('No blog articles found');
         }
@@ -39,7 +78,21 @@ const BlogPage: React.FC = () => {
     };
 
     fetchArticles();
+    
+    // Cleanup function
+    return () => {
+      window.removeEventListener('error', () => {});
+    };
   }, []);
+  
+  // Handle page changes
+  useEffect(() => {
+    if (allArticles.length > 0) {
+      const startIndex = (currentPage - 1) * articlesPerPage;
+      const endIndex = startIndex + articlesPerPage;
+      setArticles(allArticles.slice(startIndex, endIndex));
+    }
+  }, [currentPage, allArticles]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -175,6 +228,7 @@ const BlogPage: React.FC = () => {
       )}
 
       {/* Articles Grid */}
+      <ErrorBoundary>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">All Blog Posts</h2>
         
@@ -217,12 +271,40 @@ const BlogPage: React.FC = () => {
           ))}
         </div>
 
-        {articles.length === 0 && (
+        {articles.length === 0 && allArticles.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">No blog articles found.</p>
           </div>
         )}
+        
+        {/* Pagination */}
+        {allArticles.length > articlesPerPage && (
+          <div className="flex justify-center items-center mt-12 space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-full ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900'}`}
+              aria-label="Previous page"
+            >
+              <FiChevronLeft size={20} />
+            </button>
+            
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Page {currentPage} of {Math.ceil(allArticles.length / articlesPerPage)}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(allArticles.length / articlesPerPage)))}
+              disabled={currentPage >= Math.ceil(allArticles.length / articlesPerPage)}
+              className={`p-2 rounded-full ${currentPage >= Math.ceil(allArticles.length / articlesPerPage) ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900'}`}
+              aria-label="Next page"
+            >
+              <FiChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </div>
+      </ErrorBoundary>
     </div>
   );
 };

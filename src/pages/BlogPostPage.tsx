@@ -1,9 +1,11 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
+import React, { useEffect, useState, Suspense, lazy, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FiClock, FiUser, FiTag } from 'react-icons/fi';
 import { fetchPostBySlug, fetchPosts, BlogPost } from '../services/wordpressService';
 import DOMPurify from 'dompurify';
+import { useAstroData } from "@/hooks/useAstroData";
+import { SimplifiedElementalBalance, SimplifiedLunarStatusCard, SimplifiedKeyPlanetaryInfluences } from '../components/SimplifiedDashboard';
 
 // Lazy load AdSense component to improve initial loading performance
 // const AdSense = lazy(() => import('../components/AdSense'));
@@ -45,6 +47,29 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   const [trendingArticles, setTrendingArticles] = useState<BlogPost[]>([]);
   const [contentReady, setContentReady] = useState<boolean>(false);
   const [readingProgress, setReadingProgress] = useState(0);
+  
+  // Lazy loading for astro data
+  const [shouldLoadAstroData, setShouldLoadAstroData] = useState<boolean>(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  
+  // Only fetch astro data when shouldLoadAstroData is true
+  const stableDateString = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const { astroData, loading: astroLoading, error: astroError } = shouldLoadAstroData 
+    ? useAstroData(stableDateString)
+    : { astroData: null, loading: false, error: null };
+
+  // Check if user has scrolled near the dashboard section
+  const checkScrollPosition = useCallback(() => {
+    if (dashboardRef.current && !shouldLoadAstroData) {
+      const rect = dashboardRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      // Start loading when dashboard is 500px away from viewport
+      if (rect.top - viewportHeight < 500) {
+        setShouldLoadAstroData(true);
+      }
+    }
+  }, [shouldLoadAstroData]);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -84,11 +109,14 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
       const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrolled = window.scrollY;
       setReadingProgress(scrolled / scrollHeight * 100);
+      
+      // Check scroll position for lazy loading
+      checkScrollPosition();
     };
     
     window.addEventListener('scroll', updateReadingProgress);
     return () => window.removeEventListener('scroll', updateReadingProgress);
-  }, []);
+  }, [checkScrollPosition]);
 
   useEffect(() => {
     if (post) {
@@ -203,6 +231,29 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     
     return doc.body.innerHTML;
   };
+
+  // Add a simple ErrorBoundary component
+  class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+    constructor(props: any) {
+      super(props);
+      this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error: any) {
+      return { hasError: true };
+    }
+
+    componentDidCatch(error: any, errorInfo: any) {
+      console.error('ErrorBoundary caught an error', error, errorInfo);
+    }
+
+    render() {
+      if (this.state.hasError) {
+        return <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-red-700"><p>Failed to load component. Please refresh or check back later.</p></div>;
+      }
+      return this.props.children;
+    }
+  }
 
   if (loading) {
     return (
@@ -375,21 +426,59 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
           {/* Sidebar */}
           <aside className="lg:col-span-1">
             {/* Trending Articles Section */}
-            <div className="mt-8 p-6 bg-white rounded-xl shadow-lg">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900">Trending</h2>
-              <ul className="space-y-3">
+            <div className="mt-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100">
+              <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Trending</h2>
+              <ul className="space-y-4">
                 {trendingArticles.map((article) => (
-                  <li key={article.id}>
+                  <li key={article.id} className="group">
                     <Link 
                       to={`/blog/${article.slug}`} 
-                      className="text-lg text-gray-800 hover:text-indigo-700 hover:underline transition-colors"
+                      className="text-lg font-medium text-gray-800 group-hover:text-indigo-700 transition-colors flex items-start"
                     >
-                      {article.title}
+                      <span className="mr-2 text-indigo-600 group-hover:text-indigo-800 transition-colors">•</span>
+                      <span className="group-hover:underline">{article.title}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
+
+            {/* Simplified Dashboard Section */}
+            <ErrorBoundary>
+              <div 
+                ref={dashboardRef}
+                className="mt-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100"
+              >
+                <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Dashboard Insights</h2>
+                
+                {!shouldLoadAstroData ? (
+                  <p className="text-gray-500 text-center py-4">Scroll to view astro insights...</p>
+                ) : astroLoading ? (
+                  <div className="space-y-4">
+                    {/* Skeleton loaders */}
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-white p-4 rounded-lg shadow-md mb-4 animate-pulse">
+                        <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : astroError ? (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-red-700">
+                    <p>Failed to load astro data. Please try again later.</p>
+                  </div>
+                ) : astroData ? (
+                  <div className="space-y-4">
+                    <SimplifiedElementalBalance planets={astroData.planets} />
+                    <SimplifiedLunarStatusCard moonPhase={astroData.moonPhase} />
+                    <SimplifiedKeyPlanetaryInfluences aspects={astroData.aspects} />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No astro data available</p>
+                )}
+              </div>
+            </ErrorBoundary>
           </aside>
         </div>
       </div>
