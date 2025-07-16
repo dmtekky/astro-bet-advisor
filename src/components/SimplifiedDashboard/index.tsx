@@ -384,103 +384,81 @@ interface Aspect {
 
 // Simplified Key Planetary Influences component - using dashboard routing logic without fallbacks
 export const SimplifiedKeyPlanetaryInfluences: React.FC<{ aspects: Aspect[] }> = ({ aspects }) => {
-  // Format aspect name with proper capitalization
-  const formatPlanetName = (name: string): string => {
-    if (!name) return '';
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  // Helper function to translate aspect type to plain language
+  const getAspectExplanation = (aspectType?: string): string => {
+    if (!aspectType) return 'interacting with';
+    
+    const lowerType = aspectType.toLowerCase();
+    if (lowerType.includes('conjunction')) return 'joining forces with';
+    if (lowerType.includes('trine')) return 'working harmoniously with';
+    if (lowerType.includes('sextile')) return 'supporting';
+    if (lowerType.includes('square')) return 'creating tension with';
+    if (lowerType.includes('opposition')) return 'opposing';
+    if (lowerType.includes('quincunx')) return 'adjusting to';
+    return 'connecting with';
   };
-
-  // Format aspect type with proper display
-  const formatAspectType = (type: string): string => {
-    if (!type) return '';
-    const aspectMap: Record<string, string> = {
-      conjunction: 'Conjunction',
-      opposition: 'Opposition',
-      trine: 'Trine',
-      square: 'Square',
-      sextile: 'Sextile',
-      quincunx: 'Quincunx',
-      semisextile: 'Semisextile',
-      semisquare: 'Semisquare',
-      sesquiquadrate: 'Sesquiquadrate',
-      quintile: 'Quintile',
-      biquintile: 'Biquintile'
-    };
-    return aspectMap[type.toLowerCase()] || type;
+  
+  // Helper function to get simple strength description
+  const getStrengthDescription = (orb?: number): string => {
+    if (orb === undefined) return 'moderate';
+    if (orb < 1) return 'extremely strong';
+    if (orb < 3) return 'very strong';
+    if (orb < 5) return 'strong';
+    if (orb < 7) return 'moderate';
+    return 'weak';
   };
-
-  // Calculate aspect strength percentage for display
-  const getStrengthPercentage = (strength?: number): string => {
-    if (strength === undefined) return '';
-    const percentage = Math.round(strength * 100);
-    return `${percentage}%`;
-  };
-
-  // Process aspects to display format
-  const processedAspects = useMemo(() => {
-    if (!aspects || !Array.isArray(aspects)) {
-      return [];
-    }
-
-    // Sort aspects by strength if available
-    const sortedAspects = [...aspects].sort((a, b) => {
-      // If strength is available, sort by it (descending)
-      if (a.strength !== undefined && b.strength !== undefined) {
-        return b.strength - a.strength;
-      }
-      return 0;
-    });
-
-    // Get top 5 aspects
-    return sortedAspects.slice(0, 5).map(aspect => {
-      const planet1 = formatPlanetName(aspect.planet1 || '');
-      const planet2 = formatPlanetName(aspect.planet2 || '');
-      const aspectType = formatAspectType(aspect.aspect || '');
-      const strength = getStrengthPercentage(aspect.strength);
-
-      return {
-        planet1,
-        planet2,
-        aspectType,
-        strength,
-        applying: aspect.applying,
-        orb: aspect.orb !== undefined ? Math.round(aspect.orb * 10) / 10 : undefined
-      };
-    });
-  }, [aspects]);
 
   return (
     <Link to="/" className="block p-4 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
-      <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300 mb-2">Key Planetary Aspects</h3>
+      <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300 mb-2">Planet Connections</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">See how planets influence each other in your chart. Stronger connections have more impact on you.</p>
       
-      {processedAspects.length > 0 ? (
-        <ul className="space-y-2">
-          {processedAspects.map((aspect, index) => (
-            <li key={`aspect-${index}`} className="text-sm text-gray-700 dark:text-gray-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <FiStar className="text-yellow-500 mr-1.5" />
-                  <span className="font-medium">
-                    {aspect.planet1} {aspect.aspectType} {aspect.planet2}
-                  </span>
-                </div>
-                {aspect.strength && (
-                  <span className="text-xs bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-medium">
-                    {aspect.strength}
-                  </span>
-                )}
+      <ul className="space-y-4">
+        {aspects.slice(0, 5).map((aspect, index) => (
+          <li key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <span className="font-bold text-indigo-600 mr-1">{aspect.planets?.[0]?.name || aspect.planet1 || 'Planet'}</span>
+                <span className="text-gray-700 dark:text-gray-300">is</span>
+                <span className="font-medium text-indigo-600 mx-2">{getAspectExplanation(aspect.aspectType)}</span>
+                <span className="font-bold text-indigo-600">{aspect.planets?.[1]?.name || aspect.planet2 || 'Planet'}</span>
               </div>
-              {aspect.orb !== undefined ? (
-                <div className="text-xs text-gray-500 ml-5 mt-0.5">
-                  Orb: {aspect.orb}° {aspect.applying ? '(Applying)' : '(Separating)'}
+              
+              {aspect.applying && (
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Getting Stronger</span>
+              )}
+            </div>
+            
+            <div>
+              {aspect.orb !== undefined && (
+                <div>
+                  <div className="flex items-center mb-1">
+                    <span className="text-sm font-medium">
+                      Connection Strength: <span className="text-indigo-600">{getStrengthDescription(aspect.orb)}</span>
+                    </span>
+                  </div>
+                  
+                  <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      style={{ width: `${Math.max(5, Math.min(100, 100 - (aspect.orb * 10)))}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Stronger</span>
+                    <span>Weaker</span>
+                  </div>
                 </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-sm text-gray-500 italic">
-          No planetary aspects available
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      
+      {aspects.length === 0 && (
+        <div className="text-center p-4 text-gray-500">
+          No planetary connections available
         </div>
       )}
     </Link>
