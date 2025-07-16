@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FiClock, FiUser, FiTag } from 'react-icons/fi';
-import { fetchPostBySlug, BlogPost } from '../services/wordpressService';
+import { fetchPostBySlug, fetchPosts, BlogPost } from '../services/wordpressService';
 import DOMPurify from 'dompurify';
 
 // Lazy load AdSense component to improve initial loading performance
@@ -47,58 +47,36 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   const [readingProgress, setReadingProgress] = useState(0);
 
   useEffect(() => {
-    if (initialContent) {
-      setPost(initialContent);
-      setLoading(false);
-    }
-  }, [initialContent]);
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      if (!slug) {
-        setError('No slug provided');
-        setLoading(false);
-        return;
-      }
-
+    const loadPost = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        // Use the cached version if available
-        const postData = await fetchPostBySlug(slug);
-        
-        if (!postData) {
-          throw new Error(`Blog post not found: ${slug}`);
+        let postData: BlogPost | null = null;
+        if (initialContent) {
+          postData = initialContent;
+        } else if (slug) {
+          postData = await fetchPostBySlug(slug);
         }
-        
-        setPost(postData);
-        
-        // Update cached posts if this post isn't already in the cache
-        if (!cachedPosts.some(p => p.id === postData.id)) {
-          cachedPosts = [...cachedPosts, postData];
-        }
-        
-        // Get related and trending articles without additional API calls
-        if (postData?.tags) {
-          const related = await getRelatedArticles(postData.tags, postData.id);
+
+        if (postData) {
+          setPost(postData);
+          // Fetch all posts to get cachedPosts for related and trending
+          const allPosts = await fetchPosts();
+          const related = getRelatedArticles(allPosts, postData.id, 3);
           setRelatedArticles(related);
+
+          const trending = getTrendingArticles(allPosts, postData.id, 3);
+          setTrendingArticles(trending);
+        } else {
+          setError('Post not found');
         }
-        
-        const trending = getTrendingArticles(cachedPosts, postData.id, 3);
-        setTrendingArticles(trending);
-        
-        // Mark content as ready after a short delay to ensure smooth rendering
-        setTimeout(() => setContentReady(true), 100);
-      } catch (err: any) {
-        setError(err.message);
-        console.error('Error fetching blog post:', err);
+      } catch (err) {
+        setError('Failed to load post');
       } finally {
         setLoading(false);
       }
     };
 
-    if (!initialContent) {
-      fetchPost();
-    }
+    loadPost();
   }, [slug, initialContent]);
 
   useEffect(() => {
