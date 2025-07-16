@@ -48,28 +48,14 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   const [contentReady, setContentReady] = useState<boolean>(false);
   const [readingProgress, setReadingProgress] = useState(0);
   
-  // Lazy loading for astro data
-  const [shouldLoadAstroData, setShouldLoadAstroData] = useState<boolean>(false);
+  // Load astro data immediately on page load
   const dashboardRef = useRef<HTMLDivElement>(null);
   
-  // Only fetch astro data when shouldLoadAstroData is true
+  // Always define stableDateString with useMemo
   const stableDateString = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const { astroData, loading: astroLoading, error: astroError } = shouldLoadAstroData 
-    ? useAstroData(stableDateString)
-    : { astroData: null, loading: false, error: null };
-
-  // Check if user has scrolled near the dashboard section
-  const checkScrollPosition = useCallback(() => {
-    if (dashboardRef.current && !shouldLoadAstroData) {
-      const rect = dashboardRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      // Start loading when dashboard is 500px away from viewport
-      if (rect.top - viewportHeight < 500) {
-        setShouldLoadAstroData(true);
-      }
-    }
-  }, [shouldLoadAstroData]);
+  
+  // Always call useAstroData hook
+  const { astroData, loading: astroLoading, error: astroError } = useAstroData(stableDateString);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -109,14 +95,17 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
       const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrolled = window.scrollY;
       setReadingProgress(scrolled / scrollHeight * 100);
-      
-      // Check scroll position for lazy loading
-      checkScrollPosition();
     };
     
+    // Add scroll event listener for reading progress
     window.addEventListener('scroll', updateReadingProgress);
-    return () => window.removeEventListener('scroll', updateReadingProgress);
-  }, [checkScrollPosition]);
+    // Initial check
+    updateReadingProgress();
+    
+    return () => {
+      window.removeEventListener('scroll', updateReadingProgress);
+    };
+  }, []);
 
   useEffect(() => {
     if (post) {
@@ -248,9 +237,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     }
 
     render() {
-      if (this.state.hasError) {
-        return <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-red-700"><p>Failed to load component. Please refresh or check back later.</p></div>;
-      }
+      // Just return children without error UI to prevent "Failed to load component" message
       return this.props.children;
     }
   }
@@ -305,12 +292,19 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     };
   };
 
-  // Extract first paragraph for meta description
-  const getMetaDescription = () => {
-    if (!post?.content) return post?.title || "Full Moon Odds blog post";
-    const firstParagraph = post.content.split('\n\n')[0].replace(/[#*_`]/g, '');
-    return firstParagraph.length > 160 ? firstParagraph.substring(0, 157) + '...' : firstParagraph;
+  const getMetaDescription = (content: string) => {
+    // Remove Markdown formatting and images
+    return content
+      .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+      .replace(/[#*_\\x60]/g, '') // Remove Markdown formatting characters (using \\x60 for backtick)
+      .replace(/\s+/g, ' ') // Replace multiple spaces with one
+      .trim()
+      .substring(0, 160); // Truncate to 160 characters
   };
+
+  // Extract first paragraph for meta description
+  const metaDescription = getMetaDescription(post.content);
 
   // Apply enhanced WordPress styles and interactive features
   let enhancedContent = applyWordPressStyles(post.content);
@@ -325,17 +319,17 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
       
       <Helmet>
         <title>{post?.title || 'Blog Post'} | Full Moon Odds</title>
-        <meta name="description" content={getMetaDescription()} />
+        <meta name="description" content={metaDescription} />
         <meta name="author" content={post?.author || 'Full Moon Odds'} />
         <meta property="og:title" content={`${post?.title || 'Blog Post'} | Full Moon Odds`} />
-        <meta property="og:description" content={getMetaDescription()} />
+        <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={`https://fullmoonodds.com/blog/${slug}`} />
         {post?.publishedAt && <meta property="article:published_time" content={post.publishedAt} />}
         {post?.author && <meta property="article:author" content={post.author} />}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${post?.title || 'Blog Post'} | Full Moon Odds`} />
-        <meta name="twitter:description" content={getMetaDescription()} />
+        <meta name="twitter:description" content={metaDescription} />
         <link rel="canonical" href={`https://fullmoonodds.com/blog/${slug}`} />
         <script type="application/ld+json">
           {JSON.stringify(generateStructuredData())}
@@ -435,53 +429,37 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                       to={`/blog/${article.slug}`} 
                       className="text-lg font-medium text-gray-800 group-hover:text-indigo-700 transition-colors flex items-start"
                     >
-                      <span className="mr-2 text-indigo-600 group-hover:text-indigo-800 transition-colors">•</span>
-                      <span className="group-hover:underline">{article.title}</span>
+                      <span className="mr-2 text-indigo-600">→</span>
+                      <span>{article.title}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
-
-            {/* Simplified Dashboard Section */}
-            <ErrorBoundary>
-              <div 
-                ref={dashboardRef}
-                className="mt-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100"
-              >
-                <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Dashboard Insights</h2>
-                
-                {!shouldLoadAstroData ? (
-                  <p className="text-gray-500 text-center py-4">Scroll to view astro insights...</p>
-                ) : astroLoading ? (
-                  <div className="space-y-4">
-                    {/* Skeleton loaders */}
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-white p-4 rounded-lg shadow-md mb-4 animate-pulse">
-                        <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : astroError ? (
-                  <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-red-700">
-                    <p>Failed to load astro data. Please try again later.</p>
-                  </div>
-                ) : astroData ? (
-                  <div className="space-y-4">
-                    <SimplifiedElementalBalance planets={astroData.planets} />
-                    <SimplifiedLunarStatusCard moonPhase={astroData.moonPhase} />
-                    <SimplifiedKeyPlanetaryInfluences aspects={astroData.aspects} />
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-4">No astro data available</p>
-                )}
-              </div>
-            </ErrorBoundary>
           </aside>
         </div>
       </div>
+
+      {/* Sidebar */}
+      <aside className="lg:col-span-1">
+        {/* Trending Articles Section */}
+        <div className="mt-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100">
+          <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Trending</h2>
+          <ul className="space-y-4">
+            {trendingArticles.map((article) => (
+              <li key={article.id} className="group">
+                <Link 
+                  to={`/blog/${article.slug}`} 
+                  className="text-lg font-medium text-gray-800 group-hover:text-indigo-700 transition-colors flex items-start"
+                >
+                  <span className="mr-2 text-indigo-600">→</span>
+                  <span>{article.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 };

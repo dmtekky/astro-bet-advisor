@@ -46,7 +46,7 @@ const BlogPage: React.FC = () => {
   
   const indexOfLastArticle = currentPage * articlesPerPage;
   const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
-  const articlesToShow = filteredArticles.slice(indexOfFirstArticle, indexOfLastArticle);
+  const articlesToShow = useMemo(() => filteredArticles.slice(indexOfFirstArticle, indexOfLastArticle), [filteredArticles, indexOfFirstArticle, indexOfLastArticle]);
 
   useEffect(() => {
     document.title = "Blog | Full Moon Odds";
@@ -99,7 +99,7 @@ const BlogPage: React.FC = () => {
     } else {
       setArticles([]);
     }
-  }, [currentPage, filteredArticles, articlesToShow]);
+  }, [filteredArticles, articlesToShow]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

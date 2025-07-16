@@ -31,7 +31,7 @@ const UpcomingGames = lazy(() => import('./pages/UpcomingGames.js'));
 const NewsPage = lazy(() => import('./pages/NewsPage.js'));
 const NewsArticle = lazy(() => import('./pages/NewsArticle.js'));
 const BlogPage = lazy(() => import('./pages/BlogPage.js'));
-const BlogPostPage = lazy(() => import('./pages/BlogPostPage.js'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage.tsx'));
 const NotFound = lazy(() => import('./pages/NotFound.js'));
 const Header = lazy(() => import('./components/Header.js'));
 const Footer = lazy(() => import('./components/Footer.js'));
