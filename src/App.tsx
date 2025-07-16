@@ -30,6 +30,8 @@ const SearchResults = lazy(() => import('./pages/SearchResults.js'));
 const UpcomingGames = lazy(() => import('./pages/UpcomingGames.js'));
 const NewsPage = lazy(() => import('./pages/NewsPage.js'));
 const NewsArticle = lazy(() => import('./pages/NewsArticle.js'));
+const BlogPage = lazy(() => import('./pages/BlogPage.js'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage.js'));
 const NotFound = lazy(() => import('./pages/NotFound.js'));
 const Header = lazy(() => import('./components/Header.js'));
 const Footer = lazy(() => import('./components/Footer.js'));
@@ -134,6 +136,8 @@ function AppContent() {
               <Route path="/upcoming-games/:sport" element={<UpcomingGames />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
               
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />

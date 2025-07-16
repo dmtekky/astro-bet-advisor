@@ -1,0 +1,24 @@
+{
+  "articles": [
+    {
+      "id": "my-first-ai-blog-post",
+      "title": "My First AI-Generated Blog Post",
+      "description": "This is an example of an AI-generated blog post for testing purposes.",
+      "author": "Cascade AI",
+      "publishedAt": "2025-07-10",
+      "slug": "my-first-ai-blog-post",
+      "image": "/assets/blog-placeholder.jpg",
+      "keywords": ["AI", "blog", "automation", "content generation"]
+    },
+    {
+      "id": "first-post",
+      "title": "My First Blog Post",
+      "description": "This is a sample blog post written in Markdown that demonstrates how we can use React to display blog content.",
+      "author": "Cascade",
+      "publishedAt": "2023-10-27",
+      "slug": "first-post",
+      "image": "/placeholder-blog-image.jpg",
+      "keywords": ["blog", "markdown", "react"]
+    }
+  ]
+}

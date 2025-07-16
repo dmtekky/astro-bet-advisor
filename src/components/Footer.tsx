@@ -69,6 +69,7 @@ const Footer: React.FC = () => {
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
     { to: '/upcoming-games', label: 'Games' },
+    { to: '/blog', label: 'Blog' },
     { to: '/privacy', label: 'Privacy Policy' },
     { to: '/terms', label: 'Terms of Service' },
   ];

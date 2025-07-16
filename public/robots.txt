@@ -1,14 +1,24 @@
 User-agent: Googlebot
 Allow: /
+Allow: /blog/
+Allow: /blog-content/
 
 User-agent: Bingbot
 Allow: /
+Allow: /blog/
+Allow: /blog-content/
 
 User-agent: Twitterbot
 Allow: /
+Allow: /blog/
+Allow: /blog-content/
 
 User-agent: facebookexternalhit
 Allow: /
+Allow: /blog/
+Allow: /blog-content/
 
 User-agent: *
 Allow: /
+Allow: /blog/
+Allow: /blog-content/

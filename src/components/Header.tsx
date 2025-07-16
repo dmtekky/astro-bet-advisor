@@ -76,6 +76,7 @@ const Header: React.FC<HeaderProps> = () => {
     { to: "/dashboard", label: "Dashboard" },
     { to: "/upcoming-games", label: "Games" },
     { to: "/news", label: "News" },
+    { to: "/blog", label: "Blog" },
   ];
 
   // Don't render header on home page

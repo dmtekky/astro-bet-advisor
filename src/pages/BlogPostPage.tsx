@@ -1,0 +1,309 @@
+import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { FiClock, FiUser, FiTag } from 'react-icons/fi';
+import { fetchPostBySlug, BlogPost } from '../services/wordpressService';
+import DOMPurify from 'dompurify';
+
+// Lazy load AdSense component to improve initial loading performance
+const AdSense = lazy(() => import('../components/AdSense'));
+
+// Cached posts to avoid redundant API calls
+let cachedPosts: BlogPost[] = [];
+
+// Optimized related articles function that doesn't trigger additional API calls
+const getRelatedArticles = async (tags: string[], currentPostId: string, maxCount = 3): Promise<BlogPost[]> => {
+  if (cachedPosts.length === 0) return [];
+  
+  return cachedPosts
+    .filter(post => post.id !== currentPostId && tags.some(tag => post.tags?.includes(tag)))
+    .slice(0, maxCount);
+};
+
+const getTrendingArticles = async (currentPostId: string, maxCount = 3): Promise<BlogPost[]> => {
+  if (cachedPosts.length === 0) return [];
+  
+  // Simple simulation of trending by returning most recent posts
+  return cachedPosts
+    .filter(post => post.id !== currentPostId)
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, maxCount);
+};
+
+interface BlogPostPageProps {
+  initialContent?: BlogPost;
+}
+
+const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
+  const { slug } = useParams<{ slug: string }>();
+  const [post, setPost] = useState<BlogPost | null>(initialContent || null);
+  const [loading, setLoading] = useState<boolean>(!initialContent);
+  const [error, setError] = useState<string | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<BlogPost[]>([]);
+  const [trendingArticles, setTrendingArticles] = useState<BlogPost[]>([]);
+  const [contentReady, setContentReady] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (initialContent) {
+      setContentReady(true);
+      return; // If initialContent is provided, no need to fetch client-side
+    }
+
+    const fetchPost = async () => {
+      if (!slug) {
+        setError('No slug provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Use the cached version if available
+        const postData = await fetchPostBySlug(slug);
+        
+        if (!postData) {
+          throw new Error(`Blog post not found: ${slug}`);
+        }
+        
+        setPost(postData);
+        
+        // Update cached posts if this post isn't already in the cache
+        if (!cachedPosts.some(p => p.id === postData.id)) {
+          cachedPosts = [...cachedPosts, postData];
+        }
+        
+        // Get related and trending articles without additional API calls
+        if (postData?.tags) {
+          const related = await getRelatedArticles(postData.tags, postData.id);
+          setRelatedArticles(related);
+        }
+        
+        const trending = await getTrendingArticles(postData?.id || '');
+        setTrendingArticles(trending);
+        
+        // Mark content as ready after a short delay to ensure smooth rendering
+        setTimeout(() => setContentReady(true), 100);
+      } catch (err: any) {
+        setError(err.message);
+        console.error('Error fetching blog post:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [slug, initialContent]);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return dateString; // Return original if invalid
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-6"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-64 bg-gray-200 rounded mb-6"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!post) {
+    return <div>Blog post not found.</div>;
+  }
+
+  // Generate structured data for SEO
+  const generateStructuredData = () => {
+    if (!post) return {};
+    
+    return {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "author": {
+        "@type": "Person",
+        "name": post.author
+      },
+      "datePublished": post.publishedAt,
+      "description": post.title,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `https://fullmoonodds.com/blog/${slug}`
+      }
+    };
+  };
+
+  // Extract first paragraph for meta description
+  const getMetaDescription = () => {
+    if (!post?.content) return post?.title || "Full Moon Odds blog post";
+    const firstParagraph = post.content.split('\n\n')[0].replace(/[#*_`]/g, '');
+    return firstParagraph.length > 160 ? firstParagraph.substring(0, 157) + '...' : firstParagraph;
+  };
+
+  // Sanitize content and prepare it for rendering
+  const sanitizedContent = post ? DOMPurify.sanitize(post.content) : '';
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Helmet>
+        <title>{post?.title || 'Blog Post'} | Full Moon Odds</title>
+        <meta name="description" content={getMetaDescription()} />
+        <meta name="author" content={post?.author || 'Full Moon Odds'} />
+        <meta property="og:title" content={`${post?.title || 'Blog Post'} | Full Moon Odds`} />
+        <meta property="og:description" content={getMetaDescription()} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://fullmoonodds.com/blog/${slug}`} />
+        {post?.publishedAt && <meta property="article:published_time" content={post.publishedAt} />}
+        {post?.author && <meta property="article:author" content={post.author} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${post?.title || 'Blog Post'} | Full Moon Odds`} />
+        <meta name="twitter:description" content={getMetaDescription()} />
+        <link rel="canonical" href={`https://fullmoonodds.com/blog/${slug}`} />
+        <script type="application/ld+json">
+          {JSON.stringify(generateStructuredData())}
+        </script>
+      </Helmet>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            <article className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl" aria-labelledby="post-title" data-lov-id="src/pages/BlogPostPage.tsx:160:14" data-lov-name="article" data-component-path="src/pages/BlogPostPage.tsx" data-component-line="160" data-component-file="BlogPostPage.tsx" data-component-name="article" data-component-content="%7B%7D">
+              {post.image && (
+                <img
+                  src={post.image}
+                  alt={post.imageAlt || post.title}
+                  className="w-full h-80 object-cover rounded-t-lg transition-opacity duration-300 ease-in-out"
+                  loading="lazy"
+                  onLoad={(e) => e.currentTarget.classList.add('opacity-100')} // Fade-in effect on load
+                  style={{ opacity: 0 }} // Start invisible for fade-in
+                />
+              )}
+              {loading ? (
+                <div className="animate-pulse p-8">
+                  <div className="h-10 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              ) : (
+                <div className="p-8" data-lov-id="src/pages/BlogPostPage.tsx:160:14" data-lov-name="div" data-component-path="src/pages/BlogPostPage.tsx" data-component-line="160" data-component-file="BlogPostPage.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22p-8%22%7D">
+                  <h1 id="post-title" className="text-4xl font-bold text-gray-900 mb-6 leading-snug transition-colors duration-200 hover:text-indigo-600" data-lov-id="src/pages/BlogPostPage.tsx:161:16" data-lov-name="h1" data-component-path="src/pages/BlogPostPage.tsx" data-component-line="161" data-component-file="BlogPostPage.tsx" data-component-name="h1" data-component-content="%7B%22className%22%3A%22text-4xl%20font-bold%20text-gray-900%20mb-6%20leading-snug%22%7D">
+                    {post.title}
+                  </h1>
+                  <div className="flex items-center text-gray-500 text-sm mb-8 space-x-4" data-lov-id="src/pages/BlogPostPage.tsx:164:16" data-lov-name="div" data-component-path="src/pages/BlogPostPage.tsx" data-component-line="164" data-component-file="BlogPostPage.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20text-gray-500%20text-sm%20mb-8%20space-x-4%22%7D">
+                    <FiUser className="text-gray-400" aria-hidden="true" />&nbsp;{post.author}
+                    <FiClock className="text-gray-400" aria-hidden="true" />&nbsp;{formatDate(post.publishedAt)}
+                  </div>
+                  <div className="prose lg:prose-xl max-w-none mb-10 prose-headings:text-gray-800 prose-a:text-indigo-600 prose-a:underline prose-img:rounded-lg prose-img:shadow-md" data-lov-id="src/pages/BlogPostPage.tsx:172:18" data-lov-name="div" data-component-path="src/pages/BlogPostPage.tsx" data-component-line="172" data-component-file="BlogPostPage.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22prose%20lg%3Aprose-xl%20max-w-none%20mb-10%20prose-headings%3Atext-gray-800%20prose-a%3Atext-indigo-600%20prose-a%3Aunderline%20prose-img%3Arounded-lg%20prose-img%3Ashadow-md%22%7D">
+                    <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+                  </div>
+
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="mt-8" aria-labelledby="tags-heading">
+                      <h3 id="tags-heading" className="text-lg font-semibold text-gray-700 mb-4">Tags:</h3>
+                      <div className="flex flex-wrap gap-3" aria-label="Blog tags">
+                        {post.tags.map((tag) => (
+                          <Link
+                            key={tag}
+                            to={`/blog?tag=${tag}`}
+                            className="bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors duration-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            aria-label={ `View posts tagged ${tag}` }
+                          >
+                            <FiTag className="inline mr-1 -mt-1" aria-hidden="true" /> {tag}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </article>
+
+            {/* Related Articles Section */}
+            {relatedArticles.length > 0 && (
+              <section className="mt-12 bg-white shadow-lg rounded-lg p-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">Related Articles</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {relatedArticles.map((article) => (
+                    <Link to={`/blog/${article.slug}`} key={article.id} className="block group">
+                      <img
+                        src={article.image || '/placeholder-blog-image.jpg'}
+                        alt={article.imageAlt || article.title}
+                        className="w-full h-48 object-cover rounded-md mb-4 transform group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                        {article.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-2 line-clamp-3">
+                        {article.description}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="lg:col-span-1">
+            {/* Trending Articles Section */}
+            {trendingArticles.length > 0 && (
+              <div className="bg-white shadow-lg rounded-lg p-8 mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">Trending Articles</h2>
+                <ul className="space-y-6">
+                  {trendingArticles.map((article) => (
+                    <li key={article.id}>
+                      <Link to={`/blog/${article.slug}`} className="group block">
+                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                          {article.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                          {article.description}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* AdSense Placement - Lazy loaded */}
+            <div className="bg-white shadow-lg rounded-lg p-4 text-center">
+              <Suspense fallback={<div className="h-20 bg-gray-100 rounded flex items-center justify-center text-gray-400">Loading ad...</div>}>
+                {contentReady && <AdSense slot="YOUR_ADSENSE_SLOT_ID" />}
+              </Suspense>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BlogPostPage;
