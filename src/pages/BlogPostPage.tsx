@@ -110,29 +110,6 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     return () => window.removeEventListener('scroll', updateReadingProgress);
   }, []);
 
-  useEffect(() => {
-    if (post && typeof window !== 'undefined') {
-      const headings = Array.from(document.querySelectorAll('h2, h3'));
-      const tocContainer = document.getElementById('toc-container');
-      
-      if (tocContainer) {
-        tocContainer.innerHTML = '';
-        
-        headings.forEach((heading, index) => {
-          const id = `heading-${index}`;
-          heading.id = id;
-          
-          const link = document.createElement('a');
-          link.href = `#${id}`;
-          link.className = `block pl-${heading.tagName === 'H3' ? '4' : '0'} py-1 hover:text-indigo-600 transition-colors`;
-          link.textContent = heading.textContent;
-          
-          tocContainer.appendChild(link);
-        });
-      }
-    }
-  }, [post]);
-
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     try {
@@ -438,12 +415,6 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
             </div>
           </aside>
         </div>
-      </div>
-
-      {/* Floating table of contents */}
-      <div className="hidden lg:block fixed right-8 top-1/2 transform -translate-y-1/2 bg-white p-4 rounded-xl shadow-xl border border-gray-200 max-w-xs max-h-[80vh] overflow-auto">
-        <h3 className="font-bold text-lg mb-3 text-indigo-700">Table of Contents</h3>
-        <div id="toc-container" className="space-y-2 text-sm" />
       </div>
     </div>
   );

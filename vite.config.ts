@@ -85,10 +85,14 @@ export default defineConfig(({ mode }) => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.node'],
     },
     optimizeDeps: {
+      timeout: 10000, // Increase timeout to prevent 504 errors
       esbuildOptions: {
         // Node.js global to browser globalThis
         define: {
           global: 'globalThis',
+        },
+        loader: { 
+          '.js': 'jsx',
         },
       },
       include: [
