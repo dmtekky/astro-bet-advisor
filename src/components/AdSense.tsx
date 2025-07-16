@@ -11,6 +11,10 @@ const AdSense: React.FC<AdSenseProps> = ({
   format = 'auto',
   responsive = true,
 }) => {
+  if (process.env.NODE_ENV !== 'production') {
+    return null;
+  }
+
   useEffect(() => {
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
