@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMoon, FiSun, FiWind, FiDroplet, FiStar } from 'react-icons/fi';
 
@@ -83,30 +83,52 @@ interface Aspect {
 export const SimplifiedKeyPlanetaryInfluences: React.FC<{ aspects: any[] }> = ({ aspects }) => {
   // Extract and format key planetary influences
   const influences = useMemo(() => {
+    // Safety check for null/undefined/empty aspects
     if (!aspects || !Array.isArray(aspects) || aspects.length === 0) {
       return ['Sun in Aries', 'Moon in Taurus', 'Mercury in Gemini']; // Default fallback
     }
-
-    return aspects.slice(0, 3).map(aspect => {
+    
+    // Get the first 3 aspects or fewer if less are available
+    const limitedAspects = aspects.slice(0, 3);
+    
+    return limitedAspects.map(aspect => {
       try {
-        // Handle different data structures
-        if (aspect && typeof aspect === 'object') {
-          if (aspect.planet && aspect.sign) {
-            // Original format
-            return `${aspect.planet} in ${aspect.sign}`;
-          } else if (aspect.planet1 && aspect.planet2) {
-            // Format with planet1 and planet2
-            const aspectType = aspect.aspect ? ` ${aspect.aspect} ` : ' aspects ';
-            return `${aspect.planet1}${aspectType}${aspect.planet2}`;
-          } else if (aspect.planets && Array.isArray(aspect.planets) && aspect.planets.length >= 2) {
-            // Format with planets array
-            const planet1 = typeof aspect.planets[0] === 'string' ? aspect.planets[0] : 'Planet';
-            const planet2 = typeof aspect.planets[1] === 'string' ? aspect.planets[1] : 'Planet';
-            return `${planet1} ${aspect.type || 'aspects'} ${planet2}`;
-          }
-          return 'Planetary aspect'; // Generic object
+        // Safety check for null/undefined aspect
+        if (!aspect || typeof aspect !== 'object') {
+          return 'Aspect'; // Generic fallback
         }
-        return 'Aspect'; // Unknown format
+        
+        // Handle different data structures based on what's available
+        // Format 1: {planet: "sun", sign: "leo"}
+        if (typeof aspect.planet === 'string' && typeof aspect.sign === 'string') {
+          return `${aspect.planet} in ${aspect.sign}`;
+        }
+        
+        // Format 2: {planet1: "moon", planet2: "saturn", aspect: "conjunction"}
+        if (typeof aspect.planet1 === 'string' && typeof aspect.planet2 === 'string') {
+          const aspectType = typeof aspect.aspect === 'string' ? ` ${aspect.aspect} ` : ' aspects ';
+          return `${aspect.planet1}${aspectType}${aspect.planet2}`;
+        }
+        
+        // Format 3: {planets: ["venus", "mars"], type: "trine"}
+        if (Array.isArray(aspect.planets) && aspect.planets.length >= 2) {
+          const planet1 = typeof aspect.planets[0] === 'string' ? aspect.planets[0] : 'Planet';
+          const planet2 = typeof aspect.planets[1] === 'string' ? aspect.planets[1] : 'Planet';
+          return `${planet1} ${aspect.type || 'aspects'} ${planet2}`;
+        }
+        
+        // Format 4: Use interpretation if available
+        if (typeof aspect.interpretation === 'string' && aspect.interpretation.includes(':')) {
+          return aspect.interpretation.split(':')[0]; // Take just the first part before the colon
+        }
+        
+        // Last resort: construct from whatever we have
+        const keys = Object.keys(aspect);
+        if (keys.length > 0) {
+          return `${keys[0]}: ${String(aspect[keys[0]]).substring(0, 20)}`;
+        }
+        
+        return 'Planetary aspect'; // Generic object fallback
       } catch (error) {
         console.error('Error formatting aspect:', error);
         return 'Aspect'; // Fallback on error

@@ -14,10 +14,10 @@ import { SimplifiedElementalBalance, SimplifiedLunarStatusCard, SimplifiedKeyPla
 let cachedPosts: BlogPost[] = [];
 
 // Optimized related articles function that doesn't trigger additional API calls
-const getRelatedArticles = async (tags: string[], currentPostId: string, maxCount = 3): Promise<BlogPost[]> => {
-  if (cachedPosts.length === 0) return [];
+const getRelatedArticles = (posts: BlogPost[], tags: string[], currentPostId: string, maxCount = 3): BlogPost[] => {
+  if (posts.length === 0) return [];
   
-  return cachedPosts
+  return posts
     .filter(post => post.id !== currentPostId && tags.some(tag => post.tags?.includes(tag)))
     .slice(0, maxCount);
 };
@@ -54,8 +54,19 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   // Always define stableDateString with useMemo
   const stableDateString = useMemo(() => new Date().toISOString().split("T")[0], []);
   
-  // Always call useAstroData hook
+  // Always call useAstroData hook with memoization to prevent redundant fetches
   const { astroData, loading: astroLoading, error: astroError } = useAstroData(stableDateString);
+  
+  // Memoize the dashboard data to prevent unnecessary re-renders
+  const dashboardData = useMemo(() => {
+    if (!astroData) return null;
+    return {
+      elementalBalance: astroData.elementalBalance,
+      moonPhase: astroData.moonPhase,
+      moonSign: astroData.moonSign,
+      aspects: astroData.aspects || []
+    };
+  }, [astroData]);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -72,7 +83,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
           setPost(postData);
           // Fetch all posts to get cachedPosts for related and trending
           const allPosts = await fetchPosts();
-          const related = getRelatedArticles(allPosts, postData.id, 3);
+          const related = getRelatedArticles(allPosts, postData.tags || [], postData.id, 3);
           setRelatedArticles(related);
 
           const trending = getTrendingArticles(allPosts, postData.id, 3);
@@ -436,30 +447,38 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                 ))}
               </ul>
             </div>
+            
+            {/* Astro Dashboard Section */}
+            {!astroLoading && dashboardData && (
+              <div className="mt-8 space-y-4" ref={dashboardRef}>
+                <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Astrology Insights</h2>
+                
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100">
+                  {/* Simplified Elemental Balance */}
+                  <div className="mb-6">
+                    <SimplifiedElementalBalance elementalBalance={dashboardData.elementalBalance} />
+                  </div>
+                  
+                  {/* Simplified Lunar Status */}
+                  <div className="mb-6">
+                    <SimplifiedLunarStatusCard 
+                      moonPhase={dashboardData.moonPhase} 
+                      moonSign={dashboardData.moonSign} 
+                    />
+                  </div>
+                  
+                  {/* Simplified Key Planetary Influences */}
+                  <div>
+                    <SimplifiedKeyPlanetaryInfluences 
+                      aspects={dashboardData.aspects} 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </div>
-
-      {/* Sidebar */}
-      <aside className="lg:col-span-1">
-        {/* Trending Articles Section */}
-        <div className="mt-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100">
-          <h2 className="text-2xl font-bold mb-4 text-indigo-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Trending</h2>
-          <ul className="space-y-4">
-            {trendingArticles.map((article) => (
-              <li key={article.id} className="group">
-                <Link 
-                  to={`/blog/${article.slug}`} 
-                  className="text-lg font-medium text-gray-800 group-hover:text-indigo-700 transition-colors flex items-start"
-                >
-                  <span className="mr-2 text-indigo-600">→</span>
-                  <span>{article.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
     </div>
   );
 };
