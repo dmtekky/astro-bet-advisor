@@ -33,15 +33,23 @@ const SimplifiedKeyPlanetaryInfluences: React.FC<SimplifiedKeyPlanetaryInfluence
   aspects = [],
   planets = {} 
 }) => {
+  // Debug the aspects data structure
+  React.useEffect(() => {
+    console.log('SimplifiedKeyPlanetaryInfluences - Raw aspects data:', aspects);
+  }, [aspects]);
+  
   // Filter out aspects with missing data - IDENTICAL to dashboard component logic
   const validAspects = useMemo(() => {
-    return aspects
+    const filtered = aspects
       .filter(aspect => aspect.planets && aspect.planets.length >= 2 && aspect.planets[0] && aspect.planets[1])
       .sort((a, b) => {
         const influenceA = typeof a.influence === 'string' ? parseInt(a.influence.toString()) : (a.influence || 0);
         const influenceB = typeof b.influence === 'string' ? parseInt(b.influence.toString()) : (b.influence || 0);
         return influenceB - influenceA;
       });
+    
+    console.log('SimplifiedKeyPlanetaryInfluences - Filtered aspects data:', filtered);
+    return filtered;
   }, [aspects]);
 
   return (
