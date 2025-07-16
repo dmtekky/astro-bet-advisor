@@ -5,7 +5,7 @@ import { FiClock, FiUser, FiTag } from 'react-icons/fi';
 import { fetchPostBySlug, fetchPosts, BlogPost } from '../services/wordpressService';
 import DOMPurify from 'dompurify';
 import { useAstroData } from "@/hooks/useAstroData";
-import { SimplifiedElementalBalance, SimplifiedLunarStatusCard, SimplifiedKeyPlanetaryInfluences } from '../components/SimplifiedDashboard';
+import { SimplifiedElementalBalance, SimplifiedLunarStatusCard, SimplifiedKeyPlanetaryInfluences, ElementInfluenceInsights } from '../components/SimplifiedDashboard';
 
 // Lazy load AdSense component to improve initial loading performance
 // const AdSense = lazy(() => import('../components/AdSense'));
@@ -456,22 +456,28 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                 <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-lg border border-indigo-100">
                   {/* Simplified Elemental Balance */}
                   <div className="mb-6">
-                    <SimplifiedElementalBalance elementalBalance={dashboardData.elementalBalance} />
+                    <SimplifiedElementalBalance elementalBalance={astroData?.elements || {}} />
+                  </div>
+                  
+                  {/* Element Influence Insights */}
+                  <div className="mb-6">
+                    <ElementInfluenceInsights 
+                      planets={astroData?.planets} 
+                      elements={astroData?.elements}
+                    />
                   </div>
                   
                   {/* Simplified Lunar Status */}
                   <div className="mb-6">
                     <SimplifiedLunarStatusCard 
-                      moonPhase={dashboardData.moonPhase} 
-                      moonSign={dashboardData.moonSign} 
+                      moonPhase={astroData?.moonPhase} 
+                      moonData={astroData?.moonData}
                     />
                   </div>
                   
                   {/* Simplified Key Planetary Influences */}
-                  <div>
-                    <SimplifiedKeyPlanetaryInfluences 
-                      aspects={dashboardData.aspects} 
-                    />
+                  <div className="mb-6">
+                    <SimplifiedKeyPlanetaryInfluences aspects={astroData?.aspects || []} />
                   </div>
                 </div>
               </div>
