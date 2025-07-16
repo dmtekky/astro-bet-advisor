@@ -36,19 +36,22 @@ interface BlogPostPageProps {
 
 const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPost | null>(initialContent || null);
-  const [loading, setLoading] = useState<boolean>(!initialContent);
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<BlogPost[]>([]);
   const [trendingArticles, setTrendingArticles] = useState<BlogPost[]>([]);
   const [contentReady, setContentReady] = useState<boolean>(false);
+  const [readingProgress, setReadingProgress] = useState(0);
 
   useEffect(() => {
     if (initialContent) {
-      setContentReady(true);
-      return; // If initialContent is provided, no need to fetch client-side
+      setPost(initialContent);
+      setLoading(false);
     }
+  }, [initialContent]);
 
+  useEffect(() => {
     const fetchPost = async () => {
       if (!slug) {
         setError('No slug provided');
@@ -91,8 +94,44 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
       }
     };
 
-    fetchPost();
+    if (!initialContent) {
+      fetchPost();
+    }
   }, [slug, initialContent]);
+
+  useEffect(() => {
+    const updateReadingProgress = () => {
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = window.scrollY;
+      setReadingProgress(scrolled / scrollHeight * 100);
+    };
+    
+    window.addEventListener('scroll', updateReadingProgress);
+    return () => window.removeEventListener('scroll', updateReadingProgress);
+  }, []);
+
+  useEffect(() => {
+    if (post && typeof window !== 'undefined') {
+      const headings = Array.from(document.querySelectorAll('h2, h3'));
+      const tocContainer = document.getElementById('toc-container');
+      
+      if (tocContainer) {
+        tocContainer.innerHTML = '';
+        
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const link = document.createElement('a');
+          link.href = `#${id}`;
+          link.className = `block pl-${heading.tagName === 'H3' ? '4' : '0'} py-1 hover:text-indigo-600 transition-colors`;
+          link.textContent = heading.textContent;
+          
+          tocContainer.appendChild(link);
+        });
+      }
+    }
+  }, [post]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -106,6 +145,98 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
       console.error('Error formatting date:', e);
       return dateString; // Return original if invalid
     }
+  };
+
+  // Enhanced WordPress styling with modern design
+  const wordpressStyles = {
+    p: 'mb-6 leading-relaxed text-gray-700 text-lg',
+    h2: 'text-3xl font-bold mt-12 mb-6 pb-3 border-b-2 border-indigo-200 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600',
+    h3: 'text-2xl font-semibold mt-10 mb-5 text-indigo-700 hover:text-purple-600 transition-colors duration-300',
+    h4: 'text-xl font-medium mt-8 mb-4 text-indigo-600',
+    ul: 'list-disc pl-8 mb-6 space-y-2 bg-indigo-50 p-4 rounded-lg',
+    ol: 'list-decimal pl-8 mb-6 space-y-2 bg-indigo-50 p-4 rounded-lg',
+    li: 'mb-3 marker:text-indigo-500',
+    blockquote: 'border-l-4 border-indigo-500 italic pl-6 py-4 my-6 bg-indigo-50 text-gray-800 text-lg relative before:content-["\\201C"] before:text-6xl before:text-indigo-300 before:absolute before:-left-2 before:-top-4 before:font-serif',
+    table: 'min-w-full divide-y divide-gray-200 my-8 rounded-lg overflow-hidden shadow-md',
+    th: 'px-6 py-4 bg-indigo-600 text-left text-sm font-semibold text-white uppercase tracking-wider',
+    td: 'px-6 py-4 whitespace-normal text-base text-gray-800',
+    'tbody tr:nth-child(odd)': 'bg-indigo-50',
+    'tbody tr:nth-child(even)': 'bg-white',
+    a: 'text-indigo-600 font-medium hover:text-indigo-800 hover:underline transition-colors',
+    img: 'my-8 rounded-xl shadow-lg max-w-full h-auto border-4 border-white hover:shadow-xl transition-shadow duration-300 hover:scale-105 transform transition-transform duration-300',
+    'img.alignleft': 'float-left mr-6 mb-3 mt-2',
+    'img.alignright': 'float-right ml-6 mb-3 mt-2',
+    'img.aligncenter': 'mx-auto block',
+    'code:not(.hljs)': 'bg-indigo-100 rounded px-2 py-1 font-mono text-indigo-800 text-sm',
+    pre: 'bg-gray-800 text-gray-100 p-5 rounded-xl overflow-x-auto my-6 shadow-lg relative group',
+    '.wp-block-image': 'my-8',
+    '.wp-block-gallery': 'grid grid-cols-2 md:grid-cols-3 gap-4 my-8',
+    '.wp-block-gallery img': 'rounded-lg shadow-md border-0 hover:scale-105 transition-transform duration-300',
+    '.wp-block-button': 'my-6',
+    '.wp-block-button__link': 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5',
+  };
+
+  // Apply WordPress styles to all content
+  const applyWordPressStyles = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Apply styles to each element type
+    Object.entries(wordpressStyles).forEach(([selector, className]) => {
+      const elements = doc.querySelectorAll(selector);
+      elements.forEach(el => {
+        el.classList.add(...className.split(' '));
+      });
+    });
+    
+    return doc.body.innerHTML;
+  };
+
+  // Add copy button to code blocks
+  const addCopyButtons = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    const codeBlocks = doc.querySelectorAll('pre');
+    codeBlocks.forEach(pre => {
+      const button = doc.createElement('button');
+      button.innerHTML = 'Copy';
+      button.className = 'absolute top-2 right-2 bg-gray-700 text-gray-100 px-3 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity';
+      button.onclick = () => {
+        const code = pre.querySelector('code')?.innerText || '';
+        navigator.clipboard.writeText(code);
+        button.innerHTML = 'Copied!';
+        setTimeout(() => button.innerHTML = 'Copy', 2000);
+      };
+      pre.appendChild(button);
+    });
+    
+    return doc.body.innerHTML;
+  };
+
+  // Add lightbox functionality to images
+  const addLightboxToImages = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    const images = doc.querySelectorAll('img');
+    images.forEach(img => {
+      img.classList.add('cursor-zoom-in');
+      img.onclick = () => {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4';
+        
+        const lightboxImg = document.createElement('img');
+        lightboxImg.src = img.src;
+        lightboxImg.className = 'max-h-full max-w-full';
+        
+        lightbox.appendChild(lightboxImg);
+        lightbox.onclick = () => document.body.removeChild(lightbox);
+        document.body.appendChild(lightbox);
+      };
+    });
+    
+    return doc.body.innerHTML;
   };
 
   if (loading) {
@@ -165,11 +296,17 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     return firstParagraph.length > 160 ? firstParagraph.substring(0, 157) + '...' : firstParagraph;
   };
 
-  // Sanitize content and prepare it for rendering
-  const sanitizedContent = post ? DOMPurify.sanitize(post.content) : '';
+  // Apply enhanced WordPress styles and interactive features
+  let enhancedContent = applyWordPressStyles(post.content);
+  enhancedContent = addCopyButtons(enhancedContent);
+  enhancedContent = addLightboxToImages(enhancedContent);
+  const sanitizedContent = DOMPurify.sanitize(enhancedContent);
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="fixed top-0 left-0 h-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 z-50" 
+           style={{ width: `${readingProgress}%` }} />
+      
       <Helmet>
         <title>{post?.title || 'Blog Post'} | Full Moon Odds</title>
         <meta name="description" content={getMetaDescription()} />
@@ -233,7 +370,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                             key={tag}
                             to={`/blog?tag=${tag}`}
                             className="bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors duration-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                            aria-label={ `View posts tagged ${tag}` }
+                            aria-label={ /* eslint-disable-line @typescript-eslint/no-unsafe-assignment-optionals */ `View posts tagged ${tag}` }
                           >
                             <FiTag className="inline mr-1 -mt-1" aria-hidden="true" /> {tag}
                           </Link>
@@ -301,6 +438,12 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
             </div>
           </aside>
         </div>
+      </div>
+
+      {/* Floating table of contents */}
+      <div className="hidden lg:block fixed right-8 top-1/2 transform -translate-y-1/2 bg-white p-4 rounded-xl shadow-xl border border-gray-200 max-w-xs max-h-[80vh] overflow-auto">
+        <h3 className="font-bold text-lg mb-3 text-indigo-700">Table of Contents</h3>
+        <div id="toc-container" className="space-y-2 text-sm" />
       </div>
     </div>
   );
