@@ -375,12 +375,15 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
           {/* Sidebar */}
           <aside className="lg:col-span-1">
             {/* Trending Articles Section */}
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">Trending</h2>
-              <ul>
+            <div className="mt-8 p-6 bg-white rounded-xl shadow-lg">
+              <h2 className="text-2xl font-bold mb-4 text-gray-900">Trending</h2>
+              <ul className="space-y-3">
                 {trendingArticles.map((article) => (
-                  <li key={article.id} className="mb-2 text-gray-700 hover:text-blue-600">
-                    <Link to={`/blog/${article.slug}`} className="hover:underline">
+                  <li key={article.id}>
+                    <Link 
+                      to={`/blog/${article.slug}`} 
+                      className="text-lg text-gray-800 hover:text-indigo-700 hover:underline transition-colors"
+                    >
                       {article.title}
                     </Link>
                   </li>
