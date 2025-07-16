@@ -143,6 +143,14 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     }
   }, [post]);
 
+  useEffect(() => {
+    if (astroData) {
+      console.log('BlogPostPage - Debugging moonSign:', astroData.moonSign);
+    } else {
+      console.log('BlogPostPage - Debugging: astroData is undefined');
+    }
+  }, [astroData]);
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     try {
@@ -488,7 +496,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                   <div className="mb-6">
                     <SimplifiedLunarStatusCard 
                       moonPhase={astroData?.moonPhase} 
-                      moonData={astroData?.moonData}
+                      moonData={{ sign: astroData?.planets?.moon?.sign || astroData?.moonSign }}
                     />
                   </div>
                   
