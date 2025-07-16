@@ -477,7 +477,10 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                   
                   {/* Simplified Key Planetary Influences */}
                   <div className="mb-6">
-                    <SimplifiedKeyPlanetaryInfluences aspects={astroData?.aspects || []} />
+                    <SimplifiedKeyPlanetaryInfluences 
+                      aspects={astroData?.aspects || []} 
+                      planets={astroData?.planets || {}}
+                    />
                   </div>
                 </div>
               </div>
