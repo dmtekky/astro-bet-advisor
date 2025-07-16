@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ErrorBoundary as ReactErrorBoundary } from 'react';
+import React, { useEffect, useState, useMemo, ErrorBoundary as ReactErrorBoundary } from 'react';
 import { Link } from 'react-router-dom';
 import { FiClock, FiArrowRight, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { Helmet } from 'react-helmet-async';
@@ -35,10 +35,18 @@ const BlogPage: React.FC = () => {
   const [featuredArticle, setFeaturedArticle] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const articlesPerPage = 6; // Reduced from showing all articles at once
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const articlesPerPage = 6;
+  
+  const filteredArticles = useMemo(() => allArticles.filter(article => article.title.toLowerCase().includes(searchTerm.toLowerCase()) || article.description.toLowerCase().includes(searchTerm.toLowerCase())), [allArticles, searchTerm]);
+  
+  const trendingArticles = useMemo(() => [...filteredArticles].sort((a, b) => b.viewCount - a.viewCount).slice(0, 13), [filteredArticles]);
+  
+  const indexOfLastArticle = currentPage * articlesPerPage;
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+  const articlesToShow = filteredArticles.slice(indexOfFirstArticle, indexOfLastArticle);
 
   useEffect(() => {
     document.title = "Blog | Full Moon Odds";
@@ -85,14 +93,13 @@ const BlogPage: React.FC = () => {
     };
   }, []);
   
-  // Handle page changes
   useEffect(() => {
-    if (allArticles.length > 0) {
-      const startIndex = (currentPage - 1) * articlesPerPage;
-      const endIndex = startIndex + articlesPerPage;
-      setArticles(allArticles.slice(startIndex, endIndex));
+    if (filteredArticles.length > 0) {
+      setArticles(articlesToShow);
+    } else {
+      setArticles([]);
     }
-  }, [currentPage, allArticles]);
+  }, [currentPage, filteredArticles, articlesToShow]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -231,6 +238,7 @@ const BlogPage: React.FC = () => {
       <ErrorBoundary>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">All Blog Posts</h2>
+        <input type="text" placeholder="Search articles..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full p-2 border border-gray-300 rounded-md mb-4 dark:bg-gray-800 dark:border-gray-600" />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article) => (
@@ -271,9 +279,9 @@ const BlogPage: React.FC = () => {
           ))}
         </div>
 
-        {articles.length === 0 && allArticles.length === 0 && (
+        {filteredArticles.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">No blog articles found.</p>
+            <p className="text-gray-500 dark:text-gray-400">No articles found or match your search.</p>
           </div>
         )}
         
@@ -290,19 +298,36 @@ const BlogPage: React.FC = () => {
             </button>
             
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Page {currentPage} of {Math.ceil(allArticles.length / articlesPerPage)}
+              Page {currentPage} of {Math.ceil(filteredArticles.length / articlesPerPage)}
             </div>
             
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(allArticles.length / articlesPerPage)))}
-              disabled={currentPage >= Math.ceil(allArticles.length / articlesPerPage)}
-              className={`p-2 rounded-full ${currentPage >= Math.ceil(allArticles.length / articlesPerPage) ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900'}`}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredArticles.length / articlesPerPage)))}
+              disabled={currentPage >= Math.ceil(filteredArticles.length / articlesPerPage)}
+              className={`p-2 rounded-full ${currentPage >= Math.ceil(filteredArticles.length / articlesPerPage) ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900'}`}
               aria-label="Next page"
             >
               <FiChevronRight size={20} />
             </button>
           </div>
         )}
+        
+        {/* Trending Articles */}
+        <div className="mt-8 text-center">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Trending Articles</h3>
+          <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+            {trendingArticles.map((article) => (
+              <Link 
+                key={article.id} 
+                to={`/blog/${article.slug}`}
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors px-3"
+                title={article.title}
+              >
+                {article.title}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
       </ErrorBoundary>
     </div>
