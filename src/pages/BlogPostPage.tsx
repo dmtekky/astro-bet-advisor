@@ -387,35 +387,20 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
           {/* Sidebar */}
           <aside className="lg:col-span-1">
             {/* Trending Articles Section */}
-            {trendingArticles.length > 0 && (
-              <div className="bg-white shadow-lg rounded-lg p-8 mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Trending Articles</h2>
-                <ul className="space-y-6">
-                  {trendingArticles.map((article) => (
-                    <li key={article.id}>
-                      <Link to={`/blog/${article.slug}`} className="group block">
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                          {article.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-                          {article.description}
-                        </p>
+            <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Trending</h2>
+              <ul>
+                {trendingArticles.length > 0 ? (
+                  trendingArticles.map((article) => (
+                    <li key={article.id} className="mb-2 text-gray-700 hover:text-blue-600">
+                      <Link to={`/blog/${article.slug}`} className="hover:underline">
+                        {article.title}
                       </Link>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-bold mb-4">Trending Articles</h2>
-              <ul>
-                {trendingArticles.map((article) => (
-                  <li key={article.id} className="mb-2">
-                    <Link to={`/blog/${article.slug}`} className="text-blue-600 hover:underline">
-                      {article.title}
-                    </Link>
-                  </li>
-                ))}
+                  ))
+                ) : (
+                  <li className="text-gray-500">No trending articles available</li>
+                )}
               </ul>
             </div>
           </aside>
