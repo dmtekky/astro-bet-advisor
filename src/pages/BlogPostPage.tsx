@@ -20,13 +20,15 @@ const getRelatedArticles = async (tags: string[], currentPostId: string, maxCoun
     .slice(0, maxCount);
 };
 
-const getTrendingArticles = async (currentPostId: string, maxCount = 3): Promise<BlogPost[]> => {
-  if (cachedPosts.length === 0) return [];
-  
-  // Simple simulation of trending by returning most recent posts
-  return cachedPosts
+const getViewCount = (postId: string) => {
+  const views = JSON.parse(localStorage.getItem('viewCounts') || '{}');
+  return views[postId] || 0;
+};
+
+const getTrendingArticles = (posts: BlogPost[], currentPostId: string, maxCount: number) => {
+  return posts
     .filter(post => post.id !== currentPostId)
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .sort((a, b) => getViewCount(b.id) - getViewCount(a.id))  // Sort by view count descending
     .slice(0, maxCount);
 };
 
@@ -81,7 +83,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
           setRelatedArticles(related);
         }
         
-        const trending = await getTrendingArticles(postData?.id || '');
+        const trending = getTrendingArticles(cachedPosts, postData.id, 3);
         setTrendingArticles(trending);
         
         // Mark content as ready after a short delay to ensure smooth rendering
@@ -109,6 +111,14 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
     window.addEventListener('scroll', updateReadingProgress);
     return () => window.removeEventListener('scroll', updateReadingProgress);
   }, []);
+
+  useEffect(() => {
+    if (post) {
+      const views = JSON.parse(localStorage.getItem('viewCounts') || '{}');
+      views[post.id] = (views[post.id] || 0) + 1;
+      localStorage.setItem('viewCounts', JSON.stringify(views));
+    }
+  }, [post]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -390,17 +400,13 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
             <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-md">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Trending</h2>
               <ul>
-                {trendingArticles.length > 0 ? (
-                  trendingArticles.map((article) => (
-                    <li key={article.id} className="mb-2 text-gray-700 hover:text-blue-600">
-                      <Link to={`/blog/${article.slug}`} className="hover:underline">
-                        {article.title}
-                      </Link>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-gray-500">No trending articles available</li>
-                )}
+                {trendingArticles.map((article) => (
+                  <li key={article.id} className="mb-2 text-gray-700 hover:text-blue-600">
+                    <Link to={`/blog/${article.slug}`} className="hover:underline">
+                      {article.title}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </aside>
