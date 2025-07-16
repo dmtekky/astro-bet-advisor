@@ -6,7 +6,7 @@ import { fetchPostBySlug, BlogPost } from '../services/wordpressService';
 import DOMPurify from 'dompurify';
 
 // Lazy load AdSense component to improve initial loading performance
-const AdSense = lazy(() => import('../components/AdSense'));
+// const AdSense = lazy(() => import('../components/AdSense'));
 
 // Cached posts to avoid redundant API calls
 let cachedPosts: BlogPost[] = [];
@@ -406,12 +406,17 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
                 </ul>
               </div>
             )}
-
-            {/* AdSense Placement - Lazy loaded */}
-            <div className="bg-white shadow-lg rounded-lg p-4 text-center">
-              <Suspense fallback={<div className="h-20 bg-gray-100 rounded flex items-center justify-center text-gray-400">Loading ad...</div>}>
-                {contentReady && <AdSense slot="YOUR_ADSENSE_SLOT_ID" />}
-              </Suspense>
+            <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold mb-4">Trending Articles</h2>
+              <ul>
+                {trendingArticles.map((article) => (
+                  <li key={article.id} className="mb-2">
+                    <Link to={`/blog/${article.slug}`} className="text-blue-600 hover:underline">
+                      {article.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </aside>
         </div>
