@@ -60,11 +60,28 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ initialContent }) => {
   // Memoize the dashboard data to prevent unnecessary re-renders
   const dashboardData = useMemo(() => {
     if (!astroData) return null;
+    
+    // Fix aspects data to have proper planet names exactly like the dashboard
+    const processedAspects = astroData.aspects?.map(aspect => {
+      // Extract planet names from the raw aspect data
+      // The dashboard expects planets array with name property
+      const planet1Name = aspect.planet1 || "Sun"; // Default to Sun if missing
+      const planet2Name = aspect.planet2 || "Moon"; // Default to Moon if missing
+      
+      return {
+        ...aspect,
+        planets: [
+          { name: planet1Name },
+          { name: planet2Name }
+        ]
+      };
+    }) || [];
+    
     return {
       elementalBalance: astroData.elementalBalance,
       moonPhase: astroData.moonPhase,
       moonSign: astroData.moonSign,
-      aspects: astroData.aspects || []
+      aspects: processedAspects
     };
   }, [astroData]);
 
